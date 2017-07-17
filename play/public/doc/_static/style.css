@@ -1,0 +1,21 @@
+div.related {
+  background: #E0F2F7;
+}
+
+div.related li {
+  color: black;
+  text-shadow: none;
+}
+
+div.related li a {
+  color: black;
+  text-shadow: none;
+}
+
+div.footer {
+  background: #E0F2F7;
+}
+
+html {
+  background: #E0F2F7;
+}

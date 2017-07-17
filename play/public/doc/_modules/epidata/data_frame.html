@@ -1,0 +1,547 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>epidata.data_frame &mdash; epidata  documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/style.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="epidata  documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">epidata  documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for epidata.data_frame</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">epidata._private.measurement_value</span> <span class="kn">import</span> <span class="n">MeasurementValueUDT</span>
+<span class="kn">from</span> <span class="nn">numbers</span> <span class="kn">import</span> <span class="n">Number</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">pandas</span>
+<span class="kn">from</span> <span class="nn">pyspark.sql.dataframe</span> <span class="kn">import</span> <span class="n">DataFrame</span> <span class="k">as</span> <span class="n">PysparkDataFrame</span>
+<span class="kn">from</span> <span class="nn">pyspark.sql.types</span> <span class="kn">import</span> <span class="n">DoubleType</span><span class="p">,</span> <span class="n">IntegerType</span>
+
+
+<div class="viewcode-block" id="DataFrame"><a class="viewcode-back" href="../../epidata.html#epidata.data_frame.DataFrame">[docs]</a><span class="k">class</span> <span class="nc">DataFrame</span><span class="p">:</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Measurement data in a tabular format. The data itself is stored</span>
+<span class="sd">    distributively rather than on a local computer. Distributed filtering and</span>
+<span class="sd">    distributed computations may be performed on a DataFrame, producing a new</span>
+<span class="sd">    DataFrame. In addition, the functions toPandas() and retrieve() can be used</span>
+<span class="sd">    to load a local copy of the data. A DataFrame is typically created by</span>
+<span class="sd">    calling EpidataContext.query to request measurements from Epidata servers.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jdf</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">sql_ctx</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">pdf</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pdf</span> <span class="o">=</span> <span class="n">pdf</span> <span class="ow">or</span> <span class="n">PysparkDataFrame</span><span class="p">(</span><span class="n">jdf</span><span class="p">,</span> <span class="n">sql_ctx</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pdf</span><span class="o">.</span><span class="n">__getattr__</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pdf</span><span class="o">.</span><span class="n">__getitem__</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">PysparkDataFrame</span><span class="p">):</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="n">DataFrame</span><span class="p">(</span><span class="n">pdf</span><span class="o">=</span><span class="n">ret</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ret</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pdf</span><span class="o">.</span><span class="n">__repr__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="DataFrame.cache"><a class="viewcode-back" href="../../epidata.html#epidata.data_frame.DataFrame.cache">[docs]</a>    <span class="k">def</span> <span class="nf">cache</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Request that the contents of this DataFrame be saved in memory on the</span>
+<span class="sd">        remote servers. The DataFrame will be saved in memory the next time it</span>
+<span class="sd">        is accessed. On subsequent access, the data within the DataFrame will</span>
+<span class="sd">        be read from in memory storage.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        result : epidata DataFrame</span>
+<span class="sd">            The DataFrame itself.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pdf</span><span class="o">.</span><span class="n">cache</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span>
+</div>
+<div class="viewcode-block" id="DataFrame.count"><a class="viewcode-back" href="../../epidata.html#epidata.data_frame.DataFrame.count">[docs]</a>    <span class="k">def</span> <span class="nf">count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Count the number of rows in the DataFrame.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        result : long</span>
+<span class="sd">            The number of rows in the DataFrame.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pdf</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="DataFrame.describe"><a class="viewcode-back" href="../../epidata.html#epidata.data_frame.DataFrame.describe">[docs]</a>    <span class="k">def</span> <span class="nf">describe</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate summary statistics for numeric fields.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        result : pandas DataFrame</span>
+<span class="sd">            A pandas DataFrame containing the count, mean, std, min, and max</span>
+<span class="sd">            values for numeric fields.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c"># Find numeric fields.</span>
+        <span class="n">expected_numeric_types</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">DoubleType</span><span class="p">(),</span>
+            <span class="n">IntegerType</span><span class="p">(),</span>
+            <span class="n">MeasurementValueUDT</span><span class="p">()]</span>
+        <span class="n">numeric_fields</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">dataType</span> <span class="ow">in</span> <span class="n">expected_numeric_types</span><span class="p">,</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">fields</span><span class="p">)</span>
+        <span class="n">numeric_field_names</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">numeric_fields</span><span class="p">)</span>
+        <span class="n">selected</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">numeric_field_names</span><span class="p">]</span>
+
+        <span class="c"># Calculate statistics for the numeric fields.</span>
+        <span class="n">fold_zero</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_describe_init</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">numeric_field_names</span><span class="p">]</span>
+        <span class="n">stats</span> <span class="o">=</span> <span class="n">selected</span><span class="o">.</span><span class="n">_pdf</span><span class="o">.</span><span class="n">rdd</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_describe_mapper</span><span class="p">)</span><span class="o">.</span><span class="n">fold</span><span class="p">(</span>
+            <span class="n">fold_zero</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_describe_reducer</span><span class="p">)</span>
+        <span class="n">labeled_stats</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">numeric_field_names</span><span class="p">,</span> <span class="n">stats</span><span class="p">))</span>
+        <span class="n">stats_frame</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
+            <span class="n">labeled_stats</span><span class="p">)[</span><span class="n">numeric_field_names</span><span class="p">]</span>
+
+        <span class="c"># Add additional statistics.</span>
+        <span class="n">stats_sum</span> <span class="o">=</span> <span class="n">stats_frame</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s">&#39;sum&#39;</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float64&#39;</span><span class="p">)</span>
+        <span class="n">stats_sumsq</span> <span class="o">=</span> <span class="n">stats_frame</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s">&#39;sumsq&#39;</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float64&#39;</span><span class="p">)</span>
+        <span class="n">stats_count</span> <span class="o">=</span> <span class="n">stats_frame</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s">&#39;count&#39;</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float64&#39;</span><span class="p">)</span>
+        <span class="n">stats_mean</span> <span class="o">=</span> <span class="n">stats_sum</span> <span class="o">/</span> <span class="n">stats_count</span>
+        <span class="n">stats_mean_sum_sq</span> <span class="o">=</span> <span class="n">stats_sumsq</span> <span class="o">/</span> <span class="n">stats_count</span>
+        <span class="n">stats_variance</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">stats_mean_sum_sq</span> <span class="o">-</span> <span class="n">stats_mean</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">stats_count</span> <span class="o">/</span> <span class="p">(</span><span class="n">stats_count</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">stats_frame</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s">&#39;mean&#39;</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">stats_mean</span>
+        <span class="n">stats_frame</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s">&#39;std&#39;</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">stats_variance</span><span class="p">)</span>
+
+        <span class="c"># Reorder the rows, and return.</span>
+        <span class="k">return</span> <span class="n">stats_frame</span><span class="o">.</span><span class="n">loc</span><span class="p">[[</span><span class="s">&#39;count&#39;</span><span class="p">,</span> <span class="s">&#39;mean&#39;</span><span class="p">,</span> <span class="s">&#39;std&#39;</span><span class="p">,</span> <span class="s">&#39;min&#39;</span><span class="p">,</span> <span class="s">&#39;max&#39;</span><span class="p">],</span> <span class="p">:]</span>
+</div>
+<div class="viewcode-block" id="DataFrame.describe_by_group"><a class="viewcode-back" href="../../epidata.html#epidata.data_frame.DataFrame.describe_by_group">[docs]</a>    <span class="k">def</span> <span class="nf">describe_by_group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group_col</span><span class="p">,</span> <span class="n">value_cols</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate summary statistics for groups of rows, based on the parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        group_col : string</span>
+<span class="sd">            The name of the column for grouping data when calculating summary</span>
+<span class="sd">            statistics.</span>
+<span class="sd">        value_cols : list of strings</span>
+<span class="sd">            The names of columns for which summary statistics are to be</span>
+<span class="sd">            calculated.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        result : pandas DataFrame</span>
+<span class="sd">            A pandas DataFrame containing the count, mean, std, min, and max</span>
+<span class="sd">            values for the specified groups and fields.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c"># Select the requested fields.</span>
+        <span class="n">select_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">group_col</span><span class="p">]</span> <span class="o">+</span> <span class="n">value_cols</span>
+        <span class="n">selected</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">select_cols</span><span class="p">]</span>
+
+        <span class="c"># Group by the group col and calculate statistics.</span>
+        <span class="n">stats</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">selected</span><span class="o">.</span><span class="n">_pdf</span><span class="o">.</span><span class="n">rdd</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="p">(</span>
+                <span class="n">row</span><span class="o">.</span><span class="n">asDict</span><span class="p">()[</span><span class="n">group_col</span><span class="p">],</span>
+                <span class="n">row</span><span class="p">))</span><span class="o">.</span><span class="n">mapValues</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_describe_mapper</span><span class="p">)</span><span class="o">.</span><span class="n">reduceByKey</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_describe_reducer</span><span class="p">)</span><span class="o">.</span><span class="n">collect</span><span class="p">())</span>
+
+        <span class="c"># Now combine the group names with the value cols to create new</span>
+        <span class="c"># statistics column labels.</span>
+        <span class="n">ordered_group_names</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">ordered_stats_fields</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">labeled_stats</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">ordered_group_names</span><span class="p">:</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">key_stats</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">select_cols</span><span class="p">,</span> <span class="n">stats</span><span class="p">[</span><span class="n">group</span><span class="p">]):</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="n">group_col</span><span class="p">:</span>
+                    <span class="c"># Don&#39;t report stats for the group col.</span>
+                    <span class="k">continue</span>
+                <span class="n">field_name</span> <span class="o">=</span> <span class="n">group</span> <span class="o">+</span> <span class="s">&#39;.&#39;</span> <span class="o">+</span> <span class="n">key</span>
+                <span class="n">ordered_stats_fields</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">field_name</span><span class="p">)</span>
+                <span class="n">labeled_stats</span><span class="p">[</span><span class="n">field_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">key_stats</span>
+        <span class="n">stats_frame</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
+            <span class="n">labeled_stats</span><span class="p">)[</span><span class="n">ordered_stats_fields</span><span class="p">]</span>
+
+        <span class="c"># The row index of the returned data.</span>
+        <span class="n">return_index</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;count&#39;</span><span class="p">,</span> <span class="s">&#39;mean&#39;</span><span class="p">,</span> <span class="s">&#39;std&#39;</span><span class="p">,</span> <span class="s">&#39;min&#39;</span><span class="p">,</span> <span class="s">&#39;max&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">stats_frame</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+            <span class="c"># If there is no data, return an empty pandas DataFrame.</span>
+            <span class="k">return</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">return_index</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s">&#39;float64&#39;</span><span class="p">)</span>
+
+        <span class="c"># Add additional statistics.</span>
+        <span class="n">stats_sum</span> <span class="o">=</span> <span class="n">stats_frame</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s">&#39;sum&#39;</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float64&#39;</span><span class="p">)</span>
+        <span class="n">stats_sumsq</span> <span class="o">=</span> <span class="n">stats_frame</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s">&#39;sumsq&#39;</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float64&#39;</span><span class="p">)</span>
+        <span class="n">stats_count</span> <span class="o">=</span> <span class="n">stats_frame</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s">&#39;count&#39;</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s">&#39;float64&#39;</span><span class="p">)</span>
+        <span class="n">stats_mean</span> <span class="o">=</span> <span class="n">stats_sum</span> <span class="o">/</span> <span class="n">stats_count</span>
+        <span class="n">stats_mean_sum_sq</span> <span class="o">=</span> <span class="n">stats_sumsq</span> <span class="o">/</span> <span class="n">stats_count</span>
+        <span class="n">stats_variance</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">stats_mean_sum_sq</span> <span class="o">-</span> <span class="n">stats_mean</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">stats_count</span> <span class="o">/</span> <span class="p">(</span><span class="n">stats_count</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">stats_frame</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s">&#39;mean&#39;</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">stats_mean</span>
+        <span class="n">stats_frame</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s">&#39;std&#39;</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">stats_variance</span><span class="p">)</span>
+
+        <span class="c"># Reorder the fields and return.</span>
+        <span class="k">return</span> <span class="n">stats_frame</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">return_index</span><span class="p">,</span> <span class="p">:]</span>
+</div>
+<div class="viewcode-block" id="DataFrame.distinct"><a class="viewcode-back" href="../../epidata.html#epidata.data_frame.DataFrame.distinct">[docs]</a>    <span class="k">def</span> <span class="nf">distinct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Filter out duplicate rows.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        result : epidata DataFrame</span>
+<span class="sd">            A copy of this DataFrame, but with any duplicate rows excluded.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">DataFrame</span><span class="p">(</span><span class="n">pdf</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_pdf</span><span class="o">.</span><span class="n">distinct</span><span class="p">())</span>
+</div>
+<div class="viewcode-block" id="DataFrame.filter"><a class="viewcode-back" href="../../epidata.html#epidata.data_frame.DataFrame.filter">[docs]</a>    <span class="k">def</span> <span class="nf">filter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Filter rows using a boolean condition.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        condition : Column expression or string</span>
+<span class="sd">            A condition describing matching rows (rows preserved in the output),</span>
+<span class="sd">            expressed as either a boolean expression of one or more Column</span>
+<span class="sd">            objects or a string representing a SQL expression.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        result : epidata DataFrame</span>
+<span class="sd">            A new DataFrame, containing all rows matching the condition.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">DataFrame</span><span class="p">(</span><span class="n">pdf</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_pdf</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">condition</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="DataFrame.get_device_data"><a class="viewcode-back" href="../../epidata.html#epidata.data_frame.DataFrame.get_device_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_device_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get all rows for the specified device as a pandas DataFrame.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        device_name : string</span>
+<span class="sd">            The name of the device for which data will be returned.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        result : pandas DataFrame</span>
+<span class="sd">            A pandas DataFrame containing all data for the specified device. The</span>
+<span class="sd">            rows will be sorted by timestamp if a &#39;ts&#39; field exists.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_field</span><span class="p">(</span><span class="s">&#39;device_name&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+                <span class="s">&#39;DataFrame does not contain a </span><span class="se">\&#39;</span><span class="s">device_name</span><span class="se">\&#39;</span><span class="s"> field.&#39;</span><span class="p">)</span>
+        <span class="n">filtered</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device_name</span> <span class="o">==</span> <span class="n">device_name</span><span class="p">)</span><span class="o">.</span><span class="n">toPandas</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">filtered</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="s">&#39;ts&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_field</span><span class="p">(</span><span class="s">&#39;ts&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="n">filtered</span>
+</div>
+<div class="viewcode-block" id="DataFrame.get_meas_data"><a class="viewcode-back" href="../../epidata.html#epidata.data_frame.DataFrame.get_meas_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_meas_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">meas_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get all rows for the specified measurement name as a pandas DataFrame.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        meas_name : string</span>
+<span class="sd">            The name of the measurement for which data will be returned.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        result : pandas DataFrame</span>
+<span class="sd">            A pandas DataFrame containing all data for the specified measurement.</span>
+<span class="sd">            The rows will be sorted by timestamp if a &#39;ts&#39; field exists.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_field</span><span class="p">(</span><span class="s">&#39;meas_name&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s">&#39;DataFrame does not contain a </span><span class="se">\&#39;</span><span class="s">meas_name</span><span class="se">\&#39;</span><span class="s"> field.&#39;</span><span class="p">)</span>
+        <span class="n">filtered</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meas_name</span> <span class="o">==</span> <span class="n">meas_name</span><span class="p">)</span><span class="o">.</span><span class="n">toPandas</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">filtered</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="s">&#39;ts&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_field</span><span class="p">(</span><span class="s">&#39;ts&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="n">filtered</span>
+</div>
+<div class="viewcode-block" id="DataFrame.head"><a class="viewcode-back" href="../../epidata.html#epidata.data_frame.DataFrame.head">[docs]</a>    <span class="k">def</span> <span class="nf">head</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get some rows from the DataFrame.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n : int or None, default None</span>
+<span class="sd">            The number of rows to return. By default a single row is returned.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        result : list of Rows or a single Row</span>
+<span class="sd">            A list containing the requested number of Row objects from the</span>
+<span class="sd">            DataFrame. If &#39;n&#39; is None, a single Row is returned (not within a</span>
+<span class="sd">            list).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pdf</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="DataFrame.limit"><a class="viewcode-back" href="../../epidata.html#epidata.data_frame.DataFrame.limit">[docs]</a>    <span class="k">def</span> <span class="nf">limit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a DataFrame containing a limited number of rows from this</span>
+<span class="sd">        DataFrame.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n : int</span>
+<span class="sd">            The number of rows to include in the new DataFrame.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        result : epidata DataFrame</span>
+<span class="sd">            A new DataFrame, containing no more than n rows from this DataFrame.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">DataFrame</span><span class="p">(</span><span class="n">pdf</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_pdf</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="DataFrame.retrieve"><a class="viewcode-back" href="../../epidata.html#epidata.data_frame.DataFrame.retrieve">[docs]</a>    <span class="k">def</span> <span class="nf">retrieve</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the rows from this DataFrame.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        result : list of Rows</span>
+<span class="sd">            Returns the Rows of this DataFrame as a list in local memory.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pdf</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">schema</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the schema for this DataFrame.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        result : StructType</span>
+<span class="sd">            The Dataframe&#39;s schema.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pdf</span><span class="o">.</span><span class="n">schema</span>
+
+<div class="viewcode-block" id="DataFrame.select"><a class="viewcode-back" href="../../epidata.html#epidata.data_frame.DataFrame.select">[docs]</a>    <span class="k">def</span> <span class="nf">select</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">cols</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Select columns from the DataFrame.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        cols : Column or string (or several columns or strings)</span>
+<span class="sd">            One or more data frame columns, or one or more data frame column</span>
+<span class="sd">            names, to select.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        result : DataFrame</span>
+<span class="sd">            A new DataFrame containing only the selected columns.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">DataFrame</span><span class="p">(</span><span class="n">pdf</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_pdf</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="o">*</span><span class="n">cols</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="DataFrame.sort"><a class="viewcode-back" href="../../epidata.html#epidata.data_frame.DataFrame.sort">[docs]</a>    <span class="k">def</span> <span class="nf">sort</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">cols</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sort rows from the DataFrame.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        cols : string, Column or SortOrder, or several string, column, or SortOrders</span>
+<span class="sd">            One or more columns (or column names) to sort by. And for SortOrder,</span>
+<span class="sd">            the order in which to sort them.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        result : DataFrame</span>
+<span class="sd">            A new DataFrame where the rows are reordered to match the specified</span>
+<span class="sd">            sort order.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">DataFrame</span><span class="p">(</span><span class="n">pdf</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_pdf</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="o">*</span><span class="n">cols</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="DataFrame.show"><a class="viewcode-back" href="../../epidata.html#epidata.data_frame.DataFrame.show">[docs]</a>    <span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">20</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Print some rows from the DataFrame.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n : int, default 20</span>
+<span class="sd">            The number of rows to print.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">print</span> <span class="bp">self</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">toPandas</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="DataFrame.toPandas"><a class="viewcode-back" href="../../epidata.html#epidata.data_frame.DataFrame.toPandas">[docs]</a>    <span class="k">def</span> <span class="nf">toPandas</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieve all rows as a local pandas DataFrame.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        output : pandas DataFrame</span>
+<span class="sd">            A pandas DataFrame containing the rows in this epidata DataFrame.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">fixup_rows</span><span class="p">(</span><span class="n">row</span><span class="p">):</span>
+
+            <span class="k">def</span> <span class="nf">fixup_value</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+                <span class="c"># If val is not a tuple, return it.</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">val</span>
+                <span class="c"># If val is a tuple, it is assumed to be a MeasurementValue, a</span>
+                <span class="c"># type union, and deserialized.</span>
+                <span class="k">return</span> <span class="n">MeasurementValueUDT</span><span class="p">()</span><span class="o">.</span><span class="n">deserialize</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="nb">map</span><span class="p">(</span><span class="n">fixup_value</span><span class="p">,</span> <span class="n">row</span><span class="p">)</span>
+
+        <span class="n">rows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pdf</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+        <span class="n">fixed_rows</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">fixup_rows</span><span class="p">,</span> <span class="n">rows</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_records</span><span class="p">(</span>
+            <span class="n">fixed_rows</span><span class="p">,</span>
+            <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_pdf</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="DataFrame.union"><a class="viewcode-back" href="../../epidata.html#epidata.data_frame.DataFrame.union">[docs]</a>    <span class="k">def</span> <span class="nf">union</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Combine two DataFrames.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other : DataFrame</span>
+<span class="sd">            Another DataFrame, which will be concatenated with this DataFrame</span>
+<span class="sd">            in the result. The &#39;other&#39; DataFrame must have the same schema as</span>
+<span class="sd">            this DataFrame.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        output : DataFrame</span>
+<span class="sd">            A new DataFrame combining the rows from this DataFrame and &#39;other&#39;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">DataFrame</span><span class="p">(</span><span class="n">pdf</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_pdf</span><span class="o">.</span><span class="n">unionAll</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">_pdf</span><span class="p">))</span>
+</div>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_describe_init</span><span class="p">():</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s">&#39;count&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;max&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span> <span class="s">&#39;min&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span> <span class="s">&#39;sum&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s">&#39;sumsq&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">}</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_describe_mapper</span><span class="p">(</span><span class="n">row</span><span class="p">):</span>
+        <span class="c"># Map a row to a list of aggregate values describing statistical properties</span>
+        <span class="c"># of its fields.</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">row</span><span class="p">:</span>
+            <span class="c"># All tuples are interpreted as the union type MeasurementValue. Users</span>
+            <span class="c"># are not expected to create tuple columns that are not</span>
+            <span class="c"># MeasurementValues.</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                <span class="c"># Find the value within the union tuple.</span>
+                <span class="n">new_x</span> <span class="o">=</span> <span class="bp">None</span>
+                <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">x</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">y</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                        <span class="n">new_x</span> <span class="o">=</span> <span class="n">y</span>
+                        <span class="k">break</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">new_x</span>
+            <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="c"># Exclude NULL values from aggregates.</span>
+                <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">_describe_init</span><span class="p">())</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">Number</span><span class="p">):</span>
+                <span class="c"># Statistics are computed for numeric values.</span>
+                <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">{</span><span class="s">&#39;count&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&#39;max&#39;</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span> <span class="s">&#39;min&#39;</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span> <span class="s">&#39;sum&#39;</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span> <span class="s">&#39;sumsq&#39;</span><span class="p">:</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">})</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c"># Non numeric values are counted, but aggregate fields are set</span>
+                <span class="c"># to NaN. If combined with numeric values, the resulting</span>
+                <span class="c"># aggregate fields will be NaN as well.</span>
+                <span class="n">nan</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s">&#39;nan&#39;</span><span class="p">)</span>
+                <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s">&#39;count&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                            <span class="s">&#39;max&#39;</span><span class="p">:</span> <span class="n">nan</span><span class="p">,</span>
+                            <span class="s">&#39;min&#39;</span><span class="p">:</span> <span class="n">nan</span><span class="p">,</span>
+                            <span class="s">&#39;sum&#39;</span><span class="p">:</span> <span class="n">nan</span><span class="p">,</span>
+                            <span class="s">&#39;sumsq&#39;</span><span class="p">:</span> <span class="n">nan</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">ret</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_describe_reducer</span><span class="p">(</span><span class="n">row_x</span><span class="p">,</span> <span class="n">row_y</span><span class="p">):</span>
+        <span class="c"># Combine aggregate fields for two rows.</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">row_x</span><span class="p">,</span> <span class="n">row_y</span><span class="p">):</span>
+            <span class="n">x</span><span class="p">[</span><span class="s">&#39;count&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">y</span><span class="p">[</span><span class="s">&#39;count&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">x</span><span class="p">[</span><span class="s">&#39;max&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">x</span><span class="p">[</span><span class="s">&#39;max&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="s">&#39;max&#39;</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">y</span><span class="p">[</span><span class="s">&#39;max&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">x</span><span class="p">[</span><span class="s">&#39;max&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="s">&#39;max&#39;</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="s">&#39;max&#39;</span><span class="p">]])</span>
+            <span class="k">if</span> <span class="n">x</span><span class="p">[</span><span class="s">&#39;min&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">x</span><span class="p">[</span><span class="s">&#39;min&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="s">&#39;min&#39;</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">y</span><span class="p">[</span><span class="s">&#39;min&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">x</span><span class="p">[</span><span class="s">&#39;min&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="n">x</span><span class="p">[</span><span class="s">&#39;min&#39;</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="s">&#39;min&#39;</span><span class="p">]])</span>
+            <span class="n">x</span><span class="p">[</span><span class="s">&#39;sum&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">y</span><span class="p">[</span><span class="s">&#39;sum&#39;</span><span class="p">]</span>
+            <span class="n">x</span><span class="p">[</span><span class="s">&#39;sumsq&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">y</span><span class="p">[</span><span class="s">&#39;sumsq&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">row_x</span>
+
+    <span class="k">def</span> <span class="nf">_has_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field_name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">field_name</span> <span class="ow">in</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">fields</span><span class="p">]</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">epidata  documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, EpiData, Inc.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>

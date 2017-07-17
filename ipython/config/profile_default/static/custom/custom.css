@@ -1,0 +1,32 @@
+/*
+Placeholder for custom user CSS
+
+mainly to be overridden in profile/static/custom/custom.css
+
+This will always be an empty file in IPython
+*/
+
+body.notebook_app {
+  background: none;
+}
+
+body.notebook_app div#header {
+  box-shadow: none;
+  -webkit-box-shadow: none;
+}
+
+div#header-container {
+  display: none;
+}
+
+li#new-terminal {
+  display: none;
+}
+
+li#notebook-kernels.dropdown-header {
+  display: none;
+}
+
+.hidden-during-load {
+  visibility: hidden;
+}

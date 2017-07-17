@@ -1,0 +1,37 @@
+#
+# Copyright (c) 2015-2017 EpiData, Inc.
+#
+
+# Routes
+# This file defines general application routes.
+# Additional routes files are located in the conf directory.
+# ~~~~
+
+# Login/logout pages.
+GET     /                           securesocial.controllers.LoginPage.login
+GET     /login                      securesocial.controllers.LoginPage.login
+GET     /logout                     securesocial.controllers.LoginPage.logout
+
+# Interactive notebook session.
+GET     /notebook                   controllers.Notebook.show()
+
+# Map static resources from the /public folder to the /assets URL path.
+GET     /assets/*file               controllers.Assets.at(path="/public", file)
+
+# OAuth providers entry points.
+
+GET     /authenticate/demo          controllers.DemoAuth.authenticate
+POST    /authenticate/app           controllers.DemoAuth.authenticateByPost
+
+GET     /authenticate/:provider     securesocial.controllers.ProviderController.authenticate(provider)
+POST    /authenticate/:provider     securesocial.controllers.ProviderController.authenticateByPost(provider)
+GET     /not-authorized             securesocial.controllers.ProviderController.notAuthorized
+
+# Redirect for external errors.
+GET     /error                      controllers.ErrorRedirect.show()
+
+# API based authentication.
+POST    /api/authenticate/:provider controllers.ApiAuth.authenticate(provider)
+
+POST    /kafka/measurements         controllers.KafkaController.create
+POST    /kafka/measurements_list    controllers.KafkaController.createList

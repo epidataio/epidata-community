@@ -1,0 +1,60 @@
+@(loginForm: Form[(String,String)], errorMsg: Option[String] = None)(implicit request: RequestHeader, lang: Lang)
+
+@import helper._
+@import securesocial.core.Registry
+@import securesocial.core.AuthenticationMethod._
+@import securesocial.core.providers.UsernamePasswordProvider.UsernamePassword
+@import securesocial.core.providers.GitHubProvider.GitHub
+@import providers.DemoProvider.Demo
+@import play.api._
+
+
+
+@headline = { <span>EpiData</span> }
+
+@styles = { <link rel="stylesheet" href="@routes.Assets.at("stylesheets/login.min.css")"> }
+
+@main(Messages("securesocial.login.title"), headline = headline, styles = styles) {
+    @errorMsg.map { msg =>
+        <div class="alert alert-error">
+            @Messages(msg)
+        </div>
+    }
+
+    @request.flash.get("success").map { msg =>
+        <div class="alert alert-info">
+            @msg
+        </div>
+    }
+
+    @request.flash.get("error").map { msg =>
+        <div class="alert alert-error">
+            @msg
+        </div>
+    }
+
+
+@defining( Registry.providers.all.values.filter( _.id != UsernamePassword) ) { externalProviders =>
+
+    @if(Play.current.configuration.getBoolean("securesocial.useDefaultLogin").getOrElse(false)){
+        @Registry.providers.get(Demo).map { p =>
+            <div class="main-box">
+                <p>Click here to Login</p>
+                <p>
+                    @provider(p.id)
+                </p>
+            </div>
+        }
+    } else {
+        @Registry.providers.get(GitHub).map { p =>
+            <div class="main-box">
+                <p>Login with Github</p>
+                <p>
+                    @provider(p.id)
+                </p>
+            </div>
+        }
+    }
+}
+
+}

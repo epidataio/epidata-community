@@ -1,0 +1,43 @@
+@(title: String, headline: Html = Html(""), scripts: Html = Html(""), styles: Html = Html(""))(content: Html)
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>@title</title>
+    <link rel="stylesheet" href="@routes.Assets.at("stylesheets/foundation.min.css")">
+    <link rel="stylesheet" href="@routes.Assets.at("stylesheets/main.min.css")">
+    @styles
+    <script src="@routes.Assets.at("javascripts/jquery-1.9.0.min.js")"></script>
+    <script src="@routes.Assets.at("javascripts/foundation.min.js")"></script>
+    @scripts
+  </head>
+  <body>
+    <div class="row header" style="background:#E0F2F7">
+      <div class="top-headline"><h3>@headline</h3></div>
+      <nav class="top-bar">
+        <ul class="title-area">
+          <li class="name"><h1><a href=""></a></h1></li>
+          <li class="toggle-topbar"><a href=""></a></li>
+        </ul>
+        <section class="top-bar-section">
+          <ul class="left">
+            <li class="has-dropdown"><a href="">EpiData</a></li>
+          </ul>
+          <ul class="right">
+            <li class="has-dropdown"><a href="/notebook">Notebook</a></li>
+            <li class="has-dropdown"><a id="logout" href="/logout">Logout</a></li>
+          </ul>
+        </section>
+      </nav>
+    </div>
+    <section class="content">@content</section>
+    <div>
+      <div class="row footer">
+        <dl class="sub-nav left">
+        </dl>
+        <dl class="sub-nav right">
+          <dd><a href="">EpiData, Inc. &copy; 2016</a></dd>
+        </dl>
+      </div>
+    </div>
+  </body>
+</html>

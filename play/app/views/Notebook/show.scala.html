@@ -1,0 +1,27 @@
+@scripts = {
+  <script type="text/javascript">
+    // Set up jupyterhub session management.
+    $(document).ready(function() {
+
+      // Point the iframe to the jupyterhub notebook home.
+      $('iframe#notebook').attr('src', '/jupyter');
+
+      // On logout ...
+      $('a#logout').click(function(event) {
+        event.preventDefault();
+
+        // ... first log out of the jupyterhub session using the iframe ...
+        $('iframe#notebook').hide().attr('src', '/jupyter/logout');
+        $('iframe#notebook').load(function() {
+
+          // ... then log out of the play session.
+          window.open('/logout', '_self');
+        });
+      });
+    });
+  </script>
+}
+
+@main(title = "EpiData Notebook", scripts = scripts) {
+  <iframe id='notebook'></iframe>
+}

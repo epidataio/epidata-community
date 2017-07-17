@@ -1,0 +1,183 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>epidata.context &mdash; epidata  documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/style.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="epidata  documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">epidata  documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for epidata.context</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">data_frame</span> <span class="kn">import</span> <span class="n">DataFrame</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">import</span> <span class="nn">epidata._private.py4j_additions</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">py4j.java_collections</span> <span class="kn">import</span> <span class="n">ListConverter</span><span class="p">,</span> <span class="n">MapConverter</span>
+<span class="kn">from</span> <span class="nn">pyspark</span> <span class="kn">import</span> <span class="n">SparkContext</span>
+<span class="kn">from</span> <span class="nn">pyspark.conf</span> <span class="kn">import</span> <span class="n">SparkConf</span>
+<span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">SQLContext</span>
+<span class="kn">from</span> <span class="nn">pyspark.java_gateway</span> <span class="kn">import</span> <span class="n">java_import</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+
+<div class="viewcode-block" id="EpidataContext"><a class="viewcode-back" href="../../epidata.html#epidata.context.EpidataContext">[docs]</a><span class="k">class</span> <span class="nc">EpidataContext</span><span class="p">:</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A connection to the epidata server, and all relevant context.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">spark_conf</span> <span class="o">=</span> <span class="n">SparkConf</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sc</span> <span class="o">=</span> <span class="n">SparkContext</span><span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s">&#39;SPARK_MASTER&#39;</span><span class="p">],</span>
+            <span class="s">&#39;epidata&#39;</span><span class="p">,</span>
+            <span class="n">conf</span><span class="o">=</span><span class="n">spark_conf</span><span class="p">)</span>
+        <span class="n">java_import</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sc</span><span class="o">.</span><span class="n">_jvm</span><span class="p">,</span> <span class="s">&quot;com.epidata.spark.EpidataContext&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_jec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sc</span><span class="o">.</span><span class="n">_jvm</span><span class="o">.</span><span class="n">EpidataContext</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sc</span><span class="o">.</span><span class="n">_jsc</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sql_ctx</span> <span class="o">=</span> <span class="n">SQLContext</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jec</span><span class="o">.</span><span class="n">getSQLContext</span><span class="p">())</span>
+
+<div class="viewcode-block" id="EpidataContext.query"><a class="viewcode-back" href="../../epidata.html#epidata.context.EpidataContext.query">[docs]</a>    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field_query</span><span class="p">,</span> <span class="n">begin_time</span><span class="p">,</span> <span class="n">end_time</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Query for epidata measurements.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        field_query : dictionary containing either strings or lists of strings</span>
+<span class="sd">            A dictionary containing field names and the values those fields must</span>
+<span class="sd">            contain in matching measurements. Some system configurations require</span>
+<span class="sd">            that values of specific fields be specified. A string field value</span>
+<span class="sd">            represents an equality match, while a list value represents set</span>
+<span class="sd">            membership (all values within the set are matched).</span>
+<span class="sd">        begin_time : datetime</span>
+<span class="sd">            Beginning of the time interval to query, inclusive.</span>
+<span class="sd">        end_time : datetime</span>
+<span class="sd">            End of the time interval to query, exclusive.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        result : epidata DataFrame</span>
+<span class="sd">            A DataFrame containing measurements matching the query.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">gc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sc</span><span class="o">.</span><span class="n">_gateway</span><span class="o">.</span><span class="n">_gateway_client</span>
+
+        <span class="k">def</span> <span class="nf">to_java_list</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">ListConverter</span><span class="p">()</span><span class="o">.</span><span class="n">convert</span><span class="p">([</span><span class="n">x</span><span class="p">],</span> <span class="n">gc</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">ListConverter</span><span class="p">()</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">gc</span><span class="p">)</span>
+
+        <span class="n">java_list_field_query</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">to_java_list</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                                 <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">field_query</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="n">java_field_query</span> <span class="o">=</span> <span class="n">MapConverter</span><span class="p">()</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">java_list_field_query</span><span class="p">,</span> <span class="n">gc</span><span class="p">)</span>
+        <span class="n">java_begin_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_java_timestamp</span><span class="p">(</span><span class="n">begin_time</span><span class="p">)</span>
+        <span class="n">java_end_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_java_timestamp</span><span class="p">(</span><span class="n">end_time</span><span class="p">)</span>
+        <span class="n">java_data_frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jec</span><span class="o">.</span><span class="n">query</span><span class="p">(</span>
+            <span class="n">java_field_query</span><span class="p">,</span>
+            <span class="n">java_begin_time</span><span class="p">,</span>
+            <span class="n">java_end_time</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">DataFrame</span><span class="p">(</span><span class="n">jdf</span><span class="o">=</span><span class="n">java_data_frame</span><span class="p">,</span> <span class="n">sql_ctx</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_sql_ctx</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="EpidataContext.list_keys"><a class="viewcode-back" href="../../epidata.html#epidata.context.EpidataContext.list_keys">[docs]</a>    <span class="k">def</span> <span class="nf">list_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        List the epidata measurement keys.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        result : epidata DataFrame</span>
+<span class="sd">            A DataFrame containing values of the principal fields used for</span>
+<span class="sd">            classifying measurements.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">DataFrame</span><span class="p">(</span><span class="n">jdf</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_jec</span><span class="o">.</span><span class="n">listKeys</span><span class="p">(),</span> <span class="n">sql_ctx</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_sql_ctx</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">_to_java_timestamp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dt</span><span class="p">):</span>
+        <span class="n">ts</span> <span class="o">=</span> <span class="nb">long</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">mktime</span><span class="p">(</span><span class="n">dt</span><span class="o">.</span><span class="n">timetuple</span><span class="p">())</span> <span class="o">*</span> <span class="mf">1e3</span> <span class="o">+</span> <span class="n">dt</span><span class="o">.</span><span class="n">microsecond</span> <span class="o">/</span> <span class="mf">1e3</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sc</span><span class="o">.</span><span class="n">_jvm</span><span class="o">.</span><span class="n">java</span><span class="o">.</span><span class="n">sql</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">(</span><span class="n">ts</span><span class="p">)</span>
+
+</div>
+<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;SPARK_MASTER&#39;</span><span class="p">):</span>
+    <span class="c"># The global EpidataContext.</span>
+    <span class="n">ec</span> <span class="o">=</span> <span class="n">EpidataContext</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">epidata  documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, EpiData, Inc.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>
