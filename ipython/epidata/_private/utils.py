@@ -93,7 +93,7 @@ class ConvertUtils(object):
     @staticmethod
     def try_set_cell_with_long_value(df, index, column_name, row, column_value_name):
         try:
-            value = long(row[column_value_name])
+            value = long(float(row[column_value_name]))
             df.set_value(index, column_name, value)
         except BaseException:
             df.set_value(index, column_name, np.nan)
