@@ -55,9 +55,9 @@ def IMR(measurements, meas_names=None):
 
 
 def identity(df):
-    if not 'meas_method' in df.columns:
+    if 'meas_method' not in df.columns:
         df.loc[:, 'meas_method'] = ""
-    if not 'meas_flag' in df.columns:
+    if 'meas_flag' not in df.columns:
         df.loc[:, 'meas_flag'] = ""
     return df
 
@@ -84,9 +84,11 @@ def outliers(df_input, column, method):
         outlier values. Some outlier methods may add a new column to the result
         to indicate the type of outlier.
     """
-    df = df_input[df_input['meas_value'].apply(lambda x: isinstance(x, (float, long, int, np.int64, np.float64)))]
     if method == 'quartile':
-        median = df[column].median()
+        df = df_input[df_input[column].apply(
+            lambda x: isinstance(x, (float, long, int, np.int64, np.float64)))]
+        if df.empty:
+            return df
         q1 = df[column].quantile(q=0.25)
         q3 = df[column].quantile(q=0.75)
         iqr = q3 - q1  # Interquartile Range
@@ -103,6 +105,7 @@ def outliers(df_input, column, method):
         return outliers
 
     raise ValueError('Unexpected outlier method: ' + repr(method))
+
 
 def substitute(df, meas_names, method="rolling", size=3):
     """
@@ -132,7 +135,8 @@ def substitute(df, meas_names, method="rolling", size=3):
             if ((size % 2 == 0) and (size != 0)):
                 size += 1
             if df.loc[df["meas_name"] == meas_name].size > 0:
-                indices = df.loc[df["meas_name"] == meas_name].index[df.loc[df["meas_name"]== meas_name]["meas_value"].apply(lambda x: not isinstance(x, basestring) and np.isnan(x))]
+                indices = df.loc[df["meas_name"] == meas_name].index[df.loc[df["meas_name"] == meas_name]["meas_value"].apply(
+                    lambda x: not isinstance(x, basestring) and np.isnan(x))]
                 substitutes = df.loc[df["meas_name"] == meas_name]["meas_value"].rolling(
                     window=size, min_periods=1, center=True).mean()
 
@@ -181,7 +185,8 @@ def meas_statistics(df, meas_names, method="standard"):
         return row
 
     if (method == "standard"):
-        df_filtered = df[df['meas_value'].apply(lambda x: isinstance(x, (float, long, int, np.int64, np.float64)))]
+        df_filtered = df[df['meas_value'].apply(
+            lambda x: isinstance(x, (float, long, int, np.int64, np.float64)))]
         df_grouped = df_filtered.loc[df_filtered["meas_name"].isin(meas_names)].groupby(
             ["company", "site", "station", "sensor"], as_index=False)
         df_summary = df_grouped.apply(subgroup_statistics).loc[:,

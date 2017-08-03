@@ -28,8 +28,7 @@ class EpidataContext(private val sparkContext: SparkContext) {
   private val sqlContext = new SQLContext(sparkContext)
 
   // Configuration parameters.
-  private lazy val cassandraKeyspaceName =
-    sparkContext.getConf.get("spark.epidata.cassandraKeyspaceName")
+  private lazy val cassandraKeyspaceName = sparkContext.getConf.get("spark.epidata.cassandraKeyspaceName")
   private lazy val measurementClass =
     sparkContext.getConf.get("spark.epidata.measurementClass")
 

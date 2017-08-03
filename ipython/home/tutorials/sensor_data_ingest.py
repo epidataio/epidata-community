@@ -232,22 +232,29 @@ while (True):
         # Ingest All Measurements #
         ###########################
 
-        # Measurements are created by sending an HTTP POST request to the create url.
+        # Measurements are created by sending an HTTP POST request to the
+        # create url.
         url = CREATE_MEASUREMENT_URL
 
         # Request headers add parameters to the request.
-        json_header = {'Content-type': 'application/json', 'Cookie': session_cookie}
+        json_header = {
+            'Content-type': 'application/json',
+            'Cookie': session_cookie}
 
         # Construct JSON body with data to be ingested.
         json_body = json.dumps(measurement_list)
 
         # Send the POST request and receive the HTTP response.
-        conn.request('POST', CREATE_MEASUREMENT_LIST_ROUTE, json_body, json_header)
+        conn.request(
+            'POST',
+            CREATE_MEASUREMENT_LIST_ROUTE,
+            json_body,
+            json_header)
         post_response = conn.getresponse()
 
         # Check that the response's HTTP response code is 201 (CREATED).
         assert post_response.status == 201
-        
+
         post_response.read()
 
         # Print measurement details

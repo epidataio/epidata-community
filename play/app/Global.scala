@@ -21,7 +21,9 @@ object Global extends GlobalSettings {
         app.configuration
         .getConfig("pillar.epidata").get
         .getConfig(app.mode.toString.toLowerCase).get
-        .getString("cassandra-keyspace-name").get
+        .getString("cassandra-keyspace-name").get,
+        app.configuration.getString("cassandra.username").get,
+        app.configuration.getString("cassandra.password").get
       )
 
       val kafkaServers = app.configuration.getString("kafka.servers").get

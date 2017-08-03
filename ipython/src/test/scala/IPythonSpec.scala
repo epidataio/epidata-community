@@ -17,6 +17,8 @@ class IPythonSpec extends FlatSpec with BeforeAndAfter with Matchers {
   private val hostIp = "127.0.0.1"
   private val cassandraConnectionHost = hostIp
   private val cassandraKeyspaceName = "epidata_test"
+  private val cassandraUser = "cassandra"
+  private val cassandraPassword = "epidata"
   private val sparkMaster = "local[2]"
   private val sparkUIPort = "4043"
 
@@ -33,7 +35,7 @@ class IPythonSpec extends FlatSpec with BeforeAndAfter with Matchers {
   private val epidataJarFilePath = Paths.get(s"$currentDir/spark/target/scala-2.11/$epidataJarFileName")
 
   before {
-    cluster = Cluster.builder().addContactPoint(cassandraConnectionHost).build()
+    cluster = Cluster.builder().addContactPoint(cassandraConnectionHost).withCredentials(cassandraUser, cassandraPassword).build()
     session = cluster.connect(cassandraKeyspaceName)
     Files.copy(epidataJarFilePath, epidataJarFileInSpark, StandardCopyOption.REPLACE_EXISTING)
   }
@@ -154,6 +156,10 @@ class IPythonSpec extends FlatSpec with BeforeAndAfter with Matchers {
       "--conf",
       s"spark.epidata.cassandraKeyspaceName=$cassandraKeyspaceName",
       "--conf",
+      s"spark.cassandra.auth.username=$cassandraUser",
+      "--conf",
+      s"spark.cassandra.auth.password=$cassandraPassword",
+      "--conf",
       s"spark.epidata.measurementClass=automated_test",
       "--driver-class-path",
       "spark/target/scala-2.11/epidata-spark-assembly-1.0-SNAPSHOT.jar",
@@ -242,6 +248,10 @@ class IPythonSpec extends FlatSpec with BeforeAndAfter with Matchers {
       s"spark.ui.port=$sparkUIPort",
       "--conf",
       s"spark.epidata.cassandraKeyspaceName=$cassandraKeyspaceName",
+      "--conf",
+      s"spark.cassandra.auth.username=$cassandraUser",
+      "--conf",
+      s"spark.cassandra.auth.password=$cassandraPassword",
       "--conf",
       s"spark.epidata.measurementClass=sensor_measurement",
       "--driver-class-path",
@@ -333,6 +343,10 @@ class IPythonSpec extends FlatSpec with BeforeAndAfter with Matchers {
       s"spark.ui.port=$sparkUIPort",
       "--conf",
       s"spark.epidata.cassandraKeyspaceName=$cassandraKeyspaceName",
+      "--conf",
+      s"spark.cassandra.auth.username=$cassandraUser",
+      "--conf",
+      s"spark.cassandra.auth.password=$cassandraPassword",
       "--conf",
       s"spark.epidata.measurementClass=automated_test",
       "--driver-class-path",

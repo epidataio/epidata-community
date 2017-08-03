@@ -31,7 +31,23 @@ class EpidataContext:
     """
 
     def __init__(self):
+
         spark_conf = SparkConf()
+
+        cassandra_user = spark_conf.get(
+            'spark.cassandra.auth.username', 'cassandra')
+        cassandra_pass = spark_conf.get(
+            'spark.cassandra.auth.password', 'epidata')
+        cassandra_host = spark_conf.get(
+            'spark.cassandra.connection.host', '127.0.0.1')
+        cassandra_keyspace = spark_conf.get(
+            'spark.epidata.cassandraKeyspaceName',
+            'epidata_development')
+        kafka_brokers = spark_conf.get(
+            'spark.epidata.kafka.brokers', 'localhost:9092')
+        kafka_batch_duration = int(spark_conf.get(
+            'spark.epidata.kafka.duration', '6'))
+
         self._sc = SparkContext(
             os.environ['SPARK_MASTER'],
             'epidata',
@@ -40,11 +56,13 @@ class EpidataContext:
         self._jec = self._sc._jvm.EpidataContext(self._sc._jsc)
         self._sql_ctx = SQLContext(self._sc, self._jec.getSQLContext())
         self._sql_ctx_pyspark = SQLContext(self._sc)
-        self._keyspace = "epidata_development"
+        self._cassandra_conf = {
+            'keyspace': cassandra_keyspace,
+            'user': cassandra_user,
+            'password': cassandra_pass}
         self._has_checked_memory = False
-        self._kafka_broker = os.environ.get(
-            'KAFKA_BROKER', 'localhost:9092')  # a csv list
-        self._batch_duration = 6
+        self._kafka_broker = os.environ.get('KAFKA_BROKER', kafka_brokers)
+        self._batch_duration = kafka_batch_duration
         self._ssc = StreamingContext(self._sc, self._batch_duration)
 
     def query_measurements_original(self, field_query, begin_time, end_time):
@@ -106,15 +124,14 @@ class EpidataContext:
             java_end_time)
         return DataFrame(jdf=java_data_frame, sql_ctx=self._sql_ctx)
 
-    def create_stream(self, ops, original="measurements", batch_duration=6):
+    def create_stream(self, ops, original="measurements"):
         esc = EpidataStreamingContext(
             self._sc,
             self._ssc,
             self._sql_ctx_pyspark,
             original,
             self._kafka_broker,
-            self._keyspace,
-            batch_duration)
+            self._cassandra_conf)
         esc.run_stream(ops)
 
     def start_streaming(self):

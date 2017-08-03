@@ -19,14 +19,13 @@ class EpidataStreamingContext:
             sql_ctx=None,
             topics=None,
             brokers=None,
-            keyspace=None,
-            batch_duration=6):
+            cassandra_conf=None):
         self._sc = sc
         self._sql_ctx = sql_ctx
         self._topics = topics
         self._ssc = ssc
         self._brokers = brokers
-        self._keyspace = keyspace
+        self._cassandra_conf = cassandra_conf
         self._sensor_schema = ConvertUtils.get_sensor_measurement_schema()
         self._stats_schema = ConvertUtils.get_stats_schema()
         self._kafka_producer = KafkaProducer(bootstrap_servers=self._brokers)
@@ -47,7 +46,8 @@ class EpidataStreamingContext:
                 rdd_df = self._sql_ctx.createDataFrame(rdd)
 
                 # convert to panda dataframe
-                panda_df = ConvertUtils.convert_to_sensor_pandas_dataframe(rdd_df)
+                panda_df = ConvertUtils.convert_to_sensor_pandas_dataframe(
+                    rdd_df)
 
                 # perform all transformation and save it to cassandra
                 for op in ops:
@@ -61,7 +61,8 @@ class EpidataStreamingContext:
                         if op.datastore() == "cassandra":
 
                             # clean up unnecessary column
-                            output_df = ConvertUtils.convert_meas_value(output_df, op.destination())
+                            output_df = ConvertUtils.convert_meas_value(
+                                output_df, op.destination())
 
                             # convert it back to spark data frame
                             spark_output_df = self._sql_ctx.createDataFrame(
@@ -72,11 +73,11 @@ class EpidataStreamingContext:
                                 spark_output_df, op.destination())
 
                             # save to cassandra
-                            output_df_db.write \
-                                .format("org.apache.spark.sql.cassandra") \
-                                .mode('append') \
-                                .options(table=op.destination(), keyspace=self._keyspace) \
-                                .save()
+                            output_df_db.write .format("org.apache.spark.sql.cassandra") .mode('append') .options(
+                                table=op.destination(),
+                                keyspace=self._cassandra_conf['keyspace'],
+                                user=self._cassandra_conf['user'],
+                                password=self._cassandra_conf['password']) .save()
 
                         elif op.datastore() == "kafka":
 

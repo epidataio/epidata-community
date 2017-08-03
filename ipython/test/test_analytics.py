@@ -196,10 +196,9 @@ class OutliersTest(unittest.TestCase):
             outliers(df, 'a', 'quartile').to_string())
 
     def test_quartile_string(self):
-        # Test that an error is raised on a non numeric value.
-        with self.assertRaises(TypeError):
-            df = pandas.DataFrame({'a': [1.0] * 8 + ['A STRING']})
-            outliers(df, 'a', 'quartile')
+        df = pandas.DataFrame({'a': [1.0] * 8 + ['A STRING']})
+        self.assertEqual(0,
+                         outliers(df, 'a', 'quartile').shape[0])
 
     def test_quartile_numeric_object(self):
         # Test numeric values within an object typed column.
