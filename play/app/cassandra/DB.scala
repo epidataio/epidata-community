@@ -28,8 +28,8 @@ object DB {
    * Connect to cassandra. On connect, the keyspace is created and migrated if
    * necessary.
    */
-  def connect(nodeNames: String, keyspace: String) = {
-    connection = Some(new Connection(nodeNames, keyspace))
+  def connect(nodeNames: String, keyspace: String, username: String, password: String) = {
+    connection = Some(new Connection(nodeNames, keyspace, username, password))
   }
 
   /** Generate a prepared statement. */
@@ -100,11 +100,11 @@ private class TerseMigrationReporter(stream: PrintStream) extends Reporter {
   }
 }
 
-private class Connection(nodeNames: String, keyspace: String) {
+private class Connection(nodeNames: String, keyspace: String, username: String, password: String) {
 
   val cluster = nodeNames.split(',').foldLeft(Cluster.builder())({ (builder, nodeName) =>
     try {
-      builder.addContactPoint(nodeName)
+      builder.addContactPoint(nodeName).withCredentials(username, password)
     } catch {
       case e: IllegalArgumentException => Logger.warn(e.getMessage); builder
     }

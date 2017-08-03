@@ -23,17 +23,21 @@ object DemoAuth extends Controller with securesocial.core.SecureSocial {
     Registry.providers.get(DemoProvider.Demo) match {
       case Some(p) => {
         try {
-          val user = p.fillProfile(null)
-          completeAuthentication(user, request.session)
+          request.getQueryString("token") match {
+            case Some(token) if DataService.isValidToken(token) =>
+              val user = p.fillProfile(null)
+              completeAuthentication(user, request.session)
+            case _ => Redirect(RoutesHelper.login()).flashing("error" -> Messages("Access Denied"))
+          }
 
         } catch {
           case ex: AccessDeniedException => {
-            Redirect(RoutesHelper.login()).flashing("error" -> Messages("securesocial.login.accessDenied"))
+            Redirect(RoutesHelper.login()).flashing("error" -> Messages("Access Denied"))
           }
 
           case other: Throwable => {
             Logger.error("Unable to log user in. An exception was thrown", other)
-            Redirect(RoutesHelper.login()).flashing("error" -> Messages("securesocial.login.errorLoggingIn"))
+            Redirect(RoutesHelper.login()).flashing("error" -> Messages("Error LoggingIn"))
           }
         }
       }

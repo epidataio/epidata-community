@@ -9,7 +9,6 @@
 @import play.api._
 
 
-
 @headline = { <span>EpiData</span> }
 
 @styles = { <link rel="stylesheet" href="@routes.Assets.at("stylesheets/login.min.css")"> }
@@ -39,10 +38,13 @@
     @if(Play.current.configuration.getBoolean("securesocial.useDefaultLogin").getOrElse(false)){
         @Registry.providers.get(Demo).map { p =>
             <div class="main-box">
-                <p>Click here to Login</p>
-                <p>
-                    @provider(p.id)
-                </p>
+
+                <form action="/authenticate/demo">
+                    Enter your token:<br><br>
+                    <input type="password" name="token" value="">
+                    <input type="submit" value="Login">
+                </form>
+
             </div>
         }
     } else {
