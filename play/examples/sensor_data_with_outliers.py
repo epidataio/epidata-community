@@ -25,8 +25,8 @@ arg_parser.add_argument('--host')
 args = arg_parser.parse_args()
 
 HOST = args.host or '127.0.0.1'
-AUTHENTICATION_URL = 'https://' + HOST + '/api/authenticate/github'
-AUTHENTICATION_ROUTE = '/api/authenticate/github'
+AUTHENTICATION_URL = 'https://' + HOST + '/authenticate/app'
+AUTHENTICATION_ROUTE = '/authenticate/app'
 USE_KAFKA = True
 LOG_ITERATION = 1
 
@@ -64,8 +64,8 @@ current_time = get_time(current_time_string)
 # EDIT THIS SECTION #
 #####################
 
-# Replace quoted string with your Personal Access Token value (REQUIRED)
-ACCESS_TOKEN = 'PERSONAL ACCESS TOKEN'
+# Replace quoted string with API Token or GitHub Personal Access Token (REQUIRED)
+ACCESS_TOKEN = 'API TOKEN'
 
 # Modify default values (OPTIONAL)
 COMPANY = 'EpiData'
