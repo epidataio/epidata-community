@@ -5,9 +5,9 @@
 package controllers
 
 import java.util.Date
-import com.epidata.lib.models.{ MeasurementSummary, MeasurementCleansed }
+import com.epidata.lib.models.util.JsonHelpers
+import com.epidata.lib.models.MeasurementCleansed
 import models.SensorMeasurement
-import play.api.libs.json.JsError
 import play.api.libs.json.Json
 import play.api.mvc._
 import securesocial.core.SecureSocial
@@ -17,27 +17,24 @@ import util.Ordering
 object SensorMeasurements extends Controller with SecureSocial {
 
   def create = SecuredAction(parse.json) { implicit request =>
-    SensorMeasurement.parseJson(request.body).fold(
-      errors => {
-        BadRequest(Json.obj("status" -> "ERROR", "message" -> JsError.toFlatJson(errors)))
-      },
-      sensorMeasurement => {
+    JsonHelpers.toSensorMeasurement(request.body.toString()) match {
+      case Some(sensorMeasurement) =>
         SensorMeasurement.insert(sensorMeasurement)
         Created
-      }
-    )
+      case _ => BadRequest(Json.obj("status" -> "ERROR", "message" -> "Bad Json Format!"))
+    }
   }
 
   def createList = SecuredAction(parse.json) { implicit request =>
-    SensorMeasurement.parseJsonList(request.body).fold(
-      errors => {
-        BadRequest(Json.obj("status" -> "ERROR", "message" -> JsError.toFlatJson(errors)))
-      },
-      sensorMeasurementList => {
-        SensorMeasurement.insertList(sensorMeasurementList)
-        Created
-      }
-    )
+    val sensorMeasurements = JsonHelpers.toSensorMeasurements(request.body.toString())
+    SensorMeasurement.insertList(sensorMeasurements.flatMap(x => x))
+    val failedIndexes = sensorMeasurements.zipWithIndex.filter(_._1 == None).map(_._2)
+    if (failedIndexes.isEmpty)
+      Created
+    else {
+      val message = "Failed objects: " + failedIndexes.mkString(",")
+      BadRequest(Json.obj("status" -> "ERROR", "message" -> message))
+    }
   }
 
   def query(

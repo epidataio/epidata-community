@@ -21,6 +21,7 @@ AutomatedTest = Row(
     'device_name',
     'test_name',
     'meas_name',
+    'meas_datatype',
     'meas_value',
     'meas_unit',
     'meas_status',

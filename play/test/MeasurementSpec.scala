@@ -36,7 +36,7 @@ class MeasurementSpec extends Specification {
 
     val models = time.map(t =>
       Model("customer0", "customer_site0", "collection0", "dataset0",
-        t, Some("key10"), Some("key20"), Some("key30"), 2.3, Some("meas_unit0"),
+        t, Some("key10"), Some("key20"), Some("key30"), Some("double"), 2.3, Some("meas_unit0"),
         Some("meas_status0"), Some(1.0), Some(3.3), Some("meas_description0"),
         Some("val10"), Some("val20")))
   }
@@ -183,7 +183,7 @@ class MeasurementSpec extends Specification {
 
       val measurement = Model("customer0", "customer_site0",
         "collection0", "dataset0", Fixtures.beginTime, Some("key10"),
-        Some("key20"), Some("key30"), 5.1, Some("meas_unit0"), Some("meas_status0"),
+        Some("key20"), Some("key30"), Some("double"), 5.1, Some("meas_unit0"), Some("meas_status0"),
         Some(1.1), Some(10.1), Some("meas_description0"), Some("val10"),
         Some("val20"))
 
@@ -202,7 +202,7 @@ class MeasurementSpec extends Specification {
 
       val measurement = Model("customer0", "customer_site0",
         "collection0", "dataset0", Fixtures.beginTime, Some("key10"),
-        Some("key20"), Some("key30"), 5: Long, Some("meas_unit0"), Some("meas_status0"),
+        Some("key20"), Some("key30"), Some("long"), 5: Long, Some("meas_unit0"), Some("meas_status0"),
         Some(1: Long), Some(10: Long), Some("meas_description0"), Some("val10"),
         Some("val20"))
 
@@ -223,7 +223,7 @@ class MeasurementSpec extends Specification {
 
       val measurement = Model("customer0", "customer_site0",
         "collection0", "dataset0", Fixtures.beginTime, Some("key10"),
-        Some("key20"), Some("key30"), large, Some("meas_unit0"), Some("meas_status0"),
+        Some("key20"), Some("key30"), Some("long"), large, Some("meas_unit0"), Some("meas_status0"),
         Some(large - 1), Some(large + 1), Some("meas_description0"), Some("val10"),
         Some("val20"))
 
@@ -242,7 +242,7 @@ class MeasurementSpec extends Specification {
 
       val measurement = Model("customer0", "customer_site0",
         "collection0", "dataset0", Fixtures.beginTime, Some("key10"),
-        Some("key20"), Some("key30"), "MEAS", None, Some("meas_status0"),
+        Some("key20"), Some("key30"), Some("string"), "MEAS", None, Some("meas_status0"),
         None, None, Some("meas_description0"), Some("val10"),
         Some("val20"))
 
@@ -261,7 +261,7 @@ class MeasurementSpec extends Specification {
 
       val measurement = Model("customer0", "customer_site0",
         "collection0", "dataset0", Fixtures.beginTime, Some("key10"),
-        Some("key20"), Some("key30"), bytes, Some("meas_unit0"), Some("meas_status0"),
+        Some("key20"), Some("key30"), Some("binary"), bytes, Some("meas_unit0"), Some("meas_status0"),
         None, None, Some("meas_description0"), Some("val10"), Some("val20"))
 
       Measurement.insert(measurement)

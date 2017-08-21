@@ -8,6 +8,7 @@ import com.datastax.driver.core.Row
 import com.epidata.lib.models.util.Binary
 import java.nio.ByteBuffer
 import java.util.Date
+import java.lang.{ Double => JDouble, Long => JLong }
 
 /**
  * Model representing a customer measurement stored in the database. Optional
@@ -31,6 +32,7 @@ case class Measurement(
     key1: Option[String],
     key2: Option[String],
     key3: Option[String],
+    meas_datatype: Option[String],
     meas_value: Any,
     meas_unit: Option[String],
     meas_status: Option[String],
@@ -74,6 +76,36 @@ object Measurement {
     case _ => None
   }
 
+  private def getOptionDouble(row: Row, field: String): Option[Double] = {
+    if (!row.isNull(field) && !JDouble.isNaN(row.getDouble(field)))
+      Option(row.getDouble(field))
+    else None
+  }
+
+  private def getOptionLong(row: Row, field: String): Option[Long] = {
+    if (!row.isNull(field))
+      Option(row.getLong(field))
+    else None
+  }
+
+  private def getOptionString(row: Row, field: String): Option[String] = {
+    if (!row.isNull(field) && row.getString(field).compareTo("") != 0)
+      Option(row.getString(field))
+    else None
+  }
+
+  private def getOptionBinary(row: Row, field: String): Option[Binary] = {
+    val binaryBuf = row.getBytes(field)
+    binaryBuf match {
+      case null => None
+      case _ =>
+        val valueBytes = new Array[Byte](binaryBuf.limit - binaryBuf.position)
+        binaryBuf.get(valueBytes)
+        val binary = new Binary(valueBytes)
+        Option(binary)
+    }
+  }
+
   /** Map a cassandra Row to a Measurement of the proper type. */
   implicit def rowToMeasurement(row: Row): Measurement = {
 
@@ -90,6 +122,7 @@ object Measurement {
     val key1 = blankToNone(Option(row.getString("key1")).get)
     val key2 = blankToNone(Option(row.getString("key2")).get)
     val key3 = blankToNone(Option(row.getString("key3")).get)
+    val meas_datatype = stringToOption(row.getString("meas_datatype"))
     val meas_unit = optionBlankToNone(Option(row.getString("meas_unit")))
     val meas_status = optionBlankToNone(Option(row.getString("meas_status")))
     val meas_description = optionBlankToNone(Option(row.getString("meas_description")))
@@ -100,118 +133,64 @@ object Measurement {
     // specific fields. Measurements of different types are stored using
     // different field names. The presence of these field names is used to test
     // for values of the corresponing type.
-    row.getDouble("meas_value")
-    if (!row.isNull("meas_value") && !java.lang.Double.isNaN(row.getDouble("meas_value"))) {
-      // Get a Double measurement from row.
-      Measurement(
-        customer,
-        customer_site,
-        collection,
-        dataset,
-        ts,
-        key1,
-        key2,
-        key3,
-        Option(row.getDouble("meas_value")).get,
-        meas_unit,
-        meas_status,
-        Option(row.getDouble("meas_lower_limit")),
-        Option(row.getDouble("meas_upper_limit")),
-        meas_description,
-        val1,
-        val2
-      )
-    } else if (!row.isNull("meas_value_l") && row.getLong("meas_value_l") != 0) {
-      // Get an Int measurement from row.
-      Measurement(
-        customer,
-        customer_site,
-        collection,
-        dataset,
-        ts,
-        key1,
-        key2,
-        key3,
-        Option(row.getLong("meas_value_l")).get,
-        meas_unit,
-        meas_status,
-        Option(row.getLong("meas_lower_limit_l")),
-        Option(row.getLong("meas_upper_limit_l")),
-        meas_description,
-        val1,
-        val2
-      )
-    } else if (!row.isNull("meas_value_s")) {
-      // Get a String measurement from row.
-      Measurement(
-        customer,
-        customer_site,
-        collection,
-        dataset,
-        ts,
-        key1,
-        key2,
-        key3,
-        Option(row.getString("meas_value_s")).get,
-        meas_unit,
-        meas_status,
-        // Upper and lower limits are not saved with non numeric types.
-        None,
-        None,
-        meas_description,
-        val1,
-        val2
-      )
-    } else {
-      // Otherwise, get a binary measurement from row.
-      val binaryBuf = row.getBytes("meas_value_b")
 
-      binaryBuf match {
-        case null =>
-          Measurement(
-            customer,
-            customer_site,
-            collection,
-            dataset,
-            ts,
-            key1,
-            key2,
-            key3,
-            "",
-            meas_unit,
-            meas_status,
-            None,
-            None,
-            meas_description,
-            val1,
-            val2
-          )
-        case _ =>
-          val measValue = new Array[Byte](binaryBuf.limit - binaryBuf.position)
-          binaryBuf.get(measValue)
-          val binary = new Binary(measValue)
+    val meas_value_d = getOptionDouble(row, "meas_value")
+    val meas_value_l = getOptionLong(row, "meas_value_l")
+    val meas_value_s = getOptionString(row, "meas_value_s")
 
-          Measurement(
-            customer,
-            customer_site,
-            collection,
-            dataset,
-            ts,
-            key1,
-            key2,
-            key3,
-            binary,
-            meas_unit,
-            meas_status,
-            // Upper and lower limits are not saved with non numeric types.
-            None,
-            None,
-            meas_description,
-            val1,
-            val2
-          )
+    val meas_lower_limit_d = getOptionDouble(row, "meas_lower_limit")
+    val meas_upper_limit_d = getOptionDouble(row, "meas_upper_limit")
+
+    val meas_lower_limit_l = getOptionLong(row, "meas_lower_limit_l")
+    val meas_upper_limit_l = getOptionLong(row, "meas_upper_limit_l")
+
+    val meas_value =
+      if (!meas_value_d.isEmpty)
+        meas_value_d.get
+      else if (!meas_value_s.isEmpty)
+        meas_value_s.get
+      else if (!meas_value_l.isEmpty)
+        meas_value_l.get
+      else {
+        val meas_value_b = getOptionBinary(row, "meas_value_b")
+        if (!meas_value_b.isEmpty) meas_value_b.get else None
       }
 
-    }
+    val meas_lower_limit =
+      if (!meas_lower_limit_d.isEmpty)
+        meas_lower_limit_d
+      else if (!meas_lower_limit_l.isEmpty)
+        meas_lower_limit_l
+      else
+        None
+
+    val meas_upper_limit =
+      if (!meas_upper_limit_d.isEmpty)
+        meas_upper_limit_d
+      else if (!meas_upper_limit_l.isEmpty)
+        meas_upper_limit_l
+      else
+        None
+
+    Measurement(
+      customer,
+      customer_site,
+      collection,
+      dataset,
+      ts,
+      key1,
+      key2,
+      key3,
+      meas_datatype,
+      meas_value,
+      meas_unit,
+      meas_status,
+      meas_lower_limit,
+      meas_upper_limit,
+      meas_description,
+      val1,
+      val2
+    )
+
   }
 }

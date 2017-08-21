@@ -646,12 +646,12 @@ class EpidataContextSensorMeasurementSpec extends FlatSpec with BeforeAndAfter w
     results.first.getAs[Timestamp](4).getTime should equal(ts.getTime)
     result(5) should equal("Event-1")
     result(6) should equal("Meas-1")
-    result(7) should equal(MeasurementValue(45.7))
-    result(8) should equal("degree C")
-    result(9) should equal("PASS")
-    result(10) should equal(MeasurementValue(40.0))
-    result(11) should equal(MeasurementValue(90.0))
-    result(12) should equal("Description")
+    result(8) should equal(MeasurementValue(45.7))
+    result(9) should equal("degree C")
+    result(10) should equal("PASS")
+    result(11) should equal(MeasurementValue(40.0))
+    result(12) should equal(MeasurementValue(90.0))
+    result(13) should equal("Description")
   }
 
   "Long sensor measurement" should "be returned" in {
@@ -687,12 +687,12 @@ class EpidataContextSensorMeasurementSpec extends FlatSpec with BeforeAndAfter w
     results.first.getAs[Timestamp](4).getTime should equal(ts.getTime)
     result(5) should equal("Event-1")
     result(6) should equal("Meas-1")
-    result(7) should equal(MeasurementValue(45))
-    result(8) should equal("degree C")
-    result(9) should equal("PASS")
-    result(10) should equal(MeasurementValue(40))
-    result(11) should equal(MeasurementValue(90))
-    result(12) should equal("Description")
+    result(8) should equal(MeasurementValue(45))
+    result(9) should equal("degree C")
+    result(10) should equal("PASS")
+    result(11) should equal(MeasurementValue(40))
+    result(12) should equal(MeasurementValue(90))
+    result(13) should equal("Description")
   }
 
   "Large long sensor measurement" should "be returned" in {
@@ -730,12 +730,12 @@ class EpidataContextSensorMeasurementSpec extends FlatSpec with BeforeAndAfter w
     results.first.getAs[Timestamp](4).getTime should equal(ts.getTime)
     result(5) should equal("Event-1")
     result(6) should equal("Meas-1")
-    result(7) should equal(MeasurementValue(large))
-    result(8) should equal("ns")
-    result(9) should equal("PASS")
-    result(10) should equal(MeasurementValue(large - 9))
-    result(11) should equal(MeasurementValue(large + 10))
-    result(12) should equal("Description")
+    result(8) should equal(MeasurementValue(large))
+    result(9) should equal("ns")
+    result(10) should equal("PASS")
+    result(11) should equal(MeasurementValue(large - 9))
+    result(12) should equal(MeasurementValue(large + 10))
+    result(13) should equal("Description")
   }
 
   "String sensor measurement" should "be returned" in {
@@ -771,12 +771,12 @@ class EpidataContextSensorMeasurementSpec extends FlatSpec with BeforeAndAfter w
     results.first.getAs[Timestamp](4).getTime should equal(ts.getTime)
     result(5) should equal("Event-1")
     result(6) should equal("Meas-1")
-    result(7) should equal(MeasurementValue("STRING VALUE"))
-    results.first.isNullAt(8) should be(true)
-    result(9) should equal("PASS")
-    results.first.isNullAt(10) should be(true)
+    result(8) should equal(MeasurementValue("STRING VALUE"))
+    results.first.isNullAt(9) should be(true)
+    result(10) should equal("PASS")
     results.first.isNullAt(11) should be(true)
-    result(12) should equal("Description")
+    results.first.isNullAt(12) should be(true)
+    result(13) should equal("Description")
   }
 
   "Binary sensor measurement" should "be returned" in {
@@ -813,12 +813,12 @@ class EpidataContextSensorMeasurementSpec extends FlatSpec with BeforeAndAfter w
     results.first.getAs[Timestamp](4).getTime should equal(ts.getTime)
     result(5) should equal("Event-1")
     result(6) should equal("Meas-1")
-    results.first.getAs[MeasurementValue](7).value.asInstanceOf[Array[Byte]] should equal(data)
-    result(8) should equal("V")
-    result(9) should equal("PASS")
-    results.first.isNullAt(10) should be(true)
+    results.first.getAs[MeasurementValue](8).value.asInstanceOf[Array[Byte]] should equal(data)
+    result(9) should equal("V")
+    result(10) should equal("PASS")
     results.first.isNullAt(11) should be(true)
-    result(12) should equal("Description")
+    results.first.isNullAt(12) should be(true)
+    result(13) should equal("Description")
   }
 
   "Sensor measurement query" should "fail without required fields" in {

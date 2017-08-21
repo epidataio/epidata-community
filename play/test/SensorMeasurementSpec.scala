@@ -34,28 +34,28 @@ class SensorMeasurementSpec extends Specification {
 
     val models =
       Model("co_a", "si_a", "st_a", "se_a", time(0), "ev_a",
-        "mn_a", 0.2, Some("un_a"), Some("st_a"), Some(0.0), Some(0.5),
+        "mn_a", Some("double"), 0.2, Some("un_a"), Some("st_a"), Some(0.0), Some(0.5),
         Some("de_a")) ::
         Model("co_a", "si_a", "st_a", "se_a", time(1), "ev_a",
-          "mn_b", 0.2, Some("un_a"), Some("st_a"), Some(0.0), Some(0.5),
+          "mn_b", Some("double"), 0.2, Some("un_a"), Some("st_a"), Some(0.0), Some(0.5),
           Some("de_a")) ::
           Model("co_a", "si_a", "st_a", "se_a", time(2), "ev_b",
-            "mn_b", 0.2, Some("un_a"), Some("st_a"), Some(0.0), Some(0.5),
+            "mn_b", Some("double"), 0.2, Some("un_a"), Some("st_a"), Some(0.0), Some(0.5),
             Some("de_a")) ::
             Model("co_a", "si_a", "st_a", "se_a", time(3), "ev_b",
-              "mn_c", 0.2, Some("un_a"), Some("st_a"), Some(0.0), Some(0.5),
+              "mn_c", Some("double"), 0.2, Some("un_a"), Some("st_a"), Some(0.0), Some(0.5),
               Some("de_a")) ::
               Model("co_b", "si_a", "st_a", "se_a", time(4), "ev_a",
-                "mn_a", 0.2, Some("un_a"), Some("st_a"), Some(0.0), Some(0.5),
+                "mn_a", Some("double"), 0.2, Some("un_a"), Some("st_a"), Some(0.0), Some(0.5),
                 Some("de_a")) ::
                 Model("co_a", "si_b", "st_a", "se_a", time(5), "ev_a",
-                  "mn_a", 0.2, Some("un_b"), Some("st_b"), Some(0.0),
+                  "mn_a", Some("double"), 0.2, Some("un_b"), Some("st_b"), Some(0.0),
                   Some(0.5), Some("de_b")) ::
                   Model("co_a", "si_a", "st_b", "se_a", time(6), "ev_a",
-                    "mn_a", 0.2, Some("un_c"), Some("st_c"), Some(0.0),
+                    "mn_a", Some("double"), 0.2, Some("un_c"), Some("st_c"), Some(0.0),
                     Some(0.5), Some("de_c")) ::
                     Model("co_a", "si_a", "st_a", "se_b", time(7), "ev_a",
-                      "mn_a", 0.2, Some("un_d"), Some("st_d"), Some(0.0),
+                      "mn_a", Some("double"), 0.2, Some("un_d"), Some("st_d"), Some(0.0),
                       Some(0.5), Some("de_d")) :: Nil
   }
 
@@ -77,7 +77,7 @@ class SensorMeasurementSpec extends Specification {
       ).all.size must equalTo(0)
 
       SensorMeasurement.insert(Model("com", "sit", "dg", "tes", ts, "dev",
-        "tna", 1.0, Some("uni"), Some("sta"), Some(0.0), Some(2.0), Some("des")))
+        "tna", Some("double"), 1.0, Some("uni"), Some("sta"), Some(0.0), Some(2.0), Some("des")))
 
       // Value should be correct after insert.
       val row =

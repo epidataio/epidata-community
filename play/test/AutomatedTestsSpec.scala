@@ -41,15 +41,15 @@ class AutomatedTestsSpec extends Specification {
     }
 
     val measurement1 = Model("company0", "site0", "device_group0",
-      "tester0", new Date(111000000000L), "dn0", "tn0", "mn0", 0.0,
+      "tester0", new Date(111000000000L), "dn0", "tn0", "mn0", Some("double"), 0.0,
       Some("un0"), Some("st0"), Some(0.0), Some(1.0), Some("de0"), Some("ds0"),
       Some("ts0"))
     val measurement2 = Model("company0", "site0", "device_group0",
-      "tester0", new Date(111000000001L), "dn0", "tn0", "mn0", 0.0,
+      "tester0", new Date(111000000001L), "dn0", "tn0", "mn0", Some("double"), 0.0,
       Some("un0"), Some("st0"), Some(0.0), Some(1.0), Some("de0"), Some("ds0"),
       Some("ts0"))
     val measurement3 = Model("company0", "site0", "device_group0",
-      "tester0", new Date(111000000002L), "dn0", "tn0", "mn0", "STRINGVAL",
+      "tester0", new Date(111000000002L), "dn0", "tn0", "mn0", Some("string"), "STRINGVAL",
       None, Some("st0"), None, None, Some("de0"), Some("ds0"), Some("ts0"))
   }
 

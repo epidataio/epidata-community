@@ -58,15 +58,15 @@ class ConvertUtils(object):
             # print(df.dtypes)
             for index, row in df.iterrows():
                 if row['meas_datatype'] == "double":
-                    ConvertUtils.try_set_cell_with_float_value(
-                        df, index, 'meas_value_d', row, 'meas_value')
+                    ConvertUtils.try_set_cell_with_float_value_if_not_use_string(
+                        df, index, 'meas_value_d', row, 'meas_value', 'meas_value_s')
                     ConvertUtils.try_set_cell_with_float_value(
                         df, index, 'meas_upper_limit_d', row, 'meas_upper_limit')
                     ConvertUtils.try_set_cell_with_float_value(
                         df, index, 'meas_lower_limit_d', row, 'meas_lower_limit')
                 elif row['meas_datatype'] == "long":
-                    ConvertUtils.try_set_cell_with_long_value(
-                        df, index, 'meas_value_l', row, 'meas_value')
+                    ConvertUtils.try_set_cell_with_long_value_if_not_use_string(
+                        df, index, 'meas_value_l', row, 'meas_value', 'meas_value_s')
                     ConvertUtils.try_set_cell_with_long_value(
                         df, index, 'meas_upper_limit_l', row, 'meas_upper_limit')
                     ConvertUtils.try_set_cell_with_long_value(
@@ -74,10 +74,18 @@ class ConvertUtils(object):
                 elif row['meas_datatype'] == "string":
                     ConvertUtils.try_set_cell_with_string_value(
                         df, index, 'meas_value_s', row, 'meas_value')
+                    ConvertUtils.try_set_cell_with_float_value(
+                        df, index, 'meas_upper_limit_d', row, 'meas_upper_limit')
+                    ConvertUtils.try_set_cell_with_float_value(
+                        df, index, 'meas_lower_limit_d', row, 'meas_lower_limit')
                 else:
-                    pass
+                    ConvertUtils.try_set_cell_with_float_value_if_not_use_string(
+                        df, index, 'meas_value_d', row, 'meas_value', 'meas_value_s')
+                    ConvertUtils.try_set_cell_with_float_value(
+                        df, index, 'meas_upper_limit_d', row, 'meas_upper_limit')
+                    ConvertUtils.try_set_cell_with_float_value(
+                        df, index, 'meas_lower_limit_d', row, 'meas_lower_limit')
 
-            df = df.drop('meas_datatype', 1)
             df = df.drop('meas_value', 1)
             df = df.drop('meas_upper_limit', 1)
             df = df.drop('meas_lower_limit', 1)
@@ -91,6 +99,16 @@ class ConvertUtils(object):
             return df.where(df.notnull(), None)
         else:
             return df
+
+    @staticmethod
+    def try_set_cell_with_float_value_if_not_use_string(
+            df, index, column_name, row, column_value_name, column_name_str):
+        try:
+            value = float(row[column_value_name])
+            df.set_value(index, column_name, value)
+        except BaseException:
+            ConvertUtils.try_set_cell_with_string_value(
+                df, index, column_name_str, row, column_value_name)
 
     @staticmethod
     def try_set_cell_with_float_value(
@@ -111,13 +129,26 @@ class ConvertUtils(object):
             df.set_value(index, column_name, np.nan)
 
     @staticmethod
+    def try_set_cell_with_long_value_if_not_use_string(
+            df, index, column_name, row, column_value_name, column_name_str):
+        try:
+            value = long(float(row[column_value_name]))
+            df.set_value(index, column_name, value)
+        except BaseException:
+            ConvertUtils.try_set_cell_with_string_value(
+                df, index, column_name_str, row, column_value_name)
+
+    @staticmethod
     def try_set_cell_with_string_value(
             df, index, column_name, row, column_value_name):
         try:
             value = str(row[column_value_name])
-            df.set_value(index, column_name, value)
+            if value == "":
+                df.set_value(index, column_name, np.nan)
+            else:
+                df.set_value(index, column_name, value)
         except BaseException:
-            pass
+            df.set_value(index, column_name, np.nan)
 
     @staticmethod
     def convert_to_sensor_pandas_dataframe(rdd_df):
@@ -235,6 +266,7 @@ class ConvertUtils(object):
         return StructType([
             StructField("company", StringType(), True),
             StructField("event", StringType(), True),
+            StructField("meas_datatype", StringType(), True),
             StructField("meas_description", StringType(), True),
             StructField("meas_flag", StringType(), True),
             StructField("meas_method", StringType(), True),
@@ -292,14 +324,31 @@ class ConvertUtils(object):
             .withColumnRenamed("sensor", "dataset") \
             .withColumnRenamed("event", "key1") \
             .withColumnRenamed("meas_name", "key2") \
-            .withColumn("key3", lit(""))
+            .withColumn("key3", lit("").cast(StringType()))
 
         if dest == "measurements_cleansed":
-            output_df = df\
-                .withColumn("val1", lit(None).cast(StringType())) \
-                .withColumn("val2", lit(None).cast(StringType())) \
-                .withColumn('epoch', to_epoch(df['ts'])) \
-                .withColumn('meas_value_b', lit(None).cast(BinaryType()))
+            output_df = df .withColumn(
+                "val1",
+                lit(None).cast(
+                    StringType())) .withColumn(
+                "val2",
+                lit(None).cast(
+                    StringType())) .withColumn(
+                'epoch',
+                to_epoch(
+                    df['ts'])) .withColumn(
+                'meas_value_l',
+                df['meas_value_l'].cast(
+                    LongType())) .withColumn(
+                'meas_lower_limit_l',
+                df['meas_lower_limit_l'].cast(
+                    LongType())) .withColumn(
+                'meas_upper_limit_l',
+                df['meas_upper_limit_l'].cast(
+                    LongType())) .withColumn(
+                'meas_value_b',
+                lit(None).cast(
+                    BinaryType()))
 
             return output_df.withColumn('ts', to_ts(df['ts']))
 

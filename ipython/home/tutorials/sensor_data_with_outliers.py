@@ -148,7 +148,7 @@ while (True):
                 if ((data_iteration % 3 == 0) and (log_iteration == 2)):
                     meas_value = 250
                 elif ((data_iteration % 2 == 0) and (log_iteration == 2)):
-                    meas_value = 90
+                    meas_value = None
                 else:
                     meas_value = round(random.normalvariate(70, 6), 2)
                 if (30 <= meas_value <= 120):
@@ -182,12 +182,7 @@ while (True):
                 ###################################
 
                 # Simulate Wind Speed measurement data
-                if ((data_iteration % 3 == 0) and (log_iteration == 2)):
-                    meas_value = 50
-                elif ((data_iteration % 2 == 0) and (log_iteration == 2)):
-                    meas_value = 12
-                else:
-                    meas_value = round(random.normalvariate(8, 2), 2)
+                meas_value = round(random.normalvariate(8, 2), 2)
                 if (0 < meas_value < 25):
                     meas_status = 'PASS'
                 else:

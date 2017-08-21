@@ -6,8 +6,8 @@ package com.epidata.spark.utils
 
 import java.sql.Timestamp
 
-import com.epidata.lib.models.{ MeasurementSummary, MeasurementDB }
-import com.epidata.lib.models.util.ConvertUtils
+import com.epidata.lib.models.{ MeasurementSummary }
+import com.epidata.spark.models.MeasurementDB
 import org.apache.spark.sql.Row
 
 object DataFrameUtils {
@@ -21,6 +21,7 @@ object DataFrameUtils {
     val key1: String = row.getAs[String]("key1")
     val key2: String = row.getAs[String]("key2")
     val key3: String = row.getAs[String]("key3")
+    val meas_datatype: String = row.getAs[String]("meas_datatype")
     val meas_value: Option[Double] = ConvertUtils.nullToOption(row.getAs[Double]("meas_value"))
     val meas_value_l: Option[Long] = ConvertUtils.nullToOption(row.getAs[Long]("meas_value_l"))
     val meas_value_s: Option[String] = ConvertUtils.nullToOption(row.getAs[String]("meas_value_s"))
@@ -45,6 +46,7 @@ object DataFrameUtils {
       key1,
       key2,
       key3,
+      Some(meas_datatype),
       meas_value,
       meas_value_l,
       meas_value_s,

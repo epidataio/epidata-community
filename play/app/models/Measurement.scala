@@ -47,8 +47,9 @@ object Measurement {
 
     // Insert the measurement itself.
     val measurementInsertStatement = measurement.meas_value match {
-      case _: Double | _: Long => insertNumeric(measurement)
-      case _: String | _: Binary => insertObject(measurement)
+      case _: Double | _: Long => getMeasurementInsertStatement(measurement)
+      case _: String | _: Binary => getMeasurementInsertStatement(measurement)
+      case _ => getMeasurementInsertStatementForNullMeasValue(measurement)
     }
 
     // Insert the measurement partition key into the partition key store. This
@@ -212,11 +213,18 @@ object Measurement {
 
   }
 
-  private def insertNumeric(measurement: Model): Statement = {
+  private def getMeasurementInsertStatement(measurement: Model): Statement = {
 
     val insertStatementsStr = measurement.meas_value match {
       case _: Double => insertDoubleStatements
       case _: Long => insertLongStatements
+      case _: String => insertStringStatement
+      case _: Binary => insertBlobStatement
+    }
+
+    val meas_value = measurement.meas_value match {
+      case value: Binary => ByteBuffer.wrap(value.backing)
+      case _ => measurement.meas_value.asInstanceOf[AnyRef]
     }
 
     val insertStatements = insertStatementsStr.map(DB.prepare(_))
@@ -234,7 +242,8 @@ object Measurement {
           measurement.key1.getOrElse(""),
           measurement.key2.getOrElse(""),
           measurement.key3.getOrElse(""),
-          measurement.meas_value.asInstanceOf[AnyRef],
+          measurement.meas_datatype.getOrElse(""),
+          meas_value,
           measurement.meas_unit.getOrElse(""),
           measurement.meas_status.getOrElse(""),
           measurement.meas_description.getOrElse(""),
@@ -253,7 +262,8 @@ object Measurement {
           measurement.key1.getOrElse(""),
           measurement.key2.getOrElse(""),
           measurement.key3.getOrElse(""),
-          measurement.meas_value.asInstanceOf[AnyRef],
+          measurement.meas_datatype.getOrElse(""),
+          meas_value,
           measurement.meas_unit.getOrElse(""),
           measurement.meas_status.getOrElse(""),
           measurement.meas_lower_limit.get.asInstanceOf[AnyRef],
@@ -273,7 +283,8 @@ object Measurement {
           measurement.key1.getOrElse(""),
           measurement.key2.getOrElse(""),
           measurement.key3.getOrElse(""),
-          measurement.meas_value.asInstanceOf[AnyRef],
+          measurement.meas_datatype.getOrElse(""),
+          meas_value,
           measurement.meas_unit.getOrElse(""),
           measurement.meas_status.getOrElse(""),
           measurement.meas_upper_limit.get.asInstanceOf[AnyRef],
@@ -293,7 +304,8 @@ object Measurement {
           measurement.key1.getOrElse(""),
           measurement.key2.getOrElse(""),
           measurement.key3.getOrElse(""),
-          measurement.meas_value.asInstanceOf[AnyRef],
+          measurement.meas_datatype.getOrElse(""),
+          meas_value,
           measurement.meas_unit.getOrElse(""),
           measurement.meas_status.getOrElse(""),
           measurement.meas_lower_limit.get.asInstanceOf[AnyRef],
@@ -305,44 +317,108 @@ object Measurement {
     }
   }
 
-  private def insertObject(measurement: Model): Statement = {
-    val insertStatementStr = measurement.meas_value match {
-      case _: String => insertStringStatement
-      case _: Binary => insertBlobStatement
+  private def getMeasurementInsertStatementForNullMeasValue(measurement: Model): Statement = {
+    val insertStatementsStr = measurement.meas_datatype match {
+      case Some(x) if (x.compareToIgnoreCase("long") == 0) => insertNullLongValueStatement
+      case _ => insertNullDoubleValueStatement
     }
 
-    val insertStatement = DB.prepare(insertStatementStr)
+    val insertStatements = insertStatementsStr.map(DB.prepare(_))
 
-    insertStatement.bind(
-      measurement.customer,
-      measurement.customer_site,
-      measurement.collection,
-      measurement.dataset,
-      measurement.epoch: java.lang.Integer,
-      measurement.ts,
-      measurement.key1.getOrElse(""),
-      measurement.key2.getOrElse(""),
-      measurement.key3.getOrElse(""),
-      measurement.meas_value match {
-        case value: Binary => ByteBuffer.wrap(value.backing)
-        case value => value.asInstanceOf[AnyRef]
-      },
-      measurement.meas_unit.getOrElse(""),
-      measurement.meas_status.getOrElse(""),
-      measurement.meas_description.getOrElse(""),
-      measurement.val1.getOrElse(""),
-      measurement.val2.getOrElse("")
-    )
+    (measurement.meas_lower_limit, measurement.meas_upper_limit) match {
+      case (None, None) =>
+        // Insert with neither a lower nor upper limit.
+        insertStatements(0).bind(
+          measurement.customer,
+          measurement.customer_site,
+          measurement.collection,
+          measurement.dataset,
+          measurement.epoch: java.lang.Integer,
+          measurement.ts,
+          measurement.key1.getOrElse(""),
+          measurement.key2.getOrElse(""),
+          measurement.key3.getOrElse(""),
+          measurement.meas_datatype.getOrElse(""),
+          measurement.meas_unit.getOrElse(""),
+          measurement.meas_status.getOrElse(""),
+          measurement.meas_description.getOrElse(""),
+          measurement.val1.getOrElse(""),
+          measurement.val2.getOrElse("")
+        )
+      case (_, None) =>
+        // Insert with a lower limit only.
+        insertStatements(1).bind(
+          measurement.customer,
+          measurement.customer_site,
+          measurement.collection,
+          measurement.dataset,
+          measurement.epoch: java.lang.Integer,
+          measurement.ts,
+          measurement.key1.getOrElse(""),
+          measurement.key2.getOrElse(""),
+          measurement.key3.getOrElse(""),
+          measurement.meas_datatype.getOrElse(""),
+          measurement.meas_unit.getOrElse(""),
+          measurement.meas_status.getOrElse(""),
+          measurement.meas_lower_limit.get.asInstanceOf[AnyRef],
+          measurement.meas_description.getOrElse(""),
+          measurement.val1.getOrElse(""),
+          measurement.val2.getOrElse("")
+        )
+      case (None, _) =>
+        // Insert with an upper limit only.
+        insertStatements(2).bind(
+          measurement.customer,
+          measurement.customer_site,
+          measurement.collection,
+          measurement.dataset,
+          measurement.epoch: java.lang.Integer,
+          measurement.ts,
+          measurement.key1.getOrElse(""),
+          measurement.key2.getOrElse(""),
+          measurement.key3.getOrElse(""),
+          measurement.meas_datatype.getOrElse(""),
+          measurement.meas_unit.getOrElse(""),
+          measurement.meas_status.getOrElse(""),
+          measurement.meas_upper_limit.get.asInstanceOf[AnyRef],
+          measurement.meas_description.getOrElse(""),
+          measurement.val1.getOrElse(""),
+          measurement.val2.getOrElse("")
+        )
+      case _ =>
+        // Insert with both a lower and an upper limit.
+        insertStatements(3).bind(
+          measurement.customer,
+          measurement.customer_site,
+          measurement.collection,
+          measurement.dataset,
+          measurement.epoch: java.lang.Integer,
+          measurement.ts,
+          measurement.key1.getOrElse(""),
+          measurement.key2.getOrElse(""),
+          measurement.key3.getOrElse(""),
+          measurement.meas_datatype.getOrElse(""),
+          measurement.meas_unit.getOrElse(""),
+          measurement.meas_status.getOrElse(""),
+          measurement.meas_lower_limit.get.asInstanceOf[AnyRef],
+          measurement.meas_upper_limit.get.asInstanceOf[AnyRef],
+          measurement.meas_description.getOrElse(""),
+          measurement.val1.getOrElse(""),
+          measurement.val2.getOrElse("")
+        )
+    }
   }
 
   // Prepared statements for inserting different types of measurements.
-  private lazy val insertDoubleStatements = prepareNumericInserts("")
-  private lazy val insertLongStatements = prepareNumericInserts("_l")
-  private lazy val insertStringStatement = prepareObjectInsert("_s")
-  private lazy val insertBlobStatement = prepareObjectInsert("_b")
+  private lazy val insertDoubleStatements = prepareInserts("", "")
+  private lazy val insertLongStatements = prepareInserts("_l", "_l")
+  private lazy val insertStringStatement = prepareInserts("_s", "")
+  private lazy val insertBlobStatement = prepareInserts("_b", "")
   private lazy val insertKeysStatement = prepareKeysInsert
+  private lazy val insertNullDoubleValueStatement = prepareNullValueInserts("")
+  private lazy val insertNullLongValueStatement = prepareNullValueInserts("_l")
 
-  private def prepareNumericInserts(typeSuffix: String) =
+  private def prepareInserts(typeSuffix: String, limitTypeSuffix: String) =
     List(
 
       s"""#INSERT INTO ${Model.DBTableName} (
@@ -355,27 +431,10 @@ object Measurement {
             #key1,
             #key2,
             #key3,
+            #meas_datatype,
             #meas_value${typeSuffix},
             #meas_unit,
             #meas_status,
-            #meas_description,
-            #val1,
-            #val2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#'),
-
-      s"""#INSERT INTO ${Model.DBTableName} (
-            #customer,
-            #customer_site,
-            #collection,
-            #dataset,
-            #epoch,
-            #ts,
-            #key1,
-            #key2,
-            #key3,
-            #meas_value${typeSuffix},
-            #meas_unit,
-            #meas_status,
-            #meas_lower_limit${typeSuffix},
             #meas_description,
             #val1,
             #val2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#'),
@@ -390,13 +449,15 @@ object Measurement {
             #key1,
             #key2,
             #key3,
+            #meas_datatype,
             #meas_value${typeSuffix},
             #meas_unit,
             #meas_status,
-            #meas_upper_limit${typeSuffix},
+            #meas_lower_limit${limitTypeSuffix},
             #meas_description,
             #val1,
-            #val2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#'),
+            #val2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#'),
+
       s"""#INSERT INTO ${Model.DBTableName} (
             #customer,
             #customer_site,
@@ -407,33 +468,109 @@ object Measurement {
             #key1,
             #key2,
             #key3,
+            #meas_datatype,
             #meas_value${typeSuffix},
             #meas_unit,
             #meas_status,
-            #meas_lower_limit${typeSuffix},
-            #meas_upper_limit${typeSuffix},
+            #meas_upper_limit${limitTypeSuffix},
             #meas_description,
             #val1,
-            #val2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#')
+            #val2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#'),
+      s"""#INSERT INTO ${Model.DBTableName} (
+            #customer,
+            #customer_site,
+            #collection,
+            #dataset,
+            #epoch,
+            #ts,
+            #key1,
+            #key2,
+            #key3,
+            #meas_datatype,
+            #meas_value${typeSuffix},
+            #meas_unit,
+            #meas_status,
+            #meas_lower_limit${limitTypeSuffix},
+            #meas_upper_limit${limitTypeSuffix},
+            #meas_description,
+            #val1,
+            #val2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#')
     )
 
-  private def prepareObjectInsert(typeSuffix: String) =
-    s"""#INSERT INTO ${Model.DBTableName} (
-          #customer,
-          #customer_site,
-          #collection,
-          #dataset,
-          #epoch,
-          #ts,
-          #key1,
-          #key2,
-          #key3,
-          #meas_value${typeSuffix},
-          #meas_unit,
-          #meas_status,
-          #meas_description,
-          #val1,
-          #val2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#')
+  private def prepareNullValueInserts(typeSuffix: String) =
+    List(
+
+      s"""#INSERT INTO ${Model.DBTableName} (
+         #customer,
+         #customer_site,
+         #collection,
+         #dataset,
+         #epoch,
+         #ts,
+         #key1,
+         #key2,
+         #key3,
+         #meas_datatype,
+         #meas_unit,
+         #meas_status,
+         #meas_description,
+         #val1,
+         #val2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#'),
+
+      s"""#INSERT INTO ${Model.DBTableName} (
+         #customer,
+         #customer_site,
+         #collection,
+         #dataset,
+         #epoch,
+         #ts,
+         #key1,
+         #key2,
+         #key3,
+         #meas_datatype,
+         #meas_unit,
+         #meas_status,
+         #meas_lower_limit${typeSuffix},
+         #meas_description,
+         #val1,
+         #val2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#'),
+
+      s"""#INSERT INTO ${Model.DBTableName} (
+         #customer,
+         #customer_site,
+         #collection,
+         #dataset,
+         #epoch,
+         #ts,
+         #key1,
+         #key2,
+         #key3,
+         #meas_datatype,
+         #meas_unit,
+         #meas_status,
+         #meas_upper_limit${typeSuffix},
+         #meas_description,
+         #val1,
+         #val2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#'),
+      s"""#INSERT INTO ${Model.DBTableName} (
+         #customer,
+         #customer_site,
+         #collection,
+         #dataset,
+         #epoch,
+         #ts,
+         #key1,
+         #key2,
+         #key3,
+         #meas_datatype,
+         #meas_unit,
+         #meas_status,
+         #meas_lower_limit${typeSuffix},
+         #meas_upper_limit${typeSuffix},
+         #meas_description,
+         #val1,
+         #val2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#')
+    )
 
   private def prepareKeysInsert =
     s"""#INSERT INTO ${MeasurementsKeys.DBTableName} (

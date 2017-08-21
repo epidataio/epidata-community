@@ -7,6 +7,8 @@ package service
 import com.epidata.lib.models.SensorMeasurement
 import java.security.MessageDigest
 
+import com.epidata.lib.models.util.JsonHelpers
+
 object DataService {
 
   val MeasurementTopic = "measurements"
@@ -42,7 +44,7 @@ object DataService {
   def insert(sensorMeasurement: SensorMeasurement): Unit = {
 
     val key = keyForMeasurementTopic(sensorMeasurement)
-    val value = models.SensorMeasurement.toJson(sensorMeasurement).toString()
+    val value = JsonHelpers.toJson(sensorMeasurement)
     KafkaService.sendMessage(MeasurementTopic, key, value)
   }
 

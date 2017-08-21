@@ -4,8 +4,7 @@
 
 package com.epidata.spark.ops
 
-import com.epidata.lib.models.util.ConvertUtils
-import com.epidata.spark.utils.DataFrameUtils
+import com.epidata.spark.utils.{ ConvertUtils, DataFrameUtils }
 import org.apache.spark.sql.{ SQLContext, Row, DataFrame }
 import org.apache.spark.sql.functions._
 

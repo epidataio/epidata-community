@@ -4,9 +4,9 @@
 
 package com.epidata.spark
 
-import com.epidata.lib.models.MeasurementDB
-import com.epidata.lib.models.util.ConvertUtils
+import com.epidata.spark.models.MeasurementDB
 import com.epidata.spark.ops.Transformation
+import com.epidata.spark.utils.ConvertUtils
 import kafka.serializer.StringDecoder
 import org.apache.spark.{ SparkContext, SparkConf }
 import org.apache.spark.rdd.RDD

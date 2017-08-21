@@ -6,6 +6,7 @@ package service
 
 import java.util.concurrent._
 import java.util.{ Collections, Properties }
+import com.epidata.lib.models.util.JsonHelpers
 import com.fasterxml.jackson.databind.JsonMappingException
 import controllers.SensorMeasurements._
 import models.SensorMeasurement
@@ -58,18 +59,11 @@ class DataSinkService(
 
           for (record <- records) {
             try {
-              val json: JsValue = Json.parse(record.value().toString)
-
-              val jsResult = models.SensorMeasurement.parseJson(json)
-
-              jsResult.fold(
-                errors => {
-                  Logger.error("Bad json format!")
-                },
-                sensorMeasurement => {
+              JsonHelpers.toSensorMeasurement(record.value().toString) match {
+                case Some(sensorMeasurement) =>
                   SensorMeasurement.insert(sensorMeasurement)
-                }
-              )
+                case _ => Logger.error("Bad json format!")
+              }
             } catch {
               case e: JsonMappingException => Logger.error(e.getMessage)
               case _: Throwable => Logger.error("Error while insert data to cassandra from data sink service")

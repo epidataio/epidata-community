@@ -6,9 +6,10 @@ package com.epidata.spark
 
 import com.datastax.driver.core.{ Row => CassandraRow }
 import com.epidata.lib.models.{ Measurement => BaseMeasurement, MeasurementCleansed => BaseMeasurementCleansed }
-import com.epidata.lib.models.util.{ ConvertUtils, Binary }
+import com.epidata.lib.models.util.{ Binary }
 import java.sql.Timestamp
 import java.util.Date
+import com.epidata.spark.utils.ConvertUtils
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.BaseGenericInternalRow
@@ -80,6 +81,7 @@ case class Measurement(
   key1: Option[String],
   key2: Option[String],
   key3: Option[String],
+  meas_datatype: Option[String],
   meas_value: MeasurementValue,
   meas_unit: Option[String],
   meas_status: Option[String],
@@ -106,6 +108,7 @@ object Measurement {
       base.key1,
       base.key2,
       base.key3,
+      base.meas_datatype,
       base.meas_value match {
         case b: Binary => MeasurementValue(b.backing)
         case v => MeasurementValue(v)
@@ -175,6 +178,7 @@ case class SensorMeasurement(
   ts: Timestamp,
   event: String,
   meas_name: String,
+  meas_datatype: Option[String],
   meas_value: MeasurementValue,
   meas_unit: Option[String],
   meas_status: Option[String],
@@ -194,6 +198,7 @@ object SensorMeasurement {
       measurement.ts,
       ConvertUtils.optionNoneToString(measurement.key1),
       ConvertUtils.optionNoneToString(measurement.key2),
+      measurement.meas_datatype,
       measurement.meas_value,
       measurement.meas_unit,
       measurement.meas_status,
@@ -212,6 +217,7 @@ case class MeasurementCleansed(
   key1: Option[String],
   key2: Option[String],
   key3: Option[String],
+  meas_datatype: Option[String],
   meas_value: MeasurementValue,
   meas_unit: Option[String],
   meas_status: Option[String],
@@ -240,6 +246,7 @@ object MeasurementCleansed {
       base.key1,
       base.key2,
       base.key3,
+      base.meas_datatype,
       base.meas_value match {
         case b: Binary => MeasurementValue(b.backing)
         case v => MeasurementValue(v)
@@ -267,6 +274,7 @@ case class SensorMeasurementCleansed(
   ts: Timestamp,
   event: String,
   meas_name: String,
+  meas_datatype: Option[String],
   meas_value: MeasurementValue,
   meas_unit: Option[String],
   meas_status: Option[String],
@@ -287,6 +295,7 @@ object SensorMeasurementCleansed {
       measurement.ts,
       ConvertUtils.optionNoneToString(measurement.key1),
       ConvertUtils.optionNoneToString(measurement.key2),
+      measurement.meas_datatype,
       measurement.meas_value,
       measurement.meas_unit,
       measurement.meas_status,

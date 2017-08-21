@@ -107,12 +107,14 @@ json_body = json.dumps({'accessToken': ACCESS_TOKEN})
 # conn.request.verify=False
 conn.request('POST', AUTHENTICATION_ROUTE, json_body, json_header)
 post_response = conn.getresponse()
+response_status = post_response.status
+response_text = post_response.read()
 
 # Check that the response's HTTP response code is 200 (OK).
-assert post_response.status == 200
+assert response_status == 200
 
 # Parse the JSON response.
-response_json = json.loads(post_response.read())
+response_json = json.loads(response_text)
 
 # Retrieve the new session id from the JSON response.
 session_id = response_json['sessionId']
