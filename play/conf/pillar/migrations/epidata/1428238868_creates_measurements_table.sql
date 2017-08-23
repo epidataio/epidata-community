@@ -15,6 +15,7 @@ CREATE TABLE measurements_original (
   key1 TEXT,
   key2 TEXT,
   key3 TEXT,
+  meas_datatype TEXT,
   meas_value DOUBLE,
   meas_value_l BIGINT,
   meas_value_s TEXT,

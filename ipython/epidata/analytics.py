@@ -136,7 +136,7 @@ def substitute(df, meas_names, method="rolling", size=3):
                 size += 1
             if df.loc[df["meas_name"] == meas_name].size > 0:
                 indices = df.loc[df["meas_name"] == meas_name].index[df.loc[df["meas_name"] == meas_name]["meas_value"].apply(
-                    lambda x: not isinstance(x, basestring) and np.isnan(x))]
+                    lambda x: not isinstance(x, basestring) and (x == None or np.isnan(x)))]
                 substitutes = df.loc[df["meas_name"] == meas_name]["meas_value"].rolling(
                     window=size, min_periods=1, center=True).mean()
 

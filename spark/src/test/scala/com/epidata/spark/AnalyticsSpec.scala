@@ -321,48 +321,49 @@ class AnalyticsSensorMeasurementSpec extends FlatSpec with BeforeAndAfter with B
     val row2 = imr(2).toSeq
 
     // Original meas_value field.
-    row0(7).asInstanceOf[MeasurementValue].value should equal(45.7)
-    row1(7).asInstanceOf[MeasurementValue].value should equal(48.1)
-    row2(7).asInstanceOf[MeasurementValue].value should equal(49.2)
+    print(row0)
+    row0(8).asInstanceOf[MeasurementValue].value should equal(45.7)
+    row1(8).asInstanceOf[MeasurementValue].value should equal(48.1)
+    row2(8).asInstanceOf[MeasurementValue].value should equal(49.2)
 
     // I field.
-    row0(13) should equal(45.7)
-    row1(13) should equal(48.1)
-    row2(13) should equal(49.2)
+    row0(14) should equal(45.7)
+    row1(14) should equal(48.1)
+    row2(14) should equal(49.2)
 
     val iMean = (45.7 + 48.1 + 49.2) / 3.0
-    row0(14) should equal(iMean)
-    row1(14) should equal(iMean)
-    row2(14) should equal(iMean)
+    row0(15) should equal(iMean)
+    row1(15) should equal(iMean)
+    row2(15) should equal(iMean)
 
     val iLcl = iMean - 2.66 * iMean
-    row0(15) should equal(iLcl)
-    row1(15) should equal(iLcl)
-    row2(15) should equal(iLcl)
+    row0(16) should equal(iLcl)
+    row1(16) should equal(iLcl)
+    row2(16) should equal(iLcl)
 
     val iUcl = iMean + 2.66 * iMean
-    row0(16) should equal(iUcl)
-    row1(16) should equal(iUcl)
-    row2(16) should equal(iUcl)
+    row0(17) should equal(iUcl)
+    row1(17) should equal(iUcl)
+    row2(17) should equal(iUcl)
 
     val mr = List(Double.NaN, 48.1 - 45.7, 49.2 - 48.1)
-    row0(17).asInstanceOf[Double].isNaN should be(true)
-    row1(17) should equal(mr(1))
-    row2(17) should equal(mr(2))
+    row0(18).asInstanceOf[Double].isNaN should be(true)
+    row1(18) should equal(mr(1))
+    row2(18) should equal(mr(2))
 
     val mrMean = (48.1 - 45.7 + 49.2 - 48.1) / 2.0
-    row0(18) should equal(mrMean)
-    row1(18) should equal(mrMean)
-    row2(18) should equal(mrMean)
+    row0(19) should equal(mrMean)
+    row1(19) should equal(mrMean)
+    row2(19) should equal(mrMean)
 
     val mrLcl = 0.0
-    row0(19) should equal(mrLcl)
-    row1(19) should equal(mrLcl)
-    row2(19) should equal(mrLcl)
+    row0(20) should equal(mrLcl)
+    row1(20) should equal(mrLcl)
+    row2(20) should equal(mrLcl)
 
     val mrUcl = mrMean + 3.267 * mrMean
-    row0(20) should equal(mrUcl)
-    row1(20) should equal(mrUcl)
-    row2(20) should equal(mrUcl)
+    row0(21) should equal(mrUcl)
+    row1(21) should equal(mrUcl)
+    row2(21) should equal(mrUcl)
   }
 }

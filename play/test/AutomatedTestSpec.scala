@@ -34,28 +34,28 @@ class AutomatedTestSpec extends Specification {
 
     val models =
       Model("co_a", "si_a", "dg_a", "te_a", time(0), "de_a", "te_a",
-        "na_a", 0.2, Some("un_a"), Some("st_a"), Some(0.0), Some(0.5),
+        "na_a", Some("double"), 0.2, Some("un_a"), Some("st_a"), Some(0.0), Some(0.5),
         Some("de_a"), Some("ds_a"), Some("ts_a")) ::
         Model("co_a", "si_a", "dg_a", "te_a", time(1), "de_a", "te_b",
-          "na_a", 0.2, Some("un_a"), Some("st_a"), Some(0.0), Some(0.5),
+          "na_a", Some("double"), 0.2, Some("un_a"), Some("st_a"), Some(0.0), Some(0.5),
           Some("de_a"), Some("ds_a"), Some("ts_a")) ::
           Model("co_a", "si_a", "dg_a", "te_a", time(2), "de_b", "te_b",
-            "na_a", 0.2, Some("un_a"), Some("st_a"), Some(0.0), Some(0.5),
+            "na_a", Some("double"), 0.2, Some("un_a"), Some("st_a"), Some(0.0), Some(0.5),
             Some("de_a"), Some("ds_a"), Some("ts_a")) ::
             Model("co_a", "si_a", "dg_a", "te_a", time(3), "de_b", "te_c",
-              "na_a2", 0.2, Some("un_a"), Some("st_a"), Some(0.0), Some(0.5),
+              "na_a2", Some("double"), 0.2, Some("un_a"), Some("st_a"), Some(0.0), Some(0.5),
               Some("de_a"), Some("ds_a"), Some("ts_a")) ::
               Model("co_b", "si_a", "dg_a", "te_a", time(4), "de_a", "te_a",
-                "na_a2", 0.2, Some("un_a"), Some("st_a"), Some(0.0), Some(0.5),
+                "na_a2", Some("double"), 0.2, Some("un_a"), Some("st_a"), Some(0.0), Some(0.5),
                 Some("de_a"), Some("ds_a"), Some("ts_a")) ::
                 Model("co_a", "si_b", "dg_a", "te_a", time(5), "de_a", "te_a",
-                  "na_b", 0.2, Some("un_b"), Some("st_b"), Some(0.0), Some(0.5),
+                  "na_b", Some("double"), 0.2, Some("un_b"), Some("st_b"), Some(0.0), Some(0.5),
                   Some("de_b"), Some("ds_a"), Some("ts_a")) ::
                   Model("co_a", "si_a", "dg_b", "te_a", time(6), "de_a", "te_a",
-                    "na_c", 0.2, Some("un_c"), Some("st_c"), Some(0.0), Some(0.5),
+                    "na_c", Some("double"), 0.2, Some("un_c"), Some("st_c"), Some(0.0), Some(0.5),
                     Some("de_c"), Some("ds_a"), Some("ts_a")) ::
                     Model("co_a", "si_a", "dg_a", "te_b", time(7), "de_a", "te_a",
-                      "na_d", 0.2, Some("un_d"), Some("st_d"), Some(0.0), Some(0.5),
+                      "na_d", Some("double"), 0.2, Some("un_d"), Some("st_d"), Some(0.0), Some(0.5),
                       Some("de_d"), Some("ds_a"), Some("ts_a")) :: Nil
   }
 
@@ -77,7 +77,7 @@ class AutomatedTestSpec extends Specification {
       ).all.size must equalTo(0)
 
       AutomatedTest.insert(Model("com", "sit", "dg", "tes", ts, "dev",
-        "tna", "mea", 1.0, Some("uni"), Some("sta"), Some(0.0), Some(2.0), Some("des"),
+        "tna", "mea", Some("double"), 1.0, Some("uni"), Some("sta"), Some(0.0), Some(2.0), Some("des"),
         Some("dst"), Some("tst")))
 
       // Value should be correct after insert.

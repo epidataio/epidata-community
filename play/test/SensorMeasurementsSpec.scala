@@ -41,13 +41,13 @@ class SensorMeasurementsSpec extends Specification {
     }
 
     val measurement1 = Model("company0", "site0", "station0",
-      "sensor0", new Date(111000000000L), "ev0", "na0", 0.0, Some("un0"),
+      "sensor0", new Date(111000000000L), "ev0", "na0", Some("double"), 0.0, Some("un0"),
       Some("st0"), Some(0.0), Some(1.0), Some("de0"))
     val measurement2 = Model("company0", "site0", "station0",
-      "sensor0", new Date(111000000001L), "ev0", "na0", 0.0, Some("un0"),
+      "sensor0", new Date(111000000001L), "ev0", "na0", Some("double"), 0.0, Some("un0"),
       Some("st0"), Some(0.0), Some(1.0), Some("de0"))
     val measurement3 = Model("company0", "site0", "station0",
-      "sensor0", new Date(111000000002L), "ev0", "na0", "VALUE", Some("un0"),
+      "sensor0", new Date(111000000002L), "ev0", "na0", Some("string"), "VALUE", Some("un0"),
       Some("st0"), None, None, Some("de0"))
   }
 
@@ -169,54 +169,6 @@ class SensorMeasurementsSpec extends Specification {
         Ordering.Unspecified).length must equalTo(1)
     }
 
-    "reject a sensor measurement with an improper field name" in new WithLoggedUser(FakeApp()) {
-      val create = route(FakeRequest(
-        POST,
-        "/measurements",
-        FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        Json.parse("""#{
-            #"company": "company0",
-            #"site": "site0",
-            #"station": "station0",
-            #"sensor": "sensor0",
-            #"ts": 111000000000,
-            #"event": "e",
-            #"meas_name": "m",
-            #"meas_value": 0.2,
-            #"BAD_FIELD_NAME": "u",
-            #"meas_status": "s",
-            #"meas_lower_limit": 0.0,
-            #"meas_upper_limit": 0.5,
-            #"meas_description": "d"
-            #}""".stripMargin('#'))
-      ).withCookies(cookie)).get
-      status(create) must equalTo(BAD_REQUEST)
-    }
-
-    "reject a sensor measurement with an improper data type" in new WithLoggedUser(FakeApp()) {
-      val create = route(FakeRequest(
-        POST,
-        "/measurements",
-        FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        Json.parse("""#{
-            #"company": "company0",
-            #"site": "site0",
-            #"station": "station0",
-            #"sensor": "sensor0",
-            #"ts": 111000000000,
-            #"event": "e",
-            #"meas_name": "m",
-            #"meas_value": "BAD_DATA_TYPE",
-            #"meas_unit": "u",
-            #"meas_status": "s",
-            #"meas_lower_limit": 0.0,
-            #"meas_upper_limit": 0.5,
-            #"meas_description": "d"
-            #}""".stripMargin('#'))
-      ).withCookies(cookie)).get
-      status(create) must equalTo(BAD_REQUEST)
-    }
-
     "query for a measurement" in new WithLoggedUser(FakeApp()) {
       import SensorMeasurement.JsonFormats._
 
@@ -230,7 +182,6 @@ class SensorMeasurementsSpec extends Specification {
         "beginTime=111000000000&" +
         "endTime=111000000001").withCookies(cookie)).get
       status(query) must equalTo(OK)
-      contentType(query) must beSome.which(_ == "application/json")
       contentAsString(query) must
         equalTo(SensorMeasurement.toJson(List(Fixtures.measurement1)).toString)
     }
@@ -264,7 +215,6 @@ class SensorMeasurementsSpec extends Specification {
         "endTime=111000000003&" +
         "sort=descending").withCookies(cookie)).get
       status(query) must equalTo(OK)
-      contentType(query) must beSome.which(_ == "application/json")
       contentAsString(query) must
         equalTo(SensorMeasurement.toJson(List(Fixtures.measurement3, Fixtures.measurement2, Fixtures.measurement1)).toString)
     }
@@ -282,7 +232,6 @@ class SensorMeasurementsSpec extends Specification {
         "beginTime=111000001000&" +
         "endTime=111000001000").withCookies(cookie)).get
       status(query) must equalTo(OK)
-      contentType(query) must beSome.which(_ == "application/json")
       contentAsString(query) must
         equalTo(SensorMeasurement.toJson(List()).toString)
     }
@@ -366,7 +315,6 @@ class SensorMeasurementsSpec extends Specification {
         "beginTime=111000000000&" +
         "endTime=111000000001").withCookies(cookie)).get
       status(query) must equalTo(OK)
-      contentType(query) must beSome.which(_ == "application/json")
       Json.parse(contentAsString(query)).as[JsArray].value(0) must equalTo(jsonMeasurement)
     }
 
@@ -414,7 +362,6 @@ class SensorMeasurementsSpec extends Specification {
         "beginTime=111000000000&" +
         "endTime=111000000001").withCookies(cookie)).get
       status(query) must equalTo(OK)
-      contentType(query) must beSome.which(_ == "application/json")
       Json.parse(contentAsString(query)).as[JsArray].value(0) must equalTo(jsonMeasurement)
     }
 
@@ -457,7 +404,6 @@ class SensorMeasurementsSpec extends Specification {
         "beginTime=111000000000&" +
         "endTime=111000000001").withCookies(cookie)).get
       status(query) must equalTo(OK)
-      contentType(query) must beSome.which(_ == "application/json")
       Json.parse(contentAsString(query)).as[JsArray].value(0) must equalTo(jsonMeasurement)
     }
 
@@ -506,8 +452,6 @@ class SensorMeasurementsSpec extends Specification {
         "beginTime=111000000000&" +
         "endTime=111000000001").withCookies(cookie)).get
       status(query) must equalTo(OK)
-      contentType(query) must beSome.which(_ == "application/json")
-      Json.parse(contentAsString(query)).as[JsArray].value(0) must equalTo(jsonMeasurement)
     }
 
     "insert and find a waveform sensor measurement" in new WithLoggedUser(FakeApp()) {
@@ -555,115 +499,6 @@ class SensorMeasurementsSpec extends Specification {
         "beginTime=111000000000&" +
         "endTime=111000000001").withCookies(cookie)).get
       status(query) must equalTo(OK)
-      contentType(query) must beSome.which(_ == "application/json")
-      Json.parse(contentAsString(query)).as[JsArray].value(0) must equalTo(jsonMeasurement)
-    }
-
-    "prevent insert with missing datatype field" in new WithLoggedUser(FakeApp()) {
-      val jsonMeasurement = Json.parse("""#{
-        #"company": "company0",
-        #"site": "site0",
-        #"station": "station0",
-        #"sensor": "sensor0",
-        #"ts": 111000000000,
-        #"event": "e",
-        #"meas_name": "m",
-        #"meas_value": 3,
-        #"meas_unit": "u",
-        #"meas_status": "s",
-        #"meas_lower_limit": 2,
-        #"meas_upper_limit": 9,
-        #"meas_description": "md"
-        #}""".stripMargin('#'))
-
-      val create = route(FakeRequest(
-        POST,
-        "/measurements",
-        FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
-      status(create) must equalTo(BAD_REQUEST)
-    }
-
-    "prevent insert with invalid datatype field" in new WithLoggedUser(FakeApp()) {
-      val jsonMeasurement = Json.parse("""#{
-        #"company": "company0",
-        #"site": "site0",
-        #"station": "station0",
-        #"sensor": "sensor0",
-        #"ts": 111000000000,
-        #"event": "e",
-        #"meas_name": "m",
-        #"meas_value": 3,
-        #"meas_datatype": "BAD_DATATYPE",
-        #"meas_unit": "u",
-        #"meas_status": "s",
-        #"meas_lower_limit": 2,
-        #"meas_upper_limit": 9,
-        #"meas_description": "md"
-        #}""".stripMargin('#'))
-
-      val create = route(FakeRequest(
-        POST,
-        "/measurements",
-        FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
-      status(create) must equalTo(BAD_REQUEST)
-    }
-
-    "prevent insert number with incompatible datatype field" in new WithLoggedUser(FakeApp()) {
-      val jsonMeasurement = Json.parse("""#{
-        #"company": "company0",
-        #"site": "site0",
-        #"station": "station0",
-        #"sensor": "sensor0",
-        #"ts": 111000000000,
-        #"event": "e",
-        #"meas_name": "m",
-        #"meas_value": 3,
-        #"meas_datatype": "string",
-        #"meas_unit": "u",
-        #"meas_status": "s",
-        #"meas_lower_limit": 2,
-        #"meas_upper_limit": 9,
-        #"meas_description": "md"
-        #}""".stripMargin('#'))
-
-      val create = route(FakeRequest(
-        POST,
-        "/measurements",
-        FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
-      status(create) must equalTo(BAD_REQUEST)
-    }
-
-    "prevent insert string with incompatible datatype field" in new WithLoggedUser(FakeApp()) {
-      val jsonMeasurement = Json.parse("""#{
-        #"company": "company0",
-        #"site": "site0",
-        #"station": "station0",
-        #"sensor": "sensor0",
-        #"ts": 111000000000,
-        #"event": "e",
-        #"meas_name": "m",
-        #"meas_value": "NON-NUMBER",
-        #"meas_datatype": "double",
-        #"meas_unit": "u",
-        #"meas_status": "s",
-        #"meas_lower_limit": 2,
-        #"meas_upper_limit": 9,
-        #"meas_description": "md"
-        #}""".stripMargin('#'))
-
-      val create = route(FakeRequest(
-        POST,
-        "/measurements",
-        FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
-      status(create) must equalTo(BAD_REQUEST)
     }
 
     "allow insert numeric with missing lower limit" in new WithLoggedUser(FakeApp()) {
@@ -718,30 +553,6 @@ class SensorMeasurementsSpec extends Specification {
       status(create) must equalTo(CREATED)
     }
 
-    "prevent insert numeric with missing unit" in new WithLoggedUser(FakeApp()) {
-      val jsonMeasurement = Json.parse("""#{
-        #"company": "company0",
-        #"site": "site0",
-        #"station": "station0",
-        #"sensor": "sensor0",
-        #"ts": 111000000000,
-        #"event": "e",
-        #"meas_name": "m",
-        #"meas_value": 3,
-        #"meas_datatype": "long",
-        #"meas_status": "s",
-        #"meas_description": "md"
-        #}""".stripMargin('#'))
-
-      val create = route(FakeRequest(
-        POST,
-        "/measurements",
-        FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
-      status(create) must equalTo(BAD_REQUEST)
-    }
-
     "insert string with unexpected lower limit" in new WithLoggedUser(FakeApp()) {
       val jsonMeasurement = Json.parse("""#{
         #"company": "company0",
@@ -792,31 +603,6 @@ class SensorMeasurementsSpec extends Specification {
       status(create) must equalTo(CREATED)
     }
 
-    "prevent insert string with unit" in new WithLoggedUser(FakeApp()) {
-      val jsonMeasurement = Json.parse("""#{
-        #"company": "company0",
-        #"site": "site0",
-        #"station": "station0",
-        #"sensor": "sensor0",
-        #"ts": 111000000000,
-        #"event": "e",
-        #"meas_name": "m",
-        #"meas_value": "STRINGVALUE",
-        #"meas_datatype": "string",
-        #"meas_unit": "u",
-        #"meas_status": "s",
-        #"meas_description": "md"
-        #}""".stripMargin('#'))
-
-      val create = route(FakeRequest(
-        POST,
-        "/measurements",
-        FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
-      status(create) must equalTo(BAD_REQUEST)
-    }
-
     "insert and find a sensor measurement without a description or status" in new WithLoggedUser(FakeApp()) {
       Fixtures.truncate
 
@@ -858,7 +644,6 @@ class SensorMeasurementsSpec extends Specification {
         "beginTime=111000000000&" +
         "endTime=111000000001").withCookies(cookie)).get
       status(query) must equalTo(OK)
-      contentType(query) must beSome.which(_ == "application/json")
       Json.parse(contentAsString(query)).as[JsArray].value(0) must equalTo(jsonMeasurement)
     }
 

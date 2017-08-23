@@ -234,6 +234,7 @@ object AutomatedTest {
         test.device_name,
         test.test_name,
         test.meas_name,
+        Some(test.meas_datatype),
         meas_value,
         test.meas_unit,
         test.meas_status,

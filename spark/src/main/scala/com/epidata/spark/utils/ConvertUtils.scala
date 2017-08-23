@@ -1,12 +1,14 @@
 /*
-* Copyright (c) 2015-2017 EpiData, Inc.
+ * Copyright (c) 2015-2017 EpiData, Inc.
 */
 
-package com.epidata.lib.models.util
+package com.epidata.spark.utils
 
 import java.sql.Timestamp
 
 import com.epidata.lib.models._
+import com.epidata.lib.models.util.{ JsonHelpers, Binary }
+import com.epidata.spark.models.MeasurementDB
 
 object ConvertUtils {
 
@@ -46,6 +48,7 @@ object ConvertUtils {
       optionNoneToString(meas.key1),
       optionNoneToString(meas.key2),
       optionNoneToString(meas.key3),
+      meas.meas_datatype,
       Some(meas.meas_value.asInstanceOf[Double]),
       None,
       None,
@@ -73,6 +76,7 @@ object ConvertUtils {
       optionNoneToString(meas.key1),
       optionNoneToString(meas.key2),
       optionNoneToString(meas.key3),
+      meas.meas_datatype,
       None,
       Some(meas.meas_value.asInstanceOf[Long]),
       None,
@@ -100,6 +104,7 @@ object ConvertUtils {
       optionNoneToString(meas.key1),
       optionNoneToString(meas.key2),
       optionNoneToString(meas.key3),
+      meas.meas_datatype,
       None,
       None,
       Some(meas.meas_value.asInstanceOf[String]),
@@ -127,6 +132,7 @@ object ConvertUtils {
       optionNoneToString(meas.key1),
       optionNoneToString(meas.key2),
       optionNoneToString(meas.key3),
+      meas.meas_datatype,
       None,
       None,
       None,
@@ -160,3 +166,4 @@ object ConvertUtils {
   }
 
 }
+
