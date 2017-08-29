@@ -1,4 +1,4 @@
-Epidata
+EpiData
 =====================================
 EpiData is an integrated IoT Analytics Platform. It enables smarter industrial solutions including energy management, building automation and smart manufacturing. 
 
@@ -13,7 +13,12 @@ Jupyter Notebook
 
 Installation and Launch
 ------------------------
-Detailed installation and launch scripts are available in epidata-install repository. We recommend cloning epidata-community repository to epidata folder within ubuntu user's home directory (/home/ubuntu).
+- Docker Container:
+The epidata-community docker image is available as a stand-alone package with all code and required components. To build and start a docker container, simply execute the command shown below (replacing 'epidata123' with a custom token):  
+    docker run -p 443:443 -it -e token=epidata123 epidataio/epidata-community:0.10.0
+
+- Installation Scripts:
+One can also set up EpiData plaform by followig the installation and launch scripts available in epidata-install repository. We recommend cloning epidata-community repository to epidata folder within ubuntu user's home directory (/home/ubuntu).
 
 
 Configuration
@@ -32,4 +37,4 @@ After launch, EpiData platform is ready to ingest and process sensor data. To ac
 
 Resources
 ----------
-EpiData community-edition is supported via its GitHub repository site.
+EpiData community-edition is managed via this GitHub repository site. For enterprise support and services, please contact info@epidata.co.
