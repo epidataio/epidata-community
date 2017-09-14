@@ -7,12 +7,14 @@ import com.datastax.driver.core.exceptions.NoHostAvailableException
 import play.api._
 import play.api.mvc._
 import play.api.mvc.Results._
-import service.{ DataService, DataSinkService, KafkaService }
+import service.{ Configs, DataService, DataSinkService, KafkaService }
 import scala.concurrent.Future
 
 object Global extends GlobalSettings {
 
   override def onStart(app: Application) {
+
+    Configs.init(app.configuration)
 
     // Connect to the Cassandra database.
     try {
@@ -28,10 +30,12 @@ object Global extends GlobalSettings {
 
       val kafkaServers = app.configuration.getString("kafka.servers").get
       KafkaService.init(kafkaServers)
+
+      val tokens = app.configuration.getStringList("application.api.tokens").get
+
       val kafkaConsumer = new DataSinkService(kafkaServers, "data-sink-group", DataService.MeasurementTopic)
       kafkaConsumer.run()
-
-      DataService.init(app.configuration.getStringList("application.api.tokens").get)
+      DataService.init(tokens, false)
 
     } catch {
       case e: NoHostAvailableException =>

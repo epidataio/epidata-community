@@ -4,20 +4,24 @@
 
 package service
 
-import com.epidata.lib.models.SensorMeasurement
 import java.security.MessageDigest
 
+import com.epidata.lib.models.SensorMeasurement
 import com.epidata.lib.models.util.JsonHelpers
+import models.{ SensorMeasurement => Model }
+import util.EpidataMetrics
 
 object DataService {
 
   val MeasurementTopic = "measurements"
   private val Delim = "_"
   private var registered_tokens: Seq[String] = List.empty
+  private var saveToCassandra: Boolean = false
 
-  def init(tokens: java.util.List[String]) = {
+  def init(tokens: java.util.List[String], twoWaysIngestion: Boolean) = {
     import collection.JavaConverters._
     registered_tokens = tokens.asScala
+    saveToCassandra = twoWaysIngestion
   }
 
   def getMd5(inputStr: String): String = {
