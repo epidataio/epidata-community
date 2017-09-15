@@ -16,6 +16,7 @@ import java.util.Date
 import org.joda.time.Instant
 import play.api.Logger
 import play.api.Play
+import util.EpidataMetrics
 
 /**
  * Singleton object for managing the server's connection to a Cassandra
@@ -37,15 +38,19 @@ object DB {
 
   /** Execute a previously prepared statement. */
   def execute(statement: Statement): ResultSet = {
-    connection.get.execute(statement)
+    val rs = connection.get.execute(statement)
+    rs
   }
 
   /** Execute a previously prepared statement. */
   def batchExecute(statements: List[Statement]): ResultSet = {
+    val t0 = EpidataMetrics.getCurrentTime
     val batch = new BatchStatement()
     statements.foreach(s => batch.add(s))
     // execute the batch
-    connection.get.execute(batch)
+    val rs = connection.get.execute(batch)
+    EpidataMetrics.increment("DB.batchExecute", t0)
+    rs
   }
 
   /** Execute a CQL statement by binding ordered attributes. */

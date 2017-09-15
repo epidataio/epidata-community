@@ -11,7 +11,7 @@ import models.SensorMeasurement
 import play.api.libs.json.Json
 import play.api.mvc._
 import securesocial.core.SecureSocial
-import util.Ordering
+import util.{ EpidataMetrics, Ordering }
 
 /** Controller for sensor measurement data. */
 object SensorMeasurements extends Controller with SecureSocial {
@@ -28,6 +28,7 @@ object SensorMeasurements extends Controller with SecureSocial {
   def createList = SecuredAction(parse.json) { implicit request =>
     val sensorMeasurements = JsonHelpers.toSensorMeasurements(request.body.toString())
     SensorMeasurement.insertList(sensorMeasurements.flatMap(x => x))
+
     val failedIndexes = sensorMeasurements.zipWithIndex.filter(_._1 == None).map(_._2)
     if (failedIndexes.isEmpty)
       Created
