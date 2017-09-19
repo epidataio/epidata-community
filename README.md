@@ -18,16 +18,16 @@ The epidata-community docker image is available as a stand-alone package with al
     - docker run -p 443:443 -it -e token=epidata123 epidataio/epidata-community:0.10.0
 
     Below are other useful docker commands:
-    - Pull the docker image
-        docker pull epidataio/epidata-community:0.10.0
+    - Pull the docker image: 
+        - docker pull epidataio/epidata-community:0.10.0
     - List all docker containers:
-        docker ps -a
+        - docker ps -a
     - Stop a docker container:
-        docker stop <container_id>
+        - docker stop <container_id>
     - Start a stopped docker container:
-        docker start <container_id>
-    - Start epidata application on a running container
-        docker exec -it <container_id> ./epidata-start.sh -p 443:443
+        - docker start <container_id>
+    - Start epidata application on a running container:
+        - docker exec -it <container_id> ./epidata-start.sh -p 443:443
 
 
 - Installation Scripts:
