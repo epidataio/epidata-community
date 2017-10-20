@@ -33,27 +33,33 @@ class EpidataContext:
     def __init__(self):
 
         spark_conf = SparkConf()
-
-        cassandra_user = spark_conf.get(
-            'spark.cassandra.auth.username', 'cassandra')
-        cassandra_pass = spark_conf.get(
-            'spark.cassandra.auth.password', 'epidata')
-        cassandra_host = spark_conf.get(
-            'spark.cassandra.connection.host', '127.0.0.1')
-        cassandra_keyspace = spark_conf.get(
-            'spark.epidata.cassandraKeyspaceName',
-            'epidata_development')
-        kafka_brokers = spark_conf.get(
-            'spark.epidata.kafka.brokers', 'localhost:9092')
-        kafka_batch_duration = int(spark_conf.get(
-            'spark.epidata.kafka.duration', '6'))
-
         self._sc = SparkContext(
             os.environ['SPARK_MASTER'],
             'epidata',
             conf=spark_conf)
+
+        # get epidata spark conf
+        conf = self._sc.getConf()
+
+        cassandra_user = conf.get(
+            'spark.cassandra.auth.username', 'cassandra')
+        cassandra_pass = conf.get(
+            'spark.cassandra.auth.password', 'epidata')
+        cassandra_host = conf.get(
+            'spark.cassandra.connection.host', '127.0.0.1')
+        cassandra_keyspace = conf.get(
+            'spark.epidata.cassandraKeyspaceName',
+            'epidata_development')
+        kafka_brokers = conf.get(
+            'spark.epidata.kafka.brokers', 'localhost:9092')
+        kafka_batch_duration = int(conf.get(
+            'spark.epidata.kafka.duration', '6'))
+        self._measurement_class = conf.get(
+            'spark.epidata.measurementClass', 'sensor_measurement')
+
         java_import(self._sc._jvm, "com.epidata.spark.EpidataContext")
         self._jec = self._sc._jvm.EpidataContext(self._sc._jsc)
+
         self._sql_ctx = SQLContext(self._sc, self._jec.getSQLContext())
         self._sql_ctx_pyspark = SQLContext(self._sc)
         self._cassandra_conf = {
@@ -124,15 +130,16 @@ class EpidataContext:
             java_end_time)
         return DataFrame(jdf=java_data_frame, sql_ctx=self._sql_ctx)
 
-    def create_stream(self, ops, original="measurements"):
+    def create_stream(self, ops, original="measurements", clean_up=True):
         esc = EpidataStreamingContext(
             self._sc,
             self._ssc,
             self._sql_ctx_pyspark,
             original,
             self._kafka_broker,
-            self._cassandra_conf)
-        esc.run_stream(ops)
+            self._cassandra_conf,
+            self._measurement_class)
+        esc.run_stream(ops, clean_up)
 
     def start_streaming(self):
         def _start():

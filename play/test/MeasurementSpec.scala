@@ -6,7 +6,7 @@ import cassandra.DB
 import com.epidata.lib.models.{ Measurement => Model }
 import com.epidata.lib.models.util.Binary
 import java.util.Date
-import models.Measurement
+import models.MeasurementService
 import models.SensorMeasurement
 import org.specs2.mutable._
 import org.specs2.runner._
@@ -23,10 +23,14 @@ class MeasurementSpec extends Specification {
   object Fixtures {
     val truncateSQL = s"TRUNCATE ${Model.DBTableName}"
     def truncate = DB.cql(truncateSQL)
+    def cleanUp = {
+      truncate
+      MeasurementService.reset
+    }
 
     def install = {
-      truncate
-      models.foreach(Measurement.insert(_))
+      cleanUp
+      models.foreach(MeasurementService.insert(_))
     }
 
     val beginTime = new Date(1428004316000L)
@@ -49,11 +53,11 @@ class MeasurementSpec extends Specification {
       // Specify beginning and ending timestamps within a single epoch.
       val beginTime = Fixtures.time(0)
       val endTime = Fixtures.time(1)
-      assume(Measurement.epochForTs(beginTime) ==
-        Measurement.epochForTs(endTime))
+      assume(MeasurementService.epochForTs(beginTime) ==
+        MeasurementService.epochForTs(endTime))
 
       // Check that the results match.
-      Measurement.find(
+      MeasurementService.find(
         "customer0",
         "customer_site0",
         "collection0",
@@ -76,11 +80,11 @@ class MeasurementSpec extends Specification {
       // Specify beginning and ending timestamps within two adjacent epochs.
       val beginTime = Fixtures.time(0)
       val endTime = Fixtures.time(3)
-      assume(Measurement.epochForTs(beginTime) + 1 ==
-        Measurement.epochForTs(endTime))
+      assume(MeasurementService.epochForTs(beginTime) + 1 ==
+        MeasurementService.epochForTs(endTime))
 
       // Check that the results match.
-      Measurement.find(
+      MeasurementService.find(
         "customer0",
         "customer_site0",
         "collection0",
@@ -103,11 +107,11 @@ class MeasurementSpec extends Specification {
       // Specify beginning and ending timestamps within nearby epochs.
       val beginTime = Fixtures.time(0)
       val endTime = Fixtures.time(5)
-      assume(Measurement.epochForTs(beginTime) + 2 ==
-        Measurement.epochForTs(endTime))
+      assume(MeasurementService.epochForTs(beginTime) + 2 ==
+        MeasurementService.epochForTs(endTime))
 
       // Check that the results match.
-      Measurement.find(
+      MeasurementService.find(
         "customer0",
         "customer_site0",
         "collection0",
@@ -130,11 +134,11 @@ class MeasurementSpec extends Specification {
       // Specify beginning and ending timestamps within a single epoch.
       val beginTime = Fixtures.time(0)
       val endTime = Fixtures.time(1)
-      assume(Measurement.epochForTs(beginTime) ==
-        Measurement.epochForTs(endTime))
+      assume(MeasurementService.epochForTs(beginTime) ==
+        MeasurementService.epochForTs(endTime))
 
       // Check that the results match, in order.
-      Measurement.find(
+      MeasurementService.find(
         "customer0",
         "customer_site0",
         "collection0",
@@ -157,11 +161,11 @@ class MeasurementSpec extends Specification {
       // Specify beginning and ending timestamps within two adjacent epochs.
       val beginTime = Fixtures.time(0)
       val endTime = Fixtures.time(3)
-      assume(Measurement.epochForTs(beginTime) + 1 ==
-        Measurement.epochForTs(endTime))
+      assume(MeasurementService.epochForTs(beginTime) + 1 ==
+        MeasurementService.epochForTs(endTime))
 
       // Check that the results match, in order.
-      Measurement.find(
+      MeasurementService.find(
         "customer0",
         "customer_site0",
         "collection0",
@@ -179,7 +183,7 @@ class MeasurementSpec extends Specification {
     }
 
     "insert and find double measurements" in new WithApplication {
-      Fixtures.truncate
+      Fixtures.cleanUp
 
       val measurement = Model("customer0", "customer_site0",
         "collection0", "dataset0", Fixtures.beginTime, Some("key10"),
@@ -187,9 +191,9 @@ class MeasurementSpec extends Specification {
         Some(1.1), Some(10.1), Some("meas_description0"), Some("val10"),
         Some("val20"))
 
-      Measurement.insert(measurement)
+      MeasurementService.insert(measurement)
 
-      val found = Measurement.find("customer0", "customer_site0",
+      val found = MeasurementService.find("customer0", "customer_site0",
         "collection0", "dataset0", Fixtures.beginTime, Fixtures.endTime)
       found.length must equalTo(1)
       found(0).meas_value must beTypedEqualTo(5.1)
@@ -198,7 +202,7 @@ class MeasurementSpec extends Specification {
     }
 
     "insert and find long measurement" in new WithApplication {
-      Fixtures.truncate
+      Fixtures.cleanUp
 
       val measurement = Model("customer0", "customer_site0",
         "collection0", "dataset0", Fixtures.beginTime, Some("key10"),
@@ -206,9 +210,9 @@ class MeasurementSpec extends Specification {
         Some(1: Long), Some(10: Long), Some("meas_description0"), Some("val10"),
         Some("val20"))
 
-      Measurement.insert(measurement)
+      MeasurementService.insert(measurement)
 
-      val found = Measurement.find("customer0", "customer_site0",
+      val found = MeasurementService.find("customer0", "customer_site0",
         "collection0", "dataset0", Fixtures.beginTime, Fixtures.endTime)
       found.length must equalTo(1)
       found(0).meas_value must beTypedEqualTo(5: Long)
@@ -217,7 +221,7 @@ class MeasurementSpec extends Specification {
     }
 
     "insert and find large long measurement" in new WithApplication {
-      Fixtures.truncate
+      Fixtures.cleanUp
 
       val large = 3448388841L
 
@@ -227,9 +231,9 @@ class MeasurementSpec extends Specification {
         Some(large - 1), Some(large + 1), Some("meas_description0"), Some("val10"),
         Some("val20"))
 
-      Measurement.insert(measurement)
+      MeasurementService.insert(measurement)
 
-      val found = Measurement.find("customer0", "customer_site0",
+      val found = MeasurementService.find("customer0", "customer_site0",
         "collection0", "dataset0", Fixtures.beginTime, Fixtures.endTime)
       found.length must equalTo(1)
       found(0).meas_value must beTypedEqualTo(large)
@@ -238,7 +242,7 @@ class MeasurementSpec extends Specification {
     }
 
     "insert and find string measurements" in new WithApplication {
-      Fixtures.truncate
+      Fixtures.cleanUp
 
       val measurement = Model("customer0", "customer_site0",
         "collection0", "dataset0", Fixtures.beginTime, Some("key10"),
@@ -246,16 +250,16 @@ class MeasurementSpec extends Specification {
         None, None, Some("meas_description0"), Some("val10"),
         Some("val20"))
 
-      Measurement.insert(measurement)
+      MeasurementService.insert(measurement)
 
-      val found = Measurement.find("customer0", "customer_site0",
+      val found = MeasurementService.find("customer0", "customer_site0",
         "collection0", "dataset0", Fixtures.beginTime, Fixtures.endTime)
       found.length must equalTo(1)
       found(0).meas_value must beTypedEqualTo("MEAS")
     }
 
     "insert and find blob measurements" in new WithApplication {
-      Fixtures.truncate
+      Fixtures.cleanUp
 
       val bytes: Binary = new Binary(Array('b'.toByte, 'i'.toByte, 'n'.toByte, 0.toByte))
 
@@ -264,9 +268,9 @@ class MeasurementSpec extends Specification {
         Some("key20"), Some("key30"), Some("binary"), bytes, Some("meas_unit0"), Some("meas_status0"),
         None, None, Some("meas_description0"), Some("val10"), Some("val20"))
 
-      Measurement.insert(measurement)
+      MeasurementService.insert(measurement)
 
-      val found = Measurement.find("customer0", "customer_site0",
+      val found = MeasurementService.find("customer0", "customer_site0",
         "collection0", "dataset0", Fixtures.beginTime, Fixtures.endTime)
       found.length must equalTo(1)
       found(0).meas_value.asInstanceOf[Binary].backing must beTypedEqualTo(bytes.backing)

@@ -4,6 +4,7 @@
 
 import cassandra.DB
 import com.datastax.driver.core.exceptions.NoHostAvailableException
+import com.epidata.lib.models.{ SensorMeasurement, AutomatedTest }
 import play.api._
 import play.api.mvc._
 import play.api.mvc.Results._
@@ -33,9 +34,12 @@ object Global extends GlobalSettings {
 
       val tokens = app.configuration.getStringList("application.api.tokens").get
 
-      val kafkaConsumer = new DataSinkService(kafkaServers, "data-sink-group", DataService.MeasurementTopic)
-      kafkaConsumer.run()
-      DataService.init(tokens, false)
+      DataService.init(tokens)
+
+      if (!app.configuration.getBoolean("application.ingestion.2ways").getOrElse(false)) {
+        val kafkaConsumer = new DataSinkService(kafkaServers, "data-sink-group", DataService.MeasurementTopic)
+        kafkaConsumer.run()
+      }
 
     } catch {
       case e: NoHostAvailableException =>
@@ -47,8 +51,7 @@ object Global extends GlobalSettings {
   // This attribute holds the associated routes.
   private lazy val measurementRoutes =
     Play.current.configuration.getString("measurement-class").get match {
-      case "automated_test" => automated_test.Routes
-      case "sensor_measurement" => sensor_measurement.Routes
+      case SensorMeasurement.NAME => sensor_measurement.Routes
     }
 
   override def onRouteRequest(req: RequestHeader): Option[Handler] =

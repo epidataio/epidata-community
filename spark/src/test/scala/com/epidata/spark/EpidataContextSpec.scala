@@ -98,14 +98,14 @@ class EpidataContextAutomatedTestSpec extends FlatSpec with BeforeAndAfter with 
     result(5) should equal("100001")
     result(6) should equal("Test-1")
     result(7) should equal("Meas-1")
-    result(8) should equal(MeasurementValue(45.7))
-    result(9) should equal("degree C")
-    result(10) should equal("PASS")
-    result(11) should equal(MeasurementValue(40.0))
-    result(12) should equal(MeasurementValue(90.0))
-    result(13) should equal("Description")
-    result(14) should equal("PASS")
+    result(9) should equal(MeasurementValue(45.7))
+    result(10) should equal("degree C")
+    result(11) should equal("PASS")
+    result(12) should equal(MeasurementValue(40.0))
+    result(13) should equal(MeasurementValue(90.0))
+    result(14) should equal("Description")
     result(15) should equal("PASS")
+    result(16) should equal("PASS")
   }
 
   "Long automated test" should "be returned" in {
@@ -142,14 +142,14 @@ class EpidataContextAutomatedTestSpec extends FlatSpec with BeforeAndAfter with 
     result(5) should equal("100001")
     result(6) should equal("Test-1")
     result(7) should equal("Meas-1")
-    result(8) should equal(MeasurementValue(45))
-    result(9) should equal("degree C")
-    result(10) should equal("PASS")
-    result(11) should equal(MeasurementValue(40))
-    result(12) should equal(MeasurementValue(90))
-    result(13) should equal("Description")
-    result(14) should equal("PASS")
+    result(9) should equal(MeasurementValue(45))
+    result(10) should equal("degree C")
+    result(11) should equal("PASS")
+    result(12) should equal(MeasurementValue(40))
+    result(13) should equal(MeasurementValue(90))
+    result(14) should equal("Description")
     result(15) should equal("PASS")
+    result(16) should equal("PASS")
   }
 
   "String automated test" should "be returned" in {
@@ -186,14 +186,14 @@ class EpidataContextAutomatedTestSpec extends FlatSpec with BeforeAndAfter with 
     result(5) should equal("100001")
     result(6) should equal("Test-1")
     result(7) should equal("Meas-1")
-    result(8) should equal(MeasurementValue("POWER ON"))
-    results.first.isNullAt(9) should be(true)
-    result(10) should equal("PASS")
-    results.first.isNullAt(11) should be(true)
+    result(9) should equal(MeasurementValue("POWER ON"))
+    results.first.isNullAt(10) should be(true)
+    result(11) should equal("PASS")
     results.first.isNullAt(12) should be(true)
-    result(13) should equal("Description")
-    result(14) should equal("PASS")
+    results.first.isNullAt(13) should be(true)
+    result(14) should equal("Description")
     result(15) should equal("PASS")
+    result(16) should equal("PASS")
   }
 
   "Binary automated test" should "be returned" in {
@@ -231,14 +231,13 @@ class EpidataContextAutomatedTestSpec extends FlatSpec with BeforeAndAfter with 
     result(5) should equal("100001")
     result(6) should equal("Test-1")
     result(7) should equal("Meas-1")
-    results.first.getAs[MeasurementValue](8).value.asInstanceOf[Array[Byte]] should equal(data)
-    result(9) should equal("V")
-    result(10) should equal("PASS")
-    results.first.isNullAt(11) should be(true)
+    result(10) should equal("V")
+    result(11) should equal("PASS")
     results.first.isNullAt(12) should be(true)
-    result(13) should equal("Description")
-    result(14) should equal("PASS")
+    results.first.isNullAt(13) should be(true)
+    result(14) should equal("Description")
     result(15) should equal("PASS")
+    result(16) should equal("PASS")
   }
 
   "Automated test query" should "fail without required fields" in {
@@ -384,10 +383,10 @@ class EpidataContextAutomatedTestSpec extends FlatSpec with BeforeAndAfter with 
     results.count should equal(2)
     results.first.toSeq(1) should equal("Site-1")
     results.first.toSeq(7) should equal("Meas-1")
-    results.first.toSeq(10) should equal("PASS")
+    results.first.toSeq(11) should equal("PASS")
     results.collect()(1).toSeq(1) should equal("Site-1")
     results.collect()(1).toSeq(7) should equal("Meas-1")
-    results.collect()(1).toSeq(10) should equal("PASS")
+    results.collect()(1).toSeq(11) should equal("PASS")
   }
 
   "Automated test query" should "query by set membership" in {
@@ -463,7 +462,7 @@ class EpidataContextAutomatedTestSpec extends FlatSpec with BeforeAndAfter with 
     sortedResults(2).toSeq(3) should equal("Station-2")
     sortedResults(3).toSeq(1) should equal("Site-2")
     sortedResults(3).toSeq(3) should equal("Station-2")
-    sortedResults(3).toSeq(10) should equal("FAIL")
+    sortedResults(3).toSeq(10) should equal("degree C")
   }
 
   "Automated test query" should "return results for two epochs" in {

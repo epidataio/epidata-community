@@ -4,30 +4,65 @@
 
 package models
 
-import com.datastax.driver.core.ResultSet
-import com.epidata.lib.models.{ SensorMeasurement => BaseSensorMeasurement, MeasurementSummary }
-import com.epidata.lib.models.util.JsonHelpers
+import com.epidata.lib.models.{ SensorMeasurement => BaseSensorMeasurement, Measurement }
+import play.api.Logger
 import play.api.libs.json._
 import _root_.util.Ordering
+import service.{ Configs, KafkaService, DataService }
 import scala.collection.convert.WrapAsScala
 
-import java.util.{ Date, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList }
+import java.util.Date
 import scala.language.implicitConversions
-import scala.collection.JavaConverters._
 
 object SensorMeasurement {
 
   import com.epidata.lib.models.SensorMeasurement._
-  import com.epidata.lib.models.MeasurementSummary._
+
+  val name: String = "SensorMeasurement"
+
+  private def keyForMeasurementTopic(measurement: BaseSensorMeasurement): String = {
+    val key =
+      s"""
+         |${measurement.customer}${DataService.Delim}
+         |${measurement.customer_site}${DataService.Delim}
+         |${measurement.collection}${DataService.Delim}
+         |${measurement.dataset}${DataService.Delim}
+         |${measurement.epoch}
+       """.stripMargin
+    DataService.getMd5(key)
+  }
 
   /**
    * Insert a Double sensor measurement into the database.
    * @param sensorMeasurement The SensorMeasurement to insert.
    */
-  def insert(sensorMeasurement: BaseSensorMeasurement): Unit =
-    Measurement.insert(sensorMeasurement)
+  def insert(sensorMeasurement: BaseSensorMeasurement) = MeasurementService.insert(sensorMeasurement)
+  def insert(sensorMeasurementList: List[BaseSensorMeasurement]) = MeasurementService.bulkInsert(sensorMeasurementList)
 
-  def insertList(sensorMeasurementList: List[BaseSensorMeasurement]): Unit = Measurement.bulkInsert(sensorMeasurementList)
+  def insertRecordFromKafka(str: String) = {
+    BaseSensorMeasurement.jsonToSensorMeasurement(str) match {
+      case Some(sensorMeasurement) => insert(sensorMeasurement)
+      case _ => Logger.error("Bad json format!")
+    }
+  }
+
+  /**
+   * Insert a measurement into the kafka.
+   * @param sensorMeasurement The Measurement to insert.
+   */
+  def insertToKafka(sensorMeasurement: BaseSensorMeasurement): Unit = {
+
+    val key = keyForMeasurementTopic(sensorMeasurement)
+    val value = BaseSensorMeasurement.toJson(sensorMeasurement)
+    KafkaService.sendMessage(Measurement.KafkaTopic, key, value)
+  }
+
+  def insertToKafka(sensorMeasurementList: List[BaseSensorMeasurement]): Unit = {
+    sensorMeasurementList.foreach(m => insertToKafka(m))
+    if (Configs.twoWaysIngestion) {
+      insert(sensorMeasurementList)
+    }
+  }
 
   /**
    * Find sensor measurements in the database matching the specified parameters.
@@ -49,102 +84,10 @@ object SensorMeasurement {
     endTime: Date,
     ordering: Ordering.Value,
     tableName: String = com.epidata.lib.models.Measurement.DBTableName
-  ): List[BaseSensorMeasurement] = Measurement.find(company, site, station, sensor, beginTime, endTime, ordering, tableName)
+  ): List[BaseSensorMeasurement] = MeasurementService.find(company, site, station, sensor, beginTime, endTime, ordering, tableName)
     .map(measurementToSensorMeasurement)
 
-  def query(
-    company: String,
-    site: String,
-    station: String,
-    sensor: String,
-    beginTime: Date,
-    endTime: Date,
-    size: Int,
-    batch: String,
-    ordering: Ordering.Value,
-    tableName: String = com.epidata.lib.models.Measurement.DBTableName
-  ): String = {
-
-    // Get the data from Cassandra
-    val rs: ResultSet = Measurement.query(company, site, station, sensor, beginTime, endTime, ordering, tableName, size, batch)
-
-    // Get the next page info
-    val nextPage = rs.getExecutionInfo().getPagingState()
-    val nextBatch = if (nextPage == null) "" else nextPage.toString
-
-    // only return the available ones by not fetching.
-    val rows = 1.to(rs.getAvailableWithoutFetching()).map(_ => rs.one())
-
-    // Convert the model to SensorMeasurements
-
-    val records = new JLinkedList[JLinkedHashMap[String, Object]]()
-
-    tableName match {
-      case MeasurementSummary.DBTableName =>
-        val measurements = rows
-          .map(MeasurementSummary.rowToMeasurementSummary)
-          .toList
-          .map(measurementSummaryToSensorMeasurementSummary)
-
-        records.addAll(
-          measurements
-          .map(m => JsonHelpers.toJLinkedHashMap(m))
-          .asJavaCollection
-        )
-
-      case com.epidata.lib.models.MeasurementCleansed.DBTableName =>
-        val measurements = rows
-          .map(com.epidata.lib.models.MeasurementCleansed.rowToMeasurementCleansed)
-          .toList
-          .map(measurementCleansedToSensorMeasurementCleansed)
-
-        records.addAll(
-          measurements
-          .map(m => JsonHelpers.toJLinkedHashMap(m))
-          .asJavaCollection
-        )
-
-      case com.epidata.lib.models.Measurement.DBTableName =>
-        val measurements = rows
-          .map(com.epidata.lib.models.Measurement.rowToMeasurement)
-          .toList
-          .map(measurementToSensorMeasurement)
-
-        records.addAll(
-          measurements
-          .map(m => JsonHelpers.toJLinkedHashMap(m))
-          .asJavaCollection
-        )
-    }
-
-    // Return the json object
-    JsonHelpers.toJson(records, nextBatch)
-  }
-
   /** Convert a list of SensorMeasurement to a json representation. */
-  def toJson(sensorMeasurements: List[BaseSensorMeasurement]): String = JsonHelpers.toJson(sensorMeasurements)
-
-  object JsonFormats {
-
-    def convertNaNToDouble(double: Double): Double = {
-      if (java.lang.Double.isNaN(double)) java.lang.Double.valueOf(0) else double
-    }
-
-    def convertAnyValToDouble(double: AnyVal): Double = {
-      try {
-        convertNaNToDouble(double.asInstanceOf[Double])
-      } catch {
-        case _: Throwable => 0
-      }
-    }
-
-    def timestampToDate(t: java.sql.Timestamp): Date = new Date(t.getTime)
-    def dateToTimestamp(dt: Date): java.sql.Timestamp = new java.sql.Timestamp(dt.getTime)
-
-    implicit val timestampFormat = new Format[java.sql.Timestamp] {
-      def writes(t: java.sql.Timestamp): JsValue = Json.toJson(timestampToDate(t))
-      def reads(json: JsValue): JsResult[java.sql.Timestamp] = Json.fromJson[Date](json).map(dateToTimestamp)
-    }
-  }
+  def toJson(sensorMeasurements: List[BaseSensorMeasurement]): String = BaseSensorMeasurement.toJson(sensorMeasurements)
 
 }

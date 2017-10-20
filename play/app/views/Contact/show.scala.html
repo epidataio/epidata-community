@@ -1,0 +1,19 @@
+@(contactForm: Form[Contact])(implicit request: RequestHeader)
+
+@styles = { <link rel="stylesheet" href="@routes.Assets.at("stylesheets/contact.min.css")"> }
+
+@main(title = "Contact", styles = styles) {
+  @request.flash.get("success").map { msg =>
+      <div class="alert alert-info">
+          @msg
+      </div>
+  }
+
+  <div class="contact-form">
+    @helper.form(action = routes.Contact.submit) {
+      @helper.inputText(contactForm("Email"))
+      @helper.textarea(contactForm("Message"))
+      <button type="submit">Send</button>
+    }
+  </div>
+}

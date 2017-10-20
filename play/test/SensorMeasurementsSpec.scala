@@ -8,7 +8,7 @@ import com.epidata.lib.models.util.Binary
 import com.epidata.lib.models.util.Datatype
 import java.util.Date
 import javax.xml.bind.DatatypeConverter
-import models.SensorMeasurement
+import models.{ MeasurementService, SensorMeasurement }
 import org.specs2.mutable._
 import org.specs2.runner._
 import org.junit.runner._
@@ -33,8 +33,13 @@ class SensorMeasurementsSpec extends Specification {
     val truncateSQL = s"TRUNCATE ${com.epidata.lib.models.Measurement.DBTableName}"
     def truncate = DB.cql(truncateSQL)
 
-    def install = {
+    def cleanUp = {
       truncate
+      MeasurementService.reset
+    }
+
+    def install = {
+      cleanUp
       SensorMeasurement.insert(measurement1)
       SensorMeasurement.insert(measurement2)
       SensorMeasurement.insert(measurement3)
@@ -79,7 +84,7 @@ class SensorMeasurementsSpec extends Specification {
 
     "insert a sensor measurement" in new WithLoggedUser(FakeApp()) {
 
-      Fixtures.truncate
+      Fixtures.cleanUp
 
       val create = route(FakeRequest(
         POST,
@@ -111,7 +116,7 @@ class SensorMeasurementsSpec extends Specification {
 
     "fail to insert a sensor measurement without authentication" in new WithLoggedUser(FakeApp()) {
 
-      Fixtures.truncate
+      Fixtures.cleanUp
 
       val create = route(FakeRequest(
         POST,
@@ -139,7 +144,7 @@ class SensorMeasurementsSpec extends Specification {
 
     "insert a sensor measurement with out of order json fields" in new WithLoggedUser(FakeApp()) {
 
-      Fixtures.truncate
+      Fixtures.cleanUp
 
       val create = route(FakeRequest(
         POST,
@@ -170,8 +175,6 @@ class SensorMeasurementsSpec extends Specification {
     }
 
     "query for a measurement" in new WithLoggedUser(FakeApp()) {
-      import SensorMeasurement.JsonFormats._
-
       Fixtures.install
 
       val query = route(FakeRequest(GET, "/measurements_query?" +
@@ -187,8 +190,6 @@ class SensorMeasurementsSpec extends Specification {
     }
 
     "fail to query for a measurement without authentication" in new WithLoggedUser(FakeApp()) {
-      import SensorMeasurement.JsonFormats._
-
       Fixtures.install
 
       val query = route(FakeRequest(GET, "/measurements_query?" +
@@ -202,8 +203,6 @@ class SensorMeasurementsSpec extends Specification {
     }
 
     "query for some measurements" in new WithLoggedUser(FakeApp()) {
-      import SensorMeasurement.JsonFormats._
-
       Fixtures.install
 
       val query = route(FakeRequest(GET, "/measurements_query?" +
@@ -220,8 +219,6 @@ class SensorMeasurementsSpec extends Specification {
     }
 
     "query not matching any measurements" in new WithLoggedUser(FakeApp()) {
-      import SensorMeasurement.JsonFormats._
-
       Fixtures.install
 
       val query = route(FakeRequest(GET, "/measurements_query?" +
@@ -272,7 +269,7 @@ class SensorMeasurementsSpec extends Specification {
     }
 
     "insert and find a long sensor measurement" in new WithLoggedUser(FakeApp()) {
-      Fixtures.truncate
+      Fixtures.cleanUp
 
       val jsonMeasurement = Json.parse("""#{
         #"company": "company0",
@@ -319,7 +316,7 @@ class SensorMeasurementsSpec extends Specification {
     }
 
     "insert and find a large long sensor measurement" in new WithLoggedUser(FakeApp()) {
-      Fixtures.truncate
+      Fixtures.cleanUp
 
       val jsonMeasurement = Json.parse(s"""#{
         #"company": "company0",
@@ -366,7 +363,7 @@ class SensorMeasurementsSpec extends Specification {
     }
 
     "insert and find a string sensor measurement" in new WithLoggedUser(FakeApp()) {
-      Fixtures.truncate
+      Fixtures.cleanUp
 
       val jsonMeasurement = Json.parse("""#{
         #"company": "company0",
@@ -408,7 +405,7 @@ class SensorMeasurementsSpec extends Specification {
     }
 
     "insert and find an array sensor measurement" in new WithLoggedUser(FakeApp()) {
-      Fixtures.truncate
+      Fixtures.cleanUp
 
       // Dummy binary data for testing
       val array = Array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11).map(_.toByte)
@@ -455,7 +452,7 @@ class SensorMeasurementsSpec extends Specification {
     }
 
     "insert and find a waveform sensor measurement" in new WithLoggedUser(FakeApp()) {
-      Fixtures.truncate
+      Fixtures.cleanUp
 
       // Dummy binary data for testing
       val array = Array(10, 20, 30, 40, 50, 60, 70, 80, 90, 11, 15).map(_.toByte)
@@ -502,6 +499,8 @@ class SensorMeasurementsSpec extends Specification {
     }
 
     "allow insert numeric with missing lower limit" in new WithLoggedUser(FakeApp()) {
+
+      Fixtures.cleanUp
       val jsonMeasurement = Json.parse("""#{
         #"company": "company0",
         #"site": "site0",
@@ -528,6 +527,8 @@ class SensorMeasurementsSpec extends Specification {
     }
 
     "allow insert numeric with missing upper limit" in new WithLoggedUser(FakeApp()) {
+
+      Fixtures.cleanUp
       val jsonMeasurement = Json.parse("""#{
         #"company": "company0",
         #"site": "site0",
@@ -554,6 +555,8 @@ class SensorMeasurementsSpec extends Specification {
     }
 
     "insert string with unexpected lower limit" in new WithLoggedUser(FakeApp()) {
+
+      Fixtures.cleanUp
       val jsonMeasurement = Json.parse("""#{
         #"company": "company0",
         #"site": "site0",
@@ -579,6 +582,8 @@ class SensorMeasurementsSpec extends Specification {
     }
 
     "insert string with unexpected upper limit" in new WithLoggedUser(FakeApp()) {
+
+      Fixtures.cleanUp
       val jsonMeasurement = Json.parse("""#{
         #"company": "company0",
         #"site": "site0",
@@ -604,7 +609,7 @@ class SensorMeasurementsSpec extends Specification {
     }
 
     "insert and find a sensor measurement without a description or status" in new WithLoggedUser(FakeApp()) {
-      Fixtures.truncate
+      Fixtures.cleanUp
 
       val jsonMeasurement = Json.parse(s"""#{
         #"company": "company0",
@@ -649,7 +654,7 @@ class SensorMeasurementsSpec extends Specification {
 
     "optional empty string fields are dropped" in new WithLoggedUser(FakeApp()) {
 
-      Fixtures.truncate
+      Fixtures.cleanUp
 
       val create = route(FakeRequest(
         POST,
