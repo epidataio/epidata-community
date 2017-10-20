@@ -7,7 +7,7 @@ package controllers
 import java.util.Date
 import com.epidata.lib.models.util.JsonHelpers
 import com.epidata.lib.models.MeasurementCleansed
-import models.SensorMeasurement
+import models.{ MeasurementService, SensorMeasurement }
 import play.api.libs.json.Json
 import play.api.mvc._
 import securesocial.core.SecureSocial
@@ -17,7 +17,7 @@ import util.{ EpidataMetrics, Ordering }
 object SensorMeasurements extends Controller with SecureSocial {
 
   def create = SecuredAction(parse.json) { implicit request =>
-    JsonHelpers.toSensorMeasurement(request.body.toString()) match {
+    com.epidata.lib.models.SensorMeasurement.jsonToSensorMeasurement(request.body.toString()) match {
       case Some(sensorMeasurement) =>
         SensorMeasurement.insert(sensorMeasurement)
         Created
@@ -26,8 +26,31 @@ object SensorMeasurements extends Controller with SecureSocial {
   }
 
   def createList = SecuredAction(parse.json) { implicit request =>
-    val sensorMeasurements = JsonHelpers.toSensorMeasurements(request.body.toString())
-    SensorMeasurement.insertList(sensorMeasurements.flatMap(x => x))
+    val sensorMeasurements = com.epidata.lib.models.SensorMeasurement.jsonToSensorMeasurements(request.body.toString())
+    SensorMeasurement.insert(sensorMeasurements.flatMap(x => x))
+
+    val failedIndexes = sensorMeasurements.zipWithIndex.filter(_._1 == None).map(_._2)
+    if (failedIndexes.isEmpty)
+      Created
+    else {
+      val message = "Failed objects: " + failedIndexes.mkString(",")
+      BadRequest(Json.obj("status" -> "ERROR", "message" -> message))
+    }
+  }
+
+  def insertRecordKafka = SecuredAction(parse.json) { implicit request =>
+    com.epidata.lib.models.SensorMeasurement.jsonToSensorMeasurement(request.body.toString()) match {
+      case Some(sensorMeasurement) =>
+        models.SensorMeasurement.insertToKafka(List(sensorMeasurement))
+        Created
+      case _ => BadRequest(Json.obj("status" -> "ERROR", "message" -> "Bad Json Format!"))
+    }
+  }
+
+  def insertKafka = SecuredAction(parse.json) { implicit request =>
+
+    val sensorMeasurements = com.epidata.lib.models.SensorMeasurement.jsonToSensorMeasurements(request.body.toString())
+    models.SensorMeasurement.insertToKafka(sensorMeasurements.flatMap(x => x))
 
     val failedIndexes = sensorMeasurements.zipWithIndex.filter(_._1 == None).map(_._2)
     if (failedIndexes.isEmpty)
@@ -70,7 +93,7 @@ object SensorMeasurements extends Controller with SecureSocial {
     ordering: Ordering.Value = Ordering.Unspecified,
     table: String = MeasurementCleansed.DBTableName
   ) = Action {
-    Ok(SensorMeasurement.query(
+    Ok(MeasurementService.query(
       company,
       site,
       station,
@@ -80,7 +103,8 @@ object SensorMeasurements extends Controller with SecureSocial {
       size,
       batch,
       ordering,
-      table
+      table,
+      com.epidata.lib.models.SensorMeasurement.NAME
     ))
   }
 

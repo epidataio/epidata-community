@@ -5,7 +5,7 @@
 import cassandra.DB
 import com.epidata.lib.models.{ SensorMeasurement => Model }
 import java.util.Date
-import models.Measurement
+import models.MeasurementService
 import models.SensorMeasurement
 import org.specs2.mutable._
 import org.specs2.runner._
@@ -23,8 +23,13 @@ class SensorMeasurementSpec extends Specification {
     val truncateSQL = s"TRUNCATE ${com.epidata.lib.models.Measurement.DBTableName}"
     def truncate = DB.cql(truncateSQL)
 
-    def install = {
+    def cleanUp = {
       truncate
+      MeasurementService.reset
+    }
+
+    def install = {
+      cleanUp
       models.foreach(SensorMeasurement.insert(_))
     }
 
@@ -63,10 +68,10 @@ class SensorMeasurementSpec extends Specification {
 
     "insert a SensorMeasurement" in new WithApplication {
 
-      Fixtures.truncate
+      Fixtures.cleanUp
 
       val ts = Fixtures.beginTime
-      val epoch = Measurement.epochForTs(ts)
+      val epoch = MeasurementService.epochForTs(ts)
 
       // Value should not exist before insert.
       DB.cql(

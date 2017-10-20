@@ -6,7 +6,7 @@ package com.epidata.spark
 
 import com.datastax.spark.connector._
 import java.sql.Timestamp
-import com.epidata.lib.models.MeasurementSummary
+import com.epidata.lib.models.{ Measurement => BaseMeasurement, MeasurementCleansed => BaseMeasurementCleansed, MeasurementSummary, SensorMeasurement => BaseSensorMeasurement, AutomatedTest => BaseAutomatedTest, MeasurementsKeys => BaseMeasurementsKeys }
 import com.epidata.spark.ops.{ Identity, OutlierDetector, MeasStatistics, FillMissingValue }
 import com.epidata.spark.utils.DataFrameUtils
 import org.apache.spark.SparkContext
@@ -177,31 +177,30 @@ class EpidataContext(private val sparkContext: SparkContext) {
     tableName: String
   ): DataFrame = {
 
-    import AutomatedTest._
-    import SensorMeasurement._
-    import MeasurementSummary._
-    import SensorMeasurementCleansed._
-
-    // Convert the concatenated rdd into a DataFrame.
-    val dataFrame = measurementClass match {
-      case "automated_test" =>
+    tableName match {
+      case BaseMeasurement.DBTableName =>
         val unionRDD = getUnionRDD(fieldQuery, beginTime, endTime, tableName)
-        sqlContext.createDataFrame(unionRDD.map(measurementToAutomatedTest))
 
-      case "sensor_measurement" if tableName.equals(com.epidata.lib.models.Measurement.DBTableName) =>
-        val unionRDD = getUnionRDD(fieldQuery, beginTime, endTime, tableName)
-        sqlContext.createDataFrame(unionRDD.map(measurementToSensorMeasurement))
+        measurementClass match {
+          case BaseAutomatedTest.NAME => sqlContext.createDataFrame(unionRDD.map(AutomatedTest.measurementToAutomatedTest))
+          case BaseSensorMeasurement.NAME => sqlContext.createDataFrame(unionRDD.map(SensorMeasurement.measurementToSensorMeasurement))
+        }
 
-      case "sensor_measurement" if tableName.equals(com.epidata.lib.models.MeasurementCleansed.DBTableName) =>
+      case BaseMeasurementCleansed.DBTableName =>
         val unionRDD = getUnionRDDMeasurementCleansed(fieldQuery, beginTime, endTime, tableName)
-        sqlContext.createDataFrame(unionRDD.map(measurementCleansedToSensorMeasurementCleansed))
+        measurementClass match {
+          case BaseAutomatedTest.NAME => sqlContext.createDataFrame(unionRDD.map(AutomatedTestCleansed.measurementCleansedToAutomatedTestCleansed))
+          case BaseSensorMeasurement.NAME => sqlContext.createDataFrame(unionRDD.map(SensorMeasurementCleansed.measurementCleansedToSensorMeasurementCleansed))
+        }
 
-      case "sensor_measurement" if tableName.equals(MeasurementSummary.DBTableName) =>
+      case MeasurementSummary.DBTableName =>
         val unionRDD = getUnionRDDMeasurementSummary(fieldQuery, beginTime, endTime, tableName)
-        sqlContext.createDataFrame(unionRDD.map(measurementSummaryToSensorMeasurementSummary))
+        measurementClass match {
+          case BaseAutomatedTest.NAME => sqlContext.createDataFrame(unionRDD.map(BaseAutomatedTest.measurementSummaryToAutomatedTestSummary))
+          case BaseSensorMeasurement.NAME => sqlContext.createDataFrame(unionRDD.map(BaseSensorMeasurement.measurementSummaryToSensorMeasurementSummary))
+        }
     }
 
-    dataFrame
   }
 
   /**
@@ -258,7 +257,7 @@ class EpidataContext(private val sparkContext: SparkContext) {
     endTime: Timestamp
   ): DataFrame = {
     import scala.collection.JavaConversions._
-    query(fieldQuery.toMap.mapValues(_.toList), beginTime, endTime, com.epidata.lib.models.Measurement.DBTableName)
+    query(fieldQuery.toMap.mapValues(_.toList), beginTime, endTime, BaseMeasurement.DBTableName)
   }
 
   /** Query interface for Java and Python. */
@@ -268,7 +267,7 @@ class EpidataContext(private val sparkContext: SparkContext) {
     endTime: Timestamp
   ): DataFrame = {
     import scala.collection.JavaConversions._
-    query(fieldQuery.toMap.mapValues(_.toList), beginTime, endTime, com.epidata.lib.models.MeasurementCleansed.DBTableName)
+    query(fieldQuery.toMap.mapValues(_.toList), beginTime, endTime, BaseMeasurementCleansed.DBTableName)
   }
 
   /** Query interface for Java and Python. */
@@ -278,7 +277,7 @@ class EpidataContext(private val sparkContext: SparkContext) {
     endTime: Timestamp
   ): DataFrame = {
     import scala.collection.JavaConversions._
-    query(fieldQuery.toMap.mapValues(_.toList), beginTime, endTime, com.epidata.lib.models.MeasurementSummary.DBTableName)
+    query(fieldQuery.toMap.mapValues(_.toList), beginTime, endTime, MeasurementSummary.DBTableName)
   }
 
   /** List the values of the currently saved partition key fields. */
@@ -287,13 +286,14 @@ class EpidataContext(private val sparkContext: SparkContext) {
     import AutomatedTestKey._
     import SensorMeasurementKey._
 
-    val table = sparkContext.cassandraTable[MeasurementKey](cassandraKeyspaceName, com.epidata.lib.models.MeasurementsKeys.DBTableName)
+    val table = sparkContext.cassandraTable[MeasurementKey](cassandraKeyspaceName, BaseMeasurementsKeys.DBTableName)
     measurementClass match {
-      case "automated_test" => sqlContext.createDataFrame(table.map(keyToAutomatedTest))
-      case "sensor_measurement" => sqlContext.createDataFrame(table.map(keyToSensorMeasurement))
+      case BaseAutomatedTest.NAME => sqlContext.createDataFrame(table.map(keyToAutomatedTest))
+      case BaseSensorMeasurement.NAME => sqlContext.createDataFrame(table.map(keyToSensorMeasurement))
     }
   }
 
+  @deprecated
   def createStream(op: String, meas_names: List[String], params: java.util.Map[String, String]): EpidataStreamingContext = {
     val esc = new EpidataStreamingContext(
       this,
@@ -318,13 +318,13 @@ class EpidataContext(private val sparkContext: SparkContext) {
   private val genericPartitionFields = List("customer", "customer_site", "collection", "dataset")
 
   private def partitionFieldsMap = measurementClass match {
-    case "automated_test" => Map(
+    case BaseAutomatedTest.NAME => Map(
       "customer" -> "company",
       "customer_site" -> "site",
       "collection" -> "device_group",
       "dataset" -> "tester"
     )
-    case "sensor_measurement" => Map(
+    case BaseSensorMeasurement.NAME => Map(
       "customer" -> "company",
       "customer_site" -> "site",
       "collection" -> "station",

@@ -136,7 +136,7 @@ def substitute(df, meas_names, method="rolling", size=3):
                 size += 1
             if df.loc[df["meas_name"] == meas_name].size > 0:
                 indices = df.loc[df["meas_name"] == meas_name].index[df.loc[df["meas_name"] == meas_name]["meas_value"].apply(
-                    lambda x: not isinstance(x, basestring) and (x == None or np.isnan(x)))]
+                    lambda x: not isinstance(x, basestring) and (x is None or np.isnan(x)))]
                 substitutes = df.loc[df["meas_name"] == meas_name]["meas_value"].rolling(
                     window=size, min_periods=1, center=True).mean()
 
@@ -197,6 +197,65 @@ def meas_statistics(df, meas_names, method="standard"):
                                                                 "start_time",
                                                                 "stop_time",
                                                                 "event",
+                                                                "meas_name",
+                                                                "meas_summary_name",
+                                                                "meas_summary_value",
+                                                                "meas_summary_description"]].drop_duplicates()
+    else:
+        raise ValueError("Unsupported summary method: ", repr(method))
+
+    return df_summary
+
+
+def meas_statistics_automated_test(df, meas_names, method="standard"):
+    """
+    Compute statistics on measurement values within a data frame, using the specified method.
+
+    Parameters
+    ----------
+    df : pandas DataFrame
+        A DataFrame in which to compute statistics.
+    meas_names : list of strings
+        The names of the measurements for which to perform statistics.
+        The measurement values corresponding to the measurement names must contain numeric values.
+    method : string
+        The name of the statistics computation method. Available methods include:
+        'standard'.
+
+    Returns
+    -------
+    result : pandas DataFrame
+        A DataFrame containing computed statistics for specified measurement names within df. Some methods may add new columns to the result with appropriate information.
+    """
+
+    def subgroup_statistics(row):
+        row['start_time'] = np.min(row["ts"])
+        row["stop_time"] = np.max(row["ts"])
+        row["meas_summary_name"] = "statistics"
+        row["meas_summary_value"] = json.dumps(
+            {
+                'count': row["meas_value"].count(),
+                'mean': row["meas_value"].mean(),
+                'std': row["meas_value"].std(),
+                'min': row["meas_value"].min(),
+                'max': row["meas_value"].max()})
+        row["meas_summary_description"] = "descriptive statistics"
+        return row
+
+    if (method == "standard"):
+        df_filtered = df[df['meas_value'].apply(
+            lambda x: isinstance(x, (float, long, int, np.int64, np.float64)))]
+        df_grouped = df_filtered.loc[df_filtered["meas_name"].isin(meas_names)].groupby(
+            ["company", "site", "device_group", "tester"], as_index=False)
+        df_summary = df_grouped.apply(subgroup_statistics).loc[:,
+                                                               ["company",
+                                                                "site",
+                                                                "device_group",
+                                                                "tester",
+                                                                "start_time",
+                                                                "stop_time",
+                                                                "device_name",
+                                                                "test_name",
                                                                 "meas_name",
                                                                 "meas_summary_name",
                                                                 "meas_summary_value",
