@@ -33,8 +33,5 @@ GET     /error                      controllers.ErrorRedirect.show()
 # API based authentication.
 POST    /api/authenticate/:provider controllers.ApiAuth.authenticate(provider)
 
-POST    /kafka/measurements         controllers.KafkaController.create
-POST    /kafka/measurements_list    controllers.KafkaController.createList
-
 # Get Metric
 GET     /metrics                    controllers.MetricController.getMetric()

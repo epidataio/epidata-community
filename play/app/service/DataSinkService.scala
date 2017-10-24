@@ -59,10 +59,10 @@ class DataSinkService(
 
           for (record <- records) {
             try {
-              JsonHelpers.toSensorMeasurement(record.value().toString) match {
-                case Some(sensorMeasurement) =>
-                  SensorMeasurement.insert(sensorMeasurement)
-                case _ => Logger.error("Bad json format!")
+              Configs.measurementClass match {
+                case com.epidata.lib.models.AutomatedTest.NAME => models.AutomatedTest.insertRecordFromKafka(record.value().toString)
+                case com.epidata.lib.models.SensorMeasurement.NAME => models.SensorMeasurement.insertRecordFromKafka(record.value().toString)
+                case _ =>
               }
             } catch {
               case e: JsonMappingException => Logger.error(e.getMessage)

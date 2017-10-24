@@ -9,16 +9,34 @@ import java.util
 import cassandra.DB
 import com.datastax.driver.core.querybuilder.{ Clause, QueryBuilder }
 import com.epidata.lib.models.{ Measurement => Model, MeasurementsKeys, MeasurementSummary }
-import com.epidata.lib.models.util.Binary
+import com.epidata.lib.models.util.{ JsonHelpers, Binary }
 import java.nio.ByteBuffer
-import java.util.Date
-import scala.collection.convert.WrapAsScala
-import _root_.util.Ordering
-import com.datastax.driver.core.{ BoundStatement, ResultSet, PagingState, Statement }
+import java.util.{ Date, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList }
+import service.Configs
 
-object Measurement {
+import scala.collection.convert.WrapAsScala
+import _root_.util.{ EpidataMetrics, Ordering }
+import com.datastax.driver.core._
+
+object MeasurementService {
 
   import com.epidata.lib.models.Measurement._
+
+  private var prepareStatementMap: Map[String, PreparedStatement] = Map.empty
+
+  def getPrepareStatement(statementSpec: String): PreparedStatement = {
+    if (!prepareStatementMap.contains(statementSpec)) {
+      val stm = DB.prepare(statementSpec)
+      prepareStatementMap = prepareStatementMap + (statementSpec -> stm)
+      stm
+    } else {
+      prepareStatementMap.get(statementSpec).get
+    }
+  }
+
+  def reset = {
+    prepareStatementMap = Map.empty
+  }
 
   def epochForTs(ts: Date): Int =
     // Divide the timeline into epochs approximately 12 days in duration.
@@ -39,6 +57,7 @@ object Measurement {
    * @param measurements The Measurement to insert.
    */
   def bulkInsert(measurements: List[Model]): Unit = {
+
     val statements = measurements.flatMap(measurement => getInsertStatements(measurement))
     DB.batchExecute(statements)
   }
@@ -52,23 +71,26 @@ object Measurement {
       case _ => getMeasurementInsertStatementForNullMeasValue(measurement)
     }
 
-    // Insert the measurement partition key into the partition key store. This
-    // write is not batched with the write above, for improved performance. If
-    // the below write fails we could miss a key in the key table, but that is
-    // expected to be rare because the same partition keys will be written
-    // repeatedly during normal ingestion. (The possibility, and risk level,
-    // of inconsistency is considered acceptable.) The real world performance
-    // impact of this write could be eliminated in the future by caching
-    // previously written keys in the app server.
+    if (Configs.ingestionKeyCreation) {
 
-    val statement2 = DB.prepare(insertKeysStatement).bind(
-      measurement.customer,
-      measurement.customer_site,
-      measurement.collection,
-      measurement.dataset
-    )
-
-    List(measurementInsertStatement, statement2)
+      // Insert the measurement partition key into the partition key store. This
+      // write is not batched with the write above, for improved performance. If Add a comment to this line
+      // the below write fails we could miss a key in the key table, but that is
+      // expected to be rare because the same partition keys will be written
+      // repeatedly during normal ingestion. (The possibility, and risk level,
+      // of inconsistency is considered acceptable.) The real world performance
+      // impact of this write could be eliminated in the future by caching
+      // previously written keys in the app server.
+      val statement2 = getPrepareStatement(insertKeysStatement).bind(
+        measurement.customer,
+        measurement.customer_site,
+        measurement.collection,
+        measurement.dataset
+      )
+      List(measurementInsertStatement, statement2)
+    } else {
+      List(measurementInsertStatement)
+    }
   }
 
   /**
@@ -126,6 +148,39 @@ object Measurement {
       .flatMap(DB.execute)
       .map(rowToMeasurement)
       .toList
+  }
+
+  def query(
+    company: String,
+    site: String,
+    station: String,
+    sensor: String,
+    beginTime: Date,
+    endTime: Date,
+    size: Int,
+    batch: String,
+    ordering: Ordering.Value,
+    tableName: String,
+    modelName: String
+  ): String = {
+
+    // Get the data from Cassandra
+    val rs: ResultSet = MeasurementService.query(company, site, station, sensor, beginTime, endTime, ordering, tableName, size, batch)
+
+    // Get the next page info
+    val nextPage = rs.getExecutionInfo().getPagingState()
+    val nextBatch = if (nextPage == null) "" else nextPage.toString
+
+    // only return the available ones by not fetching.
+    val rows = 1.to(rs.getAvailableWithoutFetching()).map(_ => rs.one())
+    val records = new JLinkedList[JLinkedHashMap[String, Object]]()
+
+    rows
+      .map(Model.rowToJLinkedHashMap(_, tableName, modelName))
+      .foreach(m => records.add(m))
+
+    // Return the json object
+    JsonHelpers.toJson(records, nextBatch)
   }
 
   def query(
@@ -227,7 +282,7 @@ object Measurement {
       case _ => measurement.meas_value.asInstanceOf[AnyRef]
     }
 
-    val insertStatements = insertStatementsStr.map(DB.prepare(_))
+    val insertStatements = insertStatementsStr.map(getPrepareStatement(_))
 
     (measurement.meas_lower_limit, measurement.meas_upper_limit) match {
       case (None, None) =>
@@ -318,12 +373,9 @@ object Measurement {
   }
 
   private def getMeasurementInsertStatementForNullMeasValue(measurement: Model): Statement = {
-    val insertStatementsStr = measurement.meas_datatype match {
-      case Some(x) if (x.compareToIgnoreCase("long") == 0) => insertNullLongValueStatement
-      case _ => insertNullDoubleValueStatement
-    }
+    val insertStatementsStr = insertNullDoubleValueStatement
 
-    val insertStatements = insertStatementsStr.map(DB.prepare(_))
+    val insertStatements = insertStatementsStr.map(getPrepareStatement(_))
 
     (measurement.meas_lower_limit, measurement.meas_upper_limit) match {
       case (None, None) =>

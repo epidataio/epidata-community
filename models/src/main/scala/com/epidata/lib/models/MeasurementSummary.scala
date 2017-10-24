@@ -24,20 +24,6 @@ case class MeasurementSummary(
   meas_summary_description: String
 )
 
-case class SensorMeasurementSummary(
-  company: String,
-  site: String,
-  station: String,
-  sensor: String,
-  start_time: Timestamp,
-  stop_time: Timestamp,
-  event: String,
-  meas_name: String,
-  meas_summary_name: String,
-  meas_summary_value: String,
-  meas_summary_description: String
-)
-
 object MeasurementSummary {
 
   val DBTableName: String = "measurements_summary"
@@ -81,20 +67,5 @@ object MeasurementSummary {
     )
 
   }
-
-  implicit def measurementSummaryToSensorMeasurementSummary(ms: MeasurementSummary): SensorMeasurementSummary =
-    SensorMeasurementSummary(
-      ms.customer,
-      ms.customer_site,
-      ms.collection,
-      ms.dataset,
-      ms.start_time,
-      ms.stop_time,
-      ms.key1,
-      ms.key2,
-      ms.meas_summary_name,
-      ms.meas_summary_value,
-      ms.meas_summary_description
-    )
 }
 

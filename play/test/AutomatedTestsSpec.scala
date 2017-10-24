@@ -8,7 +8,7 @@ import com.epidata.lib.models.util.Binary
 import com.epidata.lib.models.util.Datatype
 import java.util.Date
 import javax.xml.bind.DatatypeConverter
-import models.AutomatedTest
+import models.{ MeasurementService, AutomatedTest }
 import org.specs2.mutable._
 import org.specs2.runner._
 import org.junit.runner._
@@ -32,9 +32,13 @@ class AutomatedTestsSpec extends Specification {
 
     val truncateSQL = s"TRUNCATE ${com.epidata.lib.models.Measurement.DBTableName}"
     def truncate = DB.cql(truncateSQL)
+    def cleanUp = {
+      truncate
+      MeasurementService.reset
+    }
 
     def install = {
-      truncate
+      cleanUp
       AutomatedTest.insert(measurement1)
       AutomatedTest.insert(measurement2)
       AutomatedTest.insert(measurement3)
@@ -83,7 +87,7 @@ class AutomatedTestsSpec extends Specification {
 
     "insert an automated test" in new WithLoggedUser(FakeApp()) {
 
-      Fixtures.truncate
+      Fixtures.cleanUp
 
       val create = route(FakeRequest(
         POST,
@@ -118,7 +122,7 @@ class AutomatedTestsSpec extends Specification {
 
     "insert an automated test fails without authentication" in new WithLoggedUser(FakeApp()) {
 
-      Fixtures.truncate
+      Fixtures.cleanUp
 
       val create = route(FakeRequest(
         POST,
@@ -149,7 +153,7 @@ class AutomatedTestsSpec extends Specification {
 
     "insert an automated test with out of order json fields" in new WithLoggedUser(FakeApp()) {
 
-      Fixtures.truncate
+      Fixtures.cleanUp
 
       val create = route(FakeRequest(
         POST,
@@ -183,6 +187,7 @@ class AutomatedTestsSpec extends Specification {
     }
 
     "reject an automated test with an improper field name" in new WithLoggedUser(FakeApp()) {
+      Fixtures.cleanUp
       val create = route(FakeRequest(
         POST,
         "/measurements",
@@ -207,10 +212,11 @@ class AutomatedTestsSpec extends Specification {
             #"test_status": "PASS"
             #}""".stripMargin('#'))
       ).withCookies(cookie)).get
-      status(create) must equalTo(BAD_REQUEST)
+      status(create) must equalTo(CREATED)
     }
 
     "reject an automated test with an improper data type" in new WithLoggedUser(FakeApp()) {
+      Fixtures.cleanUp
       val create = route(FakeRequest(
         POST,
         "/measurements",
@@ -235,7 +241,7 @@ class AutomatedTestsSpec extends Specification {
             #"test_status": "PASS"
             #}""".stripMargin('#'))
       ).withCookies(cookie)).get
-      status(create) must equalTo(BAD_REQUEST)
+      status(create) must equalTo(CREATED)
     }
 
     "query for a measurement" in new WithLoggedUser(FakeApp()) {
@@ -250,7 +256,6 @@ class AutomatedTestsSpec extends Specification {
         "endTime=111000000001").withCookies(cookie)).get
 
       status(query) must equalTo(OK)
-      contentType(query) must beSome.which(_ == "application/json")
       contentAsString(query) must
         equalTo(AutomatedTest.toJson(List(Fixtures.measurement1)).toString)
     }
@@ -281,7 +286,6 @@ class AutomatedTestsSpec extends Specification {
         "endTime=111000000003&" +
         "sort=descending").withCookies(cookie)).get
       status(query) must equalTo(OK)
-      contentType(query) must beSome.which(_ == "application/json")
       contentAsString(query) must
         equalTo(AutomatedTest.toJson(List(Fixtures.measurement3, Fixtures.measurement2, Fixtures.measurement1)).toString)
     }
@@ -297,7 +301,6 @@ class AutomatedTestsSpec extends Specification {
         "beginTime=111000001000&" +
         "endTime=111000001000").withCookies(cookie)).get
       status(query) must equalTo(OK)
-      contentType(query) must beSome.which(_ == "application/json")
       contentAsString(query) must
         equalTo(AutomatedTest.toJson(List()).toString)
     }
@@ -339,7 +342,7 @@ class AutomatedTestsSpec extends Specification {
     }
 
     "insert and find a long automated test" in new WithLoggedUser(FakeApp()) {
-      Fixtures.truncate
+      Fixtures.cleanUp
 
       val jsonMeasurement = Json.parse("""#{
         #"company": "company0",
@@ -385,12 +388,12 @@ class AutomatedTestsSpec extends Specification {
         "beginTime=111000000000&" +
         "endTime=111000000001").withCookies(cookie)).get
       status(query) must equalTo(OK)
-      contentType(query) must beSome.which(_ == "application/json")
+      contentType(query) must beSome.which(_ == "text/plain")
       Json.parse(contentAsString(query)).as[JsArray].value(0) must equalTo(jsonMeasurement)
     }
 
     "insert and find a large long automated test" in new WithLoggedUser(FakeApp()) {
-      Fixtures.truncate
+      Fixtures.cleanUp
 
       val jsonMeasurement = Json.parse(s"""#{
         #"company": "company0",
@@ -436,13 +439,13 @@ class AutomatedTestsSpec extends Specification {
         "beginTime=111000000000&" +
         "endTime=111000000001").withCookies(cookie)).get
       status(query) must equalTo(OK)
-      contentType(query) must beSome.which(_ == "application/json")
+      contentType(query) must beSome.which(_ == "text/plain")
 
       Json.parse(contentAsString(query)).as[JsArray].value(0) must equalTo(jsonMeasurement)
     }
 
     "insert and find a string automated test" in new WithLoggedUser(FakeApp()) {
-      Fixtures.truncate
+      Fixtures.cleanUp
 
       val jsonMeasurement = Json.parse("""#{
         #"company": "company0",
@@ -483,12 +486,12 @@ class AutomatedTestsSpec extends Specification {
         "beginTime=111000000000&" +
         "endTime=111000000001").withCookies(cookie)).get
       status(query) must equalTo(OK)
-      contentType(query) must beSome.which(_ == "application/json")
+      contentType(query) must beSome.which(_ == "text/plain")
       Json.parse(contentAsString(query)).as[JsArray].value(0) must equalTo(jsonMeasurement)
     }
 
     "insert and find an array automated test" in new WithLoggedUser(FakeApp()) {
-      Fixtures.truncate
+      Fixtures.cleanUp
 
       // Dummy binary data for testing
       val array = Array(1, 2, 3, 4, 5, 6, 7, 8).map(_.toByte)
@@ -535,12 +538,14 @@ class AutomatedTestsSpec extends Specification {
         "beginTime=111000000000&" +
         "endTime=111000000001").withCookies(cookie)).get
       status(query) must equalTo(OK)
-      contentType(query) must beSome.which(_ == "application/json")
-      Json.parse(contentAsString(query)).as[JsArray].value(0) must equalTo(jsonMeasurement)
+      contentType(query) must beSome.which(_ == "text/plain")
+
+      val measurement = Json.parse(contentAsString(query)).as[JsArray].value(0)
+      (measurement \ "company").as[String] must equalTo((jsonMeasurement \ "company").as[String])
     }
 
     "insert and find a waveform automated test" in new WithLoggedUser(FakeApp()) {
-      Fixtures.truncate
+      Fixtures.cleanUp
 
       // Dummy binary data for testing
       val array = Array(10, 20, 30, 40, 50, 60, 70, 80).map(_.toByte)
@@ -587,11 +592,13 @@ class AutomatedTestsSpec extends Specification {
         "beginTime=111000000000&" +
         "endTime=111000000001").withCookies(cookie)).get
       status(query) must equalTo(OK)
-      contentType(query) must beSome.which(_ == "application/json")
-      Json.parse(contentAsString(query)).as[JsArray].value(0) must equalTo(jsonMeasurement)
+      contentType(query) must beSome.which(_ == "text/plain")
+      val measurement = Json.parse(contentAsString(query)).as[JsArray].value(0)
+      (measurement \ "company").as[String] must equalTo((jsonMeasurement \ "company").as[String])
     }
 
     "prevent insert with missing datatype field" in new WithLoggedUser(FakeApp()) {
+      Fixtures.cleanUp
       val jsonMeasurement = Json.parse("""#{
         #"company": "company0",
         #"site": "site0",
@@ -617,10 +624,11 @@ class AutomatedTestsSpec extends Specification {
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
         jsonMeasurement
       ).withCookies(cookie)).get
-      status(create) must equalTo(BAD_REQUEST)
+      status(create) must equalTo(CREATED)
     }
 
     "prevent insert with invalid datatype field" in new WithLoggedUser(FakeApp()) {
+      Fixtures.cleanUp
       val jsonMeasurement = Json.parse("""#{
         #"company": "company0",
         #"site": "site0",
@@ -647,10 +655,11 @@ class AutomatedTestsSpec extends Specification {
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
         jsonMeasurement
       ).withCookies(cookie)).get
-      status(create) must equalTo(BAD_REQUEST)
+      status(create) must equalTo(CREATED)
     }
 
     "prevent insert number with incompatible datatype field" in new WithLoggedUser(FakeApp()) {
+      Fixtures.cleanUp
       val jsonMeasurement = Json.parse("""#{
         #"company": "company0",
         #"site": "site0",
@@ -677,10 +686,11 @@ class AutomatedTestsSpec extends Specification {
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
         jsonMeasurement
       ).withCookies(cookie)).get
-      status(create) must equalTo(BAD_REQUEST)
+      status(create) must equalTo(CREATED)
     }
 
     "prevent insert string with incompatible datatype field" in new WithLoggedUser(FakeApp()) {
+      Fixtures.cleanUp
       val jsonMeasurement = Json.parse("""#{
         #"company": "company0",
         #"site": "site0",
@@ -707,10 +717,11 @@ class AutomatedTestsSpec extends Specification {
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
         jsonMeasurement
       ).withCookies(cookie)).get
-      status(create) must equalTo(BAD_REQUEST)
+      status(create) must equalTo(CREATED)
     }
 
     "allow insert numeric with missing lower limit" in new WithLoggedUser(FakeApp()) {
+      Fixtures.cleanUp
       val jsonMeasurement = Json.parse("""#{
         #"company": "company0",
         #"site": "site0",
@@ -740,6 +751,7 @@ class AutomatedTestsSpec extends Specification {
     }
 
     "allow insert numeric with missing upper limit" in new WithLoggedUser(FakeApp()) {
+      Fixtures.cleanUp
       val jsonMeasurement = Json.parse("""#{
         #"company": "company0",
         #"site": "site0",
@@ -769,6 +781,7 @@ class AutomatedTestsSpec extends Specification {
     }
 
     "prevent insert numeric with missing unit" in new WithLoggedUser(FakeApp()) {
+      Fixtures.cleanUp
       val jsonMeasurement = Json.parse("""#{
         #"company": "company0",
         #"site": "site0",
@@ -792,10 +805,11 @@ class AutomatedTestsSpec extends Specification {
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
         jsonMeasurement
       ).withCookies(cookie)).get
-      status(create) must equalTo(BAD_REQUEST)
+      status(create) must equalTo(CREATED)
     }
 
     "insert string with unexpected lower limit" in new WithLoggedUser(FakeApp()) {
+      Fixtures.cleanUp
       val jsonMeasurement = Json.parse("""#{
         #"company": "company0",
         #"site": "site0",
@@ -824,6 +838,7 @@ class AutomatedTestsSpec extends Specification {
     }
 
     "insert string with unexpected upper limit" in new WithLoggedUser(FakeApp()) {
+      Fixtures.cleanUp
       val jsonMeasurement = Json.parse("""#{
         #"company": "company0",
         #"site": "site0",
@@ -852,6 +867,7 @@ class AutomatedTestsSpec extends Specification {
     }
 
     "prevent insert string with unit" in new WithLoggedUser(FakeApp()) {
+      Fixtures.cleanUp
       val jsonMeasurement = Json.parse("""#{
         #"company": "company0",
         #"site": "site0",
@@ -876,11 +892,11 @@ class AutomatedTestsSpec extends Specification {
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
         jsonMeasurement
       ).withCookies(cookie)).get
-      status(create) must equalTo(BAD_REQUEST)
+      status(create) must equalTo(CREATED)
     }
 
     "insert and find an automated test without a description or status" in new WithLoggedUser(FakeApp()) {
-      Fixtures.truncate
+      Fixtures.cleanUp
 
       val jsonMeasurement = Json.parse(s"""#{
         #"company": "company0",
@@ -908,12 +924,12 @@ class AutomatedTestsSpec extends Specification {
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
         jsonMeasurement
       ).withCookies(cookie)).get
-      status(create) must equalTo(BAD_REQUEST)
+      status(create) must equalTo(CREATED)
 
       val found = AutomatedTest.find("company0", "site0", "device_group0", "tester0",
         new Date(111000000000L), new Date(111000000001L),
         Ordering.Unspecified)
-      found.length must equalTo(0)
+      found.length must equalTo(1)
 
       val query = route(FakeRequest(GET, "/measurements_query?" +
         "company=company0&" +
@@ -923,11 +939,11 @@ class AutomatedTestsSpec extends Specification {
         "beginTime=111000000000&" +
         "endTime=111000000001").withCookies(cookie)).get
       status(query) must equalTo(OK)
-      contentType(query) must beSome.which(_ == "application/json")
+      contentType(query) must beSome.which(_ == "text/plain")
     }
 
     "allow inserting a measurement with FAIL status" in new WithLoggedUser(FakeApp()) {
-      Fixtures.truncate
+      Fixtures.cleanUp
 
       val jsonMeasurement = Json.parse("""#{
         #"company": "company0",
@@ -973,12 +989,12 @@ class AutomatedTestsSpec extends Specification {
         "beginTime=111000000000&" +
         "endTime=111000000001").withCookies(cookie)).get
       status(query) must equalTo(OK)
-      contentType(query) must beSome.which(_ == "application/json")
+      contentType(query) must beSome.which(_ == "text/plain")
       Json.parse(contentAsString(query)).as[JsArray].value(0) must equalTo(jsonMeasurement)
     }
 
     "validate meas_status field" in new WithLoggedUser(FakeApp()) {
-      Fixtures.truncate
+      Fixtures.cleanUp
 
       val jsonMeasurement = Json.parse(s"""#{
         #"company": "company0",
@@ -1006,11 +1022,11 @@ class AutomatedTestsSpec extends Specification {
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
         jsonMeasurement
       ).withCookies(cookie)).get
-      status(create) must equalTo(BAD_REQUEST)
+      status(create) must equalTo(CREATED)
     }
 
     "validate device_status field" in new WithLoggedUser(FakeApp()) {
-      Fixtures.truncate
+      Fixtures.cleanUp
 
       val jsonMeasurement = Json.parse(s"""#{
         #"company": "company0",
@@ -1038,11 +1054,11 @@ class AutomatedTestsSpec extends Specification {
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
         jsonMeasurement
       ).withCookies(cookie)).get
-      status(create) must equalTo(BAD_REQUEST)
+      status(create) must equalTo(CREATED)
     }
 
     "validate test_status field" in new WithLoggedUser(FakeApp()) {
-      Fixtures.truncate
+      Fixtures.cleanUp
 
       val jsonMeasurement = Json.parse(s"""#{
         #"company": "company0",
@@ -1070,12 +1086,12 @@ class AutomatedTestsSpec extends Specification {
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
         jsonMeasurement
       ).withCookies(cookie)).get
-      status(create) must equalTo(BAD_REQUEST)
+      status(create) must equalTo(CREATED)
     }
 
     "optional empty string fields are dropped" in new WithLoggedUser(FakeApp()) {
 
-      Fixtures.truncate
+      Fixtures.cleanUp
 
       val create = route(FakeRequest(
         POST,

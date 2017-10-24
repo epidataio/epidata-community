@@ -9,13 +9,14 @@ import com.epidata.lib.models.util.Binary
 import java.nio.ByteBuffer
 import java.util.Date
 import java.lang.{ Double => JDouble, Long => JLong }
+import java.util.{ Date, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList }
+import com.epidata.lib.models.util.TypeUtils._
 
 /**
  * Model representing a customer measurement stored in the database. Optional
  * key and val fields may be used for some measurement specializations but not
  * others.
  *
- * @param TODO
  * @param meas_unit Measurement unit. Must be present for all types except
  *                  string. Must not be present for string.
  * @param meas_lower_limit Lower limit of measurement range. May be present for
@@ -45,7 +46,7 @@ case class Measurement(
 
   // Splitting timeseries by epoch keeps partitions from growing beyond
   // capacity. The epoch is computed directly from the timestamp.
-  lazy val epoch = Measurement.epochForTs(ts)
+  lazy val epoch = epochForTs(ts)
 }
 
 object MeasurementsKeys {
@@ -56,55 +57,6 @@ object Measurement {
 
   val DBTableName: String = "measurements_original"
   val KafkaTopic: String = "measurements"
-
-  def epochForTs(ts: Date): Int =
-    // Divide the timeline into epochs approximately 12 days in duration.
-    (ts.getTime() / (1000L * 1000L * 1000L)).toInt
-
-  /** Helpers for converting empty strings to None. */
-  def blankToNone(string: String): Option[String] = string match {
-    case "" => None
-    case string => Some(string)
-  }
-  def optionBlankToNone(string: Option[String]): Option[String] = string match {
-    case Some("") => None
-    case _ => string
-  }
-
-  def stringToOption(string: String): Option[String] = string match {
-    case s if (s != null) => Some(s)
-    case _ => None
-  }
-
-  private def getOptionDouble(row: Row, field: String): Option[Double] = {
-    if (!row.isNull(field) && !JDouble.isNaN(row.getDouble(field)))
-      Option(row.getDouble(field))
-    else None
-  }
-
-  private def getOptionLong(row: Row, field: String): Option[Long] = {
-    if (!row.isNull(field))
-      Option(row.getLong(field))
-    else None
-  }
-
-  private def getOptionString(row: Row, field: String): Option[String] = {
-    if (!row.isNull(field) && row.getString(field).compareTo("") != 0)
-      Option(row.getString(field))
-    else None
-  }
-
-  private def getOptionBinary(row: Row, field: String): Option[Binary] = {
-    val binaryBuf = row.getBytes(field)
-    binaryBuf match {
-      case null => None
-      case _ =>
-        val valueBytes = new Array[Byte](binaryBuf.limit - binaryBuf.position)
-        binaryBuf.get(valueBytes)
-        val binary = new Binary(valueBytes)
-        Option(binary)
-    }
-  }
 
   /** Map a cassandra Row to a Measurement of the proper type. */
   implicit def rowToMeasurement(row: Row): Measurement = {
@@ -192,5 +144,13 @@ object Measurement {
       val2
     )
 
+  }
+
+  def rowToJLinkedHashMap(row: Row, tableName: String, modelName: String): JLinkedHashMap[String, Object] = {
+    modelName match {
+      case SensorMeasurement.NAME => SensorMeasurement.rowToJLinkedHashMap(row, tableName)
+      case AutomatedTest.NAME => AutomatedTest.rowToJLinkedHashMap(row, tableName)
+      case _ => new JLinkedHashMap[String, Object]()
+    }
   }
 }
