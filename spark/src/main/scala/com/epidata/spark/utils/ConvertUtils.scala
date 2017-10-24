@@ -7,7 +7,7 @@ package com.epidata.spark.utils
 import java.sql.Timestamp
 
 import com.epidata.lib.models._
-import com.epidata.lib.models.util.{ JsonHelpers, Binary }
+import com.epidata.lib.models.util.{ TypeUtils, JsonHelpers, Binary }
 import com.epidata.spark.models.MeasurementDB
 
 object ConvertUtils {
@@ -43,7 +43,7 @@ object ConvertUtils {
       meas.customer_site,
       meas.collection,
       meas.dataset,
-      Measurement.epochForTs(meas.ts),
+      TypeUtils.epochForTs(meas.ts),
       new Timestamp(meas.ts.getTime),
       optionNoneToString(meas.key1),
       optionNoneToString(meas.key2),
@@ -71,7 +71,7 @@ object ConvertUtils {
       meas.customer_site,
       meas.collection,
       meas.dataset,
-      Measurement.epochForTs(meas.ts),
+      TypeUtils.epochForTs(meas.ts),
       new Timestamp(meas.ts.getTime),
       optionNoneToString(meas.key1),
       optionNoneToString(meas.key2),
@@ -99,7 +99,7 @@ object ConvertUtils {
       meas.customer_site,
       meas.collection,
       meas.dataset,
-      Measurement.epochForTs(meas.ts),
+      TypeUtils.epochForTs(meas.ts),
       new Timestamp(meas.ts.getTime),
       optionNoneToString(meas.key1),
       optionNoneToString(meas.key2),
@@ -127,7 +127,7 @@ object ConvertUtils {
       meas.customer_site,
       meas.collection,
       meas.dataset,
-      Measurement.epochForTs(meas.ts),
+      TypeUtils.epochForTs(meas.ts),
       new Timestamp(meas.ts.getTime),
       optionNoneToString(meas.key1),
       optionNoneToString(meas.key2),
@@ -150,8 +150,8 @@ object ConvertUtils {
   }
 
   def convertJsonStringToMeasurementDB(str: String): MeasurementDB = {
-    val meas = JsonHelpers.toSensorMeasurement(str).get
-    val m = SensorMeasurement.convertSensorMeasurementToMeasurement(meas)
+    val meas = com.epidata.lib.models.SensorMeasurement.jsonToSensorMeasurement(str).get
+    val m = SensorMeasurement.sensorMeasurementToMeasurement(meas)
     val mdb = ConvertUtils.convertMeasurementToMeasurementDB(m)
     mdb
   }

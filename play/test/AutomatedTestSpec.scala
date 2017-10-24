@@ -3,10 +3,11 @@
 */
 
 import cassandra.DB
+import com.epidata.lib.models.util.TypeUtils
 import com.epidata.lib.models.{ AutomatedTest => Model }
 import com.epidata.lib.models.Measurement
 import java.util.Date
-import models.AutomatedTest
+import models.{ MeasurementService, AutomatedTest }
 import org.specs2.mutable._
 import org.specs2.runner._
 import org.junit.runner._
@@ -22,9 +23,13 @@ class AutomatedTestSpec extends Specification {
   object Fixtures {
     val truncateSQL = s"TRUNCATE ${Measurement.DBTableName}"
     def truncate = DB.cql(truncateSQL)
+    def cleanUp = {
+      truncate
+      MeasurementService.reset
+    }
 
     def install = {
-      truncate
+      cleanUp
       models.foreach(AutomatedTest.insert(_))
     }
 
@@ -63,10 +68,10 @@ class AutomatedTestSpec extends Specification {
 
     "insert an AutomatedTest" in new WithApplication {
 
-      Fixtures.truncate
+      Fixtures.cleanUp
 
       val ts = Fixtures.beginTime
-      val epoch = Measurement.epochForTs(ts)
+      val epoch = TypeUtils.epochForTs(ts)
 
       // Value should not exist before insert.
       DB.cql(

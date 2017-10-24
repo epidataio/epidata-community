@@ -121,49 +121,49 @@ class AnalyticsAutomatedTestSpec extends FlatSpec with BeforeAndAfter with Befor
     val row2 = imr(2).toSeq
 
     // Original meas_value field.
-    row0(8).asInstanceOf[MeasurementValue].value should equal(45.7)
-    row1(8).asInstanceOf[MeasurementValue].value should equal(48.1)
-    row2(8).asInstanceOf[MeasurementValue].value should equal(49.2)
+    row0(9).asInstanceOf[MeasurementValue].value should equal(45.7)
+    row1(9).asInstanceOf[MeasurementValue].value should equal(48.1)
+    row2(9).asInstanceOf[MeasurementValue].value should equal(49.2)
 
     // I field.
-    row0(16) should equal(45.7)
-    row1(16) should equal(48.1)
-    row2(16) should equal(49.2)
+    row0(17) should equal(45.7)
+    row1(17) should equal(48.1)
+    row2(17) should equal(49.2)
 
     val iMean = (45.7 + 48.1 + 49.2) / 3.0
-    row0(17) should equal(iMean)
-    row1(17) should equal(iMean)
-    row2(17) should equal(iMean)
+    row0(18) should equal(iMean)
+    row1(18) should equal(iMean)
+    row2(18) should equal(iMean)
 
     val iLcl = iMean - 2.66 * iMean
-    row0(18) should equal(iLcl)
-    row1(18) should equal(iLcl)
-    row2(18) should equal(iLcl)
+    row0(19) should equal(iLcl)
+    row1(19) should equal(iLcl)
+    row2(19) should equal(iLcl)
 
     val iUcl = iMean + 2.66 * iMean
-    row0(19) should equal(iUcl)
-    row1(19) should equal(iUcl)
-    row2(19) should equal(iUcl)
+    row0(20) should equal(iUcl)
+    row1(20) should equal(iUcl)
+    row2(20) should equal(iUcl)
 
     val mr = List(Double.NaN, 48.1 - 45.7, 49.2 - 48.1)
-    row0(20).asInstanceOf[Double].isNaN should be(true)
-    row1(20) should equal(mr(1))
-    row2(20) should equal(mr(2))
+    row0(21).asInstanceOf[Double].isNaN should be(true)
+    row1(21) should equal(mr(1))
+    row2(21) should equal(mr(2))
 
     val mrMean = (48.1 - 45.7 + 49.2 - 48.1) / 2.0
-    row0(21) should equal(mrMean)
-    row1(21) should equal(mrMean)
-    row2(21) should equal(mrMean)
+    row0(22) should equal(mrMean)
+    row1(22) should equal(mrMean)
+    row2(22) should equal(mrMean)
 
     val mrLcl = 0.0
-    row0(22) should equal(mrLcl)
-    row1(22) should equal(mrLcl)
-    row2(22) should equal(mrLcl)
+    row0(23) should equal(mrLcl)
+    row1(23) should equal(mrLcl)
+    row2(23) should equal(mrLcl)
 
     val mrUcl = mrMean + 3.267 * mrMean
-    row0(23) should equal(mrUcl)
-    row1(23) should equal(mrUcl)
-    row2(23) should equal(mrUcl)
+    row0(24) should equal(mrUcl)
+    row1(24) should equal(mrUcl)
+    row2(24) should equal(mrUcl)
   }
 
   "IMR" should "raise exception with too few rows" in {

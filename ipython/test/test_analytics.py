@@ -102,12 +102,12 @@ class IMRTest(unittest.TestCase):
         # Compare without 'ts' column due to time representation inconsistencies
         # between systems.
         self.assertEqual(
-            '     company    site device_group     tester device_name test_name meas_name  meas_value meas_unit meas_status  meas_lower_limit  meas_upper_limit meas_description device_status test_status     I     I_mean       I_LCL    I_UCL    MR  MR_mean  MR_LCL    MR_UCL\n'
-            '0  Company-1  Site-1         1000  Station-1      100001    Test-1    Meas-1        45.7  degree C        PASS              40.0              90.0      Description          PASS        PASS  45.7  47.866667  -79.458667  175.192   NaN     1.85     0.0   7.89395\n'
-            '1  Company-1  Site-1         1000  Station-1      101001    Test-1    Meas-1        49.1  degree C        PASS              40.0              90.0      Description          PASS        PASS  49.1  47.866667  -79.458667  175.192   3.4     1.85     0.0   7.89395\n'
-            '2  Company-1  Site-1         1000  Station-1      101001    Test-1    Meas-1        48.8  degree C        PASS              40.0              90.0      Description          PASS        PASS  48.8  47.866667  -79.458667  175.192   0.3     1.85     0.0   7.89395\n'
-            '3  Company-1  Site-1         1000  Station-1      101001    Test-1    Meas-2        88.8  degree C        PASS              40.0              90.0      Description          PASS        PASS  88.8  83.200000 -138.112000  304.512   NaN    11.20     0.0  47.79040\n'
-            '4  Company-1  Site-1         1000  Station-1      101001    Test-1    Meas-2        77.6  degree C        PASS              40.0              90.0      Description          PASS        PASS  77.6  83.200000 -138.112000  304.512  11.2    11.20     0.0  47.79040',
+            '     company    site device_group     tester device_name test_name meas_name meas_datatype  meas_value meas_unit meas_status  meas_lower_limit  meas_upper_limit meas_description device_status test_status     I     I_mean       I_LCL    I_UCL    MR  MR_mean  MR_LCL    MR_UCL\n'
+            '0  Company-1  Site-1         1000  Station-1      100001    Test-1    Meas-1          None        45.7  degree C        PASS              40.0              90.0      Description          PASS        PASS  45.7  47.866667  -79.458667  175.192   NaN     1.85     0.0   7.89395\n'
+            '1  Company-1  Site-1         1000  Station-1      101001    Test-1    Meas-1          None        49.1  degree C        PASS              40.0              90.0      Description          PASS        PASS  49.1  47.866667  -79.458667  175.192   3.4     1.85     0.0   7.89395\n'
+            '2  Company-1  Site-1         1000  Station-1      101001    Test-1    Meas-1          None        48.8  degree C        PASS              40.0              90.0      Description          PASS        PASS  48.8  47.866667  -79.458667  175.192   0.3     1.85     0.0   7.89395\n'
+            '3  Company-1  Site-1         1000  Station-1      101001    Test-1    Meas-2          None        88.8  degree C        PASS              40.0              90.0      Description          PASS        PASS  88.8  83.200000 -138.112000  304.512   NaN    11.20     0.0  47.79040\n'
+            '4  Company-1  Site-1         1000  Station-1      101001    Test-1    Meas-2          None        77.6  degree C        PASS              40.0              90.0      Description          PASS        PASS  77.6  83.200000 -138.112000  304.512  11.2    11.20     0.0  47.79040',
             imr.to_string())
 
     def test_selected_meas_dist(self):

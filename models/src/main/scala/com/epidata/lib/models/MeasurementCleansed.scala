@@ -4,10 +4,10 @@
 
 package com.epidata.lib.models
 
-import java.sql.Timestamp
 import java.util.Date
 
 import com.datastax.driver.core.Row
+import com.epidata.lib.models.util.TypeUtils
 
 case class MeasurementCleansed(
     customer: String,
@@ -33,7 +33,7 @@ case class MeasurementCleansed(
 
   // Splitting timeseries by epoch keeps partitions from growing beyond
   // capacity. The epoch is computed directly from the timestamp.
-  lazy val epoch = Measurement.epochForTs(ts)
+  lazy val epoch = TypeUtils.epochForTs(ts)
 }
 
 object MeasurementCleansed {
@@ -84,8 +84,8 @@ object MeasurementCleansed {
       m.meas_value,
       m.meas_unit,
       m.meas_status,
-      Measurement.stringToOption(row.getString("meas_flag")),
-      Measurement.stringToOption(row.getString("meas_method")),
+      TypeUtils.stringToOption(row.getString("meas_flag")),
+      TypeUtils.stringToOption(row.getString("meas_method")),
       m.meas_lower_limit,
       m.meas_upper_limit,
       m.meas_description,

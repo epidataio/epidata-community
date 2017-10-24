@@ -67,28 +67,6 @@ class EpidataStreamingContext(
     start
   }
 
-  // For testing
-  def startStreamingAndPrint(op: Transformation): Unit = {
-
-    kafkaStream.foreachRDD {
-      (message: RDD[(String, String)], batchTime: Time) =>
-        {
-          val dataFrame = message.map(_._2).map(m => {
-            ConvertUtils.convertJsonStringToMeasurementDB(m)
-          }).toDF(
-            MeasurementDB.FieldNames: _*
-          )
-
-          val df = op(dataFrame, sqlContext)
-          df.show()
-
-          println(s"${df.count()} rows processed.")
-        }
-    }
-
-    start
-  }
-
   def stop(): Unit = {
     sparkStreamingContext.stop()
   }
