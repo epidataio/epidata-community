@@ -93,7 +93,7 @@ class AutomatedTestsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        Json.parse("""#{
+        Json.parse("""#[{
             #"company": "company0",
             #"site": "site0",
             #"device_group": "device_group0",
@@ -111,7 +111,7 @@ class AutomatedTestsSpec extends Specification {
             #"meas_description": "md",
             #"device_status": "PASS",
             #"test_status": "PASS"
-            #}""".stripMargin('#'))
+            #}]""".stripMargin('#'))
       ).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
 
@@ -128,7 +128,7 @@ class AutomatedTestsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        Json.parse("""#{
+        Json.parse("""#[{
             #"company": "company0",
             #"site": "site0",
             #"device_group": "device_group0",
@@ -146,7 +146,7 @@ class AutomatedTestsSpec extends Specification {
             #"meas_description": "md",
             #"device_status": "PASS",
             #"test_status": "PASS"
-            #}""".stripMargin('#'))
+            #}]""".stripMargin('#'))
       )).get // No user cookie is provided.
       status(create) must equalTo(SEE_OTHER)
     }
@@ -159,7 +159,7 @@ class AutomatedTestsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        Json.parse("""#{
+        Json.parse("""#[{
             #"device_group": "device_group0",
             #"meas_upper_limit": 0.5,
             #"tester": "tester0",
@@ -177,7 +177,7 @@ class AutomatedTestsSpec extends Specification {
             #"device_status": "PASS",
             #"ts": 111000000000,
             #"test_status": "PASS"
-            #}""".stripMargin('#'))
+            #}]""".stripMargin('#'))
       ).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
 
@@ -192,7 +192,7 @@ class AutomatedTestsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        Json.parse("""#{
+        Json.parse("""#[{
             #"company": "company0",
             #"site": "site0",
             #"device_group": "device_group0",
@@ -210,7 +210,7 @@ class AutomatedTestsSpec extends Specification {
             #"meas_description": "md",
             #"device_status": "PASS",
             #"test_status": "PASS"
-            #}""".stripMargin('#'))
+            #}]""".stripMargin('#'))
       ).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
     }
@@ -221,7 +221,7 @@ class AutomatedTestsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        Json.parse("""#{
+        Json.parse("""#[{
             #"company": "company0",
             #"site": "site0",
             #"device_group": "device_group0",
@@ -239,7 +239,7 @@ class AutomatedTestsSpec extends Specification {
             #"meas_description": "md",
             #"device_status": "PASS",
             #"test_status": "PASS"
-            #}""".stripMargin('#'))
+            #}]""".stripMargin('#'))
       ).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
     }
@@ -344,7 +344,7 @@ class AutomatedTestsSpec extends Specification {
     "insert and find a long automated test" in new WithLoggedUser(FakeApp()) {
       Fixtures.cleanUp
 
-      val jsonMeasurement = Json.parse("""#{
+      val jsonMeasurement = Json.parse("""#[{
         #"company": "company0",
         #"site": "site0",
         #"device_group": "device_group0",
@@ -362,7 +362,7 @@ class AutomatedTestsSpec extends Specification {
         #"meas_description": "md",
         #"device_status": "PASS",
         #"test_status": "PASS"
-        #}""".stripMargin('#'))
+        #}]""".stripMargin('#'))
 
       val create = route(FakeRequest(
         POST,
@@ -389,13 +389,13 @@ class AutomatedTestsSpec extends Specification {
         "endTime=111000000001").withCookies(cookie)).get
       status(query) must equalTo(OK)
       contentType(query) must beSome.which(_ == "text/plain")
-      Json.parse(contentAsString(query)).as[JsArray].value(0) must equalTo(jsonMeasurement)
+      Json.parse(contentAsString(query)).as[JsArray] must equalTo(jsonMeasurement)
     }
 
     "insert and find a large long automated test" in new WithLoggedUser(FakeApp()) {
       Fixtures.cleanUp
 
-      val jsonMeasurement = Json.parse(s"""#{
+      val jsonMeasurement = Json.parse(s"""#[{
         #"company": "company0",
         #"site": "site0",
         #"device_group": "device_group0",
@@ -413,7 +413,7 @@ class AutomatedTestsSpec extends Specification {
         #"meas_description": "md",
         #"device_status": "PASS",
         #"test_status": "PASS"
-        #}""".stripMargin('#'))
+        #}]""".stripMargin('#'))
 
       val create = route(FakeRequest(
         POST,
@@ -441,13 +441,13 @@ class AutomatedTestsSpec extends Specification {
       status(query) must equalTo(OK)
       contentType(query) must beSome.which(_ == "text/plain")
 
-      Json.parse(contentAsString(query)).as[JsArray].value(0) must equalTo(jsonMeasurement)
+      Json.parse(contentAsString(query)).as[JsArray] must equalTo(jsonMeasurement)
     }
 
     "insert and find a string automated test" in new WithLoggedUser(FakeApp()) {
       Fixtures.cleanUp
 
-      val jsonMeasurement = Json.parse("""#{
+      val jsonMeasurement = Json.parse("""#[{
         #"company": "company0",
         #"site": "site0",
         #"device_group": "device_group0",
@@ -462,7 +462,7 @@ class AutomatedTestsSpec extends Specification {
         #"meas_description": "md",
         #"device_status": "PASS",
         #"test_status": "PASS"
-        #}""".stripMargin('#'))
+        #}]""".stripMargin('#'))
 
       val create = route(FakeRequest(
         POST,
@@ -487,7 +487,7 @@ class AutomatedTestsSpec extends Specification {
         "endTime=111000000001").withCookies(cookie)).get
       status(query) must equalTo(OK)
       contentType(query) must beSome.which(_ == "text/plain")
-      Json.parse(contentAsString(query)).as[JsArray].value(0) must equalTo(jsonMeasurement)
+      Json.parse(contentAsString(query)).as[JsArray] must equalTo(jsonMeasurement)
     }
 
     "insert and find an array automated test" in new WithLoggedUser(FakeApp()) {
@@ -497,7 +497,7 @@ class AutomatedTestsSpec extends Specification {
       val array = Array(1, 2, 3, 4, 5, 6, 7, 8).map(_.toByte)
       val encodedArray = DatatypeConverter.printBase64Binary(array)
 
-      val jsonMeasurement = Json.parse(s"""#{
+      val jsonMeasurement = Json.parse(s"""#[{
         #"company": "company0",
         #"site": "site0",
         #"device_group": "device_group0",
@@ -513,7 +513,7 @@ class AutomatedTestsSpec extends Specification {
         #"meas_description": "md",
         #"device_status": "PASS",
         #"test_status": "PASS"
-        #}""".stripMargin('#'))
+        #}]""".stripMargin('#'))
 
       val create = route(FakeRequest(
         POST,
@@ -541,7 +541,7 @@ class AutomatedTestsSpec extends Specification {
       contentType(query) must beSome.which(_ == "text/plain")
 
       val measurement = Json.parse(contentAsString(query)).as[JsArray].value(0)
-      (measurement \ "company").as[String] must equalTo((jsonMeasurement \ "company").as[String])
+      (measurement \ "company").as[String] must equalTo("company0")
     }
 
     "insert and find a waveform automated test" in new WithLoggedUser(FakeApp()) {
@@ -551,7 +551,7 @@ class AutomatedTestsSpec extends Specification {
       val array = Array(10, 20, 30, 40, 50, 60, 70, 80).map(_.toByte)
       val encodedArray = DatatypeConverter.printBase64Binary(array)
 
-      val jsonMeasurement = Json.parse(s"""#{
+      val jsonMeasurement = Json.parse(s"""#[{
         #"company": "company0",
         #"site": "site0",
         #"device_group": "device_group0",
@@ -567,7 +567,7 @@ class AutomatedTestsSpec extends Specification {
         #"meas_description": "md",
         #"device_status": "PASS",
         #"test_status": "PASS"
-        #}""".stripMargin('#'))
+        #}]""".stripMargin('#'))
 
       val create = route(FakeRequest(
         POST,
@@ -594,12 +594,12 @@ class AutomatedTestsSpec extends Specification {
       status(query) must equalTo(OK)
       contentType(query) must beSome.which(_ == "text/plain")
       val measurement = Json.parse(contentAsString(query)).as[JsArray].value(0)
-      (measurement \ "company").as[String] must equalTo((jsonMeasurement \ "company").as[String])
+      (measurement \ "company").as[String] must equalTo("company0")
     }
 
     "prevent insert with missing datatype field" in new WithLoggedUser(FakeApp()) {
       Fixtures.cleanUp
-      val jsonMeasurement = Json.parse("""#{
+      val jsonMeasurement = Json.parse("""#[{
         #"company": "company0",
         #"site": "site0",
         #"device_group": "device_group0",
@@ -616,7 +616,7 @@ class AutomatedTestsSpec extends Specification {
         #"meas_description": "md",
         #"device_status": "PASS",
         #"test_status": "PASS"
-        #}""".stripMargin('#'))
+        #}]""".stripMargin('#'))
 
       val create = route(FakeRequest(
         POST,
@@ -629,7 +629,7 @@ class AutomatedTestsSpec extends Specification {
 
     "prevent insert with invalid datatype field" in new WithLoggedUser(FakeApp()) {
       Fixtures.cleanUp
-      val jsonMeasurement = Json.parse("""#{
+      val jsonMeasurement = Json.parse("""#[{
         #"company": "company0",
         #"site": "site0",
         #"device_group": "device_group0",
@@ -647,7 +647,7 @@ class AutomatedTestsSpec extends Specification {
         #"meas_description": "md",
         #"device_status": "PASS",
         #"test_status": "PASS"
-        #}""".stripMargin('#'))
+        #}]""".stripMargin('#'))
 
       val create = route(FakeRequest(
         POST,
@@ -660,7 +660,7 @@ class AutomatedTestsSpec extends Specification {
 
     "prevent insert number with incompatible datatype field" in new WithLoggedUser(FakeApp()) {
       Fixtures.cleanUp
-      val jsonMeasurement = Json.parse("""#{
+      val jsonMeasurement = Json.parse("""#[{
         #"company": "company0",
         #"site": "site0",
         #"device_group": "device_group0",
@@ -678,7 +678,7 @@ class AutomatedTestsSpec extends Specification {
         #"meas_description": "md",
         #"device_status": "PASS",
         #"test_status": "PASS"
-        #}""".stripMargin('#'))
+        #}]""".stripMargin('#'))
 
       val create = route(FakeRequest(
         POST,
@@ -691,7 +691,7 @@ class AutomatedTestsSpec extends Specification {
 
     "prevent insert string with incompatible datatype field" in new WithLoggedUser(FakeApp()) {
       Fixtures.cleanUp
-      val jsonMeasurement = Json.parse("""#{
+      val jsonMeasurement = Json.parse("""#[{
         #"company": "company0",
         #"site": "site0",
         #"device_group": "device_group0",
@@ -709,7 +709,7 @@ class AutomatedTestsSpec extends Specification {
         #"meas_description": "md",
         #"device_status": "PASS",
         #"test_status": "PASS"
-        #}""".stripMargin('#'))
+        #}]""".stripMargin('#'))
 
       val create = route(FakeRequest(
         POST,
@@ -722,7 +722,7 @@ class AutomatedTestsSpec extends Specification {
 
     "allow insert numeric with missing lower limit" in new WithLoggedUser(FakeApp()) {
       Fixtures.cleanUp
-      val jsonMeasurement = Json.parse("""#{
+      val jsonMeasurement = Json.parse("""#[{
         #"company": "company0",
         #"site": "site0",
         #"device_group": "device_group0",
@@ -739,7 +739,7 @@ class AutomatedTestsSpec extends Specification {
         #"meas_description": "md",
         #"device_status": "PASS",
         #"test_status": "PASS"
-        #}""".stripMargin('#'))
+        #}]""".stripMargin('#'))
 
       val create = route(FakeRequest(
         POST,
@@ -752,7 +752,7 @@ class AutomatedTestsSpec extends Specification {
 
     "allow insert numeric with missing upper limit" in new WithLoggedUser(FakeApp()) {
       Fixtures.cleanUp
-      val jsonMeasurement = Json.parse("""#{
+      val jsonMeasurement = Json.parse("""#[{
         #"company": "company0",
         #"site": "site0",
         #"device_group": "device_group0",
@@ -769,7 +769,7 @@ class AutomatedTestsSpec extends Specification {
         #"meas_description": "md",
         #"device_status": "PASS",
         #"test_status": "PASS"
-        #}""".stripMargin('#'))
+        #}]""".stripMargin('#'))
 
       val create = route(FakeRequest(
         POST,
@@ -782,7 +782,7 @@ class AutomatedTestsSpec extends Specification {
 
     "prevent insert numeric with missing unit" in new WithLoggedUser(FakeApp()) {
       Fixtures.cleanUp
-      val jsonMeasurement = Json.parse("""#{
+      val jsonMeasurement = Json.parse("""#[{
         #"company": "company0",
         #"site": "site0",
         #"device_group": "device_group0",
@@ -797,7 +797,7 @@ class AutomatedTestsSpec extends Specification {
         #"meas_description": "md",
         #"device_status": "PASS",
         #"test_status": "PASS"
-        #}""".stripMargin('#'))
+        #}]""".stripMargin('#'))
 
       val create = route(FakeRequest(
         POST,
@@ -810,7 +810,7 @@ class AutomatedTestsSpec extends Specification {
 
     "insert string with unexpected lower limit" in new WithLoggedUser(FakeApp()) {
       Fixtures.cleanUp
-      val jsonMeasurement = Json.parse("""#{
+      val jsonMeasurement = Json.parse("""#[{
         #"company": "company0",
         #"site": "site0",
         #"device_group": "device_group0",
@@ -826,7 +826,7 @@ class AutomatedTestsSpec extends Specification {
         #"meas_description": "md",
         #"device_status": "PASS",
         #"test_status": "PASS"
-        #}""".stripMargin('#'))
+        #}]""".stripMargin('#'))
 
       val create = route(FakeRequest(
         POST,
@@ -839,7 +839,7 @@ class AutomatedTestsSpec extends Specification {
 
     "insert string with unexpected upper limit" in new WithLoggedUser(FakeApp()) {
       Fixtures.cleanUp
-      val jsonMeasurement = Json.parse("""#{
+      val jsonMeasurement = Json.parse("""#[{
         #"company": "company0",
         #"site": "site0",
         #"device_group": "device_group0",
@@ -855,7 +855,7 @@ class AutomatedTestsSpec extends Specification {
         #"meas_description": "md",
         #"device_status": "PASS",
         #"test_status": "PASS"
-        #}""".stripMargin('#'))
+        #}]""".stripMargin('#'))
 
       val create = route(FakeRequest(
         POST,
@@ -868,7 +868,7 @@ class AutomatedTestsSpec extends Specification {
 
     "prevent insert string with unit" in new WithLoggedUser(FakeApp()) {
       Fixtures.cleanUp
-      val jsonMeasurement = Json.parse("""#{
+      val jsonMeasurement = Json.parse("""#[{
         #"company": "company0",
         #"site": "site0",
         #"device_group": "device_group0",
@@ -884,7 +884,7 @@ class AutomatedTestsSpec extends Specification {
         #"meas_description": "md",
         #"device_status": "PASS",
         #"test_status": "PASS"
-        #}""".stripMargin('#'))
+        #}]""".stripMargin('#'))
 
       val create = route(FakeRequest(
         POST,
@@ -898,7 +898,7 @@ class AutomatedTestsSpec extends Specification {
     "insert and find an automated test without a description or status" in new WithLoggedUser(FakeApp()) {
       Fixtures.cleanUp
 
-      val jsonMeasurement = Json.parse(s"""#{
+      val jsonMeasurement = Json.parse(s"""#[{
         #"company": "company0",
         #"site": "site0",
         #"device_group": "device_group0",
@@ -916,7 +916,7 @@ class AutomatedTestsSpec extends Specification {
         #"meas_description": ""   ${"" /* empty string field */ },
         #"device_status": ""      ${"" /* empty string field */ },
         #"test_status": ""        ${"" /* empty string field */ }
-        #}""".stripMargin('#'))
+        #}]""".stripMargin('#'))
 
       val create = route(FakeRequest(
         POST,
@@ -945,7 +945,7 @@ class AutomatedTestsSpec extends Specification {
     "allow inserting a measurement with FAIL status" in new WithLoggedUser(FakeApp()) {
       Fixtures.cleanUp
 
-      val jsonMeasurement = Json.parse("""#{
+      val jsonMeasurement = Json.parse("""#[{
         #"company": "company0",
         #"site": "site0",
         #"device_group": "device_group0",
@@ -963,7 +963,7 @@ class AutomatedTestsSpec extends Specification {
         #"meas_description": "md",
         #"device_status": "FAIL",
         #"test_status": "FAIL"
-        #}""".stripMargin('#'))
+        #}]""".stripMargin('#'))
 
       val create = route(FakeRequest(
         POST,
@@ -990,13 +990,13 @@ class AutomatedTestsSpec extends Specification {
         "endTime=111000000001").withCookies(cookie)).get
       status(query) must equalTo(OK)
       contentType(query) must beSome.which(_ == "text/plain")
-      Json.parse(contentAsString(query)).as[JsArray].value(0) must equalTo(jsonMeasurement)
+      Json.parse(contentAsString(query)).as[JsArray] must equalTo(jsonMeasurement)
     }
 
     "validate meas_status field" in new WithLoggedUser(FakeApp()) {
       Fixtures.cleanUp
 
-      val jsonMeasurement = Json.parse(s"""#{
+      val jsonMeasurement = Json.parse(s"""#[{
         #"company": "company0",
         #"site": "site0",
         #"device_group": "device_group0",
@@ -1014,7 +1014,7 @@ class AutomatedTestsSpec extends Specification {
         #"meas_description": "md",
         #"device_status": "PASS",
         #"test_status": "PASS"
-        #}""".stripMargin('#'))
+        #}]""".stripMargin('#'))
 
       val create = route(FakeRequest(
         POST,
@@ -1028,7 +1028,7 @@ class AutomatedTestsSpec extends Specification {
     "validate device_status field" in new WithLoggedUser(FakeApp()) {
       Fixtures.cleanUp
 
-      val jsonMeasurement = Json.parse(s"""#{
+      val jsonMeasurement = Json.parse(s"""#[{
         #"company": "company0",
         #"site": "site0",
         #"device_group": "device_group0",
@@ -1046,7 +1046,7 @@ class AutomatedTestsSpec extends Specification {
         #"meas_description": "md",
         #"device_status": "badPASS", ${"" /* status suffix not allowed */ }
         #"test_status": "PASS"
-        #}""".stripMargin('#'))
+        #}]""".stripMargin('#'))
 
       val create = route(FakeRequest(
         POST,
@@ -1060,7 +1060,7 @@ class AutomatedTestsSpec extends Specification {
     "validate test_status field" in new WithLoggedUser(FakeApp()) {
       Fixtures.cleanUp
 
-      val jsonMeasurement = Json.parse(s"""#{
+      val jsonMeasurement = Json.parse(s"""#[{
         #"company": "company0",
         #"site": "site0",
         #"device_group": "device_group0",
@@ -1078,7 +1078,7 @@ class AutomatedTestsSpec extends Specification {
         #"meas_description": "md",
         #"device_status": "PASS",
         #"test_status": "FAILbad"    ${"" /* status prefix not allowed */ }
-        #}""".stripMargin('#'))
+        #}]""".stripMargin('#'))
 
       val create = route(FakeRequest(
         POST,
@@ -1097,7 +1097,7 @@ class AutomatedTestsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        Json.parse(s"""#{
+        Json.parse(s"""#[{
             #"company": "company0",
             #"site": "site0",
             #"device_group": "device_group0",
@@ -1115,7 +1115,7 @@ class AutomatedTestsSpec extends Specification {
             #"meas_description": "",     ${"" /* empty string field */ }
             #"device_status": "PASS",
             #"test_status": "PASS"
-            #}""".stripMargin('#'))
+            #}]""".stripMargin('#'))
       ).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
 

@@ -85,7 +85,7 @@ headers = {
 
 # The measurement data is assembled in a python dictionary and converted
 # to JSON.
-json_body = json.dumps({
+json_body = json.dumps([{
     'company': 'Company-1',
     'site': 'Site-1',
     'device_group': '1000',
@@ -111,7 +111,7 @@ json_body = json.dumps({
     'meas_description': '',
     'device_status': 'PASS',
     'test_status': 'PASS'
-})
+}])
 
 # Construct the POST request.
 post_request = urllib2.Request(url, headers=headers, data=json_body)
@@ -129,7 +129,7 @@ assert post_response2.getcode() == 201
 
 url = CREATE_MEASUREMENT_URL
 headers = {'Content-type': 'application/json', 'Cookie': session_cookie}
-json_body = json.dumps({
+json_body = json.dumps([{
     'company': 'Company-2',
     'site': 'Site-2',
     'device_group': '2000',
@@ -148,7 +148,7 @@ json_body = json.dumps({
     'meas_description': '',
     'device_status': 'PASS',
     'test_status': 'PASS'
-})
+}])
 post_request = urllib2.Request(url, headers=headers, data=json_body)
 post_response = urllib2.urlopen(post_request)
 assert post_response.getcode() == 201
@@ -188,7 +188,7 @@ waveform_data = struct.pack(
 
 url = CREATE_MEASUREMENT_URL
 headers = {'Content-type': 'application/json', 'Cookie': session_cookie}
-json_body = json.dumps({
+json_body = json.dumps([{
     'company': 'Company-3',
     'site': 'Site-3',
     'device_group': '3000',
@@ -210,7 +210,7 @@ json_body = json.dumps({
     'meas_description': '',
     'device_status': 'PASS',
     'test_status': 'PASS'
-})
+}])
 post_request = urllib2.Request(url, headers=headers, data=json_body)
 post_response = urllib2.urlopen(post_request)
 assert post_response.getcode() == 201

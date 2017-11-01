@@ -15,11 +15,11 @@ Installation and Launch
 ------------------------
 - Docker Container:
 The epidata-community docker image is available as a stand-alone package with all code and required components. To build and start a docker container, simply execute the command shown below (replacing 'epidata123' with a custom token):  
-    - docker run -p 443:443 -it -e token=epidata123 epidataio/epidata-community:0.10.0
+    - docker run -p 443:443 -it -e token=epidata123 epidataio/epidata-community:0.11.0
 
     Below are other useful docker commands:
     - Pull the docker image: 
-        - docker pull epidataio/epidata-community:0.10.0
+        - docker pull epidataio/epidata-community:0.11.0
     - List all docker containers:
         - docker ps -a
     - Stop a docker container:

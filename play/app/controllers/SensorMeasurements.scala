@@ -17,15 +17,6 @@ import util.{ EpidataMetrics, Ordering }
 object SensorMeasurements extends Controller with SecureSocial {
 
   def create = SecuredAction(parse.json) { implicit request =>
-    com.epidata.lib.models.SensorMeasurement.jsonToSensorMeasurement(request.body.toString()) match {
-      case Some(sensorMeasurement) =>
-        SensorMeasurement.insert(sensorMeasurement)
-        Created
-      case _ => BadRequest(Json.obj("status" -> "ERROR", "message" -> "Bad Json Format!"))
-    }
-  }
-
-  def createList = SecuredAction(parse.json) { implicit request =>
     val sensorMeasurements = com.epidata.lib.models.SensorMeasurement.jsonToSensorMeasurements(request.body.toString())
     SensorMeasurement.insert(sensorMeasurements.flatMap(x => x))
 
@@ -35,15 +26,6 @@ object SensorMeasurements extends Controller with SecureSocial {
     else {
       val message = "Failed objects: " + failedIndexes.mkString(",")
       BadRequest(Json.obj("status" -> "ERROR", "message" -> message))
-    }
-  }
-
-  def insertRecordKafka = SecuredAction(parse.json) { implicit request =>
-    com.epidata.lib.models.SensorMeasurement.jsonToSensorMeasurement(request.body.toString()) match {
-      case Some(sensorMeasurement) =>
-        models.SensorMeasurement.insertToKafka(List(sensorMeasurement))
-        Created
-      case _ => BadRequest(Json.obj("status" -> "ERROR", "message" -> "Bad Json Format!"))
     }
   }
 

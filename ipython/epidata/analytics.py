@@ -129,7 +129,15 @@ def substitute(df, meas_names, method="rolling", size=3):
     result : pandas DataFrame
         A DataFrame containing full copies of the substituted and non-substituted rows within df. Some substitution methods may add a new column to the result to indicate that substitution was perfomed.
     """
-    df["meas_value"] = df["meas_value"].apply(lambda x: x if (not isinstance(x, basestring) and not (x is None or np.isnan(x))) or (isinstance(x, basestring) and x != "") else np.nan)
+    df["meas_value"] = df["meas_value"].apply(
+        lambda x: x if (
+            not isinstance(
+                x,
+                basestring) and not (
+                x is None or np.isnan(x))) or (
+                    isinstance(
+                        x,
+                        basestring) and x != "") else np.nan)
     for meas_name in meas_names:
 
         if (method == "rolling"):
