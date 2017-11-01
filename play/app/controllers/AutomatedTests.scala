@@ -19,15 +19,6 @@ import util.Ordering
 object AutomatedTests extends Controller with SecureSocial {
 
   def create = SecuredAction(parse.json) { implicit request =>
-    com.epidata.lib.models.AutomatedTest.jsonToAutomatedTest(request.body.toString()) match {
-      case Some(m) =>
-        AutomatedTest.insert(m)
-        Created
-      case _ => BadRequest(Json.obj("status" -> "ERROR", "message" -> "Bad Json Format!"))
-    }
-  }
-
-  def createList = SecuredAction(parse.json) { implicit request =>
     val automatedTests = com.epidata.lib.models.AutomatedTest.jsonToAutomatedTests(request.body.toString())
     AutomatedTest.insertList(automatedTests.flatMap(x => x))
 

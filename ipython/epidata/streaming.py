@@ -8,7 +8,7 @@ from kafka import KafkaProducer
 from kafka import KafkaClient
 import json
 
-from epidata._private.utils import ConvertUtils
+from utils import ConvertUtils
 from sensor_measurement import SensorMeasurement
 from automated_test import AutomatedTest
 
@@ -78,7 +78,6 @@ class EpidataStreamingContext:
                             # clean up unnecessary column
                             output_df = ConvertUtils.convert_meas_value(
                                 output_df, op.destination())
-
 
                             # convert it back to spark data frame
                             spark_output_df = self._sql_ctx.createDataFrame(

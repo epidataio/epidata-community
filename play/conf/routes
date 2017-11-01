@@ -29,6 +29,7 @@ GET     /not-authorized             securesocial.controllers.ProviderController.
 
 # Redirect for external errors.
 GET     /error                      controllers.ErrorRedirect.show()
+GET     /unauthorized               controllers.Unauthorized.show()
 
 # API based authentication.
 POST    /api/authenticate/:provider controllers.ApiAuth.authenticate(provider)

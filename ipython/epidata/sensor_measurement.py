@@ -44,14 +44,20 @@ class SensorMeasurement(object):
                 output["meas_value_datatype"] = 'string'
 
         if "meas_value" in dict and isinstance(dict['meas_value'], float):
-            if output["meas_datatype"] == "long" and long(float(dict['meas_value'])) == float(dict['meas_value']):
+            if output["meas_datatype"] == "long" and long(
+                    float(dict['meas_value'])) == float(dict['meas_value']):
                 output["meas_value_l"] = float(dict["meas_value"])
                 output["meas_value_datatype"] = 'long'
             else:
                 output["meas_value_d"] = float(dict["meas_value"])
                 output["meas_value_datatype"] = 'double'
 
-        if "meas_value" in dict and ( isinstance(dict['meas_value'], int) or isinstance(dict['meas_value'], long)):
+        if "meas_value" in dict and (
+            isinstance(
+                dict['meas_value'],
+                int) or isinstance(
+                dict['meas_value'],
+                long)):
             output["meas_value_l"] = float(dict["meas_value"])
             output["meas_value_datatype"] = 'long'
 
@@ -59,26 +65,44 @@ class SensorMeasurement(object):
         output["meas_lower_limit_d"] = np.nan
         output["meas_lower_limit_l"] = np.nan
 
-        if "meas_lower_limit" in dict and isinstance(dict['meas_lower_limit'], float):
-            if long(float(dict["meas_lower_limit"])) == float(dict["meas_lower_limit"]):
+        if "meas_lower_limit" in dict and isinstance(
+                dict['meas_lower_limit'], float):
+            if long(
+                    float(
+                        dict["meas_lower_limit"])) == float(
+                    dict["meas_lower_limit"]):
                 output["meas_lower_limit_l"] = float(dict["meas_lower_limit"])
             else:
                 output["meas_lower_limit_d"] = float(dict["meas_lower_limit"])
 
-        if "meas_lower_limit" in dict and (isinstance(dict['meas_lower_limit'], int) or isinstance(dict['meas_lower_limit'], long)):
+        if "meas_lower_limit" in dict and (
+            isinstance(
+                dict['meas_lower_limit'],
+                int) or isinstance(
+                dict['meas_lower_limit'],
+                long)):
             output["meas_lower_limit_l"] = float(dict["meas_lower_limit"])
 
         # Set meas_upper_limit
         output["meas_upper_limit_d"] = np.nan
         output["meas_upper_limit_l"] = np.nan
 
-        if "meas_upper_limit" in dict and isinstance(dict['meas_upper_limit'], float):
-            if long(float(dict["meas_upper_limit"])) == float(dict["meas_upper_limit"]):
+        if "meas_upper_limit" in dict and isinstance(
+                dict['meas_upper_limit'], float):
+            if long(
+                    float(
+                        dict["meas_upper_limit"])) == float(
+                    dict["meas_upper_limit"]):
                 output["meas_upper_limit_l"] = float(dict["meas_upper_limit"])
             else:
                 output["meas_upper_limit_d"] = float(dict["meas_upper_limit"])
 
-        if "meas_upper_limit" in dict and (isinstance(dict['meas_upper_limit'], int) or isinstance(dict['meas_upper_limit'], long)):
+        if "meas_upper_limit" in dict and (
+            isinstance(
+                dict['meas_upper_limit'],
+                int) or isinstance(
+                dict['meas_upper_limit'],
+                long)):
             output["meas_upper_limit_l"] = float(dict["meas_upper_limit"])
 
         return Row(**output)

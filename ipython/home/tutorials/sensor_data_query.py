@@ -14,7 +14,8 @@ from decimal import Decimal
 import struct
 import time
 from time import sleep
-import urllib, urllib2
+import urllib
+import urllib2
 
 
 ##################################
@@ -35,11 +36,16 @@ QUERY_MEASUREMENTS_SUMMARY_URL = 'https://' + HOST + '/measurements_summary?'
 
 def get_time(time_string):
     date_object = datetime.strptime(time_string, '%m/%d/%Y %H:%M:%S.%f')
-    return long(time.mktime(date_object.timetuple()) * 1e3 + date_object.microsecond / 1e3)
+    return long(time.mktime(date_object.timetuple())
+                * 1e3 + date_object.microsecond / 1e3)
+
 
 def add_time(time_string, delta):
-    date_object = datetime.strptime(time_string, '%m/%d/%Y %H:%M:%S.%f') + timedelta(seconds=delta)
-    return long(time.mktime(date_object.timetuple()) * 1e3 + date_object.microsecond / 1e3)
+    date_object = datetime.strptime(
+        time_string, '%m/%d/%Y %H:%M:%S.%f') + timedelta(seconds=delta)
+    return long(time.mktime(date_object.timetuple())
+                * 1e3 + date_object.microsecond / 1e3)
+
 
 current_time_string = datetime.now().strftime("%m/%d/%Y %H:%M:%S.%f")
 current_time = get_time(current_time_string)
@@ -49,11 +55,12 @@ current_time = get_time(current_time_string)
 # EDIT THIS SECTION #
 #####################
 
-# Replace quoted string with API Token or GitHub Personal Access Token (REQUIRED)
+# Replace quoted string with API Token or GitHub Personal Access Token
+# (REQUIRED)
 ACCESS_TOKEN = 'API Token'
 
 # Modify default values (OPTIONAL)
-COMPANY ='EpiData'
+COMPANY = 'EpiData'
 SITE = 'San_Jose'
 STATION = 'WSN-1'
 SENSOR = "Temperature_Probe"
@@ -117,20 +124,26 @@ print "Sending Query Request to EpiData ..."
 iteration = 0
 
 while (True):
-    
+
     try:
-        
+
         # Create instances that connect to the server
         conn = httplib.HTTPSConnection(HOST)
 
         # Specify measurement query parameters
         begin_time = get_time("8/1/2017 00:00:00.000")
         end_time = get_time("9/1/2017 00:00:00.000")
-        
-        parameters = {'company': COMPANY, 'site': SITE, 'station': STATION, 'sensor': SENSOR, 'beginTime': begin_time, 'endTime': end_time}
+
+        parameters = {
+            'company': COMPANY,
+            'site': SITE,
+            'station': STATION,
+            'sensor': SENSOR,
+            'beginTime': begin_time,
+            'endTime': end_time}
 
         # Construct url with parameters
-        url = QUERY_MEASUREMENTS_ORIGINAL_URL+urllib.urlencode(parameters)
+        url = QUERY_MEASUREMENTS_ORIGINAL_URL + urllib.urlencode(parameters)
         print url
         json_header = {'Cookie': session_cookie, 'Accept': 'text/plain'}
 
@@ -140,8 +153,9 @@ while (True):
         response_status = get_response.status
         response_text = get_response.read()
         print response_status, response_text
-               
-        # Check that the response's HTTP response code is 200 (OK) and read the response.
+
+        # Check that the response's HTTP response code is 200 (OK) and read the
+        # response.
         assert response_status == 200
         response_json = json.loads(response_text)
         print response_json
@@ -163,4 +177,3 @@ while (True):
 ################################
 # End of Data Query Script #
 ################################
-

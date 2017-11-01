@@ -90,7 +90,7 @@ class SensorMeasurementsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        Json.parse("""#{
+        Json.parse("""#[{
             #"company": "company0",
             #"site": "site0",
             #"station": "station0",
@@ -105,7 +105,7 @@ class SensorMeasurementsSpec extends Specification {
             #"meas_lower_limit": 0.0,
             #"meas_upper_limit": 0.5,
             #"meas_description": "d"
-            #}""".stripMargin('#'))
+            #}]""".stripMargin('#'))
       ).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
 
@@ -122,7 +122,7 @@ class SensorMeasurementsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        Json.parse("""#{
+        Json.parse("""#[{
             #"company": "company0",
             #"site": "site0",
             #"station": "station0",
@@ -137,7 +137,7 @@ class SensorMeasurementsSpec extends Specification {
             #"meas_lower_limit": 0.0,
             #"meas_upper_limit": 0.5,
             #"meas_description": "d"
-            #}""".stripMargin('#'))
+            #}]""".stripMargin('#'))
       )).get // No User cookie is provided.
       status(create) must equalTo(SEE_OTHER)
     }
@@ -150,7 +150,7 @@ class SensorMeasurementsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        Json.parse("""#{
+        Json.parse("""#[{
             #"site": "site0",
             #"sensor": "sensor0",
             #"ts": 111000000000,
@@ -165,7 +165,7 @@ class SensorMeasurementsSpec extends Specification {
             #"company": "company0",
             #"meas_upper_limit": 0.5,
             #"meas_description": "d"
-            #}""".stripMargin('#'))
+            #}]""".stripMargin('#'))
       ).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
 
@@ -271,7 +271,7 @@ class SensorMeasurementsSpec extends Specification {
     "insert and find a long sensor measurement" in new WithLoggedUser(FakeApp()) {
       Fixtures.cleanUp
 
-      val jsonMeasurement = Json.parse("""#{
+      val jsonMeasurement = Json.parse("""#[{
         #"company": "company0",
         #"site": "site0",
         #"station": "station0",
@@ -286,7 +286,7 @@ class SensorMeasurementsSpec extends Specification {
         #"meas_lower_limit": 2,
         #"meas_upper_limit": 9,
         #"meas_description": "md"
-        #}""".stripMargin('#'))
+        #}]""".stripMargin('#'))
 
       val create = route(FakeRequest(
         POST,
@@ -312,13 +312,13 @@ class SensorMeasurementsSpec extends Specification {
         "beginTime=111000000000&" +
         "endTime=111000000001").withCookies(cookie)).get
       status(query) must equalTo(OK)
-      Json.parse(contentAsString(query)).as[JsArray].value(0) must equalTo(jsonMeasurement)
+      Json.parse(contentAsString(query)).as[JsArray] must equalTo(jsonMeasurement)
     }
 
     "insert and find a large long sensor measurement" in new WithLoggedUser(FakeApp()) {
       Fixtures.cleanUp
 
-      val jsonMeasurement = Json.parse(s"""#{
+      val jsonMeasurement = Json.parse(s"""#[{
         #"company": "company0",
         #"site": "site0",
         #"station": "station0",
@@ -333,7 +333,7 @@ class SensorMeasurementsSpec extends Specification {
         #"meas_lower_limit": 800000000000000001,
         #"meas_upper_limit": 800000000000000003,
         #"meas_description": "md"
-        #}""".stripMargin('#'))
+        #}]""".stripMargin('#'))
 
       val create = route(FakeRequest(
         POST,
@@ -359,13 +359,13 @@ class SensorMeasurementsSpec extends Specification {
         "beginTime=111000000000&" +
         "endTime=111000000001").withCookies(cookie)).get
       status(query) must equalTo(OK)
-      Json.parse(contentAsString(query)).as[JsArray].value(0) must equalTo(jsonMeasurement)
+      Json.parse(contentAsString(query)).as[JsArray] must equalTo(jsonMeasurement)
     }
 
     "insert and find a string sensor measurement" in new WithLoggedUser(FakeApp()) {
       Fixtures.cleanUp
 
-      val jsonMeasurement = Json.parse("""#{
+      val jsonMeasurement = Json.parse("""#[{
         #"company": "company0",
         #"site": "site0",
         #"station": "station0",
@@ -377,7 +377,7 @@ class SensorMeasurementsSpec extends Specification {
         #"meas_datatype": "string",
         #"meas_status": "s",
         #"meas_description": "md"
-        #}""".stripMargin('#'))
+        #}]""".stripMargin('#'))
 
       val create = route(FakeRequest(
         POST,
@@ -401,7 +401,7 @@ class SensorMeasurementsSpec extends Specification {
         "beginTime=111000000000&" +
         "endTime=111000000001").withCookies(cookie)).get
       status(query) must equalTo(OK)
-      Json.parse(contentAsString(query)).as[JsArray].value(0) must equalTo(jsonMeasurement)
+      Json.parse(contentAsString(query)).as[JsArray] must equalTo(jsonMeasurement)
     }
 
     "insert and find an array sensor measurement" in new WithLoggedUser(FakeApp()) {
@@ -411,7 +411,7 @@ class SensorMeasurementsSpec extends Specification {
       val array = Array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11).map(_.toByte)
       val encodedArray = DatatypeConverter.printBase64Binary(array)
 
-      val jsonMeasurement = Json.parse(s"""#{
+      val jsonMeasurement = Json.parse(s"""#[{
         #"company": "company0",
         #"site": "site0",
         #"station": "station0",
@@ -424,7 +424,7 @@ class SensorMeasurementsSpec extends Specification {
         #"meas_unit": "u",
         #"meas_status": "s",
         #"meas_description": "md"
-        #}""".stripMargin('#'))
+        #}]""".stripMargin('#'))
 
       val create = route(FakeRequest(
         POST,
@@ -458,7 +458,7 @@ class SensorMeasurementsSpec extends Specification {
       val array = Array(10, 20, 30, 40, 50, 60, 70, 80, 90, 11, 15).map(_.toByte)
       val encodedArray = DatatypeConverter.printBase64Binary(array)
 
-      val jsonMeasurement = Json.parse(s"""#{
+      val jsonMeasurement = Json.parse(s"""#[{
         #"company": "company0",
         #"site": "site0",
         #"station": "station0",
@@ -471,7 +471,7 @@ class SensorMeasurementsSpec extends Specification {
         #"meas_unit": "u",
         #"meas_status": "s",
         #"meas_description": "md"
-        #}""".stripMargin('#'))
+        #}]""".stripMargin('#'))
 
       val create = route(FakeRequest(
         POST,
@@ -501,7 +501,7 @@ class SensorMeasurementsSpec extends Specification {
     "allow insert numeric with missing lower limit" in new WithLoggedUser(FakeApp()) {
 
       Fixtures.cleanUp
-      val jsonMeasurement = Json.parse("""#{
+      val jsonMeasurement = Json.parse("""#[{
         #"company": "company0",
         #"site": "site0",
         #"station": "station0",
@@ -515,7 +515,7 @@ class SensorMeasurementsSpec extends Specification {
         #"meas_status": "s",
         #"meas_upper_limit": 9,
         #"meas_description": "md"
-        #}""".stripMargin('#'))
+        #}]""".stripMargin('#'))
 
       val create = route(FakeRequest(
         POST,
@@ -529,7 +529,7 @@ class SensorMeasurementsSpec extends Specification {
     "allow insert numeric with missing upper limit" in new WithLoggedUser(FakeApp()) {
 
       Fixtures.cleanUp
-      val jsonMeasurement = Json.parse("""#{
+      val jsonMeasurement = Json.parse("""#[{
         #"company": "company0",
         #"site": "site0",
         #"station": "station0",
@@ -543,7 +543,7 @@ class SensorMeasurementsSpec extends Specification {
         #"meas_status": "s",
         #"meas_lower_limit": 2,
         #"meas_description": "md"
-        #}""".stripMargin('#'))
+        #}]""".stripMargin('#'))
 
       val create = route(FakeRequest(
         POST,
@@ -557,7 +557,7 @@ class SensorMeasurementsSpec extends Specification {
     "insert string with unexpected lower limit" in new WithLoggedUser(FakeApp()) {
 
       Fixtures.cleanUp
-      val jsonMeasurement = Json.parse("""#{
+      val jsonMeasurement = Json.parse("""#[{
         #"company": "company0",
         #"site": "site0",
         #"station": "station0",
@@ -570,7 +570,7 @@ class SensorMeasurementsSpec extends Specification {
         #"meas_status": "s",
         #"meas_lower_limit": 2,
         #"meas_description": "md"
-        #}""".stripMargin('#'))
+        #}]""".stripMargin('#'))
 
       val create = route(FakeRequest(
         POST,
@@ -584,7 +584,7 @@ class SensorMeasurementsSpec extends Specification {
     "insert string with unexpected upper limit" in new WithLoggedUser(FakeApp()) {
 
       Fixtures.cleanUp
-      val jsonMeasurement = Json.parse("""#{
+      val jsonMeasurement = Json.parse("""#[{
         #"company": "company0",
         #"site": "site0",
         #"station": "station0",
@@ -597,7 +597,7 @@ class SensorMeasurementsSpec extends Specification {
         #"meas_status": "s",
         #"meas_upper_limit": 2,
         #"meas_description": "md"
-        #}""".stripMargin('#'))
+        #}]""".stripMargin('#'))
 
       val create = route(FakeRequest(
         POST,
@@ -611,7 +611,7 @@ class SensorMeasurementsSpec extends Specification {
     "insert and find a sensor measurement without a description or status" in new WithLoggedUser(FakeApp()) {
       Fixtures.cleanUp
 
-      val jsonMeasurement = Json.parse(s"""#{
+      val jsonMeasurement = Json.parse(s"""#[{
         #"company": "company0",
         #"site": "site0",
         #"station": "station0",
@@ -624,7 +624,7 @@ class SensorMeasurementsSpec extends Specification {
         #"meas_unit": "u",
         #"meas_lower_limit": 2,
         #"meas_upper_limit": 9
-        #}""".stripMargin('#'))
+        #}]""".stripMargin('#'))
 
       val create = route(FakeRequest(
         POST,
@@ -649,7 +649,7 @@ class SensorMeasurementsSpec extends Specification {
         "beginTime=111000000000&" +
         "endTime=111000000001").withCookies(cookie)).get
       status(query) must equalTo(OK)
-      Json.parse(contentAsString(query)).as[JsArray].value(0) must equalTo(jsonMeasurement)
+      Json.parse(contentAsString(query)).as[JsArray] must equalTo(jsonMeasurement)
     }
 
     "optional empty string fields are dropped" in new WithLoggedUser(FakeApp()) {
@@ -660,7 +660,7 @@ class SensorMeasurementsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        Json.parse(s"""#{
+        Json.parse(s"""#[{
             #"company": "company0",
             #"site": "site0",
             #"station": "station0",
@@ -675,7 +675,7 @@ class SensorMeasurementsSpec extends Specification {
             #"meas_lower_limit": 0.0,
             #"meas_upper_limit": 0.5,
             #"meas_description": ""        ${"" /* empty string field */ }
-            #}""".stripMargin('#'))
+            #}]""".stripMargin('#'))
       ).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
 

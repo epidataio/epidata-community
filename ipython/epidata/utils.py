@@ -39,8 +39,9 @@ class ConvertUtils(object):
                     ConvertUtils.try_set_cell_with_float_value_if_not_use_string(
                         df, index, 'meas_value_d', row, 'meas_value', 'meas_value_s')
 
-
-                if row['meas_datatype'] == "long" and ConvertUtils.is_long_number(row['meas_upper_limit']) and ConvertUtils.is_long_number(row['meas_lower_limit']):
+                if row['meas_datatype'] == "long" and ConvertUtils.is_long_number(
+                        row['meas_upper_limit']) and ConvertUtils.is_long_number(
+                        row['meas_lower_limit']):
                     ConvertUtils.try_set_cell_with_long_value(
                         df, index, 'meas_upper_limit_l', row, 'meas_upper_limit')
                     ConvertUtils.try_set_cell_with_long_value(
@@ -173,9 +174,9 @@ class ConvertUtils(object):
                     row['meas_value_datatype'])
 
                 if row['meas_value_datatype'] == "string" and row['meas_value_str'] != "":
-                    df.set_value(index,'meas_upper_limit',np.nan)
-                    df.set_value(index,'meas_lower_limit',np.nan)
-                    df.set_value(index,'meas_unit',"")
+                    df.set_value(index, 'meas_upper_limit', np.nan)
+                    df.set_value(index, 'meas_lower_limit', np.nan)
+                    df.set_value(index, 'meas_unit', "")
 
         df = df.drop('meas_value_str', 1)
         df = df.drop('meas_value_d', 1)

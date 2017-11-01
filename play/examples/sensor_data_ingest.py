@@ -32,12 +32,10 @@ LOG_ITERATION = 1
 
 if USE_KAFKA:
     CREATE_MEASUREMENT_URL = 'https://' + HOST + '/kafka/measurements'
-    CREATE_MEASUREMENT_ROUTE = '/kafka/measurements'
-    CREATE_MEASUREMENT_LIST_ROUTE = '/kafka/measurements_list'
+    CREATE_MEASUREMENT_LIST_ROUTE = '/kafka/measurements'
 else:
     CREATE_MEASUREMENT_URL = 'https://' + HOST + '/measurements'
-    CREATE_MEASUREMENT_ROUTE = '/measurements'
-    CREATE_MEASUREMENT_LIST_ROUTE = '/measurements_list'
+    CREATE_MEASUREMENT_LIST_ROUTE = '/measurements'
 
 iteration = 0
 post_iteration = 0

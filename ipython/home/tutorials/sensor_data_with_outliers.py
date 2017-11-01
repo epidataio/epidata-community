@@ -32,12 +32,10 @@ LOG_ITERATION = 1
 
 if USE_KAFKA:
     CREATE_MEASUREMENT_URL = 'https://' + HOST + '/kafka/measurements'
-    CREATE_MEASUREMENT_ROUTE = '/kafka/measurements'
-    CREATE_MEASUREMENT_LIST_ROUTE = '/kafka/measurements_list'
+    CREATE_MEASUREMENT_LIST_ROUTE = '/kafka/measurements'
 else:
     CREATE_MEASUREMENT_URL = 'https://' + HOST + '/measurements'
-    CREATE_MEASUREMENT_ROUTE = '/measurements'
-    CREATE_MEASUREMENT_LIST_ROUTE = '/measurements_list'
+    CREATE_MEASUREMENT_LIST_ROUTE = '/measurements'
 
 iteration = 0
 post_iteration = 0
@@ -64,7 +62,8 @@ current_time = get_time(current_time_string)
 # EDIT THIS SECTION #
 #####################
 
-# Replace quoted string with API Token or GitHub Personal Access Token (REQUIRED)
+# Replace quoted string with API Token or GitHub Personal Access Token
+# (REQUIRED)
 ACCESS_TOKEN = 'API TOKEN'
 
 # Modify default values (OPTIONAL)

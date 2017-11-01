@@ -143,36 +143,36 @@ class IPythonSpec extends FlatSpec with BeforeAndAfter with Matchers {
       "VALUES ('Company-1', 'Site-1', '1000', 'Station-1')")
   }
 
-  "test_automated_test.py" should "run without error" in {
+      "test_automated_test.py" should "run without error" in {
 
-    setupAutomatedTestFixtures
+        setupAutomatedTestFixtures
 
-    Process(List(
-      "spark-submit",
-      "--conf",
-      s"spark.cassandra.connection.host=$cassandraConnectionHost",
-      "--conf",
-      s"spark.ui.port=$sparkUIPort",
-      "--conf",
-      s"spark.epidata.cassandraKeyspaceName=$cassandraKeyspaceName",
-      "--conf",
-      s"spark.cassandra.auth.username=$cassandraUser",
-      "--conf",
-      s"spark.cassandra.auth.password=$cassandraPassword",
-      "--conf",
-      s"spark.epidata.measurementClass=automated_test",
-      "--driver-class-path",
-      "spark/target/scala-2.11/epidata-spark-assembly-1.0-SNAPSHOT.jar",
-      "--py-files",
-      "ipython/dist/epidata-1.0_SNAPSHOT-py2.7.egg",
-      "ipython/test/test_automated_test.py"
-    ), None,
-      "SPARK_CONF_DIR" -> "spark/conf",
-      "PYTHONPATH" -> "python",
-      "SPARK_MASTER" -> sparkMaster)
-      .run()
-      .exitValue() should equal(PROCESS_SUCCESS)
-  }
+        Process(List(
+          "spark-submit",
+          "--conf",
+          s"spark.cassandra.connection.host=$cassandraConnectionHost",
+          "--conf",
+          s"spark.ui.port=$sparkUIPort",
+          "--conf",
+          s"spark.epidata.cassandraKeyspaceName=$cassandraKeyspaceName",
+          "--conf",
+          s"spark.cassandra.auth.username=$cassandraUser",
+          "--conf",
+          s"spark.cassandra.auth.password=$cassandraPassword",
+          "--conf",
+          s"spark.epidata.measurementClass=automated_test",
+          "--driver-class-path",
+          "spark/target/scala-2.11/epidata-spark-assembly-1.0-SNAPSHOT.jar",
+          "--py-files",
+          "ipython/dist/epidata-1.0_SNAPSHOT-py2.7.egg",
+          "ipython/test/test_automated_test.py"
+        ), None,
+          "SPARK_CONF_DIR" -> "spark/conf",
+          "PYTHONPATH" -> "python",
+          "SPARK_MASTER" -> sparkMaster)
+          .run()
+          .exitValue() should equal(PROCESS_SUCCESS)
+      }
 
   private def setupSensorMeasurementFixtures() = {
 
@@ -236,36 +236,36 @@ class IPythonSpec extends FlatSpec with BeforeAndAfter with Matchers {
       "VALUES ('Company-1', 'Site-1', 'Station-1', 'Sensor-1')")
   }
 
-  "test_sensor_measurement.py" should "run without error" in {
+      "test_sensor_measurement.py" should "run without error" in {
 
-    setupSensorMeasurementFixtures
+        setupSensorMeasurementFixtures
 
-    Process(List(
-      "spark-submit",
-      "--conf",
-      s"spark.cassandra.connection.host=$cassandraConnectionHost",
-      "--conf",
-      s"spark.ui.port=$sparkUIPort",
-      "--conf",
-      s"spark.epidata.cassandraKeyspaceName=$cassandraKeyspaceName",
-      "--conf",
-      s"spark.cassandra.auth.username=$cassandraUser",
-      "--conf",
-      s"spark.cassandra.auth.password=$cassandraPassword",
-      "--conf",
-      s"spark.epidata.measurementClass=sensor_measurement",
-      "--driver-class-path",
-      "spark/target/scala-2.11/epidata-spark-assembly-1.0-SNAPSHOT.jar",
-      "--py-files",
-      "ipython/dist/epidata-1.0_SNAPSHOT-py2.7.egg",
-      "ipython/test/test_sensor_measurement.py"
-    ), None,
-      "SPARK_CONF_DIR" -> "spark/conf",
-      "PYTHONPATH" -> "python",
-      "SPARK_MASTER" -> sparkMaster)
-      .run()
-      .exitValue() should equal(PROCESS_SUCCESS)
-  }
+        Process(List(
+          "spark-submit",
+          "--conf",
+          s"spark.cassandra.connection.host=$cassandraConnectionHost",
+          "--conf",
+          s"spark.ui.port=$sparkUIPort",
+          "--conf",
+          s"spark.epidata.cassandraKeyspaceName=$cassandraKeyspaceName",
+          "--conf",
+          s"spark.cassandra.auth.username=$cassandraUser",
+          "--conf",
+          s"spark.cassandra.auth.password=$cassandraPassword",
+          "--conf",
+          s"spark.epidata.measurementClass=sensor_measurement",
+          "--driver-class-path",
+          "spark/target/scala-2.11/epidata-spark-assembly-1.0-SNAPSHOT.jar",
+          "--py-files",
+          "ipython/dist/epidata-1.0_SNAPSHOT-py2.7.egg",
+          "ipython/test/test_sensor_measurement.py"
+        ), None,
+          "SPARK_CONF_DIR" -> "spark/conf",
+          "PYTHONPATH" -> "python",
+          "SPARK_MASTER" -> sparkMaster)
+          .run()
+          .exitValue() should equal(PROCESS_SUCCESS)
+      }
 
   private def setupAnalyticsFixtures() = {
 
@@ -331,9 +331,71 @@ class IPythonSpec extends FlatSpec with BeforeAndAfter with Matchers {
     })
   }
 
-  "test_analytics.py" should "run without error" in {
+      "test_analytics.py" should "run without error" in {
 
-    setupAnalyticsFixtures
+        setupAnalyticsFixtures
+
+        Process(List(
+          "spark-submit",
+          "--conf",
+          s"spark.cassandra.connection.host=$cassandraConnectionHost",
+          "--conf",
+          s"spark.ui.port=$sparkUIPort",
+          "--conf",
+          s"spark.epidata.cassandraKeyspaceName=$cassandraKeyspaceName",
+          "--conf",
+          s"spark.cassandra.auth.username=$cassandraUser",
+          "--conf",
+          s"spark.cassandra.auth.password=$cassandraPassword",
+          "--conf",
+          s"spark.epidata.measurementClass=automated_test",
+          "--driver-class-path",
+          "spark/target/scala-2.11/epidata-spark-assembly-1.0-SNAPSHOT.jar",
+          "--py-files",
+          "ipython/dist/epidata-1.0_SNAPSHOT-py2.7.egg",
+          "ipython/test/test_analytics.py"
+        ), None,
+          "SPARK_CONF_DIR" -> "spark/conf",
+          "PYTHONPATH" -> "python",
+          "SPARK_MASTER" -> sparkMaster)
+          .run()
+          .exitValue() should equal(PROCESS_SUCCESS)
+      }
+
+  "test_streaming_sensor_measurement.py" should "run without error" in {
+
+    setupSensorMeasurementFixtures
+
+    Process(List(
+      "spark-submit",
+      "--conf",
+      s"spark.cassandra.connection.host=$cassandraConnectionHost",
+      "--conf",
+      s"spark.ui.port=$sparkUIPort",
+      "--conf",
+      s"spark.epidata.cassandraKeyspaceName=$cassandraKeyspaceName",
+      "--conf",
+      s"spark.cassandra.auth.username=$cassandraUser",
+      "--conf",
+      s"spark.cassandra.auth.password=$cassandraPassword",
+      "--conf",
+      s"spark.epidata.measurementClass=sensor_measurement",
+      "--driver-class-path",
+      "spark/target/scala-2.11/epidata-spark-assembly-1.0-SNAPSHOT.jar",
+      "--py-files",
+      "ipython/dist/epidata-1.0_SNAPSHOT-py2.7.egg",
+      "ipython/test/test_streaming_sensor_measurement.py"
+    ), None,
+      "SPARK_CONF_DIR" -> "spark/conf",
+      "PYTHONPATH" -> "python",
+      "SPARK_MASTER" -> sparkMaster)
+      .run()
+      .exitValue() should equal(PROCESS_SUCCESS)
+  }
+
+  "test_streaming_automated_test.py" should "run without error" in {
+
+    setupSensorMeasurementFixtures
 
     Process(List(
       "spark-submit",
@@ -353,7 +415,7 @@ class IPythonSpec extends FlatSpec with BeforeAndAfter with Matchers {
       "spark/target/scala-2.11/epidata-spark-assembly-1.0-SNAPSHOT.jar",
       "--py-files",
       "ipython/dist/epidata-1.0_SNAPSHOT-py2.7.egg",
-      "ipython/test/test_analytics.py"
+      "ipython/test/test_streaming_automated_test.py"
     ), None,
       "SPARK_CONF_DIR" -> "spark/conf",
       "PYTHONPATH" -> "python",
