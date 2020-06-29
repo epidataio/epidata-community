@@ -1,25 +1,19 @@
 EpiData
 =====================================
-EpiData is an IoT Data Science Platform. It enables development and deployment of machine learning algorithms for smarter industrial solutions including energy management, building automation and smart manufacturing. 
+EpiData is an IoT Data Science Platform. It integrates IoT and Data Science capabilities in a lightweight and open-source framework. The EpiData platform enables development and deployment of machine learning and deep learning algorithms for smarter industrial solutions including energy management, smart manufacturing and building automation.
 
-
-Required Components
---------------------
-Apache Cassandra  
-Apache Kafka  
-Apache Spark  
-Jupyter Notebook  
+You can find out more about EpiData at https://epidata.io.
 
 
 Installation and Launch
 ------------------------
 - Docker Container:
 The epidata-community docker image is available as a stand-alone package with all code and required components. To build and start a docker container, simply execute the command shown below (replacing 'epidata123' with a custom token):  
-    - docker run -p 443:443 -it -e token=epidata123 epidataio/epidata-community:0.10.0
+    - docker run -p 443:443 -it -e token=epidata123 epidataio/epidata-community:0.11.0
 
     Below are other useful docker commands:
-    - Pull the docker image: 
-        - docker pull epidataio/epidata-community:0.10.0
+    - Pull the docker image:
+        - docker pull epidataio/epidata-community:0.11.0
     - List all docker containers:
         - docker ps -a
     - Stop a docker container:
@@ -35,11 +29,11 @@ One can also set up EpiData platform by following the installation and launch sc
 
 Configuration
 --------------
-- Authentication: 
+- Authentication:
 Access to EpiData platform is managed via tokens and OAuth 2 authorization (with GitHub). The configuration settings for tokens are available in play/conf/application.conf, and OAuth 2 are available in play/conf/securesocial.conf. Authenticated users can be added to the system manually via Cassandra's CQL commands.
 
 - Measurement Class:
-EpiData platform can be configured to operate on 'sensor measurement' or 'automated test' data. To enable sensor measurement data, play's application.conf must set measurement-class to sensor_measurement. In addition, spark's spark-defaults.conf must set spark.epidata.measurementClass to sensor_measurement. To enable automated test data, play's application.conf must set measurement-class to automated_test. In addition, spark's spark-defaults.conf must set spark.epidata.measurementClass to automated_test. 
+EpiData platform can be configured to operate on 'sensor measurement' or 'automated test' data. To enable sensor measurement data, play's application.conf must set measurement-class to sensor_measurement. In addition, spark's spark-defaults.conf must set spark.epidata.measurementClass to sensor_measurement. To enable automated test data, play's application.conf must set measurement-class to automated_test. In addition, spark's spark-defaults.conf must set spark.epidata.measurementClass to automated_test.
 
 
 Usage
@@ -49,4 +43,4 @@ After launch, EpiData platform is ready to ingest and process sensor data. To ac
 
 Resources
 ----------
-EpiData community-edition is managed via this GitHub repository site. For enterprise support and services, please contact info@epidata.co or visit https://epidata.co.
+EpiData community-edition is managed via this GitHub repository site. For enterprise support and services, please contact the EpiData Team via https://epidata.io.
