@@ -11,8 +11,7 @@ import org.apache.spark.sql.functions._
 class FillMissingValue(
     val meas_names: List[String],
     val method: String = "rolling",
-    val s: Int = 3
-) extends Transformation {
+    val s: Int = 3) extends Transformation {
   override def apply(dataFrame: DataFrame, sqlContext: SQLContext): DataFrame = {
 
     val field = "meas_value"

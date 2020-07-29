@@ -22,61 +22,58 @@ import org.json.simple.{ JSONArray, JSONObject }
  *                         numeric types but never for non numeric types.
  */
 case class AutomatedTest(
-  company: String,
-  site: String,
-  device_group: String,
-  tester: String,
-  ts: Date,
-  device_name: String,
-  test_name: String,
-  meas_name: String,
-  meas_datatype: Option[String],
-  meas_value: Any,
-  meas_unit: Option[String],
-  meas_status: Option[String],
-  meas_lower_limit: Option[AnyVal],
-  meas_upper_limit: Option[AnyVal],
-  meas_description: Option[String],
-  device_status: Option[String],
-  test_status: Option[String]
-)
+    company: String,
+    site: String,
+    device_group: String,
+    tester: String,
+    ts: Date,
+    device_name: String,
+    test_name: String,
+    meas_name: String,
+    meas_datatype: Option[String],
+    meas_value: Any,
+    meas_unit: Option[String],
+    meas_status: Option[String],
+    meas_lower_limit: Option[AnyVal],
+    meas_upper_limit: Option[AnyVal],
+    meas_description: Option[String],
+    device_status: Option[String],
+    test_status: Option[String])
 
 case class AutomatedTestCleansed(
-  company: String,
-  site: String,
-  device_group: String,
-  tester: String,
-  ts: Date,
-  device_name: String,
-  test_name: String,
-  meas_name: String,
-  meas_datatype: Option[String],
-  meas_value: Any,
-  meas_unit: Option[String],
-  meas_status: Option[String],
-  meas_flag: Option[String],
-  meas_method: Option[String],
-  meas_lower_limit: Option[AnyVal],
-  meas_upper_limit: Option[AnyVal],
-  meas_description: Option[String],
-  device_status: Option[String],
-  test_status: Option[String]
-)
+    company: String,
+    site: String,
+    device_group: String,
+    tester: String,
+    ts: Date,
+    device_name: String,
+    test_name: String,
+    meas_name: String,
+    meas_datatype: Option[String],
+    meas_value: Any,
+    meas_unit: Option[String],
+    meas_status: Option[String],
+    meas_flag: Option[String],
+    meas_method: Option[String],
+    meas_lower_limit: Option[AnyVal],
+    meas_upper_limit: Option[AnyVal],
+    meas_description: Option[String],
+    device_status: Option[String],
+    test_status: Option[String])
 
 case class AutomatedTestSummary(
-  company: String,
-  site: String,
-  device_group: String,
-  tester: String,
-  start_time: Timestamp,
-  stop_time: Timestamp,
-  device_name: String,
-  test_name: String,
-  meas_name: String,
-  meas_summary_name: String,
-  meas_summary_value: String,
-  meas_summary_description: String
-)
+    company: String,
+    site: String,
+    device_group: String,
+    tester: String,
+    start_time: Timestamp,
+    stop_time: Timestamp,
+    device_name: String,
+    test_name: String,
+    meas_name: String,
+    meas_summary_name: String,
+    meas_summary_value: String,
+    meas_summary_description: String)
 
 object AutomatedTest {
 
@@ -104,8 +101,7 @@ object AutomatedTest {
       measurement.meas_upper_limit,
       measurement.meas_description,
       measurement.val1,
-      measurement.val2
-    )
+      measurement.val2)
 
   implicit def measurementCleansedToAutomatedTestCleansed(measurement: MeasurementCleansed): AutomatedTestCleansed =
     AutomatedTestCleansed(
@@ -127,8 +123,7 @@ object AutomatedTest {
       measurement.meas_upper_limit,
       measurement.meas_description,
       measurement.val1,
-      measurement.val2
-    )
+      measurement.val2)
 
   implicit def measurementSummaryToAutomatedTestSummary(ms: MeasurementSummary): AutomatedTestSummary =
     AutomatedTestSummary(
@@ -143,8 +138,7 @@ object AutomatedTest {
       ms.key3,
       ms.meas_summary_name,
       ms.meas_summary_value,
-      ms.meas_summary_description
-    )
+      ms.meas_summary_description)
 
   implicit def automatedTestToMeasurement(automatedTest: AutomatedTest): Measurement =
     Measurement(
@@ -164,8 +158,7 @@ object AutomatedTest {
       automatedTest.meas_upper_limit,
       automatedTest.meas_description,
       automatedTest.device_status,
-      automatedTest.test_status
-    )
+      automatedTest.test_status)
 
   // JSON Helpers
   def rowToJLinkedHashMap(row: Row, tableName: String): JLinkedHashMap[String, Object] = {
@@ -287,8 +280,7 @@ object AutomatedTest {
             Some(jsonToAutomatedTest(x.asInstanceOf[JSONObject]))
           } catch {
             case _: Throwable => None
-          }
-      )
+          })
       case _ => List.empty
     }
   }
@@ -303,9 +295,8 @@ object AutomatedTest {
     val arr = new JLinkedList[JLinkedHashMap[String, Object]]()
     arr.addAll(
       list
-      .map(m => toJLinkedHashMap(m))
-      .asJavaCollection
-    )
+        .map(m => toJLinkedHashMap(m))
+        .asJavaCollection)
     JSONArray.toJSONString(arr)
   }
 
@@ -362,8 +353,7 @@ object AutomatedTest {
       meas_upper_limit,
       meas_description,
       device_status,
-      test_status
-    )
+      test_status)
 
   }
 

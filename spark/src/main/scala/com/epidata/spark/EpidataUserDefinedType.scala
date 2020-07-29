@@ -29,8 +29,7 @@ class MeasurementValueUDT extends UserDefinedType[MeasurementValue] {
       StructField("double", DoubleType, nullable = true),
       StructField("long", LongType, nullable = true),
       StructField("string", StringType, nullable = true),
-      StructField("binary", BinaryType, nullable = true)
-    ))
+      StructField("binary", BinaryType, nullable = true)))
   }
 
   def serialize(obj: Any): InternalRow = {
@@ -68,8 +67,7 @@ class MeasurementValueUDT extends UserDefinedType[MeasurementValue] {
       case row: BaseGenericInternalRow =>
         require(
           row.numFields == 4,
-          s"MeasurementValue.deserialize given row with length ${row.numFields} but requires length == 4"
-        )
+          s"MeasurementValue.deserialize given row with length ${row.numFields} but requires length == 4")
         if (!row.isNullAt(0)) MeasurementValue(row.getDouble(0))
         else if (!row.isNullAt(1)) MeasurementValue(row.getLong(1))
         else if (!row.isNullAt(2)) MeasurementValue(row.getString(2))
@@ -79,8 +77,7 @@ class MeasurementValueUDT extends UserDefinedType[MeasurementValue] {
       case row: UnsafeRow =>
         require(
           row.numFields == 4,
-          s"MeasurementValue.deserialize given row with length ${row.numFields} but requires length == 4"
-        )
+          s"MeasurementValue.deserialize given row with length ${row.numFields} but requires length == 4")
         if (!row.isNullAt(0)) MeasurementValue(row.getDouble(0))
         else if (!row.isNullAt(1)) MeasurementValue(row.getLong(1))
         else if (!row.isNullAt(2)) MeasurementValue(row.getString(2))

@@ -5,10 +5,10 @@ import play.api.Configuration
 object Configs {
 
   def init(config: Configuration) = {
-    _keyCreation = config.getBoolean("application.ingestion.keycreation").getOrElse(false)
-    _metricEnabled = config.getBoolean("application.metric.enabled").getOrElse(false)
-    _measurementClass = config.getString("measurement-class").get
-    _twoWaysIngestion = config.getBoolean("application.ingestion.2ways").getOrElse(false)
+    _keyCreation = config.getOptional[Boolean]("application.ingestion.keycreation").getOrElse(false)
+    _metricEnabled = config.getOptional[Boolean]("application.metric.enabled").getOrElse(false)
+    _measurementClass = config.getOptional[String]("measurement-class").get
+    _twoWaysIngestion = config.getOptional[Boolean]("application.ingestion.2ways").getOrElse(false)
   }
 
   private var _keyCreation = false

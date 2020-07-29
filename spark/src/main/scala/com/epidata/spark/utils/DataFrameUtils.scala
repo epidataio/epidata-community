@@ -59,8 +59,7 @@ object DataFrameUtils {
       meas_upper_limit_l,
       meas_description,
       val1,
-      val2
-    )
+      val2)
 
   }
 

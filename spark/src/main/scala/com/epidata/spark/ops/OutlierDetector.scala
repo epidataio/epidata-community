@@ -9,8 +9,7 @@ import org.apache.spark.sql.{ SQLContext, DataFrame }
 
 class OutlierDetector(
     val column: String,
-    val method: String
-) extends Transformation {
+    val method: String) extends Transformation {
   override def apply(dataFrame: DataFrame, sqlContext: SQLContext): DataFrame = {
     method match {
       case "quartile" =>

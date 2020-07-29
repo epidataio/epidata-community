@@ -11,15 +11,24 @@ import models.{ MeasurementService, AutomatedTest }
 import play.api.libs.json.JsError
 import play.api.libs.json.Json
 import play.api.mvc._
-import securesocial.core.SecureSocial
+import play.api.mvc.{ AnyContent, Request }
 import service.DataService
+import providers.DemoProvider
 import util.Ordering
+import javax.inject._
+import play.api.i18n.{ I18nSupport, Messages, Lang }
+import securesocial.core.{ IdentityProvider, RuntimeEnvironment, SecureSocial }
 
 /** Controller for automated test data. */
-object AutomatedTests extends Controller with SecureSocial {
+@Singleton
+class AutomatedTests @Inject() (val cc: ControllerComponents)(
+    override implicit val env: RuntimeEnvironment) extends AbstractController(cc)
+  with SecureSocial {
+
+  override def messagesApi = env.messagesApi
 
   def create = SecuredAction(parse.json) { implicit request =>
-    val automatedTests = com.epidata.lib.models.AutomatedTest.jsonToAutomatedTests(request.body.toString())
+    val automatedTests = com.epidata.lib.models.AutomatedTest.jsonToAutomatedTests(request.body.toString)
     AutomatedTest.insertList(automatedTests.flatMap(x => x))
 
     val failedIndexes = automatedTests.zipWithIndex.filter(_._1 == None).map(_._2)
@@ -32,8 +41,7 @@ object AutomatedTests extends Controller with SecureSocial {
   }
 
   def insertKafka = SecuredAction(parse.json) { implicit request =>
-
-    val list = com.epidata.lib.models.AutomatedTest.jsonToAutomatedTests(request.body.toString())
+    val list = com.epidata.lib.models.AutomatedTest.jsonToAutomatedTests(request.body.toString)
     models.AutomatedTest.insertToKafka(list.flatMap(x => x))
 
     val failedIndexes = list.zipWithIndex.filter(_._1 == None).map(_._2)
@@ -52,8 +60,7 @@ object AutomatedTests extends Controller with SecureSocial {
     tester: String,
     beginTime: Date,
     endTime: Date,
-    ordering: Ordering.Value = Ordering.Unspecified
-  ) = SecuredAction {
+    ordering: Ordering.Value = Ordering.Unspecified) = SecuredAction {
     Ok(com.epidata.lib.models.AutomatedTest.toJson(AutomatedTest.find(
       company,
       site,
@@ -61,8 +68,7 @@ object AutomatedTests extends Controller with SecureSocial {
       tester,
       beginTime,
       endTime,
-      ordering
-    )))
+      ordering)))
   }
 
   def find(
@@ -75,8 +81,7 @@ object AutomatedTests extends Controller with SecureSocial {
     size: Int = 10000,
     batch: String = "",
     ordering: Ordering.Value = Ordering.Unspecified,
-    table: String = MeasurementCleansed.DBTableName
-  ) = SecuredAction {
+    table: String = MeasurementCleansed.DBTableName) = SecuredAction {
     Ok(MeasurementService.query(
       company,
       site,
@@ -88,7 +93,6 @@ object AutomatedTests extends Controller with SecureSocial {
       batch,
       ordering,
       table,
-      com.epidata.lib.models.AutomatedTest.NAME
-    ))
+      com.epidata.lib.models.AutomatedTest.NAME))
   }
 }

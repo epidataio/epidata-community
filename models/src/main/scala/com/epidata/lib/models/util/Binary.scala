@@ -24,6 +24,5 @@ object Binary {
   def toBase64(binary: Binary): (Datatype.Value, String) =
     (
       Datatype.byId(binary.backing(0)),
-      DatatypeConverter.printBase64Binary(binary.backing.slice(1, binary.backing.length))
-    )
+      DatatypeConverter.printBase64Binary(binary.backing.slice(1, binary.backing.length)))
 }

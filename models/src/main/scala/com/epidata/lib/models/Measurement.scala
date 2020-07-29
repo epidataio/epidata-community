@@ -41,8 +41,7 @@ case class Measurement(
     meas_upper_limit: Option[AnyVal],
     meas_description: Option[String],
     val1: Option[String],
-    val2: Option[String]
-) {
+    val2: Option[String]) {
 
   // Splitting timeseries by epoch keeps partitions from growing beyond
   // capacity. The epoch is computed directly from the timestamp.
@@ -141,8 +140,7 @@ object Measurement {
       meas_upper_limit,
       meas_description,
       val1,
-      val2
-    )
+      val2)
 
   }
 

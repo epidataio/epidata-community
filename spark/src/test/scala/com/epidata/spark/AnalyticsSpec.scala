@@ -109,11 +109,9 @@ class AnalyticsAutomatedTestSpec extends FlatSpec with BeforeAndAfter with Befor
         "site" -> List("Site-1"),
         "device_group" -> List("1000"),
         "tester" -> List("Station-1"),
-        "meas_name" -> List("Meas-1")
-      ),
+        "meas_name" -> List("Meas-1")),
       beginTime,
-      endTime
-    )
+      endTime)
 
     val (imr, imrSchema) = IMR(results.collect.toList, results.schema)
     val row0 = imr(0).toSeq
@@ -174,11 +172,9 @@ class AnalyticsAutomatedTestSpec extends FlatSpec with BeforeAndAfter with Befor
         "company" -> List("Company-1"),
         "site" -> List("Site-1"),
         "device_group" -> List("1000"),
-        "tester" -> List("Station-1")
-      ),
+        "tester" -> List("Station-1")),
       beginTime,
-      new Timestamp(beginTime.getTime + 1)
-    )
+      new Timestamp(beginTime.getTime + 1))
 
     intercept[IllegalArgumentException] {
       IMR(results.collect.toList, results.schema)
@@ -198,8 +194,7 @@ class AnalyticsAutomatedTestSpec extends FlatSpec with BeforeAndAfter with Befor
       // Not restricting meas_name field.
       ),
       beginTime,
-      endTime
-    )
+      endTime)
 
     intercept[IllegalArgumentException] {
       IMR(results.collect.toList, results.schema)
@@ -216,11 +211,9 @@ class AnalyticsAutomatedTestSpec extends FlatSpec with BeforeAndAfter with Befor
         "site" -> List("Site-1"),
         "device_group" -> List("1000"),
         "tester" -> List("Station-1"),
-        "meas_name" -> List("Meas-2")
-      ),
+        "meas_name" -> List("Meas-2")),
       beginTime,
-      endTime
-    )
+      endTime)
 
     intercept[IllegalArgumentException] {
       IMR(results.collect.toList, results.schema)
@@ -309,11 +302,9 @@ class AnalyticsSensorMeasurementSpec extends FlatSpec with BeforeAndAfter with B
         "company" -> List("Company-1"),
         "site" -> List("Site-1"),
         "station" -> List("Station-1"),
-        "sensor" -> List("Sensor-1")
-      ),
+        "sensor" -> List("Sensor-1")),
       beginTime,
-      endTime
-    )
+      endTime)
 
     val (imr, imrSchema) = IMR(results.collect.toList, results.schema)
     val row0 = imr(0).toSeq

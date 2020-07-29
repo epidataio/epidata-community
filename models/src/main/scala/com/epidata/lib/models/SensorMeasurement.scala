@@ -21,54 +21,51 @@ import org.json.simple.{ JSONArray, JSONObject }
  *                         numeric types but never for non numeric types.
  */
 case class SensorMeasurement(
-  company: String,
-  site: String,
-  station: String,
-  sensor: String,
-  ts: Date,
-  event: String,
-  meas_name: String,
-  meas_datatype: Option[String],
-  meas_value: Any,
-  meas_unit: Option[String],
-  meas_status: Option[String],
-  meas_lower_limit: Option[AnyVal],
-  meas_upper_limit: Option[AnyVal],
-  meas_description: Option[String]
-)
+    company: String,
+    site: String,
+    station: String,
+    sensor: String,
+    ts: Date,
+    event: String,
+    meas_name: String,
+    meas_datatype: Option[String],
+    meas_value: Any,
+    meas_unit: Option[String],
+    meas_status: Option[String],
+    meas_lower_limit: Option[AnyVal],
+    meas_upper_limit: Option[AnyVal],
+    meas_description: Option[String])
 
 case class SensorMeasurementCleansed(
-  company: String,
-  site: String,
-  station: String,
-  sensor: String,
-  ts: Date,
-  event: String,
-  meas_name: String,
-  meas_datatype: Option[String],
-  meas_value: Any,
-  meas_unit: Option[String],
-  meas_status: Option[String],
-  meas_flag: Option[String],
-  meas_method: Option[String],
-  meas_lower_limit: Option[AnyVal],
-  meas_upper_limit: Option[AnyVal],
-  meas_description: Option[String]
-)
+    company: String,
+    site: String,
+    station: String,
+    sensor: String,
+    ts: Date,
+    event: String,
+    meas_name: String,
+    meas_datatype: Option[String],
+    meas_value: Any,
+    meas_unit: Option[String],
+    meas_status: Option[String],
+    meas_flag: Option[String],
+    meas_method: Option[String],
+    meas_lower_limit: Option[AnyVal],
+    meas_upper_limit: Option[AnyVal],
+    meas_description: Option[String])
 
 case class SensorMeasurementSummary(
-  company: String,
-  site: String,
-  station: String,
-  sensor: String,
-  start_time: Timestamp,
-  stop_time: Timestamp,
-  event: String,
-  meas_name: String,
-  meas_summary_name: String,
-  meas_summary_value: String,
-  meas_summary_description: String
-)
+    company: String,
+    site: String,
+    station: String,
+    sensor: String,
+    start_time: Timestamp,
+    stop_time: Timestamp,
+    event: String,
+    meas_name: String,
+    meas_summary_name: String,
+    meas_summary_value: String,
+    meas_summary_description: String)
 
 object SensorMeasurement {
 
@@ -94,8 +91,7 @@ object SensorMeasurement {
       measurement.meas_status,
       measurement.meas_lower_limit,
       measurement.meas_upper_limit,
-      measurement.meas_description
-    )
+      measurement.meas_description)
 
   implicit def measurementCleansedToSensorMeasurementCleansed(measurement: MeasurementCleansed): SensorMeasurementCleansed =
     SensorMeasurementCleansed(
@@ -114,8 +110,7 @@ object SensorMeasurement {
       measurement.meas_method,
       measurement.meas_lower_limit,
       measurement.meas_upper_limit,
-      measurement.meas_description
-    )
+      measurement.meas_description)
 
   implicit def measurementSummaryToSensorMeasurementSummary(ms: MeasurementSummary): SensorMeasurementSummary =
     SensorMeasurementSummary(
@@ -129,8 +124,7 @@ object SensorMeasurement {
       ms.key2,
       ms.meas_summary_name,
       ms.meas_summary_value,
-      ms.meas_summary_description
-    )
+      ms.meas_summary_description)
 
   implicit def sensorMeasurementToMeasurement(sensorMeasurement: SensorMeasurement): Measurement =
     Measurement(
@@ -150,8 +144,7 @@ object SensorMeasurement {
       sensorMeasurement.meas_upper_limit,
       sensorMeasurement.meas_description,
       None,
-      None
-    )
+      None)
 
   implicit def sensorMeasurementToMeasurement(sensorMeasurements: List[SensorMeasurement]): List[Measurement] =
     sensorMeasurements.map(sensorMeasurement => sensorMeasurementToMeasurement(sensorMeasurement))
@@ -188,9 +181,8 @@ object SensorMeasurement {
     val arr = new JLinkedList[JLinkedHashMap[String, Object]]()
     arr.addAll(
       sensorMeasurements
-      .map(m => toJLinkedHashMap(m))
-      .asJavaCollection
-    )
+        .map(m => toJLinkedHashMap(m))
+        .asJavaCollection)
     JSONArray.toJSONString(arr)
   }
 
@@ -282,8 +274,7 @@ object SensorMeasurement {
             Some(jsonToSensorMeasurement(x.asInstanceOf[JSONObject]))
           } catch {
             case _: Throwable => None
-          }
-      )
+          })
       case _ => List.empty
     }
   }
@@ -334,8 +325,7 @@ object SensorMeasurement {
       meas_status,
       meas_lower_limit,
       meas_upper_limit,
-      meas_description
-    )
+      meas_description)
 
   }
 

@@ -72,8 +72,7 @@ class AutomatedTestsSpec extends Specification {
           automated_test.Routes.handlerFor(req) orElse super.onRouteRequest(req)
 
         override def onStop(app: Application) = Global.onStop(app)
-      })
-    )
+      }))
 
   import WithLoggedUser._
 
@@ -111,8 +110,7 @@ class AutomatedTestsSpec extends Specification {
             #"meas_description": "md",
             #"device_status": "PASS",
             #"test_status": "PASS"
-            #}]""".stripMargin('#'))
-      ).withCookies(cookie)).get
+            #}]""".stripMargin('#'))).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
 
       AutomatedTest.find("company0", "site0", "device_group0", "tester0",
@@ -146,8 +144,7 @@ class AutomatedTestsSpec extends Specification {
             #"meas_description": "md",
             #"device_status": "PASS",
             #"test_status": "PASS"
-            #}]""".stripMargin('#'))
-      )).get // No user cookie is provided.
+            #}]""".stripMargin('#')))).get // No user cookie is provided.
       status(create) must equalTo(SEE_OTHER)
     }
 
@@ -177,8 +174,7 @@ class AutomatedTestsSpec extends Specification {
             #"device_status": "PASS",
             #"ts": 111000000000,
             #"test_status": "PASS"
-            #}]""".stripMargin('#'))
-      ).withCookies(cookie)).get
+            #}]""".stripMargin('#'))).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
 
       AutomatedTest.find("company0", "site0", "device_group0", "tester0",
@@ -210,8 +206,7 @@ class AutomatedTestsSpec extends Specification {
             #"meas_description": "md",
             #"device_status": "PASS",
             #"test_status": "PASS"
-            #}]""".stripMargin('#'))
-      ).withCookies(cookie)).get
+            #}]""".stripMargin('#'))).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
     }
 
@@ -239,8 +234,7 @@ class AutomatedTestsSpec extends Specification {
             #"meas_description": "md",
             #"device_status": "PASS",
             #"test_status": "PASS"
-            #}]""".stripMargin('#'))
-      ).withCookies(cookie)).get
+            #}]""".stripMargin('#'))).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
     }
 
@@ -324,7 +318,7 @@ class AutomatedTestsSpec extends Specification {
         "tester=tester0&" +
         "beginTime=111000001000&" +
         "endTime=badtime" // endTime invalid
-        ).withCookies(cookie)).get
+      ).withCookies(cookie)).get
       status(query) must equalTo(BAD_REQUEST)
     }
 
@@ -337,7 +331,7 @@ class AutomatedTestsSpec extends Specification {
         "beginTime=111000001000&" +
         "endTime=111000001000" +
         "sort=badorder" // sort invalid
-        ).withCookies(cookie)).get
+      ).withCookies(cookie)).get
       status(query) must equalTo(BAD_REQUEST)
     }
 
@@ -368,8 +362,7 @@ class AutomatedTestsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
 
       val found = AutomatedTest.find("company0", "site0", "device_group0", "tester0",
@@ -419,8 +412,7 @@ class AutomatedTestsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
 
       val found = AutomatedTest.find("company0", "site0", "device_group0", "tester0",
@@ -468,8 +460,7 @@ class AutomatedTestsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
 
       val found = AutomatedTest.find("company0", "site0", "device_group0", "tester0",
@@ -519,8 +510,7 @@ class AutomatedTestsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
 
       val found = AutomatedTest.find("company0", "site0", "device_group0", "tester0",
@@ -573,8 +563,7 @@ class AutomatedTestsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
 
       val found = AutomatedTest.find("company0", "site0", "device_group0", "tester0",
@@ -622,8 +611,7 @@ class AutomatedTestsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
     }
 
@@ -653,8 +641,7 @@ class AutomatedTestsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
     }
 
@@ -684,8 +671,7 @@ class AutomatedTestsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
     }
 
@@ -715,8 +701,7 @@ class AutomatedTestsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
     }
 
@@ -745,8 +730,7 @@ class AutomatedTestsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
     }
 
@@ -775,8 +759,7 @@ class AutomatedTestsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
     }
 
@@ -803,8 +786,7 @@ class AutomatedTestsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
     }
 
@@ -832,8 +814,7 @@ class AutomatedTestsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
     }
 
@@ -861,8 +842,7 @@ class AutomatedTestsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
     }
 
@@ -890,8 +870,7 @@ class AutomatedTestsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
     }
 
@@ -922,8 +901,7 @@ class AutomatedTestsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
 
       val found = AutomatedTest.find("company0", "site0", "device_group0", "tester0",
@@ -969,8 +947,7 @@ class AutomatedTestsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
 
       val found = AutomatedTest.find("company0", "site0", "device_group0", "tester0",
@@ -1020,8 +997,7 @@ class AutomatedTestsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
     }
 
@@ -1052,8 +1028,7 @@ class AutomatedTestsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
     }
 
@@ -1084,8 +1059,7 @@ class AutomatedTestsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
     }
 
@@ -1115,8 +1089,7 @@ class AutomatedTestsSpec extends Specification {
             #"meas_description": "",     ${"" /* empty string field */ }
             #"device_status": "PASS",
             #"test_status": "PASS"
-            #}]""".stripMargin('#'))
-      ).withCookies(cookie)).get
+            #}]""".stripMargin('#'))).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
 
       val results = AutomatedTest.find("company0", "site0", "device_group0", "tester0",

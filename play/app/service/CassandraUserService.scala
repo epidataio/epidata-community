@@ -5,68 +5,88 @@
 package service
 
 import models.User
+import scala.concurrent.Future
+import play.api.libs.ws._
 import play.api.{ Logger, Application }
 import securesocial.core._
-import securesocial.core.providers.Token
+import securesocial.core.{ PasswordInfo, BasicProfile }
+import play.api.{ Environment, Configuration }
+import securesocial.core.services._
+import securesocial.core.providers.MailToken
+
+import javax.inject._
 
 /** A user service in Scala using a Cassandra backend. */
-class CassandraUserService(application: Application) extends UserServicePlugin(application) {
+@Singleton
+class CassandraUserService extends UserService[BasicProfile] {
   val logger = Logger("application.controllers.CassandraUserService")
 
-  def find(id: IdentityId): Option[Identity] = User.find(id)
+  var users = Map[(String, String), BasicProfile]()
+  private var tokens = Map[String, MailToken]()
 
-  def findByEmailAndProvider(email: String, providerId: String): Option[Identity] = {
+  def find(providerId: String, userId: String): Future[Option[BasicProfile]] = Future.successful(User.find(providerId, userId))
+
+  override def findByEmailAndProvider(email: String, providerId: String): Future[Option[BasicProfile]] = {
     // No UsernamePassword provider in use.
-    None
+    Future.successful(None)
   }
 
-  def save(user: Identity): Identity = {
+  override def save(user: BasicProfile, mode: SaveMode): Future[BasicProfile] = {
 
     // Do not allow creation of new user accounts. Accounts are created
     // manually during the restricted invite period.
-    if (find(user.identityId).isEmpty) {
-      throw new AuthenticationException
+    find(user.providerId, user.userId).value match {
+      case None => throw new Exception("User Not Found")
+      case Some(_) =>
+        val basicProfile = BasicProfile(
+          user.providerId,
+          user.userId,
+          user.firstName,
+          user.lastName,
+          user.fullName,
+          user.email,
+          user.avatarUrl,
+          user.authMethod,
+          user.oAuth1Info,
+          user.oAuth2Info,
+          user.passwordInfo)
+
+        User.save(basicProfile)
+        Future.successful(basicProfile)
     }
-
-    val socialUser = SocialUser(
-      user.identityId,
-      user.firstName,
-      user.lastName,
-      user.fullName,
-      user.email,
-      user.avatarUrl,
-      user.authMethod,
-      user.oAuth1Info,
-      user.oAuth2Info,
-      user.passwordInfo
-    )
-
-    User.save(socialUser)
-    socialUser
   }
 
-  def link(current: Identity, to: Identity) {
+  override def link(current: BasicProfile, to: BasicProfile): Future[BasicProfile] = {
+    // Default implementation as no UsernamePassword provider is in use.
+    Future.successful(current)
+  }
+
+  override def passwordInfoFor(user: BasicProfile): Future[Option[PasswordInfo]] = {
     // No UsernamePassword provider in use.
+    Future.successful(None)
   }
 
-  def save(token: Token) {
+  override def updatePasswordInfo(user: BasicProfile, info: PasswordInfo): Future[Option[BasicProfile]] = {
     // No UsernamePassword provider in use.
+    Future.successful(None)
   }
 
-  def findToken(token: String): Option[Token] = {
+  override def saveToken(token: MailToken): Future[MailToken] = {
+    // Defult implementaiton as no UsernamePassword provider in use.
+    Future.successful(token)
+  }
+
+  override def findToken(token: String): Future[Option[MailToken]] = {
     // No UsernamePassword provider in use.
-    None
+    Future.successful(None)
   }
 
-  def deleteToken(uuid: String) {
+  override def deleteToken(uuid: String): Future[Option[MailToken]] = {
     // No UsernamePassword provider in use.
+    Future.successful(None)
   }
 
-  def deleteTokens() {
-    // No UsernamePassword provider in use.
-  }
-
-  def deleteExpiredTokens() {
+  override def deleteExpiredTokens() {
     // No UsernamePassword provider in use.
   }
 }

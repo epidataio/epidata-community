@@ -11,11 +11,10 @@ import org.apache.spark.MeasurementValue
 
 /** Specialization of MeasurementKey representing a sensor measurement key. */
 case class SensorMeasurementKey(
-  company: String,
-  site: String,
-  station: String,
-  sensor: String
-)
+    company: String,
+    site: String,
+    station: String,
+    sensor: String)
 
 object SensorMeasurementKey {
 
@@ -24,27 +23,25 @@ object SensorMeasurementKey {
       key.customer,
       key.customer_site,
       key.collection,
-      key.dataset
-    )
+      key.dataset)
 }
 
 /** Specialization of Measurement representing sensor data. */
 case class SensorMeasurement(
-  company: String,
-  site: String,
-  station: String,
-  sensor: String,
-  ts: Timestamp,
-  event: String,
-  meas_name: String,
-  meas_datatype: Option[String],
-  meas_value: MeasurementValue,
-  meas_unit: Option[String],
-  meas_status: Option[String],
-  meas_lower_limit: Option[MeasurementValue],
-  meas_upper_limit: Option[MeasurementValue],
-  meas_description: Option[String]
-)
+    company: String,
+    site: String,
+    station: String,
+    sensor: String,
+    ts: Timestamp,
+    event: String,
+    meas_name: String,
+    meas_datatype: Option[String],
+    meas_value: MeasurementValue,
+    meas_unit: Option[String],
+    meas_status: Option[String],
+    meas_lower_limit: Option[MeasurementValue],
+    meas_upper_limit: Option[MeasurementValue],
+    meas_description: Option[String])
 
 object SensorMeasurement {
 
@@ -63,28 +60,26 @@ object SensorMeasurement {
       measurement.meas_status,
       measurement.meas_lower_limit,
       measurement.meas_upper_limit,
-      measurement.meas_description
-    )
+      measurement.meas_description)
 }
 
 case class SensorMeasurementCleansed(
-  company: String,
-  site: String,
-  station: String,
-  sensor: String,
-  ts: Timestamp,
-  event: String,
-  meas_name: String,
-  meas_datatype: Option[String],
-  meas_value: MeasurementValue,
-  meas_unit: Option[String],
-  meas_status: Option[String],
-  meas_flag: Option[String],
-  meas_method: Option[String],
-  meas_lower_limit: Option[MeasurementValue],
-  meas_upper_limit: Option[MeasurementValue],
-  meas_description: Option[String]
-)
+    company: String,
+    site: String,
+    station: String,
+    sensor: String,
+    ts: Timestamp,
+    event: String,
+    meas_name: String,
+    meas_datatype: Option[String],
+    meas_value: MeasurementValue,
+    meas_unit: Option[String],
+    meas_status: Option[String],
+    meas_flag: Option[String],
+    meas_method: Option[String],
+    meas_lower_limit: Option[MeasurementValue],
+    meas_upper_limit: Option[MeasurementValue],
+    meas_description: Option[String])
 
 object SensorMeasurementCleansed {
   implicit def measurementCleansedToSensorMeasurementCleansed(measurement: MeasurementCleansed): SensorMeasurementCleansed =
@@ -104,6 +99,5 @@ object SensorMeasurementCleansed {
       measurement.meas_method,
       measurement.meas_lower_limit,
       measurement.meas_upper_limit,
-      measurement.meas_description
-    )
+      measurement.meas_description)
 }

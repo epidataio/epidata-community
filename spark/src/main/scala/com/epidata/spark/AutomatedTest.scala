@@ -6,11 +6,10 @@ import org.apache.spark.MeasurementValue
 
 /** Specialization of MeasurementKey representing an automated test key. */
 case class AutomatedTestKey(
-  company: String,
-  site: String,
-  device_group: String,
-  tester: String
-)
+    company: String,
+    site: String,
+    device_group: String,
+    tester: String)
 
 object AutomatedTestKey {
 
@@ -19,30 +18,28 @@ object AutomatedTestKey {
       key.customer,
       key.customer_site,
       key.collection,
-      key.dataset
-    )
+      key.dataset)
 }
 
 /** Specialization of Measurement representing automated test data. */
 case class AutomatedTest(
-  company: String,
-  site: String,
-  device_group: String,
-  tester: String,
-  ts: Timestamp,
-  device_name: String,
-  test_name: String,
-  meas_name: String,
-  meas_datatype: Option[String],
-  meas_value: MeasurementValue,
-  meas_unit: Option[String],
-  meas_status: Option[String],
-  meas_lower_limit: Option[MeasurementValue],
-  meas_upper_limit: Option[MeasurementValue],
-  meas_description: Option[String],
-  device_status: Option[String],
-  test_status: Option[String]
-)
+    company: String,
+    site: String,
+    device_group: String,
+    tester: String,
+    ts: Timestamp,
+    device_name: String,
+    test_name: String,
+    meas_name: String,
+    meas_datatype: Option[String],
+    meas_value: MeasurementValue,
+    meas_unit: Option[String],
+    meas_status: Option[String],
+    meas_lower_limit: Option[MeasurementValue],
+    meas_upper_limit: Option[MeasurementValue],
+    meas_description: Option[String],
+    device_status: Option[String],
+    test_status: Option[String])
 
 object AutomatedTest {
 
@@ -64,31 +61,29 @@ object AutomatedTest {
       measurement.meas_upper_limit,
       measurement.meas_description,
       measurement.val1,
-      measurement.val2
-    )
+      measurement.val2)
 }
 
 case class AutomatedTestCleansed(
-  company: String,
-  site: String,
-  device_group: String,
-  tester: String,
-  ts: Timestamp,
-  device_name: String,
-  test_name: String,
-  meas_name: String,
-  meas_datatype: Option[String],
-  meas_value: MeasurementValue,
-  meas_unit: Option[String],
-  meas_status: Option[String],
-  meas_flag: Option[String],
-  meas_method: Option[String],
-  meas_lower_limit: Option[MeasurementValue],
-  meas_upper_limit: Option[MeasurementValue],
-  meas_description: Option[String],
-  device_status: Option[String],
-  test_status: Option[String]
-)
+    company: String,
+    site: String,
+    device_group: String,
+    tester: String,
+    ts: Timestamp,
+    device_name: String,
+    test_name: String,
+    meas_name: String,
+    meas_datatype: Option[String],
+    meas_value: MeasurementValue,
+    meas_unit: Option[String],
+    meas_status: Option[String],
+    meas_flag: Option[String],
+    meas_method: Option[String],
+    meas_lower_limit: Option[MeasurementValue],
+    meas_upper_limit: Option[MeasurementValue],
+    meas_description: Option[String],
+    device_status: Option[String],
+    test_status: Option[String])
 
 object AutomatedTestCleansed {
 
@@ -112,6 +107,5 @@ object AutomatedTestCleansed {
       measurement.meas_upper_limit,
       measurement.meas_description,
       measurement.val1,
-      measurement.val2
-    )
+      measurement.val2)
 }

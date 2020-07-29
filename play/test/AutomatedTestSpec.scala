@@ -78,8 +78,7 @@ class AutomatedTestSpec extends Specification {
         s"SELECT * FROM ${Measurement.DBTableName} WHERE customer = 'com' AND " +
           " customer_site = 'sit' AND collection = 'dg' AND dataset = 'tes' " +
           " AND epoch = ? AND ts = ? AND key1 = 'dev' AND key2 = 'tna' AND key3 = 'mea'",
-        epoch: java.lang.Integer, ts
-      ).all.size must equalTo(0)
+        epoch: java.lang.Integer, ts).all.size must equalTo(0)
 
       AutomatedTest.insert(Model("com", "sit", "dg", "tes", ts, "dev",
         "tna", "mea", Some("double"), 1.0, Some("uni"), Some("sta"), Some(0.0), Some(2.0), Some("des"),
@@ -91,8 +90,7 @@ class AutomatedTestSpec extends Specification {
           s"SELECT * FROM ${Measurement.DBTableName} WHERE customer = 'com' AND " +
             " customer_site = 'sit' AND collection = 'dg' AND dataset = 'tes' " +
             " AND epoch = ? AND ts = ? AND key1 = 'dev' AND key2 = 'tna' AND key3 = 'mea'",
-          epoch: java.lang.Integer, ts
-        ).one
+          epoch: java.lang.Integer, ts).one
       row.getString("customer") must equalTo("com")
       row.getString("customer_site") must equalTo("sit")
       row.getString("collection") must equalTo("dg")
@@ -121,8 +119,7 @@ class AutomatedTestSpec extends Specification {
         "te_a",
         Fixtures.beginTime,
         Fixtures.endTime,
-        Ordering.Unspecified
-      ).toSet must
+        Ordering.Unspecified).toSet must
         equalTo(Fixtures.models.filter(x => x.company == "co_a" &&
           x.site == "si_a" &&
           x.device_group == "dg_a" &&
@@ -138,8 +135,7 @@ class AutomatedTestSpec extends Specification {
         "te_a",
         Fixtures.time(1),
         Fixtures.time(3),
-        Ordering.Unspecified
-      ).toSet must
+        Ordering.Unspecified).toSet must
         equalTo(Fixtures.models.filter(x => x.company == "co_a" &&
           x.site == "si_a" &&
           x.device_group == "dg_a" &&
@@ -157,8 +153,7 @@ class AutomatedTestSpec extends Specification {
         "te_a",
         Fixtures.beginTime,
         Fixtures.endTime,
-        Ordering.Ascending
-      ) must
+        Ordering.Ascending) must
         equalTo(Fixtures.models.filter(x => x.company == "co_a" &&
           x.site == "si_a" &&
           x.device_group == "dg_a" &&
@@ -174,8 +169,7 @@ class AutomatedTestSpec extends Specification {
         "te_a",
         Fixtures.beginTime,
         Fixtures.endTime,
-        Ordering.Descending
-      ) must
+        Ordering.Descending) must
         equalTo(Fixtures.models.filter(x => x.company == "co_a" &&
           x.site == "si_a" &&
           x.device_group == "dg_a" &&

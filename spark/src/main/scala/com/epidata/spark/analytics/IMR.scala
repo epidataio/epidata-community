@@ -16,15 +16,14 @@ object IMR {
 
   // Row additions for IMR result data.
   private case class IMRResultElement(
-    I: Double,
-    I_mean: Double,
-    I_LCL: Double,
-    I_UCL: Double,
-    MR: Double,
-    MR_mean: Double,
-    MR_LCL: Double,
-    MR_UCL: Double
-  )
+      I: Double,
+      I_mean: Double,
+      I_LCL: Double,
+      I_UCL: Double,
+      MR: Double,
+      MR_mean: Double,
+      MR_LCL: Double,
+      MR_UCL: Double)
 
   /**
    * Perform IMR analysis on the supplied measurement Rows.
@@ -74,8 +73,7 @@ object IMR {
       x._2,
       MR_mean,
       MR_LCL,
-      MR_UCL
-    ))
+      MR_UCL))
 
     val ret = sorted.zip(imr).map(x => Row.merge(x._1, Row.fromTuple(x._2)))
     val retSchema = StructType(schema.toSeq ++

@@ -1,13 +1,16 @@
+import com.typesafe.sbt.SbtScalariform.ScalariformKeys
+import scalariform.formatter.preferences._
+
 name := "epidata-models"
 
 libraryDependencies ++= Seq(
-  "com.datastax.cassandra" % "cassandra-driver-core" % "3.0.2",
+  "com.datastax.cassandra" % "cassandra-driver-core" % "3.9.0",
   "com.googlecode.json-simple" % "json-simple" % "1.1.1"
 )
 
-scalariformSettings
+SbtScalariform.scalariformSettings
+//scalariformSettings
 
-scalaVersion := "2.11.8"
-
-scalaVersion in ThisBuild := "2.11.8"
-
+ScalariformKeys.preferences := ScalariformKeys.preferences.value
+  .setPreference(DoubleIndentConstructorArguments, true)
+  .setPreference(AlignParameters, false)

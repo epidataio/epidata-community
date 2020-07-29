@@ -10,19 +10,18 @@ import java.util.Date
 import com.datastax.driver.core.Row
 
 case class MeasurementSummary(
-  customer: String,
-  customer_site: String,
-  collection: String,
-  dataset: String,
-  start_time: Timestamp,
-  stop_time: Timestamp,
-  key1: String,
-  key2: String,
-  key3: String,
-  meas_summary_name: String,
-  meas_summary_value: String,
-  meas_summary_description: String
-)
+    customer: String,
+    customer_site: String,
+    collection: String,
+    dataset: String,
+    start_time: Timestamp,
+    stop_time: Timestamp,
+    key1: String,
+    key2: String,
+    key3: String,
+    meas_summary_name: String,
+    meas_summary_value: String,
+    meas_summary_description: String)
 
 object MeasurementSummary {
 
@@ -63,8 +62,7 @@ object MeasurementSummary {
       key3,
       meas_summary_name,
       meas_summary_value,
-      meas_summary_description
-    )
+      meas_summary_description)
 
   }
 }

@@ -1,13 +1,16 @@
-@(title: String, headline: Html = Html(""), scripts: Html = Html(""), styles: Html = Html(""))(content: Html)
+@(title: String, headline: Html = Html(""), scripts: Html = Html(""), styles: Html = Html(""))(content: Html)(implicit assets: AssetsFinder)
+
+<img alt="hamburger" src="@assets.path("images/hamburger.jpg")">
+
 <!DOCTYPE html>
 <html>
   <head>
     <title>@title</title>
-    <link rel="stylesheet" href="@routes.Assets.at("stylesheets/foundation.min.css")">
-    <link rel="stylesheet" href="@routes.Assets.at("stylesheets/main.min.css")">
+    <link rel="stylesheet" href="@assets.path("stylesheets/foundation.min.css")">
+    <link rel="stylesheet" href="@assets.path("stylesheets/main.min.css")">
     @styles
-    <script src="@routes.Assets.at("javascripts/jquery-1.9.0.min.js")"></script>
-    <script src="@routes.Assets.at("javascripts/foundation.min.js")"></script>
+    <script src="@assets.path("javascripts/jquery-1.9.0.min.js")"></script>
+    <script src="@assets.path("javascripts/foundation.min.js")"></script>
     @scripts
   </head>
   <body>
