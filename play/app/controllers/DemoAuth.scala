@@ -20,8 +20,7 @@ import securesocial.controllers._
 import securesocial.core._
 import securesocial.core.authenticator._
 import securesocial.core.utils._
-import securesocial.core.authenticator.AuthenticatorBuilder
-import securesocial.core.authenticator.CookieAuthenticatorBuilder
+import securesocial.core.authenticator.{ AuthenticatorBuilder, CookieAuthenticator, CookieAuthenticatorBuilder }
 import securesocial.core.services.SaveMode
 import securesocial.core.services.{ CacheService, RoutesService }
 import javax.inject._
@@ -33,7 +32,7 @@ import scala.util.{ Success, Failure }
 @Singleton
 class DemoAuth @Inject() (val cc: ControllerComponents)(
     implicit
-    val env: RuntimeEnvironment,
+    val env: AppEnvironment,
     implicit val conf: Configuration) extends AbstractController(cc) with SecureSocial {
 
   private implicit val readsOAuth2Info = Json.reads[OAuth2Info]
@@ -73,37 +72,39 @@ class DemoAuth @Inject() (val cc: ControllerComponents)(
   def authenticateByPost = Action.async { implicit request =>
     conf.get[Boolean]("securesocial.useDefaultLogin") match {
       case true => {
-        try {
-          val jsonBody: Option[JsValue] = request.body.asJson
-          jsonBody.map { json =>
+        val jsonBody: Option[JsValue] = request.body.asJson
+        jsonBody match {
+          case Some(json) => {
             val token = (json \ "accessToken").as[String]
             if (DataService.isValidToken(token)) {
-              val provider = env.providers(providerId)
-              val user: Future[BasicProfile] = provider.asInstanceOf[OAuth2Provider].fillProfile(null)
-              user.map {
-                u =>
-                  u.isInstanceOf[BasicProfile] match {
-                    case true =>
-                      logger.debug(s"$user logged in via $providerId provider")
-                      completeAuthenticationByPost(u, request.session)
-                    case false =>
-                      InternalServerError(Json.toJson(Map("error" -> "unexpected internal error"))).as("application/json")
+              env.authenticatorService.find(CookieAuthenticator.Id) match {
+                case Some(builder) => {
+                  val provider = env.providers(providerId).asInstanceOf[OAuth2Provider]
+                  provider.fillProfile(null).flatMap {
+                    user =>
+                      user.isInstanceOf[BasicProfile] match {
+                        case true =>
+                          logger.debug(s"$user logged in via $providerId provider")
+                          completeAuthenticationByPost(
+                            builder.asInstanceOf[CookieAuthenticatorBuilder[BasicProfile]],
+                            user.asInstanceOf[BasicProfile], request.session)
+                        case false =>
+                          Future.successful(InternalServerError(Json.toJson(Map("error" -> "unexpected internal error"))).as("application/json"))
+                      }
                   }
+                }
+                case None =>
+                  Future.successful(InternalServerError(Json.toJson(Map("error" -> "unexpected internal error"))).as("application/json"))
               }
             } else {
               Future.successful(Unauthorized("Token is invalid"))
             }
-          }.getOrElse {
+          }
+          case None =>
             Future.successful(Unauthorized("Error parsing request data"))
-          }
-        } catch {
-          case e: Exception => {
-            logger.error("Unable to log user in. An exception was thrown")
-            Future.successful(InternalServerError(Json.toJson(Map("error" -> "unexpected error"))).as("application/json"))
-          }
         }
       }
-      case _ => {
+      case false => {
         logger.error("User login mode is not supported")
         Future.successful(Unauthorized("Unable to log user in"))
       }
@@ -116,10 +117,15 @@ class DemoAuth @Inject() (val cc: ControllerComponents)(
     Ok(Json.obj("sessionId" -> sessionId))
   }
 
-  def completeAuthenticationByPost(user: BasicProfile, session: Session)(implicit request: RequestHeader): Result = {
-    val withSession = Events.fire(new LoginEvent(user)).getOrElse(session)
-    val sessionId = UUID.randomUUID().toString
-    Ok(Json.obj("sessionId" -> sessionId))
+  def completeAuthenticationByPost(builder: CookieAuthenticatorBuilder[BasicProfile], user: BasicProfile, session: Session)(
+    implicit
+    request: RequestHeader): Future[Result] = {
+    builder.fromUser(user).map {
+      authenticator =>
+        val auth = authenticator.asInstanceOf[CookieAuthenticator[BasicProfile]]
+        val result: Result = Ok(Json.obj("sessionId" -> UUID.randomUUID().toString))
+        result.withCookies(auth.config.toCookieWithId(auth.id))
+    }
   }
 
 }

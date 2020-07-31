@@ -14,6 +14,7 @@ import struct
 import time
 from time import sleep
 import urllib2
+import requests
 
 
 ##################################
@@ -24,7 +25,7 @@ arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument('--host')
 args = arg_parser.parse_args()
 
-HOST = args.host or '127.0.0.1'
+HOST = args.host or '127.0.0.1:9443'
 AUTHENTICATION_URL = 'https://' + HOST + '/authenticate/app'
 AUTHENTICATION_ROUTE = '/authenticate/app'
 USE_KAFKA = True
@@ -32,27 +33,21 @@ LOG_ITERATION = 1
 
 if USE_KAFKA:
     CREATE_MEASUREMENT_URL = 'https://' + HOST + '/kafka/measurements'
-    CREATE_MEASUREMENT_LIST_ROUTE = '/kafka/measurements'
+    CREATE_MEASUREMENT_ROUTE = '/kafka/measurements'
 else:
     CREATE_MEASUREMENT_URL = 'https://' + HOST + '/measurements'
-    CREATE_MEASUREMENT_LIST_ROUTE = '/measurements'
-
-iteration = 0
-post_iteration = 0
-
+    CREATE_MEASUREMENT_ROUTE = '/measurements'
 
 def get_time(time_string):
     date_object = datetime.strptime(time_string, '%m/%d/%Y %H:%M:%S.%f')
     return long(time.mktime(date_object.timetuple())
                 * 1e3 + date_object.microsecond / 1e3)
 
-
 def add_time(time_string, delta):
     date_object = datetime.strptime(
         time_string, '%m/%d/%Y %H:%M:%S.%f') + timedelta(seconds=delta)
     return long(time.mktime(date_object.timetuple())
                 * 1e3 + date_object.microsecond / 1e3)
-
 
 current_time_string = datetime.now().strftime("%m/%d/%Y %H:%M:%S.%f")
 current_time = get_time(current_time_string)
@@ -63,11 +58,11 @@ current_time = get_time(current_time_string)
 #####################
 
 # Replace quoted string with API Token or GitHub Personal Access Token (REQUIRED)
-ACCESS_TOKEN = 'API TOKEN'
+ACCESS_TOKEN = ''
 
 # Modify default values (OPTIONAL)
 COMPANY = 'EpiData'
-SITE = 'San_Jose'
+SITE = 'Redwood_City'
 STATION = 'WSN-1'
 
 
@@ -90,33 +85,30 @@ else:
 # Authenticate with EpiData #
 #############################
 
-conn = httplib.HTTPSConnection(HOST)
+# Create session object for HTTP requests
+session = requests.Session()
 
 # Authentication is achieved by posting to the AUTHENTICATION_URL.
 url = AUTHENTICATION_URL
+print url
 
 # An HTTP POST with JSON content requires the HTTP Content-type header.
-json_header = {'Content-type': 'application/json'}
+json_header = {'Content-type': 'application/json', 'Set-Cookie': "epidata"}
 
 # The access token is povided via JSON.
 json_body = json.dumps({'accessToken': ACCESS_TOKEN})
 
 # Send the POST request and receive the HTTP response.
-# conn.request.verify=False
-conn.request('POST', AUTHENTICATION_ROUTE, json_body, json_header)
-post_response = conn.getresponse()
+req = requests.Request('POST', AUTHENTICATION_URL, data=json_body, headers=json_header)
+prepped = session.prepare_request(req)
+resp = session.send(prepped, stream=None, verify=None, proxies=None, cert=None, timeout=None)
 
 # Check that the response's HTTP response code is 200 (OK).
-assert post_response.status == 200
+assert resp.status_code == 200
 
 # Parse the JSON response.
-response_json = json.loads(post_response.read())
-
-# Retrieve the new session id from the JSON response.
-session_id = response_json['sessionId']
-
-# Construct the session cookie.
-session_cookie = 'epidata=' + session_id
+post_response = json.loads(resp.content)
+print "response - ", post_response
 
 
 ############################################
@@ -128,12 +120,16 @@ while (True):
 
     try:
 
-        for data_iteration in range(1, 6):
+        meas_last_temperature_value = 70.0
+        meas_last_windspeed_value = 8
+        meas_last_rh_value = 60
+
+        for data_iteration in range(1, 25):
 
             # Construct an empty list of measurement objects
             measurement_list = []
 
-            for log_iteration in range(1, 4):
+            for log_iteration in range(1, 5):
 
                 current_time_string = datetime.now().strftime("%m/%d/%Y %H:%M:%S.%f")
                 current_time = get_time(current_time_string)
@@ -143,12 +139,23 @@ while (True):
                 ####################################
 
                 # Simulate Temperate measurement data
-                if ((data_iteration % 3 == 0) and (log_iteration == 2)):
-                    meas_value = 250
-                elif ((data_iteration % 2 == 0) and (log_iteration == 2)):
+                if ((data_iteration % 4 == 0) and (log_iteration == 2)):
+                    if(data_iteration <= 12):
+                        meas_value_diff = float(round(random.normalvariate(3.0, 0.25), 2))
+                        meas_value = meas_last_temperature_value + meas_value_diff
+                    else:
+                        meas_value_diff = float(round(random.normalvariate(3.0, 0.25), 2))
+                        meas_value = meas_last_temperature_value - meas_value_diff
+                elif ((data_iteration % 6 == 0) and (log_iteration == 3)):
                     meas_value = None
                 else:
-                    meas_value = round(random.normalvariate(70, 6), 2)
+                    if(data_iteration <= 12):
+                        meas_value_diff = float(round(random.normalvariate(0.5, 0.25), 2))
+                        meas_value = meas_last_temperature_value + meas_value_diff
+                    else:
+                        meas_value_diff = float(round(random.normalvariate(0.5, 0.25), 2))
+                        meas_value = meas_last_temperature_value - meas_value_diff
+                    meas_last_temperature_value = meas_value
                 if (30 <= meas_value <= 120):
                     meas_status = 'PASS'
                 else:
@@ -167,8 +174,8 @@ while (True):
                     'meas_unit': 'deg F',
                     'meas_datatype': 'double',
                     'meas_status': meas_status,
-                    'meas_lower_limit': 10,
-                    'meas_upper_limit': 120,
+                    'meas_lower_limit': 10.1,
+                    'meas_upper_limit': 120.4,
                     'meas_description': ''
                 }
 
@@ -180,7 +187,13 @@ while (True):
                 ###################################
 
                 # Simulate Wind Speed measurement data
-                meas_value = round(random.normalvariate(8, 2), 2)
+                if ((data_iteration % 4 == 0) and (log_iteration == 2)):
+                    meas_value = float(30)
+                elif ((data_iteration % 21 == 0) and (log_iteration == 3)):
+                    meas_value = None
+                else:
+                    meas_value = float(round(random.normalvariate(8, 2), 2))
+                    meas_last_windspeed_value = meas_value
                 if (0 < meas_value < 25):
                     meas_status = 'PASS'
                 else:
@@ -205,14 +218,14 @@ while (True):
                 }
 
                 # Construct measurement list with data to be ingested.
-                measurement_list.append(measurement)
+                #measurement_list.append(measurement)
 
                 ##########################################
                 # Simulate Relative Humidity Measurement #
                 ##########################################
 
                 # Simulate Relative Humidity measurement data
-                meas_value = round(random.normalvariate(60, 5), 2)
+                meas_value = float(round(random.normalvariate(60, 5), 2))
                 if (0 <= meas_value <= 100):
                     meas_status = 'PASS'
                 else:
@@ -231,13 +244,14 @@ while (True):
                     'meas_unit': '%',
                     'meas_datatype': 'double',
                     'meas_status': meas_status,
-                    'meas_lower_limit': 0,
-                    'meas_upper_limit': 100,
+                    'meas_lower_limit': None,
+                    'meas_upper_limit': None,
                     'meas_description': ''
                 }
 
                 # Construct measurement list with data to be ingested.
-                measurement_list.append(measurement)
+                #measurement_list.append(measurement)
+                meas_last_rh_value = meas_value
 
                 ####################################
                 # Increment iteration and continue #
@@ -245,42 +259,37 @@ while (True):
 
                 # increment iteration and current time
                 time.sleep(0.1)
-                iteration += 1
 
             ###########################
             # Ingest All Measurements #
             ###########################
 
-            # Measurements are created by sending an HTTP POST request to the
+            # Measurements are created by sending an HTTP POST request to the platform
             # create url.
             url = CREATE_MEASUREMENT_URL
 
             # Request headers add parameters to the request.
             json_header = {
-                'Content-type': 'application/json',
-                'Cookie': session_cookie}
+                'Content-type': 'application/json'
+                }
 
             # Construct JSON body with data to be ingested.
             json_body = json.dumps(measurement_list)
 
             # Send the POST request and receive the HTTP response.
-            conn.request(
-                'POST',
-                CREATE_MEASUREMENT_LIST_ROUTE,
-                json_body,
-                json_header)
-            post_response = conn.getresponse()
+            req = requests.Request('POST', CREATE_MEASUREMENT_URL, data=json_body, headers=json_header)
+            prepped = session.prepare_request(req)
+            resp = session.send(prepped, stream=None, verify=None, proxies=None, cert=None, timeout=None)
 
             # Check that the response's HTTP response code is 201 (CREATED).
-            status = post_response.status
-            message = post_response.read()
-            assert status == 201
-
-            # post_response.read()
+            print resp.content
+            assert resp.status_code == 201
 
             # Print measurement details
             print "iteration: ", data_iteration
             print json_body + "\n"
+
+            #break
 
         break
 

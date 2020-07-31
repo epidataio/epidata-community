@@ -6,9 +6,11 @@
 # ~~~~
 
 # Submit Measurements
++nocsrf
 POST    /measurements               @controllers.SensorMeasurements.create
 
 # Kafka insert
++nocsrf
 POST    /kafka/measurements         @controllers.SensorMeasurements.insertKafka
 
 # Query Measurement

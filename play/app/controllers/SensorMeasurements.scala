@@ -25,7 +25,6 @@ class SensorMeasurements @Inject() (val cc: ControllerComponents)(
   override def messagesApi = env.messagesApi
 
   def create = SecuredAction(parse.json) { implicit request =>
-    print("request - " + request + "\n")
     val sensorMeasurements = com.epidata.lib.models.SensorMeasurement.jsonToSensorMeasurements(request.body.toString)
     SensorMeasurement.insert(sensorMeasurements.flatMap(x => x))
 

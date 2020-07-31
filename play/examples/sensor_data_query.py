@@ -15,6 +15,7 @@ import struct
 import time
 from time import sleep
 import urllib, urllib2
+import requests
 
 
 ##################################
@@ -25,7 +26,7 @@ arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument('--host')
 args = arg_parser.parse_args()
 
-HOST = args.host or '127.0.0.1'
+HOST = args.host or '127.0.0.1:9443'
 AUTHENTICATION_URL = 'https://' + HOST + '/authenticate/app'
 AUTHENTICATION_ROUTE = '/authenticate/app'
 QUERY_MEASUREMENTS_ORIGINAL_URL = 'https://' + HOST + '/measurements_original?'
@@ -50,11 +51,11 @@ current_time = get_time(current_time_string)
 #####################
 
 # Replace quoted string with API Token or GitHub Personal Access Token (REQUIRED)
-ACCESS_TOKEN = 'API Token'
+ACCESS_TOKEN = ''
 
 # Modify default values (OPTIONAL)
 COMPANY ='EpiData'
-SITE = 'San_Jose'
+SITE = 'Redwood_City'
 STATION = 'WSN-1'
 SENSOR = "Temperature_Probe"
 
@@ -79,7 +80,8 @@ else:
 # Authenticate with EpiData #
 #############################
 
-conn = httplib.HTTPSConnection(HOST)
+# Create a session object for HTTP requests
+session = requests.Session()
 
 # Authentication is achieved by posting to the AUTHENTICATION_URL.
 url = AUTHENTICATION_URL
@@ -91,22 +93,16 @@ json_header = {'Content-type': 'application/json'}
 json_body = json.dumps({'accessToken': ACCESS_TOKEN})
 
 # Send the POST request and receive the HTTP response.
-conn.request('POST', AUTHENTICATION_ROUTE, json_body, json_header)
-post_response = conn.getresponse()
-response_status = post_response.status
-response_text = post_response.read()
+req = requests.Request('POST', AUTHENTICATION_URL, data=json_body, headers=json_header)
+prepped = session.prepare_request(req)
+resp = session.send(prepped, stream=None, verify=None, proxies=None, cert=None, timeout=None)
 
 # Check that the response's HTTP response code is 200 (OK).
-assert response_status == 200
+assert resp.status_code == 200
 
 # Parse the JSON response.
-response_json = json.loads(response_text)
-
-# Retrieve the new session id from the JSON response.
-session_id = response_json['sessionId']
-
-# Construct the session cookie.
-session_cookie = 'epidata=' + session_id
+response_json = json.loads(resp.content)
+print "response - ", response_json
 
 
 ###########################################
@@ -117,34 +113,32 @@ print "Sending Query Request to EpiData ..."
 iteration = 0
 
 while (True):
-    
-    try:
-        
-        # Create instances that connect to the server
-        conn = httplib.HTTPSConnection(HOST)
 
+    try:
         # Specify measurement query parameters
-        begin_time = get_time("8/1/2017 00:00:00.000")
-        end_time = get_time("9/1/2017 00:00:00.000")
-        
+        begin_time = get_time("1/11/2020 00:00:00.000")
+        end_time = get_time("12/31/2020 00:00:00.000")
+
         parameters = {'company': COMPANY, 'site': SITE, 'station': STATION, 'sensor': SENSOR, 'beginTime': begin_time, 'endTime': end_time}
 
         # Construct url with parameters
         url = QUERY_MEASUREMENTS_ORIGINAL_URL+urllib.urlencode(parameters)
         print url
-        json_header = {'Cookie': session_cookie, 'Accept': 'text/plain'}
+#        json_header = {'Cookie': session_cookie, 'Accept': 'text/plain'}
+        json_header = {
+                'Content-type': 'application/json'
+        }
 
         # Send the GET request and receive the HTTP response.
-        conn.request('GET', url, "", json_header)
-        get_response = conn.getresponse()
-        response_status = get_response.status
-        response_text = get_response.read()
-        print response_status, response_text
-               
+        req = requests.Request('GET', url, data="", headers=json_header)
+        prepped = session.prepare_request(req)
+        print "prepared statement header: \n", prepped.headers
+        resp = session.send(prepped, stream=None, verify=None, proxies=None, cert=None, timeout=None)
+
         # Check that the response's HTTP response code is 200 (OK) and read the response.
-        assert response_status == 200
-        response_json = json.loads(response_text)
+        response_json = json.loads(resp.content)
         print response_json
+        assert resp.status_code == 200
 
         # increment iteration and current time
         iteration += 1
@@ -163,4 +157,3 @@ while (True):
 ################################
 # End of Data Query Script #
 ################################
-

@@ -37,12 +37,10 @@ class DemoProvider(
   val passwordInfo: Option[PasswordInfo] = None
 
   override protected def buildInfo(response: WSResponse): OAuth2Info = {
-    print("buildInfo called \n")
     OAuth2Info(defaultAccessToken, None, None, None)
   }
 
   override def fillProfile(info: OAuth2Info): Future[BasicProfile] = {
-    print("fillProfile called \n")
     Future.successful(BasicProfile(id, userId, firstName, lastName, fullName, email, avatarUrl, authMethod, oAuth2Info = Some(info)))
   }
 }
