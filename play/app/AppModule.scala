@@ -3,6 +3,7 @@
 */
 
 import cassandra.DB
+import SQLite.DBL
 import com.datastax.driver.core.exceptions.NoHostAvailableException
 import com.epidata.lib.models.{ SensorMeasurement, AutomatedTest }
 import play.api._
@@ -38,6 +39,10 @@ class ApplicationStart @Inject() (env: Environment, conf: Configuration) {
 
   // Connect to the Cassandra database.
   try {
+
+    DBL.connect(
+      conf.getOptional[String]("SQLite.url").get)
+
     DB.connect(
       conf.getOptional[String]("cassandra.node").get,
       conf.getOptional[Configuration]("pillar.epidata").get

@@ -7,15 +7,21 @@
 
 # Submit Measurements
 +nocsrf
-POST    /measurements               @controllers.SensorMeasurements.create
+POST    /measurements                      @controllers.SensorMeasurements.create
+POST    /measurements_sqlite               @controllers.SensorMeasurements.createLite
 
 # Kafka insert
 +nocsrf
-POST    /kafka/measurements         @controllers.SensorMeasurements.insertKafka
+POST    /kafka/measurements                @controllers.SensorMeasurements.insertKafka
 
 # Query Measurement
-GET     /measurements_query         @controllers.SensorMeasurements.query(company: String, site: String, station: String, sensor: String, beginTime: Date, endTime: Date, sort: Ordering.Value ?= Ordering.Unspecified)
+GET     /measurements_query                @controllers.SensorMeasurements.query(company: String, site: String, station: String, sensor: String, beginTime: Date, endTime: Date, sort: Ordering.Value ?= Ordering.Unspecified)
 
-GET     /measurements_original      @controllers.SensorMeasurements.find(company: String, site: String, station: String, sensor: String, beginTime: Date, endTime: Date, size: Int ?= 10000, batch: String ?= "", sort: Ordering.Value ?= Ordering.Unspecified, table: String = "measurements_original")
-GET     /measurements_cleansed      @controllers.SensorMeasurements.find(company: String, site: String, station: String, sensor: String, beginTime: Date, endTime: Date, size: Int ?= 10000, batch: String ?= "", sort: Ordering.Value ?= Ordering.Unspecified, table: String = "measurements_cleansed")
-GET     /measurements_summary       @controllers.SensorMeasurements.find(company: String, site: String, station: String, sensor: String, beginTime: Date, endTime: Date, size: Int ?= 10000, batch: String ?= "", sort: Ordering.Value ?= Ordering.Unspecified, table: String = "measurements_summary")
+GET     /measurements_original             @controllers.SensorMeasurements.find(company: String, site: String, station: String, sensor: String, beginTime: Date, endTime: Date, size: Int ?= 10000, batch: String ?= "", sort: Ordering.Value ?= Ordering.Unspecified, table: String = "measurements_original")
+GET     /measurements_cleansed             @controllers.SensorMeasurements.find(company: String, site: String, station: String, sensor: String, beginTime: Date, endTime: Date, size: Int ?= 10000, batch: String ?= "", sort: Ordering.Value ?= Ordering.Unspecified, table: String = "measurements_cleansed")
+GET     /measurements_summary              @controllers.SensorMeasurements.find(company: String, site: String, station: String, sensor: String, beginTime: Date, endTime: Date, size: Int ?= 10000, batch: String ?= "", sort: Ordering.Value ?= Ordering.Unspecified, table: String = "measurements_summary")
+
+
+GET     /measurements_original_sqlite      @controllers.SensorMeasurements.findLite(company: String, site: String, station: String, sensor: String, beginTime: Date, endTime: Date, size: Int ?= 10000, batch: String ?= "", sort: Ordering.Value ?= Ordering.Unspecified, table: String = "measurements_original")
+GET     /measurements_cleansed_sqlite      @controllers.SensorMeasurements.findLite(company: String, site: String, station: String, sensor: String, beginTime: Date, endTime: Date, size: Int ?= 10000, batch: String ?= "", sort: Ordering.Value ?= Ordering.Unspecified, table: String = "measurements_cleansed")
+GET     /measurements_summary_sqlite       @controllers.SensorMeasurements.findLite(company: String, site: String, station: String, sensor: String, beginTime: Date, endTime: Date, size: Int ?= 10000, batch: String ?= "", sort: Ordering.Value ?= Ordering.Unspecified, table: String = "measurements_summary")

@@ -1,0 +1,12 @@
+CREATE TABLE IF NOT EXISTS users (
+  id TEXT PRIMARY KEY,
+  first_name TEXT,
+  last_name TEXT,
+  full_name TEXT,
+  email TEXT,
+  avatar_url TEXT,
+  oauth2_token TEXT,
+  oauth2_token_type TEXT,
+  oauth2_expires_in INT,
+  oauth2_refresh_token TEXT
+)

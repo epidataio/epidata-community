@@ -41,6 +41,9 @@ object SensorMeasurement {
   def insert(sensorMeasurement: BaseSensorMeasurement) = MeasurementService.insert(sensorMeasurement)
   def insert(sensorMeasurementList: List[BaseSensorMeasurement]) = MeasurementService.bulkInsert(sensorMeasurementList)
 
+  def insertLite(sensorMeasurement: BaseSensorMeasurement) = MeasurementServiceLite.insert(sensorMeasurement)
+  def insertLite(sensorMeasurementList: List[BaseSensorMeasurement]) = MeasurementServiceLite.bulkInsert(sensorMeasurementList)
+
   def insertRecordFromKafka(str: String) = {
     BaseSensorMeasurement.jsonToSensorMeasurement(str) match {
       case Some(sensorMeasurement) => insert(sensorMeasurement)

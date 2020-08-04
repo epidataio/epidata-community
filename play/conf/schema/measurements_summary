@@ -1,0 +1,15 @@
+CREATE TABLE IF NOT EXISTS measurements_summary (
+  customer TEXT,
+  customer_site TEXT,
+  collection TEXT,
+  dataset TEXT,
+  start_time DATETIME,
+  stop_time DATETIME,
+  key1 TEXT,
+  key2 TEXT,
+  key3 TEXT,
+  meas_summary_name TEXT,
+  meas_summary_value TEXT,
+  meas_summary_description TEXT,
+  PRIMARY KEY (customer, customer_site, collection, dataset, start_time, stop_time, key1, key2, key3)
+)

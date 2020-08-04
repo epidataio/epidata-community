@@ -10,6 +10,7 @@ routesGenerator := InjectedRoutesGenerator
 libraryDependencies ++= Seq(
   guice,
   ehcache,
+  jdbc,
   "com.datastax.cassandra" % "cassandra-driver-core" % "3.9.0",
   "de.kaufhof" %% "pillar" % "4.1.2",
   "com.typesafe.play" %% "play-mailer" % "6.0.1",

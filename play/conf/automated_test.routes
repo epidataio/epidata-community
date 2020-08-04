@@ -6,14 +6,19 @@
 # ~~~~
 
 # insert Measurements To DB
-POST    /measurements            @controllers.AutomatedTests.create
+POST    /measurements                   @controllers.AutomatedTests.create
+POST    /measurements_sqlite            @controllers.AutomatedTests.create
 
 # Kafka insert
-POST    /kafka/measurements      @controllers.AutomatedTests.insertKafka
+POST    /kafka/measurements             @controllers.AutomatedTests.insertKafka
 
 # Query Measurement
-GET     /measurements_query      @controllers.AutomatedTests.query(company: String, site: String, device_group: String, tester: String, beginTime: Date, endTime: Date, sort: Ordering.Value ?= Ordering.Unspecified)
+GET     /measurements_query             @controllers.AutomatedTests.query(company: String, site: String, device_group: String, tester: String, beginTime: Date, endTime: Date, sort: Ordering.Value ?= Ordering.Unspecified)
 
-GET     /measurements_original   @controllers.AutomatedTests.find(company: String, site: String, device_group: String, tester: String, beginTime: Date, endTime: Date, size: Int ?= 10000, batch: String ?= "", sort: Ordering.Value ?= Ordering.Unspecified, table: String = "measurements_original")
-GET     /measurements_cleansed   @controllers.AutomatedTests.find(company: String, site: String, device_group: String, tester: String, beginTime: Date, endTime: Date, size: Int ?= 10000, batch: String ?= "", sort: Ordering.Value ?= Ordering.Unspecified, table: String = "measurements_cleansed")
-GET     /measurements_summary    @controllers.AutomatedTests.find(company: String, site: String, device_group: String, tester: String, beginTime: Date, endTime: Date, size: Int ?= 10000, batch: String ?= "", sort: Ordering.Value ?= Ordering.Unspecified, table: String = "measurements_summary")
+GET     /measurements_original          @controllers.AutomatedTests.find(company: String, site: String, device_group: String, tester: String, beginTime: Date, endTime: Date, size: Int ?= 10000, batch: String ?= "", sort: Ordering.Value ?= Ordering.Unspecified, table: String = "measurements_original")
+GET     /measurements_cleansed          @controllers.AutomatedTests.find(company: String, site: String, device_group: String, tester: String, beginTime: Date, endTime: Date, size: Int ?= 10000, batch: String ?= "", sort: Ordering.Value ?= Ordering.Unspecified, table: String = "measurements_cleansed")
+GET     /measurements_summary           @controllers.AutomatedTests.find(company: String, site: String, device_group: String, tester: String, beginTime: Date, endTime: Date, size: Int ?= 10000, batch: String ?= "", sort: Ordering.Value ?= Ordering.Unspecified, table: String = "measurements_summary")
+
+GET     /measurements_original_sqlite   @controllers.AutomatedTests.findLite(company: String, site: String, device_group: String, tester: String, beginTime: Date, endTime: Date, size: Int ?= 10000, batch: String ?= "", sort: Ordering.Value ?= Ordering.Unspecified, table: String = "measurements_original")
+GET     /measurements_cleansed_sqlite   @controllers.AutomatedTests.findLite(company: String, site: String, device_group: String, tester: String, beginTime: Date, endTime: Date, size: Int ?= 10000, batch: String ?= "", sort: Ordering.Value ?= Ordering.Unspecified, table: String = "measurements_cleansed")
+GET     /measurements_summary_sqlite    @controllers.AutomatedTests.findLite(company: String, site: String, device_group: String, tester: String, beginTime: Date, endTime: Date, size: Int ?= 10000, batch: String ?= "", sort: Ordering.Value ?= Ordering.Unspecified, table: String = "measurements_summary")

@@ -7,7 +7,7 @@ package controllers
 import java.util.Date
 import com.epidata.lib.models.MeasurementCleansed
 import com.epidata.lib.models.util.JsonHelpers
-import models.{ MeasurementService, AutomatedTest }
+import models.{ MeasurementService, AutomatedTest, MeasurementServiceLite }
 import play.api.libs.json.JsError
 import play.api.libs.json.Json
 import play.api.mvc._
@@ -30,6 +30,19 @@ class AutomatedTests @Inject() (val cc: ControllerComponents)(
   def create = SecuredAction(parse.json) { implicit request =>
     val automatedTests = com.epidata.lib.models.AutomatedTest.jsonToAutomatedTests(request.body.toString)
     AutomatedTest.insertList(automatedTests.flatMap(x => x))
+
+    val failedIndexes = automatedTests.zipWithIndex.filter(_._1 == None).map(_._2)
+    if (failedIndexes.isEmpty)
+      Created
+    else {
+      val message = "Failed objects: " + failedIndexes.mkString(",")
+      BadRequest(Json.obj("status" -> "ERROR", "message" -> message))
+    }
+  }
+
+  def createLite = SecuredAction(parse.json) { implicit request =>
+    val automatedTests = com.epidata.lib.models.AutomatedTest.jsonToAutomatedTests(request.body.toString)
+    AutomatedTest.insertListLite(automatedTests.flatMap(x => x))
 
     val failedIndexes = automatedTests.zipWithIndex.filter(_._1 == None).map(_._2)
     if (failedIndexes.isEmpty)
@@ -95,4 +108,30 @@ class AutomatedTests @Inject() (val cc: ControllerComponents)(
       table,
       com.epidata.lib.models.AutomatedTest.NAME))
   }
+
+  def findLite(
+    company: String,
+    site: String,
+    station: String,
+    sensor: String,
+    beginTime: Date,
+    endTime: Date,
+    size: Int = 10000,
+    batch: String = "",
+    ordering: Ordering.Value = Ordering.Unspecified,
+    table: String = MeasurementCleansed.DBTableName) = SecuredAction {
+    Ok(MeasurementServiceLite.query(
+      company,
+      site,
+      station,
+      sensor,
+      beginTime,
+      endTime,
+      size,
+      batch,
+      ordering,
+      table,
+      com.epidata.lib.models.AutomatedTest.NAME))
+  }
+
 }

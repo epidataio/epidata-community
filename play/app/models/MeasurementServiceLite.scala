@@ -7,18 +7,19 @@ package models
 import java.util
 import java.util.{ Date, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList }
 import java.nio.ByteBuffer
-import cassandra.DB
+import SQLite.DBL
 import service.Configs
 import com.epidata.lib.models.{ Measurement => Model, MeasurementsKeys, MeasurementSummary }
 import com.epidata.lib.models.util.{ JsonHelpers, Binary }
 import _root_.util.{ EpidataMetrics, Ordering }
 import com.datastax.driver.core.querybuilder.{ Clause, QueryBuilder }
-import com.datastax.driver.core._
+
+import java.sql._
 
 import scala.collection.convert.WrapAsScala
 import scala.collection.JavaConverters._
 
-object MeasurementService {
+object MeasurementServiceLite {
 
   import com.epidata.lib.models.Measurement._
 
@@ -26,7 +27,7 @@ object MeasurementService {
 
   def getPrepareStatement(statementSpec: String): PreparedStatement = {
     if (!prepareStatementMap.contains(statementSpec)) {
-      val stm = DB.prepare(statementSpec)
+      val stm = DBL.prepare(statementSpec)
       prepareStatementMap = prepareStatementMap + (statementSpec -> stm)
       stm
     } else {
@@ -49,7 +50,7 @@ object MeasurementService {
   def insert(measurement: Model): Unit = {
     val statements = getInsertStatements(measurement)
     statements.foreach(statement =>
-      DB.execute(statement))
+      DBL.executeUpdate(statement))
   }
 
   /**
@@ -59,10 +60,10 @@ object MeasurementService {
   def bulkInsert(measurements: List[Model]): Unit = {
 
     val statements = measurements.flatMap(measurement => getInsertStatements(measurement))
-    DB.batchExecute(statements)
+    DBL.batchExecute(statements)
   }
 
-  def getInsertStatements(measurement: Model): List[Statement] = {
+  def getInsertStatements(measurement: Model): List[PreparedStatement] = {
 
     // Insert the measurement itself.
     val measurementInsertStatement = measurement.meas_value match {
@@ -81,7 +82,8 @@ object MeasurementService {
       // of inconsistency is considered acceptable.) The real world performance
       // impact of this write could be eliminated in the future by caching
       // previously written keys in the app server.
-      val statement2 = getPrepareStatement(insertKeysStatement).bind(
+      val statement2 = DBL.binds(
+        getPrepareStatement(insertKeysStatement),
         measurement.customer,
         measurement.customer_site,
         measurement.collection,
@@ -102,51 +104,52 @@ object MeasurementService {
    * @param endTime End of query time interval, exclusive
    * @param ordering Timestamp ordering of results, if specified.
    */
-  @Deprecated
-  def find(
-    customer: String,
-    customer_site: String,
-    collection: String,
-    dataset: String,
-    beginTime: Date,
-    endTime: Date,
-    ordering: Ordering.Value = Ordering.Unspecified,
-    tableName: String = com.epidata.lib.models.Measurement.DBTableName): List[Model] = {
-    import WrapAsScala.iterableAsScalaIterable
+  //   @Deprecated
+  //   def find(
+  //     customer: String,
+  //     customer_site: String,
+  //     collection: String,
+  //     dataset: String,
+  //     beginTime: Date,
+  //     endTime: Date,
+  //     ordering: Ordering.Value = Ordering.Unspecified,
+  //     tableName: String = com.epidata.lib.models.Measurement.DBTableName): List[Model] = {
+  //     import WrapAsScala.iterableAsScalaIterable
 
-    // Find the epochs from which measurements are required, in timestamp
-    // sorted order. In practice queries will commonly access only one epoch.
-    val orderedEpochs = ordering match {
-      case Ordering.Descending => epochForTs(endTime) to epochForTs(beginTime) by -1
-      case _ => epochForTs(beginTime) to epochForTs(endTime)
-    }
+  //     // Find the epochs from which measurements are required, in timestamp
+  //     // sorted order. In practice queries will commonly access only one epoch.
+  //     val orderedEpochs = ordering match {
+  //       case Ordering.Descending => epochForTs(endTime) to epochForTs(beginTime) by -1
+  //       case _ => epochForTs(beginTime) to epochForTs(endTime)
+  //     }
 
-    // Define the database query to execute for a single epoch.
-    def queryForEpoch(epoch: Int) = {
-      val query = QueryBuilder.select().all().from(tableName).where()
-        .and(QueryBuilder.eq("customer", customer))
-        .and(QueryBuilder.eq("customer_site", customer_site))
-        .and(QueryBuilder.eq("collection", collection))
-        .and(QueryBuilder.eq("dataset", dataset))
-        .and(QueryBuilder.eq("epoch", epoch))
-        .and(QueryBuilder.gte("ts", beginTime))
-        .and(QueryBuilder.lt("ts", endTime))
-      // Apply an orderBy parameter if ordering is required.
-      ordering match {
-        case Ordering.Ascending => query.orderBy(QueryBuilder.asc("ts"))
-        case Ordering.Descending => query.orderBy(QueryBuilder.desc("ts"))
-        case _ =>
-      }
-      query
-    }
+  //     // Define the database query to execute for a single epoch.
+  //     def queryForEpoch(epoch: Int) = {
+  //       val query = QueryBuilder.select().all().from(tableName).where()
+  //         .and(QueryBuilder.eq("customer", customer))
+  //         .and(QueryBuilder.eq("customer_site", customer_site))
+  //         .and(QueryBuilder.eq("collection", collection))
+  //         .and(QueryBuilder.eq("dataset", dataset))
+  //         .and(QueryBuilder.eq("epoch", epoch))
+  //         .and(QueryBuilder.gte("ts", beginTime))
+  //         .and(QueryBuilder.lt("ts", endTime))
+  //       // Apply an orderBy parameter if ordering is required.
+  //       ordering match {
+  //         case Ordering.Ascending => query.orderBy(QueryBuilder.asc("ts"))
+  //         case Ordering.Descending => query.orderBy(QueryBuilder.desc("ts"))
+  //         case _ =>
+  //       }
+  //       query
+  //     }
 
-    // Execute the queries, concatenating results across epochs.
-    orderedEpochs
-      .map(queryForEpoch)
-      .flatMap(DB.execute)
-      .map(rowToMeasurement)
-      .toList
-  }
+  //     // Execute the queries, concatenating results across epochs.
+  //     orderedEpochs
+  //       .map(queryForEpoch)
+  //       .flatMap(DBL.prepare)
+  //       .flatMap(DBL.execute)
+  //       .map(rowToMeasurement)
+  //       .toList
+  //   }
 
   def query(
     company: String,
@@ -162,19 +165,24 @@ object MeasurementService {
     modelName: String): String = {
 
     // Get the data from Cassandra
-    val rs: ResultSet = MeasurementService.query(company, site, station, sensor, beginTime, endTime, ordering, tableName, size, batch)
+    val rs: ResultSet = MeasurementServiceLite.query(company, site, station, sensor, beginTime, endTime, ordering, tableName, size, batch)
 
-    // Get the next page info
-    val nextPage = rs.getExecutionInfo().getPagingState()
-    val nextBatch = if (nextPage == null) "" else nextPage.toString
+    // Get the next page info NOT APPLICABALE IN SQLITE
+    // val nextPage = rs.getExecutionInfo().getPagingState()
+    // val nextBatch = if (nextPage == null) "" else nextPage.toString
+    val records = new JLinkedList[JLinkedHashMap[String, Object]]()
+    while (rs.next() != false) {
+      records.add(Model.rowToJLinkedHashMap(rs, tableName, modelName))
+    }
+    val nextBatch = ""
 
     // only return the available ones by not fetching.
-    val rows = 1.to(rs.getAvailableWithoutFetching()).map(_ => rs.one())
-    val records = new JLinkedList[JLinkedHashMap[String, Object]]()
+    // val rows = 1.to(rs.getAvailableWithoutFetching()).map(_ => rs.one())
+    // val records = new JLinkedList[JLinkedHashMap[String, Object]]()
 
-    rows
-      .map(Model.rowToJLinkedHashMap(_, tableName, modelName))
-      .foreach(m => records.add(m))
+    // rows
+    //   .map(Model.rowToJLinkedHashMap(_, tableName, modelName))
+    //   .foreach(m => records.add(m))
 
     // Return the json object
     JsonHelpers.toJson(records, nextBatch)
@@ -221,14 +229,9 @@ object MeasurementService {
         case _ =>
       }
 
-      if (batch != null && !batch.isEmpty) {
-        val pagingState = PagingState.fromString(batch);
-        query.setPagingState(pagingState)
-      }
-
       query.setFetchSize(size)
 
-      query
+      query.toString()
     }
 
     def queryForMeasurementSummary = {
@@ -246,25 +249,20 @@ object MeasurementService {
         case _ =>
       }
 
-      if (batch != null && !batch.isEmpty) {
-        val pagingState = PagingState.fromString(batch);
-        query.setPagingState(pagingState)
-      }
-
       query.setFetchSize(size)
 
-      query
+      query.toString()
     }
 
     // Execute the query
     tableName match {
-      case MeasurementSummary.DBTableName => DB.execute(queryForMeasurementSummary)
-      case _ => DB.execute(queryForEpoch)
+      case MeasurementSummary.DBTableName => DBL.prepare(queryForMeasurementSummary).executeQuery()
+      case _ => DBL.prepare(queryForEpoch).executeQuery()
     }
 
   }
 
-  private def getMeasurementInsertStatement(measurement: Model): Statement = {
+  private def getMeasurementInsertStatement(measurement: Model): PreparedStatement = {
 
     val insertStatementsStr = measurement.meas_value match {
       case _: Double => insertDoubleStatements
@@ -283,7 +281,8 @@ object MeasurementService {
     (measurement.meas_lower_limit, measurement.meas_upper_limit) match {
       case (None, None) =>
         // Insert with neither a lower nor upper limit.
-        insertStatements(0).bind(
+        DBL.binds(
+          insertStatements(0),
           measurement.customer,
           measurement.customer_site,
           measurement.collection,
@@ -302,7 +301,8 @@ object MeasurementService {
           measurement.val2.getOrElse(""))
       case (_, None) =>
         // Insert with a lower limit only.
-        insertStatements(1).bind(
+        DBL.binds(
+          insertStatements(1),
           measurement.customer,
           measurement.customer_site,
           measurement.collection,
@@ -322,7 +322,8 @@ object MeasurementService {
           measurement.val2.getOrElse(""))
       case (None, _) =>
         // Insert with an upper limit only.
-        insertStatements(2).bind(
+        DBL.binds(
+          insertStatements(2),
           measurement.customer,
           measurement.customer_site,
           measurement.collection,
@@ -342,7 +343,8 @@ object MeasurementService {
           measurement.val2.getOrElse(""))
       case _ =>
         // Insert with both a lower and an upper limit.
-        insertStatements(3).bind(
+        DBL.binds(
+          insertStatements(3),
           measurement.customer,
           measurement.customer_site,
           measurement.collection,
@@ -364,7 +366,7 @@ object MeasurementService {
     }
   }
 
-  private def getMeasurementInsertStatementForNullMeasValue(measurement: Model): Statement = {
+  private def getMeasurementInsertStatementForNullMeasValue(measurement: Model): PreparedStatement = {
     val insertStatementsStr = insertNullDoubleValueStatement
 
     val insertStatements = insertStatementsStr.map(getPrepareStatement(_))
@@ -372,7 +374,8 @@ object MeasurementService {
     (measurement.meas_lower_limit, measurement.meas_upper_limit) match {
       case (None, None) =>
         // Insert with neither a lower nor upper limit.
-        insertStatements(0).bind(
+        DBL.binds(
+          insertStatements(0),
           measurement.customer,
           measurement.customer_site,
           measurement.collection,
@@ -390,7 +393,8 @@ object MeasurementService {
           measurement.val2.getOrElse(""))
       case (_, None) =>
         // Insert with a lower limit only.
-        insertStatements(1).bind(
+        DBL.binds(
+          insertStatements(1),
           measurement.customer,
           measurement.customer_site,
           measurement.collection,
@@ -409,7 +413,8 @@ object MeasurementService {
           measurement.val2.getOrElse(""))
       case (None, _) =>
         // Insert with an upper limit only.
-        insertStatements(2).bind(
+        DBL.binds(
+          insertStatements(2),
           measurement.customer,
           measurement.customer_site,
           measurement.collection,
@@ -428,7 +433,8 @@ object MeasurementService {
           measurement.val2.getOrElse(""))
       case _ =>
         // Insert with both a lower and an upper limit.
-        insertStatements(3).bind(
+        DBL.binds(
+          insertStatements(3),
           measurement.customer,
           measurement.customer_site,
           measurement.collection,

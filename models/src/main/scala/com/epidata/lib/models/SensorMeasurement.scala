@@ -11,6 +11,7 @@ import java.lang.{ Long => JLong, Double => JDouble }
 import com.datastax.driver.core.Row
 import com.epidata.lib.models.util.{ Binary, Datatype, TypeUtils, JsonHelpers }
 import org.json.simple.{ JSONArray, JSONObject }
+import java.sql.ResultSet
 
 /**
  * Specialization of Measurement representing sensor data.
@@ -75,6 +76,11 @@ object SensorMeasurement {
   def rowToSensorMeasurement(row: Row): SensorMeasurement = Measurement.rowToMeasurement(row)
   def rowToSensorMeasurementCleansed(row: Row): SensorMeasurementCleansed = MeasurementCleansed.rowToMeasurementCleansed(row)
   def rowToSensorMeasurementSummary(row: Row): SensorMeasurementSummary = MeasurementSummary.rowToMeasurementSummary(row)
+
+  // Model Conversions for SQLite
+  def rowToSensorMeasurement(row: ResultSet): SensorMeasurement = Measurement.rowToMeasurement(row)
+  def rowToSensorMeasurementCleansed(row: ResultSet): SensorMeasurementCleansed = MeasurementCleansed.rowToMeasurementCleansed(row)
+  def rowToSensorMeasurementSummary(row: ResultSet): SensorMeasurementSummary = MeasurementSummary.rowToMeasurementSummary(row)
 
   implicit def measurementToSensorMeasurement(measurement: Measurement): SensorMeasurement =
     SensorMeasurement(
@@ -154,6 +160,23 @@ object SensorMeasurement {
 
   // JSON Helpers
   def rowToJLinkedHashMap(row: Row, tableName: String): JLinkedHashMap[String, Object] = {
+    tableName match {
+      case MeasurementSummary.DBTableName =>
+        val m = rowToSensorMeasurementSummary(row)
+        toJLinkedHashMap(m)
+
+      case com.epidata.lib.models.MeasurementCleansed.DBTableName =>
+        val m = rowToSensorMeasurementCleansed(row)
+        toJLinkedHashMap(m)
+
+      case com.epidata.lib.models.Measurement.DBTableName =>
+        val m = rowToSensorMeasurement(row)
+        toJLinkedHashMap(m)
+    }
+  }
+
+  // JSON Helpers for SQLite
+  def rowToJLinkedHashMap(row: ResultSet, tableName: String): JLinkedHashMap[String, Object] = {
     tableName match {
       case MeasurementSummary.DBTableName =>
         val m = rowToSensorMeasurementSummary(row)

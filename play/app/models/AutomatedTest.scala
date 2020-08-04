@@ -35,6 +35,9 @@ object AutomatedTest {
   def insert(automatedTest: Model): Unit = MeasurementService.insert(automatedTest)
   def insertList(automatedTests: List[Model]): Unit = MeasurementService.bulkInsert(automatedTests.map(automatedTestToMeasurement))
 
+  def insertLite(automatedTest: Model): Unit = MeasurementServiceLite.insert(automatedTest)
+  def insertListLite(automatedTests: List[Model]): Unit = MeasurementServiceLite.bulkInsert(automatedTests.map(automatedTestToMeasurement))
+
   def insertRecordFromKafka(str: String) = {
     Model.jsonToAutomatedTest(str) match {
       case Some(m) => insert(m)

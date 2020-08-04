@@ -9,7 +9,7 @@ import java.util.Date
 
 import com.epidata.lib.models.util.JsonHelpers
 import com.epidata.lib.models.MeasurementCleansed
-import models.{ MeasurementService, SensorMeasurement }
+import models.{ MeasurementService, SensorMeasurement, MeasurementServiceLite }
 import util.{ EpidataMetrics, Ordering }
 import play.api.libs.json.Json
 import play.api.mvc._
@@ -27,6 +27,19 @@ class SensorMeasurements @Inject() (val cc: ControllerComponents)(
   def create = SecuredAction(parse.json) { implicit request =>
     val sensorMeasurements = com.epidata.lib.models.SensorMeasurement.jsonToSensorMeasurements(request.body.toString)
     SensorMeasurement.insert(sensorMeasurements.flatMap(x => x))
+
+    val failedIndexes = sensorMeasurements.zipWithIndex.filter(_._1 == None).map(_._2)
+    if (failedIndexes.isEmpty)
+      Created
+    else {
+      val message = "Failed objects: " + failedIndexes.mkString(",")
+      BadRequest(Json.obj("status" -> "ERROR", "message" -> message))
+    }
+  }
+
+  def createLite = SecuredAction(parse.json) { implicit request =>
+    val sensorMeasurements = com.epidata.lib.models.SensorMeasurement.jsonToSensorMeasurements(request.body.toString)
+    SensorMeasurement.insertLite(sensorMeasurements.flatMap(x => x))
 
     val failedIndexes = sensorMeasurements.zipWithIndex.filter(_._1 == None).map(_._2)
     if (failedIndexes.isEmpty)
@@ -80,6 +93,31 @@ class SensorMeasurements @Inject() (val cc: ControllerComponents)(
     ordering: Ordering.Value = Ordering.Unspecified,
     table: String = MeasurementCleansed.DBTableName) = Action {
     Ok(MeasurementService.query(
+      company,
+      site,
+      station,
+      sensor,
+      beginTime,
+      endTime,
+      size,
+      batch,
+      ordering,
+      table,
+      com.epidata.lib.models.SensorMeasurement.NAME))
+  }
+
+  def findLite(
+    company: String,
+    site: String,
+    station: String,
+    sensor: String,
+    beginTime: Date,
+    endTime: Date,
+    size: Int = 10000,
+    batch: String = "",
+    ordering: Ordering.Value = Ordering.Unspecified,
+    table: String = MeasurementCleansed.DBTableName) = Action {
+    Ok(MeasurementServiceLite.query(
       company,
       site,
       station,
