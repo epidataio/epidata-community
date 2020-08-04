@@ -39,7 +39,7 @@ object DBL {
   def execute(statement: Statement): ResultSet = connection.get.execute(statement)
 
   /** Execute a previously prepared statement which returns and empty ResultSet */
-  def executeUpdate(statement: Statement): ResultSet = connection.get.executeUpdate(statement)
+  def executeUpdate(statement: PreparedStatement) = connection.get.executeUpdate(statement)
 
   /** ResultSet to Json Object. */
   //  def resultToJson(rs : ResultSet) = {
@@ -63,7 +63,7 @@ object DBL {
   /** ResultSet to User. */
 
   /** Executes a batch of statements individually but reverts back to original state if error */
-  def batchExecute(statements: List[PreparedStatement]): ResultSet = connection.get.batchExecute(statements)
+  def batchExecute(statements: List[PreparedStatement]) = connection.get.batchExecute(statements)
 
   /** Binds the values in args to the statement. */
   def binds(statement: PreparedStatement, args: Any*): PreparedStatement = connection.get.binds(statement, args)
@@ -85,11 +85,12 @@ object DBL {
 private class ConnectionLite(url: String) {
 
   val session = DriverManager.getConnection(url)
-  val cleansed = "play/app/conf/schemas/measurements_cleansed.txt"
-  val keys = "play/app/conf/schemas/measurements_keys.txt"
-  val original = "play/app/conf/schemas/measurements_original.txt"
-  val summary = "play/app/conf/schemas/measurements_summary.txt"
-  val users = "play/app/conf/schemas/users.txt"
+
+  val cleansed = "play/conf/schema//measurements_cleansed"
+  val keys = "play/conf/schema/measurements_keys"
+  val original = "play/conf/schema/measurements_original"
+  val summary = "play/conf/schema/measurements_summary"
+  val users = "play/conf/schema/users"
   val sql1 = Source.fromFile(cleansed).getLines.mkString
   val sql2 = Source.fromFile(keys).getLines.mkString
   val sql3 = Source.fromFile(original).getLines.mkString
@@ -105,20 +106,16 @@ private class ConnectionLite(url: String) {
 
   def execute(statement: Statement) = statement.asInstanceOf[PreparedStatement].executeQuery()
 
-  def executeUpdate(statement: Statement): ResultSet = {
-    statement.asInstanceOf[PreparedStatement].executeUpdate()
-    val l: ResultSet = null
-    l
+  def executeUpdate(statement: PreparedStatement) = {
+    statement.executeUpdate()
   }
 
-  def batchExecute(statements: List[PreparedStatement]): ResultSet = {
+  def batchExecute(statements: List[PreparedStatement]) = {
     val t0 = EpidataMetrics.getCurrentTime
     // execute the batch
     statements.foreach(s => s.executeUpdate())
 
     EpidataMetrics.increment("DB.batchExecute", t0)
-    val l: ResultSet = null
-    l
   }
 
   def binds(statement: PreparedStatement, args: Seq[Any]): PreparedStatement = {
