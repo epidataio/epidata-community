@@ -80,15 +80,12 @@ object TypeUtils {
   }
 
   def getOptionBinary(row: ResultSet, field: String): Option[Binary] = {
-    val binaryBuf = row.getBytes(field)
+    val binaryBuf = row.getBlob(field)
     binaryBuf match {
       case null => None
       case _ =>
-
-        // Not sure if there is an equivalent buffer in sqlite
-        // val valueBytes = new Array[Byte](binaryBuf.limit - binaryBuf.position)
-        // binaryBuf.get(valueBytes)
-        val binary = new Binary(binaryBuf)
+        val valueBytes = binaryBuf.getBytes(1, binaryBuf.length().toInt)
+        val binary = new Binary(valueBytes)
         Option(binary)
     }
   }

@@ -48,19 +48,15 @@ object MeasurementServiceLite {
    * @param measurement The Measurement to insert.
    */
   def insert(measurement: Model): Unit = {
-    // DBL.session.setAutoCommit(false)
-    // val statements = getInsertStatements(measurement)
-    // statements.foreach(statement =>
-    //   DBL.executeUpdate(statement))
-    // DBL.session.setAutoCommit(true)
-    DBL.session.setAutoCommit(false)
+
+    //Checks if keys need to be created
+    // Prepares the statement and executes it
     if (Configs.ingestionKeyCreation) {
       val statementPartition = getPartitionKeyStatements(measurement)
       DBL.executeUpdate(statementPartition)
     }
     val statementInsert = getInsertStatements(measurement)
     DBL.executeUpdate(statementInsert)
-    DBL.session.setAutoCommit(true)
 
   }
 
@@ -70,23 +66,10 @@ object MeasurementServiceLite {
    */
   def bulkInsert(measurements: List[Model]): Unit = {
 
-    // val statements = measurements.flatMap(measurement => getInsertStatements(measurement))
-    // DB.batchExecute(statements)
-    // measurements.flatMap(measurement => {
-    //   val x = getInsertStatements(measurement)
-    //   DBL.executeUpdate(x[0])
-    // })
-
-    DBL.session.setAutoCommit(false)
+    // Individually, inserts every statment into the database
     val t0 = EpidataMetrics.getCurrentTime
-    measurements.foreach(f => {
-      if (Configs.ingestionKeyCreation) {
-        DBL.executeUpdate(getPartitionKeyStatements(f))
-      }
-      DBL.executeUpdate(getInsertStatements(f))
-    })
+    measurements.foreach(model => insert(model))
     EpidataMetrics.increment("DB.batchExecute", t0)
-    DBL.session.setAutoCommit(true)
 
   }
 
