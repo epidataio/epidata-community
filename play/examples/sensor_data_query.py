@@ -29,7 +29,7 @@ args = arg_parser.parse_args()
 HOST = args.host or '127.0.0.1:9443'
 AUTHENTICATION_URL = 'https://' + HOST + '/authenticate/app'
 AUTHENTICATION_ROUTE = '/authenticate/app'
-QUERY_MEASUREMENTS_ORIGINAL_URL = 'https://' + HOST + '/measurements_original?'
+QUERY_MEASUREMENTS_ORIGINAL_URL = 'https://' + HOST + '/measurements_original_sqlite?'
 QUERY_MEASUREMENTS_CLEANSED_URL = 'https://' + HOST + '/measurements_cleansed?'
 QUERY_MEASUREMENTS_SUMMARY_URL = 'https://' + HOST + '/measurements_summary?'
 

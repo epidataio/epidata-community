@@ -4,7 +4,7 @@
 
 import argparse
 import base64
-from epidata_common.data_types import Waveform
+from data_types import Waveform
 from datetime import datetime
 import json
 import numpy as np
@@ -26,7 +26,7 @@ HOST = args.host or '127.0.0.1'
 ACCESS_TOKEN = args.access_token
 
 AUTHENTICATION_URL = 'https://' + HOST + '/api/authenticate/github'
-CREATE_MEASUREMENT_URL = 'https://' + HOST + '/measurements'
+CREATE_MEASUREMENT_URL = 'https://' + HOST + '/measurements_sqlite'
 
 
 def get_current_time():

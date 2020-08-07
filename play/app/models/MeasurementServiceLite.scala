@@ -48,9 +48,20 @@ object MeasurementServiceLite {
    * @param measurement The Measurement to insert.
    */
   def insert(measurement: Model): Unit = {
-    val statements = getInsertStatements(measurement)
-    statements.foreach(statement =>
-      DBL.executeUpdate(statement))
+    // DBL.session.setAutoCommit(false)
+    // val statements = getInsertStatements(measurement)
+    // statements.foreach(statement =>
+    //   DBL.executeUpdate(statement))
+    // DBL.session.setAutoCommit(true)
+    DBL.session.setAutoCommit(false)
+    if (Configs.ingestionKeyCreation) {
+      val statementPartition = getPartitionKeyStatements(measurement)
+      DBL.executeUpdate(statementPartition)
+    }
+    val statementInsert = getInsertStatements(measurement)
+    DBL.executeUpdate(statementInsert)
+    DBL.session.setAutoCommit(true)
+
   }
 
   /**
@@ -59,11 +70,27 @@ object MeasurementServiceLite {
    */
   def bulkInsert(measurements: List[Model]): Unit = {
 
-    val statements = measurements.flatMap(measurement => getInsertStatements(measurement))
-    DBL.batchExecute(statements)
+    // val statements = measurements.flatMap(measurement => getInsertStatements(measurement))
+    // DB.batchExecute(statements)
+    // measurements.flatMap(measurement => {
+    //   val x = getInsertStatements(measurement)
+    //   DBL.executeUpdate(x[0])
+    // })
+
+    DBL.session.setAutoCommit(false)
+    val t0 = EpidataMetrics.getCurrentTime
+    measurements.foreach(f => {
+      if (Configs.ingestionKeyCreation) {
+        DBL.executeUpdate(getPartitionKeyStatements(f))
+      }
+      DBL.executeUpdate(getInsertStatements(f))
+    })
+    EpidataMetrics.increment("DB.batchExecute", t0)
+    DBL.session.setAutoCommit(true)
+
   }
 
-  def getInsertStatements(measurement: Model): List[PreparedStatement] = {
+  def getInsertStatements(measurement: Model): PreparedStatement = {
 
     // Insert the measurement itself.
     val measurementInsertStatement = measurement.meas_value match {
@@ -72,26 +99,37 @@ object MeasurementServiceLite {
       case _ => getMeasurementInsertStatementForNullMeasValue(measurement)
     }
 
-    if (Configs.ingestionKeyCreation) {
+    // if (Configs.ingestionKeyCreation) {
 
-      // Insert the measurement partition key into the partition key store. This
-      // write is not batched with the write above, for improved performance. If Add a comment to this line
-      // the below write fails we could miss a key in the key table, but that is
-      // expected to be rare because the same partition keys will be written
-      // repeatedly during normal ingestion. (The possibility, and risk level,
-      // of inconsistency is considered acceptable.) The real world performance
-      // impact of this write could be eliminated in the future by caching
-      // previously written keys in the app server.
-      val statement2 = DBL.binds(
-        getPrepareStatement(insertKeysStatement),
-        measurement.customer,
-        measurement.customer_site,
-        measurement.collection,
-        measurement.dataset)
-      List(measurementInsertStatement, statement2)
-    } else {
-      List(measurementInsertStatement)
-    }
+    //   // Insert the measurement partition key into the partition key store. This
+    //   // write is not batched with the write above, for improved performance. If Add a comment to this line
+    //   // the below write fails we could miss a key in the key table, but that is
+    //   // expected to be rare because the same partition keys will be written
+    //   // repeatedly during normal ingestion. (The possibility, and risk level,
+    //   // of inconsistency is considered acceptable.) The real world performance
+    //   // impact of this write could be eliminated in the future by caching
+    //   // previously written keys in the app server.
+    //   val statement2 = DBL.binds(
+    //     getPrepareStatement(insertKeysStatement),
+    //     measurement.customer,
+    //     measurement.customer_site,
+    //     measurement.collection,
+    //     measurement.dataset)
+    //   List(measurementInsertStatement, statement2)
+    // } else {
+    //   List(measurementInsertStatement)
+    // }
+    measurementInsertStatement
+  }
+
+  def getPartitionKeyStatements(measurement: Model): PreparedStatement = {
+    val statement2 = DBL.binds(
+      getPrepareStatement(insertKeysStatement),
+      measurement.customer,
+      measurement.customer_site,
+      measurement.collection,
+      measurement.dataset)
+    statement2
   }
 
   /**
@@ -617,7 +655,7 @@ object MeasurementServiceLite {
          #val2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#'))
 
   private def prepareKeysInsert =
-    s"""#INSERT INTO ${MeasurementsKeys.DBTableName} (
+    s"""#INSERT OR IGNORE INTO ${MeasurementsKeys.DBTableName} (
          #customer,
          #customer_site,
          #collection,

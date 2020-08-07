@@ -13,13 +13,16 @@ from decimal import Decimal
 import struct
 import time
 from time import sleep
-import urllib2
 import requests
+import urllib3
+
 
 
 ##################################
 # Define Variables and Functions #
 ##################################
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument('--host')
@@ -28,15 +31,16 @@ args = arg_parser.parse_args()
 HOST = args.host or '127.0.0.1:9443'
 AUTHENTICATION_URL = 'https://' + HOST + '/authenticate/app'
 AUTHENTICATION_ROUTE = '/authenticate/app'
-USE_KAFKA = True
+USE_KAFKA = False
 LOG_ITERATION = 1
 
 if USE_KAFKA:
     CREATE_MEASUREMENT_URL = 'https://' + HOST + '/kafka/measurements'
     CREATE_MEASUREMENT_ROUTE = '/kafka/measurements'
 else:
-    CREATE_MEASUREMENT_URL = 'https://' + HOST + '/measurements'
-    CREATE_MEASUREMENT_ROUTE = '/measurements'
+    CREATE_MEASUREMENT_URL = 'https://' + HOST + '/measurements_sqlite'
+    CREATE_MEASUREMENT_ROUTE = '/measurements_sqlite'
+
 
 def get_time(time_string):
     date_object = datetime.strptime(time_string, '%m/%d/%Y %H:%M:%S.%f')
@@ -124,12 +128,12 @@ while (True):
         meas_last_windspeed_value = 8
         meas_last_rh_value = 60
 
-        for data_iteration in range(1, 25):
+        for data_iteration in range(1, 2):
 
             # Construct an empty list of measurement objects
             measurement_list = []
 
-            for log_iteration in range(1, 5):
+            for log_iteration in range(1, 2):
 
                 current_time_string = datetime.now().strftime("%m/%d/%Y %H:%M:%S.%f")
                 current_time = get_time(current_time_string)
@@ -218,7 +222,7 @@ while (True):
                 }
 
                 # Construct measurement list with data to be ingested.
-                #measurement_list.append(measurement)
+                measurement_list.append(measurement)
 
                 ##########################################
                 # Simulate Relative Humidity Measurement #
@@ -250,7 +254,7 @@ while (True):
                 }
 
                 # Construct measurement list with data to be ingested.
-                #measurement_list.append(measurement)
+                measurement_list.append(measurement)
                 meas_last_rh_value = meas_value
 
                 ####################################
@@ -274,6 +278,7 @@ while (True):
                 }
 
             # Construct JSON body with data to be ingested.
+            print measurement_list
             json_body = json.dumps(measurement_list)
 
             # Send the POST request and receive the HTTP response.
@@ -282,12 +287,11 @@ while (True):
             resp = session.send(prepped, stream=None, verify=None, proxies=None, cert=None, timeout=None)
 
             # Check that the response's HTTP response code is 201 (CREATED).
-            print resp.content
             assert resp.status_code == 201
 
             # Print measurement details
             print "iteration: ", data_iteration
-            print json_body + "\n"
+            # print json_body + "\n"
 
             #break
 
