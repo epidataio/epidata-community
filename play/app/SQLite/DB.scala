@@ -21,7 +21,7 @@ import java.sql.{ Connection, CallableStatement, DriverManager, PreparedStatemen
  * database and executing queries.
  */
 
-object DBL {
+object DB {
   private var connection: Option[ConnectionLite] = None
 
   /**
@@ -41,29 +41,7 @@ object DBL {
   /** Execute a previously prepared statement which returns and empty ResultSet */
   def executeUpdate(statement: PreparedStatement) = connection.get.executeUpdate(statement)
 
-  /** ResultSet to Json Object. */
-  //  def resultToJson(rs : ResultSet) = {
-  //    // Get the next page info
-  //    val nextPage = rs.getExecutionInfo().getPagingState()
-  //    val nextBatch = if (nextPage == null) "" else nextPage.toString
-  //
-  //    // only return the available ones by not fetching.
-  //
-  //    val rows = 1.to(rs.getFetchSize()).map(_ => rs.one())
-  //    val records = new JLinkedList[JLinkedHashMap[String, Object]]()
-  //
-  //    rows
-  //      .map(Model.rowToJLinkedHashMap(_, tableName, modelName))
-  //      .foreach(m => records.add(m))
-  //
-  //    // Return the json object
-  //    JsonHelpers.toJson(records, nextBatch)
-  //  }
-
   /** ResultSet to User. */
-
-  /** Executes a batch of statements individually but reverts back to original state if error */
-  def batchExecute(statements: List[PreparedStatement]) = connection.get.batchExecute(statements)
 
   /** Binds the values in args to the statement. */
   def binds(statement: PreparedStatement, args: Any*): PreparedStatement = connection.get.binds(statement, args)
@@ -108,14 +86,6 @@ private class ConnectionLite(url: String) {
 
   def executeUpdate(statement: PreparedStatement) = {
     statement.executeUpdate()
-  }
-
-  def batchExecute(statements: List[PreparedStatement]) = {
-    val t0 = EpidataMetrics.getCurrentTime
-    // execute the batch
-    statements.foreach(s => s.executeUpdate())
-
-    EpidataMetrics.increment("DB.batchExecute", t0)
   }
 
   def binds(statement: PreparedStatement, args: Seq[Any]): PreparedStatement = {

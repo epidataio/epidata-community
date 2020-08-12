@@ -38,15 +38,25 @@ object SensorMeasurement {
    * Insert a Double sensor measurement into the database.
    * @param sensorMeasurement The SensorMeasurement to insert.
    */
-  def insert(sensorMeasurement: BaseSensorMeasurement) = MeasurementService.insert(sensorMeasurement)
-  def insert(sensorMeasurementList: List[BaseSensorMeasurement]) = MeasurementService.bulkInsert(sensorMeasurementList)
+  def insert(sensorMeasurement: BaseSensorMeasurement, Sqlite_enable: Boolean) = {
+    if (Sqlite_enable) {
+      SQLiteMeasurementService.insert(sensorMeasurement)
+    } else {
+      MeasurementService.insert(sensorMeasurement)
+    }
+  }
 
-  def insertLite(sensorMeasurement: BaseSensorMeasurement) = MeasurementServiceLite.insert(sensorMeasurement)
-  def insertLite(sensorMeasurementList: List[BaseSensorMeasurement]) = MeasurementServiceLite.bulkInsert(sensorMeasurementList)
+  def insert(sensorMeasurementList: List[BaseSensorMeasurement], Sqlite_enable: Boolean) = {
+    if (Sqlite_enable) {
+      SQLiteMeasurementService.bulkInsert(sensorMeasurementList)
+    } else {
+      MeasurementService.bulkInsert(sensorMeasurementList)
+    }
+  }
 
   def insertRecordFromKafka(str: String) = {
     BaseSensorMeasurement.jsonToSensorMeasurement(str) match {
-      case Some(sensorMeasurement) => insert(sensorMeasurement)
+      case Some(sensorMeasurement) => insert(sensorMeasurement, Configs.DBMeas)
       case _ => logger.error("Bad json format!")
     }
   }
@@ -65,7 +75,7 @@ object SensorMeasurement {
   def insertToKafka(sensorMeasurementList: List[BaseSensorMeasurement]): Unit = {
     sensorMeasurementList.foreach(m => insertToKafka(m))
     if (Configs.twoWaysIngestion) {
-      insert(sensorMeasurementList)
+      insert(sensorMeasurementList, Configs.DBMeas)
     }
   }
 

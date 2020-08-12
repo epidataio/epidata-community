@@ -38,8 +38,8 @@ if USE_KAFKA:
     CREATE_MEASUREMENT_URL = 'https://' + HOST + '/kafka/measurements'
     CREATE_MEASUREMENT_ROUTE = '/kafka/measurements'
 else:
-    CREATE_MEASUREMENT_URL = 'https://' + HOST + '/measurements_sqlite'
-    CREATE_MEASUREMENT_ROUTE = '/measurements_sqlite'
+    CREATE_MEASUREMENT_URL = 'https://' + HOST + '/measurements'
+    CREATE_MEASUREMENT_ROUTE = '/measurements'
 
 
 def get_time(time_string):
@@ -128,12 +128,12 @@ while (True):
         meas_last_windspeed_value = 8
         meas_last_rh_value = 60
 
-        for data_iteration in range(1, 2):
+        for data_iteration in range(1, 3):
 
             # Construct an empty list of measurement objects
             measurement_list = []
 
-            for log_iteration in range(1, 2):
+            for log_iteration in range(1, 3):
 
                 current_time_string = datetime.now().strftime("%m/%d/%Y %H:%M:%S.%f")
                 current_time = get_time(current_time_string)

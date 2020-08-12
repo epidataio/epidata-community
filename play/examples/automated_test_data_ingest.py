@@ -26,7 +26,7 @@ HOST = args.host or '127.0.0.1'
 ACCESS_TOKEN = args.access_token
 
 AUTHENTICATION_URL = 'https://' + HOST + '/api/authenticate/github'
-CREATE_MEASUREMENT_URL = 'https://' + HOST + '/measurements_sqlite'
+CREATE_MEASUREMENT_URL = 'https://' + HOST + '/measurements'
 
 
 def get_current_time():

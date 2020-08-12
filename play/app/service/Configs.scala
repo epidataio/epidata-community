@@ -9,15 +9,18 @@ object Configs {
     _metricEnabled = config.getOptional[Boolean]("application.metric.enabled").getOrElse(false)
     _measurementClass = config.getOptional[String]("measurement-class").get
     _twoWaysIngestion = config.getOptional[Boolean]("application.ingestion.2ways").getOrElse(false)
+    _DBMeas = config.getOptional[Boolean]("SQLite.enable").getOrElse(false)
   }
 
   private var _keyCreation = false
   private var _metricEnabled = false
   private var _measurementClass: String = "sensor_measurement"
   private var _twoWaysIngestion = false
+  private var _DBMeas = true
 
   def ingestionKeyCreation = _keyCreation
   def metricEnabled = _keyCreation
   def measurementClass = _measurementClass
   def twoWaysIngestion = _twoWaysIngestion
+  def DBMeas = _DBMeas
 }
