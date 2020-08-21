@@ -16,9 +16,9 @@ import scala.concurrent.{ ExecutionContext, Future }
 
 //@Singleton
 class DemoProvider(
-    routesService: RoutesService,
-    client: OAuth2Client,
-    cacheService: CacheService) extends OAuth2Provider(
+  routesService: RoutesService,
+  client: OAuth2Client,
+  cacheService: CacheService) extends OAuth2Provider(
   routesService,
   client,
   cacheService) {

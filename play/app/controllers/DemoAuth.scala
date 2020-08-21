@@ -31,9 +31,9 @@ import scala.util.{ Success, Failure }
 
 @Singleton
 class DemoAuth @Inject() (val cc: ControllerComponents)(
-    implicit
-    val env: AppEnvironment,
-    implicit val conf: Configuration) extends AbstractController(cc) with SecureSocial {
+  implicit
+  val env: AppEnvironment,
+  implicit val conf: Configuration) extends AbstractController(cc) with SecureSocial {
 
   private implicit val readsOAuth2Info = Json.reads[OAuth2Info]
   val providerId = DemoProvider.Demo

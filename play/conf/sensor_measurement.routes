@@ -6,12 +6,15 @@
 # ~~~~
 
 # Submit Measurements
-+nocsrf
+# +nocsrf
 POST    /measurements                      @controllers.SensorMeasurements.create
 
 # Kafka insert
-+nocsrf
+# +nocsrf
 POST    /kafka/measurements                @controllers.SensorMeasurements.insertKafka
+
+# ZMQ or Kafka insert
+POST    /stream/measurements               @controllers.SensorMeasurements.insertQueue
 
 # Query Measurement
 GET     /measurements_query                @controllers.SensorMeasurements.query(company: String, site: String, station: String, sensor: String, beginTime: Date, endTime: Date, sort: Ordering.Value ?= Ordering.Unspecified)
