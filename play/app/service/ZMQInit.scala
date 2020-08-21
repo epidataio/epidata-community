@@ -14,11 +14,11 @@ object ZMQInit {
   def ZMQSparkStreaming: ZMQDataSink.type = _ZMQSparkStreaming
 
   def init() = {
-    //pushPort: 5550, //pubPort: 5551
+    //pushPort: 5550, pubPort: 5551
     _ZMQProducer = ZMQService.init(Configs.queueSocket.toString, (Configs.queueSocket + 1).toString)
-    //subPort: 5551, //pubPort: 5552
-    _ZMQSparkStreaming = ZMQDataSink.init((Configs.queueSocket + 1).toString, (Configs.queueSocket + 2).toString)
-    //pushPort: 5550, //pubPort: 5552
+    //pullPort: 0000, subPort: 5551, pubPort: 5552
+    _ZMQSparkStreaming = ZMQDataSink.init("0000", (Configs.queueSocket + 1).toString, (Configs.queueSocket + 2).toString)
+    //pullPort: 5550, pubPort: 5552
     _ZMQDataSink = ZMQDataSink.init(Configs.queueSocket.toString, (Configs.queueSocket + 2).toString)
   }
 }
