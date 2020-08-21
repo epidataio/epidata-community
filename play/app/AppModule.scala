@@ -64,7 +64,7 @@ class ApplicationStart @Inject() (env: Environment, conf: Configuration) {
       KafkaService.init("127.0.0.1:" + conf.getOptional[Int]("queue.servers").get)
     } else if (conf.getOptional[String]("queue.service").get.equalsIgnoreCase("ZMQ")) {
       // Initiating object that will initiate 3 instances of ZMQService/DataSink to be used across the application
-      ZMQInit.init()
+      ZMQInit.init(conf)
     } else {
       throw new IllegalStateException(s"Invalid string used to configure queue.service config: " + conf.getOptional[String]("queue.service").get + ". Expected: 'Kafka' or 'ZMQ'")
     }

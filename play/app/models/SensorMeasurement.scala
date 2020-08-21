@@ -6,12 +6,12 @@ package models
 
 import java.util.Date
 
-import com.epidata.lib.models.{Measurement, SensorMeasurement => BaseSensorMeasurement}
+import com.epidata.lib.models.{ Measurement, SensorMeasurement => BaseSensorMeasurement }
 import play.api.Logger
 import play.api.libs.json._
 import _root_.util.Ordering
 import models.SensorMeasurement.keyForMeasurementTopic
-import service.{Configs, DataService, KafkaService, ZMQService, ZMQInit}
+import service.{ Configs, DataService, KafkaService, ZMQService, ZMQInit }
 
 import scala.collection.convert.WrapAsScala
 import scala.language.implicitConversions
