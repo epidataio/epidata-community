@@ -28,7 +28,7 @@ class DemoProvider(
   val userId = "DefaultUser"
   val firstName: Option[String] = Some("FirstName")
   val lastName: Option[String] = Some("LastName")
-  val fullName: Option[String] = Some(firstName + " " + lastName)
+  val fullName: Option[String] = Some(firstName.get + " " + lastName.get)
   val email: Option[String] = None
   val avatarUrl: Option[String] = None
   override val authMethod: AuthenticationMethod = AuthenticationMethod("demo token")

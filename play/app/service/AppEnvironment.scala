@@ -37,7 +37,7 @@ class AppEnvironment @Inject() (
     override val actorSystem: ActorSystem,
     assets: AssetsFinder) extends RuntimeEnvironment.Default {
   override type U = BasicProfile
-  override val userService: UserService[U] = new CassandraUserService()
+  override val userService: UserService[U] = new DBUserService()
   override implicit val executionContext: scala.concurrent.ExecutionContext = scala.concurrent.ExecutionContext.global
 
   val lang: String = (configuration.get[String]("langs"))

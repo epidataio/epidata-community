@@ -6,7 +6,7 @@ package controllers
 
 import java.util.UUID
 
-import service.{ CassandraUserService, AppEnvironment, DataService }
+import service.{ DBUserService, AppEnvironment, DataService }
 import providers.DemoProvider
 import play.api.Logger
 import play.api.libs.json.{ JsValue, Json }
@@ -51,6 +51,9 @@ class DemoAuth @Inject() (val cc: ControllerComponents)(
               u =>
                 u.isInstanceOf[BasicProfile] match {
                   case true =>
+                    if (env.userService.find(providerId, u.userId) != null) {
+                      env.userService.save(u, SaveMode.LoggedIn)
+                    }
                     logger.debug(s"$user logged in via $providerId provider")
                     completeAuthentication(u, request.session)
                   case false =>
@@ -84,6 +87,9 @@ class DemoAuth @Inject() (val cc: ControllerComponents)(
                     user =>
                       user.isInstanceOf[BasicProfile] match {
                         case true =>
+                          if (env.userService.find(providerId, user.userId) != null) {
+                            env.userService.save(user, SaveMode.LoggedIn)
+                          }
                           logger.debug(s"$user logged in via $providerId provider")
                           completeAuthenticationByPost(
                             builder.asInstanceOf[CookieAuthenticatorBuilder[BasicProfile]],
