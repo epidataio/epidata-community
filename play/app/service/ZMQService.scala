@@ -1,6 +1,10 @@
 package service
 
+import controllers.Assets.JSON
 import org.zeromq.ZMQ
+
+case class Message(key: String,
+                   value: String)
 
 object ZMQService {
   var pushSocket: ZMQ.Socket = _
@@ -23,21 +27,21 @@ object ZMQService {
     /**
      * Below we are setting a topic and pushing the data
      */
-    val msg = key + " :Message: " + value
-    pushSocket.send(msg.getBytes(), 0)
-    println("Pushed: " + msg)
+    val message: String = JSON.format(Message(key,value))
+    pushSocket.send(message.getBytes(), 0)
+    println("Pushed: " + message)
   }
 
   def pub(key: String, value: String): Unit = {
     /**
      * Below we are setting a topic and publishing the data
      */
-    //setting the topic as Publisher
+    //setting the topic as measurements
     pubSocket.sendMore("measurements")
     //sending the message
-    val msg = key + " :Message: " + value
-    pubSocket.send(msg.getBytes(ZMQ.CHARSET), 0)
-    println("Published: " + msg)
+    val message: String = JSON.format(Message(key,value))
+    pubSocket.send(message.getBytes(ZMQ.CHARSET), 0)
+    println("Published: " + message)
   }
 
   def end(): Unit = {

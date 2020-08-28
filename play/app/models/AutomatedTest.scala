@@ -6,10 +6,11 @@ package models
 
 import java.util.Date
 
-import com.epidata.lib.models.{ AutomatedTest => Model, Measurement }
+import com.epidata.lib.models.{Measurement, AutomatedTest => Model}
 import _root_.util.Ordering
+import models.SensorMeasurement.{insert, logger}
 import play.api.Logger
-import service.{ DataService, KafkaService, Configs }
+import service.{Configs, DataService, KafkaService}
 
 object AutomatedTest {
 
@@ -51,6 +52,13 @@ object AutomatedTest {
   def insertRecordFromKafka(str: String) = {
     Model.jsonToAutomatedTest(str) match {
       case Some(m) => insert(m, Configs.DBMeas)
+      case _ => logger.error("Bad json format!")
+    }
+  }
+
+  def insertRecordFromZMQ(str: String): Unit = {
+    Model.jsonToAutomatedTest(str) match {
+      case Some(sensorMeasurement) => insert(sensorMeasurement, Configs.DBMeas)
       case _ => logger.error("Bad json format!")
     }
   }

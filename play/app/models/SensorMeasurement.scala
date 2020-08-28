@@ -62,6 +62,13 @@ object SensorMeasurement {
     }
   }
 
+  def insertRecordFromZMQ(str: String): Unit = {
+    BaseSensorMeasurement.jsonToSensorMeasurement(str) match {
+      case Some(sensorMeasurement) => insert(sensorMeasurement, Configs.DBMeas)
+      case _ => logger.error("Bad json format!")
+    }
+  }
+
   /**
    * Insert a measurement into the kafka.
    * @param sensorMeasurement The Measurement to insert.
