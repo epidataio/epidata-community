@@ -2,6 +2,8 @@ package service
 
 import play.api.Configuration
 
+case class Message(topic: String, message: String)
+
 object ZMQInit {
 
   def init(config: Configuration) = {
@@ -18,6 +20,6 @@ object ZMQInit {
   private var _ZMQSinkService: ZMQDataSink.type = _
 
   def ZMQProducer = _ZMQProducer
-  def ZMQStream  = _ZMQStreamService
+  def ZMQStream = _ZMQStreamService
   def ZMQSinkService = _ZMQSinkService
 }

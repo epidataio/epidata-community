@@ -3,9 +3,6 @@ package service
 import controllers.Assets.JSON
 import org.zeromq.ZMQ
 
-case class Message(key: String,
-                   value: String)
-
 object ZMQService {
   var pushSocket: ZMQ.Socket = _
   var pubSocket: ZMQ.Socket = _
@@ -27,7 +24,7 @@ object ZMQService {
     /**
      * Below we are setting a topic and pushing the data
      */
-    val message: String = JSON.format(Message(key,value))
+    val message: String = JSON.format(Message(key, value))
     pushSocket.send(message.getBytes(), 0)
     println("Pushed: " + message)
   }
@@ -39,7 +36,7 @@ object ZMQService {
     //setting the topic as measurements
     pubSocket.sendMore("measurements")
     //sending the message
-    val message: String = JSON.format(Message(key,value))
+    val message: String = JSON.format(Message(key, value))
     pubSocket.send(message.getBytes(ZMQ.CHARSET), 0)
     println("Published: " + message)
   }

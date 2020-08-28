@@ -2,9 +2,6 @@ package service
 
 import org.zeromq.ZMQ
 
-case class Message(topic: String,
-                   message: String)
-
 object ZMQDataSink {
   var pullSocket: ZMQ.Socket = _
   var subSocket: ZMQ.Socket = _
@@ -30,14 +27,14 @@ object ZMQDataSink {
   def pull() = {
     val message = pullSocket.recvStr()
     println("Pulled Message: " + message /*+ " Topic: " + Thread.currentThread().getName*/ )
-    Message("measurements",message)
+    Message("measurements", message)
   }
 
   def sub() = {
     val topic = subSocket.recvStr()
     val message = subSocket.recvStr()
     println("Subscribed Message: " + message + " Topic: " + topic)
-    Message(topic,message)
+    Message(topic, message)
   }
 
   def end(): Unit = {

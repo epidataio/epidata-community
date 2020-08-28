@@ -2,10 +2,6 @@ package service
 import java.util.concurrent.Executors
 
 import com.fasterxml.jackson.databind.JsonMappingException
-import service.ZMQInit
-
-case class Message(topic: String,
-                   message: String)
 
 class ZMQSinkService {
 
@@ -17,10 +13,14 @@ class ZMQSinkService {
           val processedData: Message = ZMQInit.ZMQSinkService.sub()
           try {
             Configs.measurementClass match {
-              case com.epidata.lib.models.AutomatedTest.NAME => {models.AutomatedTest.insertRecordFromZMQ(rawData.message)
-                                                                 models.AutomatedTest.insertRecordFromZMQ(processedData.message)}
-              case com.epidata.lib.models.SensorMeasurement.NAME => {models.SensorMeasurement.insertRecordFromZMQ(rawData.message)
-                                                                     models.SensorMeasurement.insertRecordFromZMQ(processedData.message)}
+              case com.epidata.lib.models.AutomatedTest.NAME => {
+                models.AutomatedTest.insertRecordFromZMQ(rawData.message)
+                models.AutomatedTest.insertRecordFromZMQ(processedData.message)
+              }
+              case com.epidata.lib.models.SensorMeasurement.NAME => {
+                models.SensorMeasurement.insertRecordFromZMQ(rawData.message)
+                models.SensorMeasurement.insertRecordFromZMQ(processedData.message)
+              }
               case _ =>
             }
           } catch {

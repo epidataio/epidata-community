@@ -6,11 +6,11 @@ package models
 
 import java.util.Date
 
-import com.epidata.lib.models.{Measurement, AutomatedTest => Model}
+import com.epidata.lib.models.{ Measurement, AutomatedTest => Model }
 import _root_.util.Ordering
-import models.SensorMeasurement.{insert, logger}
+import models.SensorMeasurement.{ insert, logger }
 import play.api.Logger
-import service.{Configs, DataService, KafkaService}
+import service.{ Configs, DataService, KafkaService }
 
 object AutomatedTest {
 
