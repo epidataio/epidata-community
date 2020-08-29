@@ -17,9 +17,9 @@ object ZMQDataSink {
 
     subSocket = context.socket(ZMQ.SUB)
     subSocket.connect("tcp://127.0.0.1:" + forwardPort)
-    subSocket.subscribe("Raw".getBytes(ZMQ.CHARSET))
-    subSocket.subscribe("Summary".getBytes(ZMQ.CHARSET))
-    subSocket.subscribe("Cleansed".getBytes(ZMQ.CHARSET))
+//    subSocket.subscribe("Raw".getBytes(ZMQ.CHARSET))
+//    subSocket.subscribe("Summary".getBytes(ZMQ.CHARSET))
+//    subSocket.subscribe("Cleansed".getBytes(ZMQ.CHARSET))
     subSocket.subscribe("Processed".getBytes(ZMQ.CHARSET))
     this
   }
