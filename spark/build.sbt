@@ -1,18 +1,22 @@
+import com.typesafe.sbt.SbtScalariform.ScalariformKeys
+import scalariform.formatter.preferences._
+
 name := "epidata-spark"
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.12.11"
 
 libraryDependencies ++= Seq(
-  "com.datastax.spark" % "spark-cassandra-connector-unshaded_2.11" % "2.0.0-M3",
-  "com.datastax.cassandra" % "cassandra-driver-core" % "3.0.2",
-  "org.apache.spark" %% "spark-core" % "2.1.0" % "provided",
-  "org.apache.spark" %% "spark-sql" % "2.1.0" % "provided",
-  "org.apache.spark" % "spark-streaming_2.11" % "2.1.0" % "provided",
-  "org.apache.spark" % "spark-streaming-kafka-0-8_2.11" % "2.1.0",
-  "com.datastax.spark" % "spark-cassandra-connector-embedded_2.11" % "2.0.1" % "test",
-  "org.scalatest" %% "scalatest" % "2.2.4" % "test",
-  "junit" % "junit" % "4.12" % "test",
-  "org.apache.cassandra" % "cassandra-all" % "3.2" % "test"
+  "com.datastax.spark" %% "spark-cassandra-connector" % "2.5.1",
+  "com.datastax.cassandra" % "cassandra-driver-core" % "3.9.0",
+  "org.apache.spark" %% "spark-core" % "2.4.6",
+  "org.apache.spark" %% "spark-sql" % "2.4.6",
+  "org.apache.spark" %% "spark-streaming" % "2.4.6" % "provided",
+  "org.apache.spark" %% "spark-streaming-kafka-0-10" % "2.4.6",
+  "org.apache.kafka" % "kafka-streams" % "2.4.1",
+  "com.datastax.spark" %% "spark-cassandra-connector-embedded" % "2.4.3" % Test,
+  "org.scalatest" %% "scalatest" % "3.2.0" % Test,
+  "junit" % "junit" % "4.13" % Test,
+  "org.apache.cassandra" % "cassandra-all" % "3.11.6"
 ).map(_.exclude("org.slf4j", "log4j-over-slf4j"))  // Excluded to allow for Cassandra to run embedded
 
 assemblyMergeStrategy in assembly := {
@@ -20,10 +24,13 @@ assemblyMergeStrategy in assembly := {
   case x => MergeStrategy.first
 }
 
+
 test in assembly := {}
 
 Keys.fork in Test := true
 
-scalariformSettings
+ScalariformKeys.preferences := ScalariformKeys.preferences.value
+  .setPreference(DoubleIndentConstructorArguments, true)
+  .setPreference(AlignParameters, false)
 
 testOptions in Test += Tests.Argument("-oF")

@@ -84,4 +84,24 @@ object DataFrameUtils {
           					 #ts < ?""".stripMargin('#')
     }
   }
+
+  def whereStatementForTable(tableName: String, parts: List[Any]): String = {
+    tableName match {
+      case MeasurementSummary.DBTableName =>
+        s"""#customer = ${parts.lift(0)} AND
+          					 #customer_site = ${parts.lift(1)} AND
+          					 #collection = ${parts.lift(2)} AND
+          					 #dataset = ${parts.lift(3)} AND
+          					 #start_time >= ${parts.lift(4)} AND
+          					 #start_time < ${parts.lift(5)}""".stripMargin('#')
+      case _ =>
+        s"""#customer = ${parts.lift(0)} AND
+          					 #customer_site = ${parts.lift(1)} AND
+          					 #collection = ${parts.lift(2)} AND
+          					 #dataset = ${parts.lift(3)} AND
+          					 #epoch = ${parts.lift(4)} AND
+          					 #ts >= ${parts.lift(5)} AND
+          					 #ts < ${parts.lift(6)}""".stripMargin('#')
+    }
+  }
 }

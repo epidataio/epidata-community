@@ -13,12 +13,20 @@ from decimal import Decimal
 import struct
 import time
 from time import sleep
+<<<<<<< Updated upstream:play/examples/sensor_data_with_outliers.py
 import urllib2
+=======
+import requests
+import urllib3
+
+>>>>>>> Stashed changes:play/examples/sensor_data_ingest_with_outliers.py
 
 
 ##################################
 # Define Variables and Functions #
 ##################################
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument('--host')
@@ -27,7 +35,7 @@ args = arg_parser.parse_args()
 HOST = args.host or '127.0.0.1'
 AUTHENTICATION_URL = 'https://' + HOST + '/authenticate/app'
 AUTHENTICATION_ROUTE = '/authenticate/app'
-USE_KAFKA = True
+USE_KAFKA = False
 LOG_ITERATION = 1
 
 if USE_KAFKA:
@@ -39,6 +47,7 @@ else:
 
 iteration = 0
 post_iteration = 0
+
 
 
 def get_time(time_string):
@@ -128,12 +137,24 @@ while (True):
 
     try:
 
+<<<<<<< Updated upstream:play/examples/sensor_data_with_outliers.py
         for data_iteration in range(1, 6):
+=======
+        meas_last_temperature_value = 70.0
+        meas_last_windspeed_value = 8
+        meas_last_rh_value = 60
+
+        for data_iteration in range(1, 3):
+>>>>>>> Stashed changes:play/examples/sensor_data_ingest_with_outliers.py
 
             # Construct an empty list of measurement objects
             measurement_list = []
 
+<<<<<<< Updated upstream:play/examples/sensor_data_with_outliers.py
             for log_iteration in range(1, 4):
+=======
+            for log_iteration in range(1, 3):
+>>>>>>> Stashed changes:play/examples/sensor_data_ingest_with_outliers.py
 
                 current_time_string = datetime.now().strftime("%m/%d/%Y %H:%M:%S.%f")
                 current_time = get_time(current_time_string)
@@ -238,6 +259,10 @@ while (True):
 
                 # Construct measurement list with data to be ingested.
                 measurement_list.append(measurement)
+<<<<<<< Updated upstream:play/examples/sensor_data_with_outliers.py
+=======
+                meas_last_rh_value = meas_value
+>>>>>>> Stashed changes:play/examples/sensor_data_ingest_with_outliers.py
 
                 ####################################
                 # Increment iteration and continue #
@@ -261,6 +286,7 @@ while (True):
                 'Cookie': session_cookie}
 
             # Construct JSON body with data to be ingested.
+            print measurement_list
             json_body = json.dumps(measurement_list)
 
             # Send the POST request and receive the HTTP response.
@@ -272,15 +298,19 @@ while (True):
             post_response = conn.getresponse()
 
             # Check that the response's HTTP response code is 201 (CREATED).
+<<<<<<< Updated upstream:play/examples/sensor_data_with_outliers.py
             status = post_response.status
             message = post_response.read()
             assert status == 201
 
             # post_response.read()
+=======
+            assert resp.status_code == 201
+>>>>>>> Stashed changes:play/examples/sensor_data_ingest_with_outliers.py
 
             # Print measurement details
             print "iteration: ", data_iteration
-            print json_body + "\n"
+            # print json_body + "\n"
 
         break
 

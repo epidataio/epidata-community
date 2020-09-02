@@ -30,20 +30,38 @@ object AutomatedTest {
    * Insert an automated test measurement into the database.
    * @param automatedTest The AutomatedTest to insert.
    */
-  def insert(automatedTest: Model): Unit = MeasurementService.insert(automatedTest)
-  def insertList(automatedTests: List[Model]): Unit = MeasurementService.bulkInsert(automatedTests.map(automatedTestToMeasurement))
+  def insert(automatedTest: Model, Sqlite_enable: Boolean): Unit = {
+    if (Sqlite_enable) {
+      SQLiteMeasurementService.insert(automatedTest)
+    } else {
+      MeasurementService.insert(automatedTest)
+    }
+  }
+  def insertList(automatedTests: List[Model], Sqlite_enable: Boolean): Unit = {
+    if (Sqlite_enable) {
+      SQLiteMeasurementService.bulkInsert(automatedTests.map(automatedTestToMeasurement))
+    } else {
+      MeasurementService.bulkInsert(automatedTests.map(automatedTestToMeasurement))
+    }
+
+  }
 
   def insertRecordFromKafka(str: String) = {
     Model.jsonToAutomatedTest(str) match {
+<<<<<<< Updated upstream
       case Some(m) => insert(m)
       case _ => Logger.error("Bad json format!")
+=======
+      case Some(m) => insert(m, Configs.DBMeas)
+      case _ => logger.error("Bad json format!")
+>>>>>>> Stashed changes
     }
   }
 
   def insertToKafka(list: List[Model]): Unit = {
     list.foreach(m => insertToKafka(m))
     if (Configs.twoWaysIngestion) {
-      models.AutomatedTest.insertList(list)
+      models.AutomatedTest.insertList(list, Configs.DBMeas)
     }
   }
 

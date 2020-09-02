@@ -62,8 +62,9 @@ object Measurement {
       base.val2
     )
 
-  implicit def rowToMeasurement(row: CassandraRow): Measurement =
+  implicit def rowToMeasurement(row: CassandraRow): Measurement = {
     baseMeasurementToMeasurement(row)
+  }
 }
 
 /**

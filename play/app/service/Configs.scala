@@ -5,19 +5,32 @@ import play.api.Configuration
 object Configs {
 
   def init(config: Configuration) = {
+<<<<<<< Updated upstream
     _keyCreation = config.getBoolean("application.ingestion.keycreation").getOrElse(false)
     _metricEnabled = config.getBoolean("application.metric.enabled").getOrElse(false)
     _measurementClass = config.getString("measurement-class").get
     _twoWaysIngestion = config.getBoolean("application.ingestion.2ways").getOrElse(false)
+=======
+    _keyCreation = config.getOptional[Boolean]("application.ingestion.keycreation").getOrElse(false)
+    _metricEnabled = config.getOptional[Boolean]("application.metric.enabled").getOrElse(false)
+    _measurementClass = config.getOptional[String]("measurement-class").get
+    _twoWaysIngestion = config.getOptional[Boolean]("application.ingestion.2ways").getOrElse(false)
+    _DBMeas = config.getOptional[Boolean]("SQLite.enable").getOrElse(true)
+    _DBUser = config.getOptional[Boolean]("SQLite.User").getOrElse(true)
+>>>>>>> Stashed changes
   }
 
   private var _keyCreation = false
   private var _metricEnabled = false
   private var _measurementClass: String = "sensor_measurement"
   private var _twoWaysIngestion = false
+  private var _DBMeas = true
+  private var _DBUser = true
 
   def ingestionKeyCreation = _keyCreation
   def metricEnabled = _keyCreation
   def measurementClass = _measurementClass
   def twoWaysIngestion = _twoWaysIngestion
+  def DBMeas = _DBMeas
+  def DBUser = _DBUser
 }

@@ -11,6 +11,7 @@ import play.api.libs.ws.Response
 class DemoProvider(application: Application) extends OAuth2Provider(application) {
   val defaultAccessToken = "accessTokenDemo"
   val userId = "DefaultUser"
+<<<<<<< Updated upstream
 
   override def id = DemoProvider.Demo
 
@@ -18,6 +19,11 @@ class DemoProvider(application: Application) extends OAuth2Provider(application)
   val firstName: String = "FirstName"
   val lastName: String = "LastName"
   val fullName: String = firstName + " " + lastName
+=======
+  val firstName: Option[String] = Some("FirstName")
+  val lastName: Option[String] = Some("LastName")
+  val fullName: Option[String] = Some(firstName.get + " " + lastName.get)
+>>>>>>> Stashed changes
   val email: Option[String] = None
   val avatarUrl: Option[String] = None
   val oAuth1Info: Option[OAuth1Info] = None
