@@ -1,3 +1,7 @@
+/*
+* Copyright (c) 2020 EpiData, Inc.
+*/
+
 package service
 
 import org.zeromq.ZMQ
