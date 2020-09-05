@@ -12,8 +12,8 @@ import javax.inject._
 
 /** Controller to display the Notebook. */
 class Notebook @Inject() (val cc: ControllerComponents)(implicit
-    assets: AssetsFinder,
-    override val env: RuntimeEnvironment) extends AbstractController(cc) with SecureSocial {
+  assets: AssetsFinder,
+  override val env: RuntimeEnvironment) extends AbstractController(cc) with SecureSocial {
 
   override def messagesApi: MessagesApi = super.messagesApi
 

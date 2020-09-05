@@ -1,3 +1,7 @@
+/*
+* Copyright (c) 2015-2020 EpiData, Inc.
+*/
+
 package com.epidata.lib.models.util
 
 import com.datastax.driver.core.Row
@@ -5,6 +9,7 @@ import java.util.Date
 import java.lang.{ Double => JDouble, Long => JLong }
 
 import scala.util.{ Success, Try }
+import java.sql.ResultSet
 
 object TypeUtils {
 
@@ -33,15 +38,36 @@ object TypeUtils {
     else None
   }
 
+  def getOptionDouble(row: ResultSet, field: String): Option[Double] = {
+    val temp = row.getDouble(field)
+    if (!row.wasNull && !JDouble.isNaN(temp))
+      Option(row.getDouble(field))
+    else None
+  }
+
   def getOptionLong(row: Row, field: String): Option[Long] = {
     if (!row.isNull(field))
       Option(row.getLong(field))
     else None
   }
 
+  def getOptionLong(row: ResultSet, field: String): Option[Long] = {
+    val temp = row.getLong(field)
+    if (!row.wasNull())
+      Option(temp)
+    else None
+  }
+
   def getOptionString(row: Row, field: String): Option[String] = {
     if (!row.isNull(field) && row.getString(field).compareTo("") != 0)
       Option(row.getString(field))
+    else None
+  }
+
+  def getOptionString(row: ResultSet, field: String): Option[String] = {
+    val temp = row.getString(field)
+    if (!row.wasNull() && temp.compareTo("") != 0)
+      Option(temp)
     else None
   }
 
@@ -52,6 +78,17 @@ object TypeUtils {
       case _ =>
         val valueBytes = new Array[Byte](binaryBuf.limit - binaryBuf.position)
         binaryBuf.get(valueBytes)
+        val binary = new Binary(valueBytes)
+        Option(binary)
+    }
+  }
+
+  def getOptionBinary(row: ResultSet, field: String): Option[Binary] = {
+    val binaryBuf = row.getBlob(field)
+    binaryBuf match {
+      case null => None
+      case _ =>
+        val valueBytes = binaryBuf.getBytes(1, binaryBuf.length().toInt)
         val binary = new Binary(valueBytes)
         Option(binary)
     }

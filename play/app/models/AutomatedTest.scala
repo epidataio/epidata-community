@@ -6,10 +6,11 @@ package models
 
 import java.util.Date
 
-import com.epidata.lib.models.{ AutomatedTest => Model, Measurement }
+import com.epidata.lib.models.{ Measurement, AutomatedTest => Model }
 import _root_.util.Ordering
+import models.SensorMeasurement.{ insert, logger }
 import play.api.Logger
-import service.{ DataService, KafkaService, Configs }
+import service.{ Configs, DataService, KafkaService }
 
 object AutomatedTest {
 
@@ -32,12 +33,32 @@ object AutomatedTest {
    * Insert an automated test measurement into the database.
    * @param automatedTest The AutomatedTest to insert.
    */
-  def insert(automatedTest: Model): Unit = MeasurementService.insert(automatedTest)
-  def insertList(automatedTests: List[Model]): Unit = MeasurementService.bulkInsert(automatedTests.map(automatedTestToMeasurement))
+  def insert(automatedTest: Model, Sqlite_enable: Boolean): Unit = {
+    if (Sqlite_enable) {
+      SQLiteMeasurementService.insert(automatedTest)
+    } else {
+      MeasurementService.insert(automatedTest)
+    }
+  }
+  def insertList(automatedTests: List[Model], Sqlite_enable: Boolean): Unit = {
+    if (Sqlite_enable) {
+      SQLiteMeasurementService.bulkInsert(automatedTests.map(automatedTestToMeasurement))
+    } else {
+      MeasurementService.bulkInsert(automatedTests.map(automatedTestToMeasurement))
+    }
+
+  }
 
   def insertRecordFromKafka(str: String) = {
     Model.jsonToAutomatedTest(str) match {
-      case Some(m) => insert(m)
+      case Some(m) => insert(m, Configs.DBMeas)
+      case _ => logger.error("Bad json format!")
+    }
+  }
+
+  def insertRecordFromZMQ(str: String): Unit = {
+    Model.jsonToAutomatedTest(str) match {
+      case Some(sensorMeasurement) => insert(sensorMeasurement, Configs.DBMeas)
       case _ => logger.error("Bad json format!")
     }
   }
@@ -45,7 +66,7 @@ object AutomatedTest {
   def insertToKafka(list: List[Model]): Unit = {
     list.foreach(m => insertToKafka(m))
     if (Configs.twoWaysIngestion) {
-      models.AutomatedTest.insertList(list)
+      models.AutomatedTest.insertList(list, Configs.DBMeas)
     }
   }
 

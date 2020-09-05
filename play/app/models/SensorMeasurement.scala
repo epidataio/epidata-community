@@ -6,13 +6,14 @@ package models
 
 import java.util.Date
 
-import com.epidata.lib.models.{ SensorMeasurement => BaseSensorMeasurement, Measurement }
+import com.epidata.lib.models.{ Measurement, SensorMeasurement => BaseSensorMeasurement }
 import play.api.Logger
 import play.api.libs.json._
 import _root_.util.Ordering
-import service.{ Configs, KafkaService, DataService }
-import scala.collection.convert.WrapAsScala
+import models.SensorMeasurement.keyForMeasurementTopic
+import service.{ Configs, DataService, KafkaService, ZMQService, ZMQInit }
 
+import scala.collection.convert.WrapAsScala
 import scala.language.implicitConversions
 
 object SensorMeasurement {
@@ -38,12 +39,32 @@ object SensorMeasurement {
    * Insert a Double sensor measurement into the database.
    * @param sensorMeasurement The SensorMeasurement to insert.
    */
-  def insert(sensorMeasurement: BaseSensorMeasurement) = MeasurementService.insert(sensorMeasurement)
-  def insert(sensorMeasurementList: List[BaseSensorMeasurement]) = MeasurementService.bulkInsert(sensorMeasurementList)
+  def insert(sensorMeasurement: BaseSensorMeasurement, Sqlite_enable: Boolean) = {
+    if (Sqlite_enable) {
+      SQLiteMeasurementService.insert(sensorMeasurement)
+    } else {
+      MeasurementService.insert(sensorMeasurement)
+    }
+  }
+
+  def insert(sensorMeasurementList: List[BaseSensorMeasurement], Sqlite_enable: Boolean) = {
+    if (Sqlite_enable) {
+      SQLiteMeasurementService.bulkInsert(sensorMeasurementList)
+    } else {
+      MeasurementService.bulkInsert(sensorMeasurementList)
+    }
+  }
 
   def insertRecordFromKafka(str: String) = {
     BaseSensorMeasurement.jsonToSensorMeasurement(str) match {
-      case Some(sensorMeasurement) => insert(sensorMeasurement)
+      case Some(sensorMeasurement) => insert(sensorMeasurement, Configs.DBMeas)
+      case _ => logger.error("Bad json format!")
+    }
+  }
+
+  def insertRecordFromZMQ(str: String): Unit = {
+    BaseSensorMeasurement.jsonToSensorMeasurement(str) match {
+      case Some(sensorMeasurement) => insert(sensorMeasurement, Configs.DBMeas)
       case _ => logger.error("Bad json format!")
     }
   }
@@ -62,7 +83,25 @@ object SensorMeasurement {
   def insertToKafka(sensorMeasurementList: List[BaseSensorMeasurement]): Unit = {
     sensorMeasurementList.foreach(m => insertToKafka(m))
     if (Configs.twoWaysIngestion) {
-      insert(sensorMeasurementList)
+      insert(sensorMeasurementList, Configs.DBMeas)
+    }
+  }
+
+  /**
+   * Insert a measurement into the ZMQ.
+   * @param sensorMeasurement The Measurement to insert.
+   */
+  def insertToZMQ(sensorMeasurement: BaseSensorMeasurement): Unit = {
+    val key = keyForMeasurementTopic(sensorMeasurement)
+    val value = BaseSensorMeasurement.toJson(sensorMeasurement)
+    ZMQInit.ZMQProducer.push(key, value)
+    ZMQInit.ZMQProducer.pub(key, value)
+  }
+
+  def insertToZMQ(sensorMeasurementList: List[BaseSensorMeasurement]): Unit = {
+    sensorMeasurementList.foreach(m => insertToZMQ(m))
+    if (Configs.twoWaysIngestion) {
+      insert(sensorMeasurementList, Configs.DBMeas)
     }
   }
 

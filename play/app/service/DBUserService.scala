@@ -16,9 +16,9 @@ import securesocial.core.providers.MailToken
 
 import javax.inject._
 
-/** A user service in Scala using a Cassandra backend. */
+/** A user service in Scala using a Database backend (SQLite or Cassandra). */
 @Singleton
-class CassandraUserService extends UserService[BasicProfile] {
+class DBUserService extends UserService[BasicProfile] {
   val logger = Logger("application.controllers.CassandraUserService")
 
   var users = Map[(String, String), BasicProfile]()
@@ -33,27 +33,25 @@ class CassandraUserService extends UserService[BasicProfile] {
 
   override def save(user: BasicProfile, mode: SaveMode): Future[BasicProfile] = {
 
-    // Do not allow creation of new user accounts. Accounts are created
-    // manually during the restricted invite period.
-    find(user.providerId, user.userId).value match {
-      case None => throw new Exception("User Not Found")
-      case Some(_) =>
-        val basicProfile = BasicProfile(
-          user.providerId,
-          user.userId,
-          user.firstName,
-          user.lastName,
-          user.fullName,
-          user.email,
-          user.avatarUrl,
-          user.authMethod,
-          user.oAuth1Info,
-          user.oAuth2Info,
-          user.passwordInfo)
+    // ****Do not allow creation of new user accounts. Accounts are created
+    // manually during the restricted invite period.****
+    // Now users are created without checking if they exisist before or not
 
-        User.save(basicProfile)
-        Future.successful(basicProfile)
-    }
+    val basicProfile = BasicProfile(
+      user.providerId,
+      user.userId,
+      user.firstName,
+      user.lastName,
+      user.fullName,
+      user.email,
+      user.avatarUrl,
+      user.authMethod,
+      user.oAuth1Info,
+      user.oAuth2Info,
+      user.passwordInfo)
+
+    User.save(basicProfile)
+    Future.successful(basicProfile)
   }
 
   override def link(current: BasicProfile, to: BasicProfile): Future[BasicProfile] = {

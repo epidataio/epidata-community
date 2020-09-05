@@ -7,7 +7,9 @@ package com.epidata.lib.models
 import java.util.Date
 
 import com.datastax.driver.core.Row
+import java.sql.ResultSet
 import com.epidata.lib.models.util.TypeUtils
+import java.sql.ResultSet
 
 case class MeasurementCleansed(
     customer: String,
@@ -68,6 +70,31 @@ object MeasurementCleansed {
       "val2")
 
   implicit def rowToMeasurementCleansed(row: Row): MeasurementCleansed = {
+    val m = Measurement.rowToMeasurement(row)
+    MeasurementCleansed(
+      m.customer,
+      m.customer_site,
+      m.collection,
+      m.dataset,
+      m.ts,
+      m.key1,
+      m.key2,
+      m.key3,
+      m.meas_datatype,
+      m.meas_value,
+      m.meas_unit,
+      m.meas_status,
+      TypeUtils.stringToOption(row.getString("meas_flag")),
+      TypeUtils.stringToOption(row.getString("meas_method")),
+      m.meas_lower_limit,
+      m.meas_upper_limit,
+      m.meas_description,
+      m.val1,
+      m.val2)
+
+  }
+
+  implicit def rowToMeasurementCleansed(row: ResultSet): MeasurementCleansed = {
     val m = Measurement.rowToMeasurement(row)
     MeasurementCleansed(
       m.customer,
