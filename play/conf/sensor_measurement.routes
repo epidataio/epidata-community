@@ -6,18 +6,6 @@
 # ~~~~
 
 # Submit Measurements
-<<<<<<< Updated upstream
-POST    /measurements               controllers.SensorMeasurements.create
-# Kafka insert
-POST    /kafka/measurements         controllers.SensorMeasurements.insertKafka
-
-# Query Measurement
-GET     /measurements_query         controllers.SensorMeasurements.query(company: String, site: String, station: String, sensor: String, beginTime: Date, endTime: Date, sort: Ordering.Value ?= Ordering.Unspecified)
-
-GET     /measurements_original      controllers.SensorMeasurements.find(company: String, site: String, station: String, sensor: String, beginTime: Date, endTime: Date, size: Int ?= 10000, batch: String ?= "", sort: Ordering.Value ?= Ordering.Unspecified, table: String = "measurements_original")
-GET     /measurements_cleansed      controllers.SensorMeasurements.find(company: String, site: String, station: String, sensor: String, beginTime: Date, endTime: Date, size: Int ?= 10000, batch: String ?= "", sort: Ordering.Value ?= Ordering.Unspecified, table: String = "measurements_cleansed")
-GET     /measurements_summary       controllers.SensorMeasurements.find(company: String, site: String, station: String, sensor: String, beginTime: Date, endTime: Date, size: Int ?= 10000, batch: String ?= "", sort: Ordering.Value ?= Ordering.Unspecified, table: String = "measurements_summary")
-=======
 +nocsrf
 POST    /measurements                      @controllers.SensorMeasurements.create
 
@@ -32,6 +20,5 @@ GET     /measurements_original             @controllers.SensorMeasurements.find(
 GET     /measurements_cleansed             @controllers.SensorMeasurements.find(company: String, site: String, station: String, sensor: String, beginTime: Date, endTime: Date, size: Int ?= 10000, batch: String ?= "", sort: Ordering.Value ?= Ordering.Unspecified, table: String = "measurements_cleansed")
 GET     /measurements_summary              @controllers.SensorMeasurements.find(company: String, site: String, station: String, sensor: String, beginTime: Date, endTime: Date, size: Int ?= 10000, batch: String ?= "", sort: Ordering.Value ?= Ordering.Unspecified, table: String = "measurements_summary")
 
->>>>>>> Stashed changes
 
 

@@ -64,8 +64,7 @@ class MeasurementSpec extends Specification {
         "dataset0",
         beginTime,
         endTime,
-        Ordering.Unspecified
-      ).toSet must
+        Ordering.Unspecified).toSet must
         equalTo(Fixtures.models.filter(x => x.customer == "customer0" &&
           x.customer_site == "customer_site0" &&
           x.collection == "collection0" &&
@@ -91,8 +90,7 @@ class MeasurementSpec extends Specification {
         "dataset0",
         beginTime,
         endTime,
-        Ordering.Unspecified
-      ).toSet must
+        Ordering.Unspecified).toSet must
         equalTo(Fixtures.models.filter(x => x.customer == "customer0" &&
           x.customer_site == "customer_site0" &&
           x.collection == "collection0" &&
@@ -118,8 +116,7 @@ class MeasurementSpec extends Specification {
         "dataset0",
         beginTime,
         endTime,
-        Ordering.Unspecified
-      ).toSet must
+        Ordering.Unspecified).toSet must
         equalTo(Fixtures.models.filter(x => x.customer == "customer0" &&
           x.customer_site == "customer_site0" &&
           x.collection == "collection0" &&
@@ -145,8 +142,7 @@ class MeasurementSpec extends Specification {
         "dataset0",
         beginTime,
         endTime,
-        Ordering.Descending
-      ).toList must
+        Ordering.Descending).toList must
         equalTo(Fixtures.models.filter(x => x.customer == "customer0" &&
           x.customer_site == "customer_site0" &&
           x.collection == "collection0" &&
@@ -172,8 +168,7 @@ class MeasurementSpec extends Specification {
         "dataset0",
         beginTime,
         endTime,
-        Ordering.Descending
-      ).toList must
+        Ordering.Descending).toList must
         equalTo(Fixtures.models.filter(x => x.customer == "customer0" &&
           x.customer_site == "customer_site0" &&
           x.collection == "collection0" &&

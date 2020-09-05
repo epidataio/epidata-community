@@ -5,7 +5,7 @@
 package com.epidata.spark
 
 import com.typesafe.config.ConfigFactory
-import org.apache.spark.{SparkContext, SparkConf}
+import org.apache.spark.{ SparkContext, SparkConf }
 
 object IdentityStream {
   def main(args: Array[String]) {

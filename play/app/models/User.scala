@@ -9,51 +9,18 @@ import SQLite.{ DB => DBLite }
 import service.Configs
 import com.datastax.driver.core.querybuilder.QueryBuilder
 import com.datastax.driver.core.Row
-import securesocial.core.IdentityId
 import securesocial.core.AuthenticationMethod
 import securesocial.core.OAuth2Info
-<<<<<<< Updated upstream
-import securesocial.core.SocialUser
-=======
 import securesocial.core.services
 import scala.concurrent.Future
 import securesocial.core.{ PasswordInfo, BasicProfile }
 import java.sql.ResultSet
->>>>>>> Stashed changes
 
 object User {
 
-  type User = SocialUser
+  type U = BasicProfile
+  //  type User = SocialUser
 
-<<<<<<< Updated upstream
-  def save(user: User): Unit = {
-    DB.execute(insertStatement.bind(
-      user.identityId.userId,
-      user.firstName,
-      user.lastName,
-      user.fullName,
-      user.email.getOrElse(""),
-      user.avatarUrl.getOrElse(""),
-      user.oAuth2Info.get.accessToken,
-      user.oAuth2Info.get.tokenType.getOrElse(""),
-      user.oAuth2Info.get.expiresIn.getOrElse(-1).asInstanceOf[AnyRef],
-      user.oAuth2Info.get.refreshToken.getOrElse("")
-    ))
-  }
-
-  def find(identity: IdentityId): Option[User] = {
-    val query = QueryBuilder.select()
-      .all()
-      .from("users")
-      .where(QueryBuilder.eq("id", identity.userId))
-    Option(DB.execute(query).one).map(rowToUser)
-  }
-
-  private lazy val insertStatement =
-    DB.prepare(
-      """#INSERT INTO users (
-         #id,
-=======
   def save(user: U): Unit = {
     if (Configs.DBUser) {
       DBLite.executeUpdate(
@@ -127,7 +94,6 @@ object User {
     """#INSERT OR REPLACE INTO users (
          #providerId,
          #userId,
->>>>>>> Stashed changes
          #first_name,
          #last_name,
          #full_name,
@@ -136,14 +102,9 @@ object User {
          #oauth2_token,
          #oauth2_token_type,
          #oauth2_expires_in,
-<<<<<<< Updated upstream
-         #oauth2_refresh_token) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#')
-    )
-=======
          #oauth2_refresh_token) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#')
->>>>>>> Stashed changes
 
-  private implicit def rowToUser(row: Row): User = {
+  private implicit def rowToUser(row: Row): U = {
     def blankToNone(string: String): Option[String] = string match {
       case "" => None
       case string => Some(string)
@@ -154,14 +115,15 @@ object User {
       case num => Some(num)
     }
 
-    SocialUser(
-      IdentityId(
-        row.getString("id"),
-        "github"
-      ),
-      row.getString("first_name"),
-      row.getString("last_name"),
-      row.getString("full_name"),
+    val user = BasicProfile(
+      //      IdentityId(
+      //        row.getString("id"),
+      //        "github"),
+      row.getString("providerID"),
+      row.getString("userId"),
+      Some(row.getString("first_name")),
+      Some(row.getString("last_name")),
+      Some(row.getString("full_name")),
       blankToNone(row.getString("email")),
       blankToNone(row.getString("avatar_url")),
       AuthenticationMethod.OAuth2,
@@ -170,9 +132,9 @@ object User {
         row.getString("oauth2_token"),
         blankToNone(row.getString("oauth2_token_type")),
         negativeToNone(row.getInt("oauth2_expires_in")),
-        blankToNone(row.getString("oauth2_refresh_token"))
-      ))
-    )
+        blankToNone(row.getString("oauth2_refresh_token")))))
+
+    user
   }
   private implicit def rowToUser(row: ResultSet): U = {
     def blankToNone(string: String): Option[String] = string match {

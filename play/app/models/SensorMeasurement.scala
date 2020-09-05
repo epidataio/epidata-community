@@ -4,6 +4,8 @@
 
 package models
 
+import java.util.Date
+
 import com.epidata.lib.models.{ SensorMeasurement => BaseSensorMeasurement, Measurement }
 import play.api.Logger
 import play.api.libs.json._
@@ -11,12 +13,12 @@ import _root_.util.Ordering
 import service.{ Configs, KafkaService, DataService }
 import scala.collection.convert.WrapAsScala
 
-import java.util.Date
 import scala.language.implicitConversions
 
 object SensorMeasurement {
 
   import com.epidata.lib.models.SensorMeasurement._
+  val logger: Logger = Logger(this.getClass())
 
   val name: String = "SensorMeasurement"
 
@@ -54,13 +56,8 @@ object SensorMeasurement {
 
   def insertRecordFromKafka(str: String) = {
     BaseSensorMeasurement.jsonToSensorMeasurement(str) match {
-<<<<<<< Updated upstream
-      case Some(sensorMeasurement) => insert(sensorMeasurement)
-      case _ => Logger.error("Bad json format!")
-=======
       case Some(sensorMeasurement) => insert(sensorMeasurement, Configs.DBMeas)
       case _ => logger.error("Bad json format!")
->>>>>>> Stashed changes
     }
   }
 
@@ -101,8 +98,7 @@ object SensorMeasurement {
     beginTime: Date,
     endTime: Date,
     ordering: Ordering.Value,
-    tableName: String = com.epidata.lib.models.Measurement.DBTableName
-  ): List[BaseSensorMeasurement] = MeasurementService.find(company, site, station, sensor, beginTime, endTime, ordering, tableName)
+    tableName: String = com.epidata.lib.models.Measurement.DBTableName): List[BaseSensorMeasurement] = MeasurementService.find(company, site, station, sensor, beginTime, endTime, ordering, tableName)
     .map(measurementToSensorMeasurement)
 
   /** Convert a list of SensorMeasurement to a json representation. */

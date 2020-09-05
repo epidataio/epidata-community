@@ -4,8 +4,9 @@
 
 package models
 
-import com.epidata.lib.models.{ AutomatedTest => Model, Measurement }
 import java.util.Date
+
+import com.epidata.lib.models.{ AutomatedTest => Model, Measurement }
 import _root_.util.Ordering
 import play.api.Logger
 import service.{ DataService, KafkaService, Configs }
@@ -13,6 +14,7 @@ import service.{ DataService, KafkaService, Configs }
 object AutomatedTest {
 
   import com.epidata.lib.models.AutomatedTest._
+  val logger: Logger = Logger(this.getClass())
 
   private def keyForMeasurementTopic(measurement: Model): String = {
     val key =
@@ -48,13 +50,8 @@ object AutomatedTest {
 
   def insertRecordFromKafka(str: String) = {
     Model.jsonToAutomatedTest(str) match {
-<<<<<<< Updated upstream
-      case Some(m) => insert(m)
-      case _ => Logger.error("Bad json format!")
-=======
       case Some(m) => insert(m, Configs.DBMeas)
       case _ => logger.error("Bad json format!")
->>>>>>> Stashed changes
     }
   }
 
@@ -91,8 +88,7 @@ object AutomatedTest {
     tester: String,
     beginTime: Date,
     endTime: Date,
-    ordering: Ordering.Value
-  ): List[Model] =
+    ordering: Ordering.Value): List[Model] =
     MeasurementService.find(company, site, device_group, tester, beginTime, endTime, ordering)
       .map(measurementToAutomatedTest)
 

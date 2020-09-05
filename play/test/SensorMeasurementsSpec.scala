@@ -68,16 +68,14 @@ class SensorMeasurementsSpec extends Specification {
           sensor_measurement.Routes.handlerFor(req) orElse super.onRouteRequest(req)
 
         override def onStop(app: Application) = Global.onStop(app)
-      })
-    )
+      }))
 
   import WithLoggedUser._
 
   object FakeApp {
     def apply() = new FakeApp(
       withoutPlugins = excludedPlugins,
-      additionalPlugins = includedPlugins
-    )
+      additionalPlugins = includedPlugins)
   }
 
   "SensorMeasurements" should {
@@ -105,8 +103,7 @@ class SensorMeasurementsSpec extends Specification {
             #"meas_lower_limit": 0.0,
             #"meas_upper_limit": 0.5,
             #"meas_description": "d"
-            #}]""".stripMargin('#'))
-      ).withCookies(cookie)).get
+            #}]""".stripMargin('#'))).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
 
       SensorMeasurement.find("company0", "site0", "station0", "sensor0",
@@ -137,8 +134,7 @@ class SensorMeasurementsSpec extends Specification {
             #"meas_lower_limit": 0.0,
             #"meas_upper_limit": 0.5,
             #"meas_description": "d"
-            #}]""".stripMargin('#'))
-      )).get // No User cookie is provided.
+            #}]""".stripMargin('#')))).get // No User cookie is provided.
       status(create) must equalTo(SEE_OTHER)
     }
 
@@ -165,8 +161,7 @@ class SensorMeasurementsSpec extends Specification {
             #"company": "company0",
             #"meas_upper_limit": 0.5,
             #"meas_description": "d"
-            #}]""".stripMargin('#'))
-      ).withCookies(cookie)).get
+            #}]""".stripMargin('#'))).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
 
       SensorMeasurement.find("company0", "site0", "station0", "sensor0",
@@ -264,7 +259,7 @@ class SensorMeasurementsSpec extends Specification {
         "beginTime=111000001000&" +
         "endTime=111000001000&" +
         "sort=badorder" // sort invalid
-        ).withCookies(cookie)).get
+      ).withCookies(cookie)).get
       status(query) must equalTo(BAD_REQUEST)
     }
 
@@ -292,8 +287,7 @@ class SensorMeasurementsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
 
       val found = SensorMeasurement.find("company0", "site0", "station0", "sensor0",
@@ -339,8 +333,7 @@ class SensorMeasurementsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
 
       val found = SensorMeasurement.find("company0", "site0", "station0", "sensor0",
@@ -383,8 +376,7 @@ class SensorMeasurementsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
 
       val found = SensorMeasurement.find("company0", "site0", "station0", "sensor0",
@@ -430,8 +422,7 @@ class SensorMeasurementsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
 
       val found = SensorMeasurement.find("company0", "site0", "station0", "sensor0",
@@ -477,8 +468,7 @@ class SensorMeasurementsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
 
       val found = SensorMeasurement.find("company0", "site0", "station0", "sensor0",
@@ -521,8 +511,7 @@ class SensorMeasurementsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
     }
 
@@ -549,8 +538,7 @@ class SensorMeasurementsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
     }
 
@@ -576,8 +564,7 @@ class SensorMeasurementsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
     }
 
@@ -603,8 +590,7 @@ class SensorMeasurementsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
     }
 
@@ -630,8 +616,7 @@ class SensorMeasurementsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
 
       val found = SensorMeasurement.find("company0", "site0", "station0", "sensor0",
@@ -675,8 +660,7 @@ class SensorMeasurementsSpec extends Specification {
             #"meas_lower_limit": 0.0,
             #"meas_upper_limit": 0.5,
             #"meas_description": ""        ${"" /* empty string field */ }
-            #}]""".stripMargin('#'))
-      ).withCookies(cookie)).get
+            #}]""".stripMargin('#'))).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
 
       val results = SensorMeasurement.find("company0", "site0", "station0", "sensor0",

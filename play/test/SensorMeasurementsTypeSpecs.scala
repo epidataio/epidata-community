@@ -138,16 +138,14 @@ class SensorMeasurementsTypeSpecs extends Specification {
           sensor_measurement.Routes.handlerFor(req) orElse super.onRouteRequest(req)
 
         override def onStop(app: Application) = Global.onStop(app)
-      })
-    )
+      }))
 
   import WithLoggedUser._
 
   object FakeApp {
     def apply() = new FakeApp(
       withoutPlugins = excludedPlugins,
-      additionalPlugins = includedPlugins
-    )
+      additionalPlugins = includedPlugins)
   }
 
   "insert a sensor measurements with all combination datatype" in new WithLoggedUser(FakeApp()) {
@@ -158,8 +156,7 @@ class SensorMeasurementsTypeSpecs extends Specification {
       POST,
       "/measurements",
       FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-      Json.parse(Fixtures.measurementsJson)
-    ).withCookies(cookie)).get
+      Json.parse(Fixtures.measurementsJson)).withCookies(cookie)).get
     status(create) must equalTo(BAD_REQUEST)
 
     var results = new Array[Model](70)

@@ -6,19 +6,6 @@
 # ~~~~
 
 # insert Measurements To DB
-<<<<<<< Updated upstream
-POST    /measurements            controllers.AutomatedTests.create
-# Kafka insert
-POST    /kafka/measurements      controllers.AutomatedTests.insertKafka
-
-# Query Measurement
-GET     /measurements_query      controllers.AutomatedTests.query(company: String, site: String, device_group: String, tester: String, beginTime: Date, endTime: Date, sort: Ordering.Value ?= Ordering.Unspecified)
-
-GET     /measurements_original   controllers.AutomatedTests.find(company: String, site: String, device_group: String, tester: String, beginTime: Date, endTime: Date, size: Int ?= 10000, batch: String ?= "", sort: Ordering.Value ?= Ordering.Unspecified, table: String = "measurements_original")
-GET     /measurements_cleansed   controllers.AutomatedTests.find(company: String, site: String, device_group: String, tester: String, beginTime: Date, endTime: Date, size: Int ?= 10000, batch: String ?= "", sort: Ordering.Value ?= Ordering.Unspecified, table: String = "measurements_cleansed")
-GET     /measurements_summary    controllers.AutomatedTests.find(company: String, site: String, device_group: String, tester: String, beginTime: Date, endTime: Date, size: Int ?= 10000, batch: String ?= "", sort: Ordering.Value ?= Ordering.Unspecified, table: String = "measurements_summary")
-
-=======
 POST    /measurements                   @controllers.AutomatedTests.create
 
 # Kafka insert
@@ -30,5 +17,4 @@ GET     /measurements_query             @controllers.AutomatedTests.query(compan
 GET     /measurements_original          @controllers.AutomatedTests.find(company: String, site: String, device_group: String, tester: String, beginTime: Date, endTime: Date, size: Int ?= 10000, batch: String ?= "", sort: Ordering.Value ?= Ordering.Unspecified, table: String = "measurements_original")
 GET     /measurements_cleansed          @controllers.AutomatedTests.find(company: String, site: String, device_group: String, tester: String, beginTime: Date, endTime: Date, size: Int ?= 10000, batch: String ?= "", sort: Ordering.Value ?= Ordering.Unspecified, table: String = "measurements_cleansed")
 GET     /measurements_summary           @controllers.AutomatedTests.find(company: String, site: String, device_group: String, tester: String, beginTime: Date, endTime: Date, size: Int ?= 10000, batch: String ?= "", sort: Ordering.Value ?= Ordering.Unspecified, table: String = "measurements_summary")
->>>>>>> Stashed changes
 

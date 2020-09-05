@@ -4,49 +4,38 @@
 
 package controllers
 
-<<<<<<< Updated upstream
-import _root_.providers.DemoProvider
-=======
 import java.util.UUID
 
 import service.{ DBUserService, AppEnvironment, DataService }
 import providers.DemoProvider
->>>>>>> Stashed changes
 import play.api.Logger
-import play.api.i18n.Messages
 import play.api.libs.json.{ JsValue, Json }
 import play.api.mvc._
-import securesocial.controllers.ProviderController._
+import play.api.{ Environment, Configuration }
+import play.api.i18n.{ I18nSupport, MessagesApi, Messages }
+import play.api.libs.ws.WSResponse
+import securesocial.controllers.BaseProviderController
+import securesocial.controllers.ProviderController
+import securesocial.controllers._
 import securesocial.core._
-import securesocial.core.providers.utils.RoutesHelper
-import service.DataService
+import securesocial.core.authenticator._
+import securesocial.core.utils._
+import securesocial.core.authenticator.{ AuthenticatorBuilder, CookieAuthenticator, CookieAuthenticatorBuilder }
+import securesocial.core.services.SaveMode
+import securesocial.core.services.{ CacheService, RoutesService }
+import javax.inject._
 
-object DemoAuth extends Controller with securesocial.core.SecureSocial {
+import scala.collection.immutable.ListMap
+import scala.concurrent.Future
+import scala.util.{ Success, Failure }
+
+@Singleton
+class DemoAuth @Inject() (val cc: ControllerComponents)(
+    implicit
+    val env: AppEnvironment,
+    implicit val conf: Configuration) extends AbstractController(cc) with SecureSocial {
 
   private implicit val readsOAuth2Info = Json.reads[OAuth2Info]
-<<<<<<< Updated upstream
-
-  def authenticate = Action { implicit request =>
-
-    Registry.providers.get(DemoProvider.Demo) match {
-      case Some(p) => {
-        try {
-          request.getQueryString("token") match {
-            case Some(token) if DataService.isValidToken(token) =>
-              val user = p.fillProfile(null)
-              completeAuthentication(user, request.session)
-            case _ => Redirect(RoutesHelper.login()).flashing("error" -> Messages("Access Denied"))
-          }
-
-        } catch {
-          case ex: AccessDeniedException => {
-            Redirect(RoutesHelper.login()).flashing("error" -> Messages("Access Denied"))
-          }
-
-          case other: Throwable => {
-            Logger.error("Unable to log user in. An exception was thrown", other)
-            Redirect(RoutesHelper.login()).flashing("error" -> Messages("Error LoggingIn"))
-=======
   val providerId = DemoProvider.Demo
   val logger: Logger = Logger(this.getClass())
   override def messagesApi: MessagesApi = super.messagesApi
@@ -71,30 +60,26 @@ object DemoAuth extends Controller with securesocial.core.SecureSocial {
                     InternalServerError(Json.toJson(Map("error" -> "unexpected internal error"))).as("application/json")
                 }
             }
->>>>>>> Stashed changes
           }
+          case _ =>
+            Future.successful(Redirect(securesocial.controllers.routes.LoginPage.login).flashing("error" -> Messages("Access Denied")))
         }
       }
-      case _ => NotFound
+      case false => {
+        logger.error("Unable to log user in. Only Default Login is Supported")
+        Future.successful(Redirect(securesocial.controllers.routes.LoginPage.login).flashing("error" -> Messages("Login Mode Not Supported")))
+      }
     }
-
   }
 
-  def authenticateByPost = Action { implicit request =>
-
-    Registry.providers.get(DemoProvider.Demo) match {
-      case Some(p) => {
-        try {
-          val jsonBody: Option[JsValue] = request.body.asJson
-
-          // Expecting json body
-          jsonBody.map { json =>
+  def authenticateByPost = Action.async { implicit request =>
+    conf.get[Boolean]("securesocial.useDefaultLogin") match {
+      case true => {
+        val jsonBody: Option[JsValue] = request.body.asJson
+        jsonBody match {
+          case Some(json) => {
             val token = (json \ "accessToken").as[String]
             if (DataService.isValidToken(token)) {
-<<<<<<< Updated upstream
-              val user = p.fillProfile(null)
-              completeAuthenticationByPost(user, request.session)
-=======
               env.authenticatorService.find(CookieAuthenticator.Id) match {
                 case Some(builder) => {
                   val provider = env.providers(providerId).asInstanceOf[OAuth2Provider]
@@ -117,40 +102,35 @@ object DemoAuth extends Controller with securesocial.core.SecureSocial {
                 case None =>
                   Future.successful(InternalServerError(Json.toJson(Map("error" -> "unexpected internal error"))).as("application/json"))
               }
->>>>>>> Stashed changes
             } else {
-              NotFound
+              Future.successful(Unauthorized("Token is invalid"))
             }
-          }.getOrElse {
-            NotFound
           }
-
-        } catch {
-          case ex: AccessDeniedException => {
-            NotFound
-          }
-
-          case other: Throwable => {
-            Logger.error("Unable to log user in. An exception was thrown", other)
-            NotFound
-          }
+          case None =>
+            Future.successful(Unauthorized("Error parsing request data"))
         }
       }
-      case _ => NotFound
+      case false => {
+        logger.error("User login mode is not supported")
+        Future.successful(Unauthorized("Unable to log user in"))
+      }
     }
-
   }
 
-  def completeAuthenticationByPost(user: Identity, session: Session)(implicit request: RequestHeader): SimpleResult = {
+  def completeAuthentication(user: BasicProfile, session: Session)(implicit request: RequestHeader): Result = {
     val withSession = Events.fire(new LoginEvent(user)).getOrElse(session)
-    Authenticator.create(user) match {
-      case Right(authenticator) => {
-        Ok(Json.obj("sessionId" -> authenticator.toCookie.value))
-      }
-      case Left(error) => {
-        // improve this
-        throw new RuntimeException("Error creating authenticator")
-      }
+    val sessionId = UUID.randomUUID().toString
+    Ok(Json.obj("sessionId" -> sessionId))
+  }
+
+  def completeAuthenticationByPost(builder: CookieAuthenticatorBuilder[BasicProfile], user: BasicProfile, session: Session)(
+    implicit
+    request: RequestHeader): Future[Result] = {
+    builder.fromUser(user).map {
+      authenticator =>
+        val auth = authenticator.asInstanceOf[CookieAuthenticator[BasicProfile]]
+        val result: Result = Ok(Json.obj("sessionId" -> UUID.randomUUID().toString))
+        result.withCookies(auth.config.toCookieWithId(auth.id))
     }
   }
 

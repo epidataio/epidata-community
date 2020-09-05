@@ -144,8 +144,7 @@ class AutomatedTestsTypeSpecs extends Specification {
           automated_test.Routes.handlerFor(req) orElse super.onRouteRequest(req)
 
         override def onStop(app: Application) = Global.onStop(app)
-      })
-    )
+      }))
 
   import WithLoggedUser._
 
@@ -166,9 +165,7 @@ class AutomatedTestsTypeSpecs extends Specification {
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
         Json.parse(
-          Fixtures.measurementsJson
-        )
-      ).withCookies(cookie)).get
+          Fixtures.measurementsJson)).withCookies(cookie)).get
       status(create) must equalTo(BAD_REQUEST)
 
       var results = new Array[Model](70)

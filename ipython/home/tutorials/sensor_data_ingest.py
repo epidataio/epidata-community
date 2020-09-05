@@ -64,7 +64,7 @@ current_time = get_time(current_time_string)
 
 # Replace quoted string with API Token or GitHub Personal Access Token
 # (REQUIRED)
-ACCESS_TOKEN = 'API Token'
+ACCESS_TOKEN = ''
 
 # Modify default values (OPTIONAL)
 COMPANY = 'EpiData'
