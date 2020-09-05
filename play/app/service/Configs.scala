@@ -9,8 +9,11 @@ object Configs {
     _metricEnabled = config.getOptional[Boolean]("application.metric.enabled").getOrElse(false)
     _measurementClass = config.getOptional[String]("measurement-class").get
     _twoWaysIngestion = config.getOptional[Boolean]("application.ingestion.2ways").getOrElse(false)
+    _DBMeas = config.getOptional[Boolean]("SQLite.enable").getOrElse(false)
     _DBMeas = config.getOptional[Boolean]("SQLite.enable").getOrElse(true)
     _DBUser = config.getOptional[Boolean]("SQLite.User").getOrElse(true)
+    _queueService = config.getOptional[String]("queue.service").get
+    _queueSocket = config.getOptional[Int]("queue.servers").get
   }
 
   private var _keyCreation = false
@@ -19,6 +22,8 @@ object Configs {
   private var _twoWaysIngestion = false
   private var _DBMeas = true
   private var _DBUser = true
+  private var _queueService: String = "ZMQ"
+  private var _queueSocket = 0
 
   def ingestionKeyCreation = _keyCreation
   def metricEnabled = _keyCreation
@@ -26,4 +31,6 @@ object Configs {
   def twoWaysIngestion = _twoWaysIngestion
   def DBMeas = _DBMeas
   def DBUser = _DBUser
+  def queueService = _queueService
+  def queueSocket = _queueSocket
 }

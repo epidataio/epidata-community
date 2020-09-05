@@ -4,6 +4,10 @@ import scalariform.formatter.preferences._
 name := "epidata-play"
 
 resolvers += "Typesafe repository" at "https://repo.typesafe.com/typesafe/releases/"
+resolvers ++= Seq(
+  "Typesafe repository" at "https://repo.typesafe.com/typesafe/releases/",
+  Resolver.jcenterRepo
+)
 
 routesGenerator := InjectedRoutesGenerator
 
@@ -43,8 +47,10 @@ lazy val autopep8 = taskKey[Unit]("autopep8")
 
 //TwirlKeys.templateImports += "org.example._"
 
-ScalariformKeys.preferences := ScalariformKeys.preferences.value
-  .setPreference(DoubleIndentConstructorArguments, true)
-  .setPreference(AlignParameters, false)
+//ScalariformKeys.preferences := ScalariformKeys.preferences.value
+//  .setPreference(DoubleIndentConstructorArguments, true)
+//  .setPreference(AlignParameters, false)
 
 scalaVersion := "2.12.11"
+
+libraryDependencies += "ru.dgis" %% "reactive-zmq" % "0.4.0"

@@ -15,7 +15,7 @@ import securesocial.core.{ IdentityProvider, RuntimeEnvironment, SecureSocial }
  * play error page when a jupyterhub error occurs.
  */
 class Unauthorized @Inject() (val cc: ControllerComponents)(
-    override implicit val env: RuntimeEnvironment) extends AbstractController(cc)
+  override implicit val env: RuntimeEnvironment) extends AbstractController(cc)
   with SecureSocial {
 
   override def messagesApi: MessagesApi = super.messagesApi

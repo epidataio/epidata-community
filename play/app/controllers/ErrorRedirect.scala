@@ -16,7 +16,7 @@ case class ErrorRedirectException(msg: String) extends Exception
  * play error page when a jupyterhub error occurs.
  */
 class ErrorRedirect @Inject() (val cc: ControllerComponents)(
-    override implicit val env: RuntimeEnvironment) extends AbstractController(cc)
+  override implicit val env: RuntimeEnvironment) extends AbstractController(cc)
   with SecureSocial with I18nSupport {
 
   override def messagesApi = env.messagesApi

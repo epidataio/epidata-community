@@ -17,12 +17,12 @@ import scala.util.matching.Regex
 
 @Singleton
 class MeasurementRoutesHandler @Inject() (
-    errorHandler: HttpErrorHandler,
-    httpConf: HttpConfiguration,
-    filters: HttpFilters,
-    routes: Router,
-    sensorRoutes: sensor_measurement.Routes,
-    ateRoutes: automated_test.Routes)(implicit val conf: Configuration) extends DefaultHttpRequestHandler(
+  errorHandler: HttpErrorHandler,
+  httpConf: HttpConfiguration,
+  filters: HttpFilters,
+  routes: Router,
+  sensorRoutes: sensor_measurement.Routes,
+  ateRoutes: automated_test.Routes)(implicit val conf: Configuration) extends DefaultHttpRequestHandler(
   routes,
   errorHandler,
   httpConf,
