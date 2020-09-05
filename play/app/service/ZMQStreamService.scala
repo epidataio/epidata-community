@@ -1,3 +1,7 @@
+/*
+* Copyright (c) 2020 EpiData, Inc.
+*/
+
 package service
 
 import controllers.Assets.JSON
