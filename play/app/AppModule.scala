@@ -31,6 +31,7 @@ class AppModule extends Module {
 class ApplicationStop @Inject() (lifecycle: ApplicationLifecycle) {
   lifecycle.addStopHook { () =>
     Future.successful(DB.close)
+    Future.successful(DBLite.close)
   }
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 EpiData, Inc.
+* Copyright (c) 2015-2020 EpiData, Inc.
 */
 
 package SQLite
@@ -35,13 +35,11 @@ object DB {
   /** Generate a prepared statement. */
   def prepare(statementSpec: String) = connection.get.prepare(statementSpec)
 
-  /** Execute a previously prepared statement. */
+  /** Execute a previously prepared statement which returns a resultset (Get Statements) */
   def execute(statement: Statement): ResultSet = connection.get.execute(statement)
 
-  /** Execute a previously prepared statement which returns and empty ResultSet */
+  /** Execute a previously prepared statement which does not return anything (Insert Statements) */
   def executeUpdate(statement: PreparedStatement) = connection.get.executeUpdate(statement)
-
-  /** ResultSet to User. */
 
   /** Binds the values in args to the statement. */
   def binds(statement: PreparedStatement, args: Any*): PreparedStatement = connection.get.binds(statement, args)

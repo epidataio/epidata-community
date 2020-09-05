@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 EpiData, Inc.
+* Copyright (c) 2015-2020 EpiData, Inc.
 */
 
 package models
@@ -118,7 +118,7 @@ object SQLiteMeasurementService {
     tableName: String,
     modelName: String): String = {
 
-    // Get the data from Cassandra
+    // Get the data from SQLite
     val rs: ResultSet = SQLiteMeasurementService.query(company, site, station, sensor, beginTime, endTime, ordering, tableName, size, batch)
     val records = new JLinkedList[JLinkedHashMap[String, Object]]()
     while (rs.next() != false) {
