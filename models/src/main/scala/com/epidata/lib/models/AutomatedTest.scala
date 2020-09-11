@@ -7,7 +7,6 @@ package com.epidata.lib.models
 import java.sql.Timestamp
 
 import com.datastax.driver.core.Row
-//import org.apache.spark.sql.{Row => sRow}
 import java.sql.ResultSet
 import com.epidata.lib.models.util.{ Datatype, TypeUtils, JsonHelpers, Binary }
 import java.util.{ Date, Map => JMap, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList }

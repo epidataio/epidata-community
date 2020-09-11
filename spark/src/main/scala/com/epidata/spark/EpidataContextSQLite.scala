@@ -7,7 +7,8 @@ package com.epidata.spark
 import java.sql.Timestamp
 import java.util.Date
 import com.epidata.spark.models.{ MeasureLite => BaseMeasurement, MeasureLiteCleansed => BaseMeasurementCleansed, MeasurementSummary }
-import com.epidata.lib.models.{ SensorMeasurement => BaseSensorMeasurement, AutomatedTest => BaseAutomatedTest, MeasurementsKeys => BaseMeasurementsKeys }
+import com.epidata.spark.{ SensorMeasurement => BaseSensorMeasurement, AutomatedTest => BaseAutomatedTest }
+import com.epidata.lib.models.{ MeasurementsKeys => BaseMeasurementsKeys }
 import com.epidata.spark.ops.{ Identity, OutlierDetector, MeasStatistics, FillMissingValue }
 import com.epidata.spark.utils.DataFrameUtils
 import org.apache.spark.SparkContext
@@ -29,7 +30,6 @@ class EpidataContextSQLite(private val sparkContext: SparkContext) {
   private val sqlContext = new SQLContext(sparkContext)
 
   // Configuration parameters.
-  // private lazy val cassandraKeyspaceName = sparkContext.getConf.get("spark.epidata.cassandraKeyspaceName")
   private lazy val measurementClass =
     sparkContext.getConf.get("spark.epidata.measurementClass")
 
@@ -113,8 +113,7 @@ class EpidataContextSQLite(private val sparkContext: SparkContext) {
 
     // Transform to MeasureLiteCleansed to MeasurementLiteCleansed
     import sqlContext.sparkSession.implicits._
-    val table = sqlite.map(row => MeasurementLiteCleansed.baseMeasurementCleansedToMeasurementCleansed
-                                  (BaseMeasurementCleansed.rowToMeasurementCleansed(row)))
+    val table = sqlite.map(row => MeasurementLiteCleansed.baseMeasurementCleansedToMeasurementCleansed(BaseMeasurementCleansed.rowToMeasurementCleansed(row)))
 
     // Find all epochs covered by the query.
     val epochs = Measurement.epochForTs(beginTime) to Measurement.epochForTs(endTime)
@@ -194,15 +193,15 @@ class EpidataContextSQLite(private val sparkContext: SparkContext) {
       case BaseMeasurement.DBTableName =>
         val unionRDD = getUnionRDD(fieldQuery, beginTime, endTime, tableName)
         measurementClass match {
-          case BaseAutomatedTest.NAME => sqlContext.createDataFrame(unionRDD.map(AutomatedTest.measurementToAutomatedTest))
-          case BaseSensorMeasurement.NAME => sqlContext.createDataFrame(unionRDD.map(SensorMeasurement.measurementToSensorMeasurement))
+          case BaseAutomatedTest.NAME => sqlContext.createDataFrame(unionRDD.map(AutomatedTest.measliteToAutomatedTest))
+          case BaseSensorMeasurement.NAME => sqlContext.createDataFrame(unionRDD.map(SensorMeasurement.measureliteToSensorMeasurement))
         }
 
       case BaseMeasurementCleansed.DBTableName =>
         val unionRDD = getUnionRDDMeasurementCleansed(fieldQuery, beginTime, endTime, tableName)
         measurementClass match {
-          case BaseAutomatedTest.NAME => sqlContext.createDataFrame(unionRDD.map(AutomatedTestCleansed.measurementCleansedToAutomatedTestCleansed))
-          case BaseSensorMeasurement.NAME => sqlContext.createDataFrame(unionRDD.map(SensorMeasurementCleansed.measurementCleansedToSensorMeasurementCleansed))
+          case BaseAutomatedTest.NAME => sqlContext.createDataFrame(unionRDD.map(AutomatedTestCleansed.measureliteCleansedToAutomatedTestCleansed))
+          case BaseSensorMeasurement.NAME => sqlContext.createDataFrame(unionRDD.map(SensorMeasurementCleansed.measureliteCleansedToSensorMeasurementCleansed))
         }
 
       case MeasurementSummary.DBTableName =>
@@ -298,9 +297,10 @@ class EpidataContextSQLite(private val sparkContext: SparkContext) {
       .options(Map(
         "url" -> "jdbc:sqlite:/Users/JFu/Downloads/chinook.db",
         "dbtable" -> s"(SELECT * FROM $BaseMeasurementsKeys.DBTableName)")).load()
+    import sqlContext.sparkSession.implicits._
     measurementClass match {
-      case BaseAutomatedTest.NAME => sqlContext.createDataFrame(table.map(keyToAutomatedTest))
-      case BaseSensorMeasurement.NAME => sqlContext.createDataFrame(table.map(keyToSensorMeasurement))
+      case BaseAutomatedTest.NAME => sqlContext.createDataFrame(table.map(row => keyToAutomatedTest(MeasurementKeyReader.read(row))).rdd)
+      case BaseSensorMeasurement.NAME => sqlContext.createDataFrame(table.map(row => keyToSensorMeasurement(MeasurementKeyReader.read(row))).rdd)
     }
   }
 

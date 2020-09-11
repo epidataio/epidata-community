@@ -10,8 +10,7 @@ import org.apache.spark.sql.functions._
 
 class MeasStatistics(
     val meas_names: List[String],
-    val method: String
-) extends Transformation {
+    val method: String) extends Transformation {
   override def apply(dataFrame: DataFrame, sqlContext: SQLContext): DataFrame = {
 
     method match {
@@ -23,8 +22,7 @@ class MeasStatistics(
         val stopTime = row.getTimestamp(1)
 
         val mapping: Map[String, Column => Column] = Map(
-          "min" -> min, "max" -> max, "mean" -> mean, "count" -> count, "std" -> stddev
-        )
+          "min" -> min, "max" -> max, "mean" -> mean, "count" -> count, "std" -> stddev)
 
         val groupBy = Seq("customer", "customer_site", "collection", "dataset", "start_time", "stop_time", "key1", "key2", "key3")
         val aggregate = Seq("meas_value")

@@ -5,6 +5,7 @@
 package com.epidata.spark
 
 import com.datastax.driver.core.{ ProtocolVersion, Row }
+import org.apache.spark.sql.{ Row => sRow }
 import com.datastax.spark.connector.ColumnRef
 import com.datastax.spark.connector.rdd.reader.{ RowReader, ThisRowReaderAsFactory }
 import com.epidata.lib.models.{ MeasurementCleansed, MeasurementSummary }
@@ -15,7 +16,7 @@ import com.datastax.spark.connector.CassandraRowMetadata
 object MeasurementHelpers {
 
   implicit object MeasurementReader
-      extends RowReader[Measurement] with ThisRowReaderAsFactory[Measurement] {
+    extends RowReader[Measurement] with ThisRowReaderAsFactory[Measurement] {
 
     override def targetClass: Class[Measurement] = classOf[Measurement]
 
@@ -25,7 +26,7 @@ object MeasurementHelpers {
   }
 
   implicit object MeasurementCleansedReader
-      extends RowReader[MeasurementCleansed] with ThisRowReaderAsFactory[MeasurementCleansed] {
+    extends RowReader[MeasurementCleansed] with ThisRowReaderAsFactory[MeasurementCleansed] {
 
     override def targetClass: Class[MeasurementCleansed] = classOf[MeasurementCleansed]
 
@@ -35,7 +36,7 @@ object MeasurementHelpers {
   }
 
   implicit object MeasurementSummaryReader
-      extends RowReader[MeasurementSummary] with ThisRowReaderAsFactory[MeasurementSummary] {
+    extends RowReader[MeasurementSummary] with ThisRowReaderAsFactory[MeasurementSummary] {
 
     override def targetClass: Class[MeasurementSummary] = classOf[MeasurementSummary]
 
@@ -45,7 +46,7 @@ object MeasurementHelpers {
   }
 
   implicit object MeasurementKeyReader
-      extends RowReader[MeasurementKey] with ThisRowReaderAsFactory[MeasurementKey] {
+    extends RowReader[MeasurementKey] with ThisRowReaderAsFactory[MeasurementKey] {
 
     override def targetClass: Class[MeasurementKey] = classOf[MeasurementKey]
 
@@ -55,7 +56,12 @@ object MeasurementHelpers {
       Option(row.getString("customer")).get,
       Option(row.getString("customer_site")).get,
       Option(row.getString("collection")).get,
-      Option(row.getString("dataset")).get
-    )
+      Option(row.getString("dataset")).get)
+
+    override def read(row: sRow): MeasurementLiteKey = MeasurementLiteKey(
+      Option(row.getString(0)).get,
+      Option(row.getString(1)).get,
+      Option(row.getString(2)).get,
+      Option(row.getString(3)).get)
   }
 }

@@ -61,8 +61,7 @@ object ConvertUtils {
       None,
       meas.meas_description,
       meas.val1,
-      meas.val2
-    )
+      meas.val2)
   }
 
   def convertLongMeasurementToMeasurementDB(meas: Measurement): MeasurementDB = {
@@ -89,8 +88,7 @@ object ConvertUtils {
       meas.meas_upper_limit.map(_.asInstanceOf[Long]),
       meas.meas_description,
       meas.val1,
-      meas.val2
-    )
+      meas.val2)
   }
 
   def convertStringMeasurementToMeasurementDB(meas: Measurement): MeasurementDB = {
@@ -117,8 +115,7 @@ object ConvertUtils {
       None,
       meas.meas_description,
       meas.val1,
-      meas.val2
-    )
+      meas.val2)
   }
 
   def convertBinaryMeasurementToMeasurementDB(meas: Measurement): MeasurementDB = {
@@ -145,8 +142,7 @@ object ConvertUtils {
       None,
       meas.meas_description,
       meas.val1,
-      meas.val2
-    )
+      meas.val2)
   }
 
   def convertJsonStringToMeasurementDB(str: String): MeasurementDB = {
