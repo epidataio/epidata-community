@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2015-2020 EpiData, Inc.
+*/
+
 package com.epidata.spark
 
 import java.sql.Timestamp

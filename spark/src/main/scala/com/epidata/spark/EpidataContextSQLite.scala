@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 EpiData, Inc.
+ * Copyright (c) 2015-2020 EpiData, Inc.
 */
 
 package com.epidata.spark
@@ -295,7 +295,7 @@ class EpidataContextSQLite(private val sparkContext: SparkContext) {
 
     val table = sqlContext.read.format("jdbc")
       .options(Map(
-        "url" -> "jdbc:sqlite:/Users/JFu/Downloads/chinook.db",
+        "url" -> sparkContext.getConf.get("SQLite.url"),
         "dbtable" -> s"(SELECT * FROM $BaseMeasurementsKeys.DBTableName)")).load()
     import sqlContext.sparkSession.implicits._
     measurementClass match {
