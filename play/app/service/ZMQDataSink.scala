@@ -4,6 +4,7 @@
 
 package service
 
+import org.json.simple.JSONObject
 import org.zeromq.ZMQ
 
 object ZMQDataSink {
@@ -21,24 +22,19 @@ object ZMQDataSink {
 
     subSocket = context.socket(ZMQ.SUB)
     subSocket.connect("tcp://127.0.0.1:" + forwardPort)
-//    subSocket.subscribe("Raw".getBytes(ZMQ.CHARSET))
-//    subSocket.subscribe("Summary".getBytes(ZMQ.CHARSET))
-//    subSocket.subscribe("Cleansed".getBytes(ZMQ.CHARSET))
-    subSocket.subscribe("Processed".getBytes(ZMQ.CHARSET))
+    subSocket.subscribe("cleansed".getBytes(ZMQ.CHARSET))
     this
   }
 
   def pull() = {
-    val message = pullSocket.recvStr()
-    println("Pulled Message: " + message /*+ " Topic: " + Thread.currentThread().getName*/ )
-    Message("measurements", message)
+    val messageObject = new JSONObject(pullSocket.recvStr())
+    new Message(messageObject.get("topic"), messageObject.get("key"), messageObject.get("value"))
   }
 
   def sub() = {
     val topic = subSocket.recvStr()
-    val message = subSocket.recvStr()
-    println("Subscribed Message: " + message + " Topic: " + topic)
-    Message(topic, message)
+    val messageObject = new JSONObject(subSocket.recvStr())
+    new Message(messageObject.get("topic"), messageObject.get("key"), messageObject.get("value"))
   }
 
   def end(): Unit = {
