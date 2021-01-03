@@ -27,17 +27,17 @@ import scala.concurrent.ExecutionContext
 
 @Singleton
 class AppEnvironment @Inject() (
-    override val configuration: Configuration,
-    override val messagesApi: MessagesApi,
-    override val environment: Environment,
-    override val wsClient: WSClient,
-    override val cacheApi: AsyncCacheApi,
-    override val mailerClient: MailerClient,
-    override val parsers: PlayBodyParsers,
-    override val actorSystem: ActorSystem,
-    assets: AssetsFinder) extends RuntimeEnvironment.Default {
+  override val configuration: Configuration,
+  override val messagesApi: MessagesApi,
+  override val environment: Environment,
+  override val wsClient: WSClient,
+  override val cacheApi: AsyncCacheApi,
+  override val mailerClient: MailerClient,
+  override val parsers: PlayBodyParsers,
+  override val actorSystem: ActorSystem,
+  assets: AssetsFinder) extends RuntimeEnvironment.Default {
   override type U = BasicProfile
-  override val userService: UserService[U] = new CassandraUserService()
+  override val userService: UserService[U] = new DBUserService()
   override implicit val executionContext: scala.concurrent.ExecutionContext = scala.concurrent.ExecutionContext.global
 
   val lang: String = (configuration.get[String]("langs"))

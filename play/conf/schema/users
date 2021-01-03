@@ -1,12 +1,4 @@
---
--- Copyright (c) 2015-2017 EpiData, Inc.
---
--- description: creates users table
-
--- authoredAt: 1436279027
--- up:
-
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
   providerId TEXT,
   userId TEXT,
   first_name TEXT,
@@ -20,7 +12,3 @@ CREATE TABLE users (
   oauth2_refresh_token TEXT,
   PRIMARY KEY (providerId, userId )
 )
-
--- down:
-
-DROP TABLE users

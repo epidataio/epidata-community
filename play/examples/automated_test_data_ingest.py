@@ -4,7 +4,7 @@
 
 import argparse
 import base64
-from epidata_common.data_types import Waveform
+from data_types import Waveform
 from datetime import datetime
 import json
 import numpy as np

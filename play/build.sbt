@@ -4,12 +4,17 @@ import scalariform.formatter.preferences._
 name := "epidata-play"
 
 resolvers += "Typesafe repository" at "https://repo.typesafe.com/typesafe/releases/"
+resolvers ++= Seq(
+  "Typesafe repository" at "https://repo.typesafe.com/typesafe/releases/",
+  Resolver.jcenterRepo
+)
 
 routesGenerator := InjectedRoutesGenerator
 
 libraryDependencies ++= Seq(
   guice,
   ehcache,
+  "org.xerial" % "sqlite-jdbc" % "3.30.1",
   "com.datastax.cassandra" % "cassandra-driver-core" % "3.9.0",
   "de.kaufhof" %% "pillar" % "4.1.2",
   "com.typesafe.play" %% "play-mailer" % "6.0.1",
@@ -42,8 +47,10 @@ lazy val autopep8 = taskKey[Unit]("autopep8")
 
 //TwirlKeys.templateImports += "org.example._"
 
-ScalariformKeys.preferences := ScalariformKeys.preferences.value
-  .setPreference(DoubleIndentConstructorArguments, true)
-  .setPreference(AlignParameters, false)
+//ScalariformKeys.preferences := ScalariformKeys.preferences.value
+//  .setPreference(DoubleIndentConstructorArguments, true)
+//  .setPreference(AlignParameters, false)
 
 scalaVersion := "2.12.11"
+
+libraryDependencies += "ru.dgis" %% "reactive-zmq" % "0.4.0"

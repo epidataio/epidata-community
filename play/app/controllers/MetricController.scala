@@ -10,7 +10,7 @@ import securesocial.core.{ IdentityProvider, RuntimeEnvironment, SecureSocial }
 
 @Singleton
 class MetricController @Inject() (val cc: ControllerComponents)(
-    override implicit val env: RuntimeEnvironment) extends AbstractController(cc)
+  override implicit val env: RuntimeEnvironment) extends AbstractController(cc)
   with SecureSocial with I18nSupport {
 
   override def messagesApi = env.messagesApi

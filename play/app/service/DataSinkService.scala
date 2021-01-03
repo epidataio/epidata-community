@@ -24,9 +24,9 @@ import org.apache.kafka.clients.consumer.{ ConsumerConfig, KafkaConsumer, Consum
 import scala.collection.JavaConversions._
 
 class DataSinkService(
-    val brokers: String,
-    val groupId: String,
-    val topic: String) extends Logging {
+  val brokers: String,
+  val groupId: String,
+  val topic: String) extends Logging {
 
   val props = createConsumerConfig(brokers, groupId)
   val consumer = new KafkaConsumer[String, String](props)

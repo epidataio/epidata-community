@@ -7,6 +7,7 @@ package com.epidata.lib.models
 import java.sql.Timestamp
 
 import com.datastax.driver.core.Row
+import java.sql.ResultSet
 import com.epidata.lib.models.util.{ Datatype, TypeUtils, JsonHelpers, Binary }
 import java.util.{ Date, Map => JMap, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList }
 import java.util.Date
@@ -82,6 +83,10 @@ object AutomatedTest {
   def rowToAutomatedTest(row: Row): AutomatedTest = Measurement.rowToMeasurement(row)
   def rowToAutomatedTestCleansed(row: Row): AutomatedTestCleansed = MeasurementCleansed.rowToMeasurementCleansed(row)
   def rowToAutomatedTestSummary(row: Row): AutomatedTestSummary = MeasurementSummary.rowToMeasurementSummary(row)
+
+  def rowToAutomatedTest(row: ResultSet): AutomatedTest = Measurement.rowToMeasurement(row)
+  def rowToAutomatedTestCleansed(row: ResultSet): AutomatedTestCleansed = MeasurementCleansed.rowToMeasurementCleansed(row)
+  def rowToAutomatedTestSummary(row: ResultSet): AutomatedTestSummary = MeasurementSummary.rowToMeasurementSummary(row)
 
   implicit def measurementToAutomatedTest(measurement: Measurement): AutomatedTest =
     AutomatedTest(
@@ -162,6 +167,23 @@ object AutomatedTest {
 
   // JSON Helpers
   def rowToJLinkedHashMap(row: Row, tableName: String): JLinkedHashMap[String, Object] = {
+    tableName match {
+      case MeasurementSummary.DBTableName =>
+        val m = rowToAutomatedTestSummary(row)
+        toJLinkedHashMap(m)
+
+      case com.epidata.lib.models.MeasurementCleansed.DBTableName =>
+        val m = rowToAutomatedTestCleansed(row)
+        toJLinkedHashMap(m)
+
+      case com.epidata.lib.models.Measurement.DBTableName =>
+        val m = rowToAutomatedTest(row)
+        toJLinkedHashMap(m)
+    }
+  }
+
+  // JSON Helpers
+  def rowToJLinkedHashMap(row: ResultSet, tableName: String): JLinkedHashMap[String, Object] = {
     tableName match {
       case MeasurementSummary.DBTableName =>
         val m = rowToAutomatedTestSummary(row)

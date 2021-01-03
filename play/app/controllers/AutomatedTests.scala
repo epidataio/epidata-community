@@ -7,7 +7,7 @@ package controllers
 import java.util.Date
 import com.epidata.lib.models.MeasurementCleansed
 import com.epidata.lib.models.util.JsonHelpers
-import models.{ MeasurementService, AutomatedTest }
+import models.{ MeasurementService, AutomatedTest, SQLiteMeasurementService }
 import play.api.libs.json.JsError
 import play.api.libs.json.Json
 import play.api.mvc._
@@ -18,18 +18,19 @@ import util.Ordering
 import javax.inject._
 import play.api.i18n.{ I18nSupport, Messages, Lang }
 import securesocial.core.{ IdentityProvider, RuntimeEnvironment, SecureSocial }
+import service.Configs
 
 /** Controller for automated test data. */
 @Singleton
 class AutomatedTests @Inject() (val cc: ControllerComponents)(
-    override implicit val env: RuntimeEnvironment) extends AbstractController(cc)
+  override implicit val env: RuntimeEnvironment) extends AbstractController(cc)
   with SecureSocial {
 
   override def messagesApi = env.messagesApi
 
   def create = SecuredAction(parse.json) { implicit request =>
     val automatedTests = com.epidata.lib.models.AutomatedTest.jsonToAutomatedTests(request.body.toString)
-    AutomatedTest.insertList(automatedTests.flatMap(x => x))
+    AutomatedTest.insertList(automatedTests.flatMap(x => x), Configs.DBMeas)
 
     val failedIndexes = automatedTests.zipWithIndex.filter(_._1 == None).map(_._2)
     if (failedIndexes.isEmpty)
@@ -82,17 +83,32 @@ class AutomatedTests @Inject() (val cc: ControllerComponents)(
     batch: String = "",
     ordering: Ordering.Value = Ordering.Unspecified,
     table: String = MeasurementCleansed.DBTableName) = SecuredAction {
-    Ok(MeasurementService.query(
-      company,
-      site,
-      station,
-      sensor,
-      beginTime,
-      endTime,
-      size,
-      batch,
-      ordering,
-      table,
-      com.epidata.lib.models.AutomatedTest.NAME))
+    if (Configs.DBMeas) {
+      Ok(MeasurementService.query(
+        company,
+        site,
+        station,
+        sensor,
+        beginTime,
+        endTime,
+        size,
+        batch,
+        ordering,
+        table,
+        com.epidata.lib.models.AutomatedTest.NAME))
+    } else {
+      Ok(SQLiteMeasurementService.query(
+        company,
+        site,
+        station,
+        sensor,
+        beginTime,
+        endTime,
+        size,
+        batch,
+        ordering,
+        table,
+        com.epidata.lib.models.AutomatedTest.NAME))
+    }
   }
 }
