@@ -19,9 +19,9 @@ import org.apache.spark.streaming.kafka010.ConsumerStrategies.Subscribe
 import org.apache.spark.streaming.{ Time, StreamingContext, Duration }
 
 class EpidataStreamingContext(
-    val epidataContext: EpidataContext,
-    val batchDuration: Duration,
-    val topics: String) {
+  val epidataContext: EpidataContext,
+  val batchDuration: Duration,
+  val topics: String) {
 
   val topicsSet = topics.split(",").toSet
 

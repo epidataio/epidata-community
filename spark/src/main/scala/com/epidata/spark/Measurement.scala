@@ -13,23 +13,23 @@ import org.apache.spark.MeasurementValue
  * differences from BaseMeasurement allow for integration with Spark SQL.
  */
 case class Measurement(
-    customer: String,
-    customer_site: String,
-    collection: String,
-    dataset: String,
-    ts: Timestamp,
-    key1: Option[String],
-    key2: Option[String],
-    key3: Option[String],
-    meas_datatype: Option[String],
-    meas_value: MeasurementValue,
-    meas_unit: Option[String],
-    meas_status: Option[String],
-    meas_lower_limit: Option[MeasurementValue],
-    meas_upper_limit: Option[MeasurementValue],
-    meas_description: Option[String],
-    val1: Option[String],
-    val2: Option[String])
+  customer: String,
+  customer_site: String,
+  collection: String,
+  dataset: String,
+  ts: Timestamp,
+  key1: Option[String],
+  key2: Option[String],
+  key3: Option[String],
+  meas_datatype: Option[String],
+  meas_value: MeasurementValue,
+  meas_unit: Option[String],
+  meas_status: Option[String],
+  meas_lower_limit: Option[MeasurementValue],
+  meas_upper_limit: Option[MeasurementValue],
+  meas_description: Option[String],
+  val1: Option[String],
+  val2: Option[String])
 
 object Measurement {
 
@@ -70,31 +70,31 @@ object Measurement {
  * the database's measurements table.
  */
 case class MeasurementKey(
-    customer: String,
-    customer_site: String,
-    collection: String,
-    dataset: String)
+  customer: String,
+  customer_site: String,
+  collection: String,
+  dataset: String)
 
 case class MeasurementCleansed(
-    customer: String,
-    customer_site: String,
-    collection: String,
-    dataset: String,
-    ts: Timestamp,
-    key1: Option[String],
-    key2: Option[String],
-    key3: Option[String],
-    meas_datatype: Option[String],
-    meas_value: MeasurementValue,
-    meas_unit: Option[String],
-    meas_status: Option[String],
-    meas_flag: Option[String],
-    meas_method: Option[String],
-    meas_lower_limit: Option[MeasurementValue],
-    meas_upper_limit: Option[MeasurementValue],
-    meas_description: Option[String],
-    val1: Option[String],
-    val2: Option[String])
+  customer: String,
+  customer_site: String,
+  collection: String,
+  dataset: String,
+  ts: Timestamp,
+  key1: Option[String],
+  key2: Option[String],
+  key3: Option[String],
+  meas_datatype: Option[String],
+  meas_value: MeasurementValue,
+  meas_unit: Option[String],
+  meas_status: Option[String],
+  meas_flag: Option[String],
+  meas_method: Option[String],
+  meas_lower_limit: Option[MeasurementValue],
+  meas_upper_limit: Option[MeasurementValue],
+  meas_description: Option[String],
+  val1: Option[String],
+  val2: Option[String])
 
 object MeasurementCleansed {
 

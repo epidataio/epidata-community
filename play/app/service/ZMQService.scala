@@ -3,50 +3,56 @@
 */
 
 package service
+import java.util.concurrent.Executors
 
-import controllers.Assets.JSON
-import org.zeromq.ZMQ
+import com.fasterxml.jackson.databind.JsonMappingException
+import play.api.Configuration
 
 object ZMQService {
-  var pushSocket: ZMQ.Socket = _
-  var pubSocket: ZMQ.Socket = _
-  var context: ZMQ.Context = _
 
-  def init(pushPort: String, pubPort: String): ZMQService.type = {
-    //creating ZMQ context which will be used for PUB and PUSH
-    context = ZMQ.context(1)
-    //using context to create PUSH and PUB models and binding them to sockets
-    pushSocket = context.socket(ZMQ.PUSH)
-    pushSocket.connect("tcp://127.0.0.1:" + pushPort)
-
-    pubSocket = context.socket(ZMQ.PUB)
-    pubSocket.bind("tcp://127.0.0.1:" + pubPort)
-    this
-  }
-
-  def push(key: String, value: String): Unit = {
+  def startThreads(config: Configuration): Unit = {
+    //    /**
+    //     * ZMQ Stream as a thread
+    //     */
+    //    val stream = ZMQStream.init((config.getOptional[Int]("queue.servers").get + 1).toString, (config.getOptional[Int]("queue.servers").get + 1).toString)
+    //    Executors.newSingleThreadExecutor.execute(new Runnable {
+    //      override def run(): Unit = {
+    //
+    //        while (true) {
+    //          stream.receive()
+    //          stream.publish(ZMQInit.streamQueue.dequeue())
+    //        }
+    //      }
+    //    })
     /**
-     * Below we are setting a topic and pushing the data
+     * ZMQ DataSink as a thread
      */
-    val message: String = JSON.format(Message(key, value))
-    pushSocket.send(message.getBytes(), 0)
-    println("Pushed: " + message)
+    val sink = ZMQDataSink.init(config.getOptional[Int]("queue.servers").get.toString, (config.getOptional[Int]("queue.servers").get + 2).toString)
+    Executors.newSingleThreadExecutor.execute(new Runnable {
+      override def run(): Unit = {
+
+        while (true) {
+          val rawData: Message = sink.pull()
+          val processedData: Message = sink.sub()
+          try {
+            Configs.measurementClass match {
+              case com.epidata.lib.models.AutomatedTest.NAME => {
+                models.AutomatedTest.insertRecordFromZMQ(rawData.value)
+                models.AutomatedTest.insertRecordFromZMQ(processedData.value)
+              }
+              case com.epidata.lib.models.SensorMeasurement.NAME => {
+                models.SensorMeasurement.insertRecordFromZMQ(rawData.value)
+                models.SensorMeasurement.insertRecordFromZMQ(processedData.value)
+              }
+              case _ =>
+            }
+          } catch {
+            case e: JsonMappingException => throw new Exception(e.getMessage)
+            case _: Throwable => throw new Exception("Error while insert data to cassandra from data sink service")
+          }
+        }
+      }
+    })
   }
 
-  def pub(key: String, value: String): Unit = {
-    /**
-     * Below we are setting a topic and publishing the data
-     */
-    //setting the topic as measurements
-    pubSocket.sendMore("measurements")
-    //sending the message
-    val message: String = JSON.format(Message(key, value))
-    pubSocket.send(message.getBytes(ZMQ.CHARSET), 0)
-    println("Published: " + message)
-  }
-
-  def end(): Unit = {
-    pushSocket.close()
-    pubSocket.close()
-  }
 }
