@@ -1,7 +1,9 @@
-import com.typesafe.sbt.SbtScalariform.ScalariformKeys
-import scalariform.formatter.preferences._
+//import com.typesafe.sbt.SbtScalariform.ScalariformKeys
+//import scalariform.formatter.preferences._
 
 name := "epidata-spark"
+
+resolvers ++= Seq(Resolver.jcenterRepo)
 
 scalaVersion := "2.12.11"
 
@@ -19,18 +21,21 @@ libraryDependencies ++= Seq(
   "org.apache.cassandra" % "cassandra-all" % "3.11.6"
 ).map(_.exclude("org.slf4j", "log4j-over-slf4j"))  // Excluded to allow for Cassandra to run embedded
 
-assemblyMergeStrategy in assembly := {
-  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
-  case x => MergeStrategy.first
-}
+//assemblyMergeStrategy in assembly := {
+//  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+//  case x => MergeStrategy.first
+//}
 
 
-test in assembly := {}
+//test in assembly := {}
 
 Keys.fork in Test := true
 
-ScalariformKeys.preferences := ScalariformKeys.preferences.value
-  .setPreference(DoubleIndentConstructorArguments, true)
-  .setPreference(AlignParameters, false)
+//ScalariformKeys.preferences := ScalariformKeys.preferences.value
+//  .setPreference(DoubleIndentConstructorArguments, true)
+//  .setPreference(AlignParameters, false)
 
 testOptions in Test += Tests.Argument("-oF")
+
+// ZMQ
+libraryDependencies += "ru.dgis" %% "reactive-zmq" % "0.4.0"

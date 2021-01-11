@@ -31,18 +31,16 @@ object ZMQStream {
     ZMQInit.streamQueue.enqueue(new Message(messageObject.get("topic"), messageObject.get("key"), messageObject.get("value")))
   }
 
-  def processAndPublish(): Unit = {
-    val processedMessage: Message = epidataLiteStreaming(ZMQInit.streamQueue.dequeue)
+  def publish(processedMessage: Message): Unit = {
+    //val processedMessage: Message = epidataLiteStreamingContext(ZMQInit.streamQueue.dequeue)
     if (processedMessage.topic == "passBack") {
       forwardSocket.sendMore("passBack")
       val msg: String = JSON.format(processedMessage)
       forwardSocket.send(msg.getBytes(), 0)
-      println(msg)
     } else {
       forwardSocket.sendMore("cleansed")
       val msg: String = JSON.format(processedMessage)
       forwardSocket.send(msg.getBytes(), 0)
-      println(msg)
     }
   }
 }

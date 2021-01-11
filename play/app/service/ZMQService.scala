@@ -11,18 +11,19 @@ import play.api.Configuration
 object ZMQService {
 
   def startThreads(config: Configuration): Unit = {
-    /**
-     * ZMQ Stream as a thread
-     */
-    val stream = ZMQStream.init((config.getOptional[Int]("queue.servers").get + 1).toString, (config.getOptional[Int]("queue.servers").get + 1).toString)
-    Executors.newSingleThreadExecutor.execute(new Runnable {
-      override def run(): Unit = {
-
-        while (true) {
-          stream.receive()
-        }
-      }
-    })
+//    /**
+//     * ZMQ Stream as a thread
+//     */
+//    val stream = ZMQStream.init((config.getOptional[Int]("queue.servers").get + 1).toString, (config.getOptional[Int]("queue.servers").get + 1).toString)
+//    Executors.newSingleThreadExecutor.execute(new Runnable {
+//      override def run(): Unit = {
+//
+//        while (true) {
+//          stream.receive()
+//          stream.publish(ZMQInit.streamQueue.dequeue())
+//        }
+//      }
+//    })
     /**
      * ZMQ DataSink as a thread
      */

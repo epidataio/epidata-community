@@ -16,14 +16,14 @@ object IMR {
 
   // Row additions for IMR result data.
   private case class IMRResultElement(
-      I: Double,
-      I_mean: Double,
-      I_LCL: Double,
-      I_UCL: Double,
-      MR: Double,
-      MR_mean: Double,
-      MR_LCL: Double,
-      MR_UCL: Double)
+    I: Double,
+    I_mean: Double,
+    I_LCL: Double,
+    I_UCL: Double,
+    MR: Double,
+    MR_mean: Double,
+    MR_LCL: Double,
+    MR_UCL: Double)
 
   /**
    * Perform IMR analysis on the supplied measurement Rows.
