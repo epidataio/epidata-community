@@ -12,7 +12,7 @@ object ZMQDataSink {
   var subSocket: ZMQ.Socket = _
   var forwardMessage: ZMQ.Socket = _
 
-  def init(pushPort: String, forwardPort: String): ZMQDataSink.type = {
+  def init(pushPort: String, pullPort: String): ZMQDataSink.type = {
     //creating ZMQ context which will be used for PUB and PUSH
     val context = ZMQ.context(1)
 
@@ -21,8 +21,10 @@ object ZMQDataSink {
     pullSocket.bind("tcp://127.0.0.1:" + pushPort)
 
     subSocket = context.socket(ZMQ.SUB)
-    subSocket.connect("tcp://127.0.0.1:" + forwardPort)
-    subSocket.subscribe("cleansed".getBytes(ZMQ.CHARSET))
+    subSocket.connect("tcp://127.0.0.1:" + pullPort)
+    subSocket.subscribe("measurements_substituted".getBytes(ZMQ.CHARSET))
+    subSocket.subscribe("measurement_cleansed".getBytes(ZMQ.CHARSET))
+    subSocket.subscribe("measurements_summary".getBytes(ZMQ.CHARSET))
     this
   }
 

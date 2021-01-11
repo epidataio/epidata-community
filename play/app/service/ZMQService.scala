@@ -27,7 +27,7 @@ object ZMQService {
     /**
      * ZMQ DataSink as a thread
      */
-    val sink = ZMQDataSink.init(config.getOptional[Int]("queue.servers").get.toString, (config.getOptional[Int]("queue.servers").get + 1).toString)
+    val sink = ZMQDataSink.init(config.getOptional[Int]("queue.servers").get.toString, (config.getOptional[Int]("queue.servers").get + 2).toString)
     Executors.newSingleThreadExecutor.execute(new Runnable {
       override def run(): Unit = {
 

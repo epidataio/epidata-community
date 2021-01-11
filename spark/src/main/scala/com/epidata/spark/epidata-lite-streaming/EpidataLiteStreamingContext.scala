@@ -4,13 +4,12 @@ import java.util.concurrent.Executors
 import org.zeromq.ZMQ
 import com.epidata.spark.ops.Transformation
 
-import scala.collection.BitSet.empty
 import scala.collection.convert.ImplicitConversions.`list asScalaBuffer`
 
 case class Message(topic: Object, key: Object, value: Object)
 
 class EpidataLiteStreamingContext {
-  var port: Integer = 5550
+  var port: Integer = 5551
   val receiver: StreamingNode.type = _
   val processors: util.ArrayList[StreamingNode.type] = _
   var runStream: Boolean = _
@@ -43,9 +42,10 @@ class EpidataLiteStreamingContext {
   def createStream(sourceTopic: String, destinationTopic: String, operation: Transformation): Unit = {
     if (processors.size == 0) {
       processors.add(new StreamingNode(context, port.toString, (port + 2).toString, sourceTopic, destinationTopic, operation))
+      port += 1
     }
     else if (destinationTopic.equals("measurements_substituted") || destinationTopic.equals("measurement_cleansed") || destinationTopic.equals("measurements_summary")) {
-      processors.add(new StreamingNode(context, port.toString, (5551).toString, sourceTopic, destinationTopic, operation))
+      processors.add(new StreamingNode(context, port.toString, (5552).toString, sourceTopic, destinationTopic, operation))
     }
     else {
       processors.add(new StreamingNode(context, port.toString, (port + 1).toString, sourceTopic, destinationTopic, operation))
