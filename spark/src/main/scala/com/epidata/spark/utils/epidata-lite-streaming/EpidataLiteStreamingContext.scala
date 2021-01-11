@@ -3,7 +3,6 @@ import java.util.concurrent.Executors
 
 import org.zeromq.ZMQ
 import com.epidata.spark.ops.Transformation
-import org.apache.cassandra.db.transform.Transformation
 
 import scala.collection.BitSet.empty
 import scala.collection.convert.ImplicitConversions.`list asScalaBuffer`
@@ -43,13 +42,13 @@ class EpidataLiteStreamingContext {
 
   def createStream(sourceTopic: String, destinationTopic: String, operation: Transformation): Unit = {
     if (processors.size == 0) {
-      processors.add(new StreamingNode(context, port.toString, (port + 2).toString, sourceTopic, destinationTopic, Transformation))
+      processors.add(new StreamingNode(context, port.toString, (port + 2).toString, sourceTopic, destinationTopic, operation))
     }
     else if (destinationTopic.equals("measurements_substituted") || destinationTopic.equals("measurement_cleansed") || destinationTopic.equals("measurements_summary")) {
-      processors.add(new StreamingNode(context, port.toString, (5551).toString, sourceTopic, destinationTopic, Transformation))
+      processors.add(new StreamingNode(context, port.toString, (5551).toString, sourceTopic, destinationTopic, operation))
     }
     else {
-      processors.add(new StreamingNode(context, port.toString, (port + 1).toString, sourceTopic, destinationTopic, Transformation))
+      processors.add(new StreamingNode(context, port.toString, (port + 1).toString, sourceTopic, destinationTopic, operation))
     }
     port += 1
   }
