@@ -14,7 +14,12 @@ object StreamingNode {
   var publishTopic: String = _
   var transformation: Transformation = _
 
-  def init(context: ZMQ.context, receivePort: String, publishPort: String, receiveTopic: String, publishTopic: String, transformation: Transformation): StreamingNode.type = {
+  def init(context: ZMQ.context,
+           receivePort: String,
+           publishPort: String,
+           receiveTopic: String,
+           publishTopic: String,
+           transformation: Transformation): StreamingNode.type = {
     subSocket = context.socket(ZMQ.SUB)
     subSocket.connect("tcp://127.0.0.1:" + receivePort)
     subSocket.subscribe(receiveTopic.getBytes(ZMQ.CHARSET))
@@ -28,7 +33,12 @@ object StreamingNode {
     this
   }
 
-  def init(context: ZMQ.context, receivePort: String, publishPort: String, receiveTopic: Array[String], publishTopic: String, transformation: Transformation): StreamingNode.type = {
+  def init(context: ZMQ.context,
+           receivePort: String,
+           publishPort: String,
+           receiveTopic: Array[String],
+           publishTopic: String,
+           transformation: Transformation): StreamingNode.type = {
     subSocket = context.socket(ZMQ.SUB)
     subSocket.connect("tcp://127.0.0.1:" + receivePort)
     for (topic <- receiveTopic) {
@@ -44,7 +54,12 @@ object StreamingNode {
     this
   }
 
-  def init(context: ZMQ.context, receivePort: String, publishPort: String, receiveTopic: Array[String], publishTopic: String, transformation: Transformation): StreamingNode.type = {
+  def init(context: ZMQ.context,
+           receivePort: String,
+           publishPort: String,
+           receiveTopic: Array[String],
+           publishTopic: String,
+           transformation: Transformation): StreamingNode.type = {
     subSocket = context.socket(ZMQ.SUB)
     subSocket.connect("tcp://127.0.0.1:" + receivePort)
     for (topic <- receiveTopic) {
@@ -60,7 +75,12 @@ object StreamingNode {
     this
   }
 
-  def init(context: ZMQ.context, receivePort: String, publishPort: String, receiveTopic: Array[String], publishTopic: String, transformation: util.ArrayList[Transformation]): StreamingNode.type = {
+  def init(context: ZMQ.context,
+           receivePort: String,
+           publishPort: String,
+           receiveTopic: Array[String],
+           publishTopic: String,
+           transformation: util.ArrayList[Transformation]): StreamingNode.type = {
     subSocket = context.socket(ZMQ.SUB)
     subSocket.connect("tcp://127.0.0.1:" + receivePort)
     for (topic <- receiveTopic) {

@@ -20,18 +20,18 @@ object ZMQInit {
      * ZMQService executes ZMQStream and ZMQDataSink as threads
      */
     _ZMQProducer = ZMQProducer.init(config.getOptional[Int]("queue.servers").get.toString, (config.getOptional[Int]("queue.servers").get + 1).toString)
-    _ZMQService.startThreads(config)
+    //_ZMQService.startThreads(config)
 
-    _streamQueue = mutable.Queue[Message]()
+    //_streamQueue = mutable.Queue[Message]()
   }
 
   private var _ZMQProducer: ZMQProducer.type = _
-  private var _ZMQService: ZMQService.type = _
+  //private var _ZMQService: ZMQService.type = _
 
-  var _streamQueue: mutable.Queue[Message] = _
+  //var _streamQueue: mutable.Queue[Message] = _
 
   def ZMQProducer = _ZMQProducer
-  def ZMQSinkService = _ZMQService
+  //def ZMQSinkService = _ZMQService
 
-  def streamQueue = _streamQueue
+  //def streamQueue = _streamQueue
 }

@@ -3,19 +3,22 @@ import java.util.concurrent.Executors
 
 import org.zeromq.ZMQ
 import com.epidata.spark.ops.Transformation
+import org.apache.cassandra.db.transform.Transformation
 
+import scala.collection.BitSet.empty
 import scala.collection.convert.ImplicitConversions.`list asScalaBuffer`
 
 case class Message(topic: Object, key: Object, value: Object)
 
 class EpidataLiteStreamingContext {
-  val port: Integer = 5550
+  var port: Integer = 5550
   val receiver: StreamingNode.type = _
   val processors: util.ArrayList[StreamingNode.type] = _
   var runStream: Boolean = _
+  val context: ZMQ.context = _
 
   def init(): Unit = { //ec.start_streaming()
-    val context = ZMQ.context(1)
+    context = ZMQ.context(1)
     runStream = true
   }
 
@@ -38,17 +41,17 @@ class EpidataLiteStreamingContext {
 //    processors.add(new StreamingNode(context, port, port, ))
 //  }
 
-  def createStream(sourceTopic: String, destinationTopic: String, operation: Transformation): Unit {
+  def createStream(sourceTopic: String, destinationTopic: String, operation: Transformation): Unit = {
     if (processors.size == 0) {
-      processors.add(new StreamingNode(context, port.toString, (port+2).toString, sourceTopic, destinationTopic, Transformation))
+      processors.add(new StreamingNode(context, port.toString, (port + 2).toString, sourceTopic, destinationTopic, Transformation))
     }
     else if (destinationTopic.equals("measurements_substituted") || destinationTopic.equals("measurement_cleansed") || destinationTopic.equals("measurements_summary")) {
       processors.add(new StreamingNode(context, port.toString, (5551).toString, sourceTopic, destinationTopic, Transformation))
     }
     else {
-    processors.add(new StreamingNode(context, port.toString, (port+1).toString, sourceTopic, destinationTopic, Transformation))
+      processors.add(new StreamingNode(context, port.toString, (port + 1).toString, sourceTopic, destinationTopic, Transformation))
     }
-    port++
+    port += 1
   }
 
   def startStream(): Unit = {
