@@ -4,7 +4,8 @@
 
 package service
 
-import org.json.simple.JSONObject
+import controllers.Assets.JSON
+import play.api.libs.json.Json
 import org.zeromq.ZMQ
 
 object ZMQDataSink {
@@ -28,15 +29,21 @@ object ZMQDataSink {
     this
   }
 
-  def pull() = {
-    val messageObject = new JSONObject(pullSocket.recvStr())
-    new Message(messageObject.get("topic"), messageObject.get("key"), messageObject.get("value"))
+  def pull(): Map[String, String] = {
+    //val messageObject = new JSONObject(pullSocket.recvStr())
+    //JSON.parse(pullSocket.recvStr()).collect{case map: Map[String, Any] => (map("topic"), map("key"), map("value"))}.get
+    //JSON.toMap.asInstanceOf[Map[String, Int]]
+    JSON.asInstanceOf
+    //new Message(messageObject.get("topic"), messageObject.get("key"), messageObject.get("value"))
+    (Json.parse(pullSocket.recvStr()) \ "key_value").as[Map[String, String]]
   }
 
   def sub() = {
     val topic = subSocket.recvStr()
-    val messageObject = new JSONObject(subSocket.recvStr())
-    new Message(messageObject.get("topic"), messageObject.get("key"), messageObject.get("value"))
+    //val messageObject = new JSONObject(subSocket.recvStr())
+    //JSON.parseFull(pullSocket.recvStr()).collect{case map: Map[String, Any] => (map("topic"), map("key"), map("value"))}.get
+    //new Message(messageObject.get("topic"), messageObject.get("key"), messageObject.get("value"))
+    (Json.parse(subSocket.recvStr()) \ "key_value").as[Map[String, String]]
   }
 
   def end(): Unit = {

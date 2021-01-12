@@ -43,12 +43,12 @@ class EpidataLiteStreamingContext {
 
   def createStream(sourceTopic: String, destinationTopic: String, operation: Transformation): Unit = {
     if (processors.size == 0) {
-      processors :+= new StreamingNode(context, port.toString, (port + 2).toString, sourceTopic, destinationTopic, operation)
+      processors :+= StreamingNode.init(context, port.toString, (port + 2).toString, sourceTopic, destinationTopic, operation)
       port += 1
     } else if (destinationTopic.equals("measurements_substituted") || destinationTopic.equals("measurement_cleansed") || destinationTopic.equals("measurements_summary")) {
-      processors :+= new StreamingNode(context, port.toString, "5552", sourceTopic, destinationTopic, operation)
+      processors :+= StreamingNode.init(context, port.toString, "5552", sourceTopic, destinationTopic, operation)
     } else {
-      processors :+= new StreamingNode(context, port.toString, (port + 1).toString, sourceTopic, destinationTopic, operation)
+      processors :+= StreamingNode.init(context, port.toString, (port + 1).toString, sourceTopic, destinationTopic, operation)
     }
     port += 1
   }

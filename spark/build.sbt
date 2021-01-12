@@ -1,13 +1,15 @@
 //import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 //import scalariform.formatter.preferences._
 
+
 name := "epidata-spark"
 
 resolvers ++= Seq(Resolver.jcenterRepo)
 
 scalaVersion := "2.12.11"
 
-libraryDependencies ++= Seq(
+libraryDependencies ++= Seq
+"org.reactivemongo" %% "reactivemongo-play-json" % "0.20.13-play27",
   "com.datastax.spark" %% "spark-cassandra-connector" % "2.5.1", //2.4.3 if compilation issue with spark "object creation impossible"
   "com.datastax.cassandra" % "cassandra-driver-core" % "3.9.0",
   "org.apache.spark" %% "spark-core" % "2.4.6",

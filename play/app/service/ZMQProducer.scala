@@ -28,7 +28,8 @@ object ZMQProducer {
     /**
      * Encapsulating key and value as Message object and pushing data to DataSink
      */
-    val message: String = JSON.format(Message("passBack", key, value))
+    //val message: String = JSON.format(Message("passBack", key, value))
+    val message: String = JSON.format(Map("topic" -> "passBack", "key" -> key, "value" -> value))
     pushSocket.send(message.getBytes(ZMQ.CHARSET), 0)
     println("Pushed: " + message)
   }
@@ -40,7 +41,8 @@ object ZMQProducer {
     //setting the topic as measurements
     pubSocket.sendMore("measurements")
     //sending the message
-    val message: String = JSON.format(Message("passBack", key, value))
+    //val message: String = JSON.format(Message("passBack", key, value))
+    val message: String = JSON.format(Map("topic" -> "passBack", "key" -> key, "value" -> value))
     pubSocket.send(message.getBytes(ZMQ.CHARSET), 0)
     println("Published: " + message)
   }
