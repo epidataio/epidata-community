@@ -6,6 +6,7 @@ name := "epidata-spark"
 scalaVersion := "2.12.11"
 
 libraryDependencies ++= Seq(
+  "ru.dgis" %% "reactive-zmq" % "0.4.0"
   "org.xerial" % "sqlite-jdbc" % "3.30.1",
   "com.datastax.spark" %% "spark-cassandra-connector" % "2.4.3",
   "com.datastax.cassandra" % "cassandra-driver-core" % "3.9.0",
