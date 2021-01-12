@@ -5,7 +5,6 @@
 package com.epidata.lib.models.util
 
 import com.datastax.driver.core.Row
-//import org.apache.spark.sql.{Row => sRow}
 import java.util.Date
 import java.lang.{ Double => JDouble, Long => JLong }
 

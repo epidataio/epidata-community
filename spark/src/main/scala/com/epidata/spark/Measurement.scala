@@ -1,7 +1,3 @@
-/*
- * Copyright (c) 2015-2020 EpiData, Inc.
-*/
-
 package com.epidata.spark
 
 import com.datastax.driver.core.{ Row => CassandraRow }
@@ -64,9 +60,8 @@ object Measurement {
       base.val1,
       base.val2)
 
-  implicit def rowToMeasurement(row: CassandraRow): Measurement = {
+  implicit def rowToMeasurement(row: CassandraRow): Measurement =
     baseMeasurementToMeasurement(row)
-  }
 }
 
 /**

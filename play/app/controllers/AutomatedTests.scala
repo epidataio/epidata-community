@@ -23,7 +23,7 @@ import service.Configs
 /** Controller for automated test data. */
 @Singleton
 class AutomatedTests @Inject() (val cc: ControllerComponents)(
-    override implicit val env: RuntimeEnvironment) extends AbstractController(cc)
+  override implicit val env: RuntimeEnvironment) extends AbstractController(cc)
   with SecureSocial {
 
   override def messagesApi = env.messagesApi
