@@ -5,13 +5,17 @@
 package com.epidata.lib.models
 
 import com.datastax.driver.core.Row
+
 import java.sql.ResultSet
 import com.epidata.lib.models.util.Binary
+
 import java.nio.ByteBuffer
 import java.util.Date
 import java.lang.{ Double => JDouble, Long => JLong }
 import java.util.{ Date, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList }
 import com.epidata.lib.models.util.TypeUtils._
+
+import scala.collection.mutable.Set
 
 /**
  * Model representing a customer measurement stored in the database. Optional
@@ -246,5 +250,27 @@ object Measurement {
       case AutomatedTest.NAME => AutomatedTest.rowToJLinkedHashMap(row, tableName)
       case _ => new JLinkedHashMap[String, Object]()
     }
+  }
+
+  def getColumns(): Set[String] = {
+    var col_set = Set(
+      "customer",
+      "customer_site",
+      "collection",
+      "dataset",
+      "ts",
+      "key1",
+      "key2",
+      "key3",
+      "meas_datatype",
+      "meas_value",
+      "meas_unit",
+      "meas_status",
+      "meas_lower_limit",
+      "meas_upper_limit",
+      "meas_description",
+      "val1",
+      "val2")
+    col_set
   }
 }

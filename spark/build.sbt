@@ -1,16 +1,14 @@
-//import com.typesafe.sbt.SbtScalariform.ScalariformKeys
-//import scalariform.formatter.preferences._
-
+import com.typesafe.sbt.SbtScalariform.ScalariformKeys
+import scalariform.formatter.preferences._
 
 name := "epidata-spark"
 
-resolvers ++= Seq(Resolver.jcenterRepo)
-
 scalaVersion := "2.12.11"
 
-libraryDependencies ++= Seq
-"org.reactivemongo" %% "reactivemongo-play-json" % "0.20.13-play27",
-  "com.datastax.spark" %% "spark-cassandra-connector" % "2.5.1", //2.4.3 if compilation issue with spark "object creation impossible"
+libraryDependencies ++= Seq(
+  "ru.dgis" %% "reactive-zmq" % "0.4.0"
+  "org.xerial" % "sqlite-jdbc" % "3.30.1",
+  "com.datastax.spark" %% "spark-cassandra-connector" % "2.4.3",
   "com.datastax.cassandra" % "cassandra-driver-core" % "3.9.0",
   "org.apache.spark" %% "spark-core" % "2.4.6",
   "org.apache.spark" %% "spark-sql" % "2.4.6",
@@ -23,21 +21,18 @@ libraryDependencies ++= Seq
   "org.apache.cassandra" % "cassandra-all" % "3.11.6"
 ).map(_.exclude("org.slf4j", "log4j-over-slf4j"))  // Excluded to allow for Cassandra to run embedded
 
-//assemblyMergeStrategy in assembly := {
-//  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
-//  case x => MergeStrategy.first
-//}
+assemblyMergeStrategy in assembly := {
+  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+  case x => MergeStrategy.first
+}
 
 
-//test in assembly := {}
+test in assembly := {}
 
 Keys.fork in Test := true
 
-//ScalariformKeys.preferences := ScalariformKeys.preferences.value
-//  .setPreference(DoubleIndentConstructorArguments, true)
-//  .setPreference(AlignParameters, false)
+ScalariformKeys.preferences := ScalariformKeys.preferences.value
+  .setPreference(DoubleIndentConstructorArguments, true)
+  .setPreference(AlignParameters, false)
 
 testOptions in Test += Tests.Argument("-oF")
-
-// ZMQ
-libraryDependencies += "ru.dgis" %% "reactive-zmq" % "0.4.0"

@@ -9,8 +9,8 @@ import org.apache.spark.sql.{ SQLContext, Column, DataFrame }
 import org.apache.spark.sql.functions._
 
 class MeasStatistics(
-  val meas_names: List[String],
-  val method: String) extends Transformation {
+    val meas_names: List[String],
+    val method: String) extends Transformation {
   override def apply(dataFrame: DataFrame, sqlContext: SQLContext): DataFrame = {
 
     method match {
