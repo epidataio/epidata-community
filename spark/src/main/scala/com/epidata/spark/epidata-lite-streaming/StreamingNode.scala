@@ -4,9 +4,13 @@
 package com.epidata.spark
 
 import com.epidata.spark.ops.Transformation
-import org.json.simple.JSONObject
+import play.api.libs.json._
+import play.api.libs.json.Reads._
+import play.api.libs.functional.syntax._
 import reactivemongo.play.json._
 import org.zeromq.ZMQ
+import com.epidata.lib.models.{ Measurement, SensorMeasurement => BaseSensorMeasurement }
+import org.apache.spark.sql.SQLContext
 
 object StreamingNode {
   var subSocket: ZMQ.Socket = _ //add as parameter
@@ -101,17 +105,20 @@ object StreamingNode {
   //  }
 
   def receive(): Unit = {
-    val topic = subSocket.recvStr() //measurements or passBack
+    subSocket.recvStr() //measurements or passBack
     //val messageObject = new JSONObject(subSocket.recvStr()) //JSON formatted Message {"topic":[topic]"key":[key],"value":[message]}
     val messageObject = (Json.parse(subSocket.recvStr()) \ "key_value").as[Map[String, String]]
-    publish(new Message(publishTopic, messageObject("key"), this.transformation.apply(messageObject("value"))))
+    publish(Map(
+      "topic" -> publishTopic,
+      "key" -> messageObject("key"),
+      "value" -> Json.stringify(Json.toJson(this.transformation.apply(BaseSensorMeasurement.jsonToSensorMeasurement(messageObject("value")), Map)))))
   }
 
-  def publish(processedMessage: Message): Unit = {
+  def publish(processedMessage: Map[String, String]): Unit = {
     //val processedMessage: Message = epidataLiteStreamingContext(ZMQInit.streamQueue.dequeue)
     forwardSocket.sendMore(this.publishTopic)
-    val msg: String = JSON.format(processedMessage)
-      //JSON.format(processedMessage)
+    val msg: String = Json.stringify(Json.toJson(processedMessage))
+    //JSON.format(processedMessage)
     forwardSocket.send(msg.getBytes(), 0)
   }
 
