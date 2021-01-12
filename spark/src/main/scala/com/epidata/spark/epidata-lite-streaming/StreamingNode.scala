@@ -6,11 +6,8 @@ package com.epidata.spark
 import com.epidata.spark.ops.Transformation
 import play.api.libs.json._
 import play.api.libs.json.Reads._
-import play.api.libs.functional.syntax._
-import reactivemongo.play.json._
 import org.zeromq.ZMQ
-import com.epidata.lib.models.{ Measurement, SensorMeasurement => BaseSensorMeasurement }
-import org.apache.spark.sql.SQLContext
+import com.epidata.lib.models.{ SensorMeasurement => BaseSensorMeasurement }
 
 object StreamingNode {
   var subSocket: ZMQ.Socket = _ //add as parameter
@@ -105,7 +102,7 @@ object StreamingNode {
   //  }
 
   def receive(): Unit = {
-    subSocket.recvStr() //measurements or passBack
+    val topic = subSocket.recvStr() //measurements or passBack
     //val messageObject = new JSONObject(subSocket.recvStr()) //JSON formatted Message {"topic":[topic]"key":[key],"value":[message]}
     val messageObject = (Json.parse(subSocket.recvStr()) \ "key_value").as[Map[String, String]]
     publish(Map(
