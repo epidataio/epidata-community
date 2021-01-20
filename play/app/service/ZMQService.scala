@@ -32,17 +32,17 @@ object ZMQService {
       override def run(): Unit = {
 
         while (true) {
-          val rawData: Message = sink.pull()
-          val processedData: Message = sink.sub()
+          val rawData: Map[String, String] = sink.pull()
+          val processedData: Map[String, String] = sink.sub()
           try {
             Configs.measurementClass match {
               case com.epidata.lib.models.AutomatedTest.NAME => {
-                models.AutomatedTest.insertRecordFromZMQ(rawData.value)
-                models.AutomatedTest.insertRecordFromZMQ(processedData.value)
+                models.AutomatedTest.insertRecordFromZMQ(rawData("value"))
+                models.AutomatedTest.insertRecordFromZMQ(processedData("value"))
               }
               case com.epidata.lib.models.SensorMeasurement.NAME => {
-                models.SensorMeasurement.insertRecordFromZMQ(rawData.value)
-                models.SensorMeasurement.insertRecordFromZMQ(processedData.value)
+                models.SensorMeasurement.insertRecordFromZMQ(rawData("value"))
+                models.SensorMeasurement.insertRecordFromZMQ(processedData("value"))
               }
               case _ =>
             }

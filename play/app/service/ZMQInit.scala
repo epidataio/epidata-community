@@ -11,6 +11,8 @@ import scala.collection.mutable
 case class Message(topic: Object, key: Object, value: Object)
 
 object ZMQInit {
+  var _ZMQProducer: ZMQProducer.type = _
+  var _ZMQService: ZMQService.type = _
 
   def init(config: Configuration) = {
     /**
@@ -24,14 +26,6 @@ object ZMQInit {
 
     //_streamQueue = mutable.Queue[Message]()
   }
-
-  private var _ZMQProducer: ZMQProducer.type = _
-  private var _ZMQService: ZMQService.type = _
-
   //var _streamQueue: mutable.Queue[Message] = _
-
-  def ZMQProducer = _ZMQProducer
-  def ZMQSinkService = _ZMQService
-
   //def streamQueue = _streamQueue
 }

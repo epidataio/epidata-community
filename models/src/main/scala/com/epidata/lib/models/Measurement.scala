@@ -15,6 +15,7 @@ import java.lang.{ Double => JDouble, Long => JLong }
 import java.util.{ Date, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList }
 import com.epidata.lib.models.util.TypeUtils._
 
+import scala.collection.mutable
 import scala.collection.mutable.Set
 
 /**
@@ -252,8 +253,8 @@ object Measurement {
     }
   }
 
-  def getColumns(): Set[String] = {
-    var col_set = Set(
+  def getColumns: mutable.Set[String] = {
+    val col_set = mutable.Set(
       "customer",
       "customer_site",
       "collection",
@@ -273,4 +274,5 @@ object Measurement {
       "val2")
     col_set
   }
+
 }
