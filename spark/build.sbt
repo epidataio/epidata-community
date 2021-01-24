@@ -7,10 +7,8 @@ resolvers += Resolver.jcenterRepo
 
 scalaVersion := "2.12.11"
 
-// https://mvnrepository.com/artifact/com.typesafe.play/play-json
-libraryDependencies += "com.typesafe.play" %% "play-json" % "2.7.4"
-
 libraryDependencies ++= Seq(
+  "com.typesafe.play" %% "play-json" % "2.7.4",
   "org.xerial" % "sqlite-jdbc" % "3.30.1",
   "com.datastax.spark" %% "spark-cassandra-connector" % "2.4.3",
   "com.datastax.cassandra" % "cassandra-driver-core" % "3.9.0",

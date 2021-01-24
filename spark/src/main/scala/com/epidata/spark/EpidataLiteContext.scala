@@ -1,25 +1,22 @@
 /*
- * Copyright (c) 2015-2020 EpiData, Inc.
+ * Copyright (c) 2015-2021 EpiData, Inc.
 */
 
 package com.epidata.spark
 
-import com.datastax.driver.core.querybuilder.QueryBuilder
-
-import java.sql.{ Connection, DriverManager, ResultSet, SQLException, Statement, Timestamp }
-import java.util.Date
-import com.epidata.lib.models.{ Measurement => BaseMeasurement, MeasurementCleansed => BaseMeasurementCleansed, MeasurementsKeys => BaseMeasurementsKeys }
-import com.epidata.lib.models.{ AutomatedTest => BaseAutomatedTest, SensorMeasurement => BaseSensorMeasurement, MeasurementSummary }
-
+import java.sql.{Connection, DriverManager, ResultSet, SQLException, Statement, Timestamp}
+import com.epidata.lib.models.{Measurement => BaseMeasurement, MeasurementCleansed => BaseMeasurementCleansed, MeasurementsKeys => BaseMeasurementsKeys}
+import com.epidata.lib.models.{MeasurementSummary, AutomatedTest => BaseAutomatedTest, SensorMeasurement => BaseSensorMeasurement}
+import com.typesafe.config.ConfigFactory
+import java.io.File
 /**
- * The context of an Epidata connection to Spark, constructed with a provided
- * SparkContext.
+ * The context of an Epidata connection to SQLite.
  */
 class EpidataLiteContext() {
-  // Coming from ipython conf => now want it in spark conf
-  private lazy val SQLiteDBName = "1234"
-  private lazy val measurementClass = "automated_test"
-  private lazy val streamingBatchDuration = 5
+  private val conf = ConfigFactory.parseFile(new File("/Users/JFu/Documents/epidata-interns/spark/conf/sqlite-defaults.conf"))
+  private lazy val SQLiteDBName = conf.getString("spark.epidata.SQLiteDBName")
+  private lazy val measurementClass = conf.getString("spark.epidata.measurementClass")
+  private lazy val streamingBatchDuration = conf.getInt("spark.epidata.streamingBatchDuration")
 
   def query(
     fieldQuery: Map[String, List[String]],
@@ -37,23 +34,33 @@ class EpidataLiteContext() {
     // Find the equality queries for the partition key fields.
     val FieldsQuery = genericPartitionFields
       .map(partitionFieldsMap).flatMap(fieldQuery)
-    val epochs = Measurement.epochForTs(beginTime) to Measurement.epochForTs(endTime)
 
     // Add config file for SQLite in folder?
-    val con = DriverManager.getConnection("jdbc:sqlite:/Users/JFu/Desktop/empty.db")
+    val con = DriverManager.getConnection(conf.getString("spark.epidata.SQLite.url"))
+
+    val orderedEpochs = Measurement.epochForTs(beginTime) to Measurement.epochForTs(endTime)
+    val epoch = orderedEpochs.toArray
+    // Calculating # of bindmarkers
+    var epoch_str = ""
+    for (i <- 1 to epoch.length) {
+      epoch_str += "?,"
+    }
+    epoch_str = epoch_str.slice(0, epoch_str.length-1)
 
     // Create a ResultSet for a specified epoch
-    def rsQuery(parameter: List[Any]): ResultSet = {
-      val query = QueryBuilder.select().all().from(tableName).where()
-        .and(QueryBuilder.eq("customer", parameter(0)))
-        .and(QueryBuilder.eq("customer_site", parameter(1)))
-        .and(QueryBuilder.eq("collection", parameter(2)))
-        .and(QueryBuilder.eq("dataset", parameter(3)))
-        .and(QueryBuilder.in("epoch", epochs))
-        .and(QueryBuilder.gte("ts", beginTime))
-        .and(QueryBuilder.lt("ts", endTime))
-        .toString()
-      val rs = con.createStatement().executeQuery(query)
+    def rsQuery(parameter: List[AnyRef]): ResultSet = {
+      val query = getSelectStatmentString(tableName, epoch_str)
+      val stmt = con.prepareStatement(query)
+      stmt.setString(1, parameter.head.asInstanceOf[String])
+      stmt.setString(2, parameter(1).asInstanceOf[String])
+      stmt.setString(3, parameter(2).asInstanceOf[String])
+      stmt.setString(4, parameter(3).asInstanceOf[String])
+      for (i <- 1 to epoch.length) {
+        stmt.setInt(4 + i, epoch(i-1))
+      }
+      stmt.setTimestamp(4 + epoch.length + 1, beginTime)
+      stmt.setTimestamp(4 + epoch.length + 2, endTime)
+      val rs = stmt.executeQuery()
       rs
     }
 
@@ -64,26 +71,19 @@ class EpidataLiteContext() {
     con.close()
     rs
   }
-  /**
-   * Todo: Change unionrs to rs
-   * If SQLite has strict range query as last part of the statment like Cassandra
-   *  yes, then filter after
-   *  no, add key1 & 2 to query builder
-   * Check if conversion to rdd needs to start up Spark
-   */
+
   private def transformResultSet(rs: ResultSet, tableName: String): Array[Any] = {
     var df_list = Array[Any]()
-    print(s"Table name is  ${tableName}")
     tableName match {
       case BaseMeasurement.DBTableName =>
         measurementClass match {
           case BaseAutomatedTest.NAME =>
             while (rs.next()) {
-              df_list = df_list :+ AutomatedTest.measurementToAutomatedTest(BaseMeasurement.rowToMeasurement(rs))
+              df_list :+= AutomatedTest.measurementToAutomatedTest(BaseMeasurement.rowToMeasurement(rs))
             }
           case BaseSensorMeasurement.NAME =>
             while (rs.next()) {
-              df_list = df_list :+ SensorMeasurement.measurementToSensorMeasurement(BaseMeasurement.rowToMeasurement(rs))
+              df_list :+= SensorMeasurement.measurementToSensorMeasurement(BaseMeasurement.rowToMeasurement(rs))
             }
         }
 
@@ -91,11 +91,11 @@ class EpidataLiteContext() {
         measurementClass match {
           case BaseAutomatedTest.NAME =>
             while (rs.next()) {
-              df_list = df_list :+ AutomatedTestCleansed.measurementCleansedToAutomatedTestCleansed(BaseMeasurementCleansed.rowToMeasurementCleansed(rs))
+              df_list :+= AutomatedTestCleansed.measurementCleansedToAutomatedTestCleansed(BaseMeasurementCleansed.rowToMeasurementCleansed(rs))
             }
           case BaseSensorMeasurement.NAME =>
             while (rs.next()) {
-              df_list = df_list :+ SensorMeasurementCleansed.measurementCleansedToSensorMeasurementCleansed(BaseMeasurementCleansed.rowToMeasurementCleansed(rs))
+              df_list :+= SensorMeasurementCleansed.measurementCleansedToSensorMeasurementCleansed(BaseMeasurementCleansed.rowToMeasurementCleansed(rs))
             }
         }
 
@@ -103,22 +103,17 @@ class EpidataLiteContext() {
         measurementClass match {
           case BaseAutomatedTest.NAME =>
             while (rs.next()) {
-              df_list = df_list :+ BaseAutomatedTest.measurementSummaryToAutomatedTestSummary(MeasurementSummary.rowToMeasurementSummary(rs))
+              df_list :+= BaseAutomatedTest.measurementSummaryToAutomatedTestSummary(MeasurementSummary.rowToMeasurementSummary(rs))
             }
           case BaseSensorMeasurement.NAME =>
             while (rs.next()) {
-              df_list = df_list :+ BaseSensorMeasurement.measurementSummaryToSensorMeasurementSummary(MeasurementSummary.rowToMeasurementSummary(rs))
+              df_list :+= BaseSensorMeasurement.measurementSummaryToSensorMeasurementSummary(MeasurementSummary.rowToMeasurementSummary(rs))
             }
         }
     }
 
-    print(s"The length of final array is ${df_list.length}")
     df_list
   }
-
-  // query: have some checks, call getdataframe, return array/whatever
-  // getDataFrame: database query, call transformation, return final arr
-  // transformResultSet: 2 layers transformation (Resultset->MeasureLite-> Auto/Sensor)
 
   /**
    * @param fieldQuery Map indicating required values for specified fields.
@@ -146,8 +141,6 @@ class EpidataLiteContext() {
     }
 
     val dataFrame = getDataFrame(fieldQuery, beginTime, endTime, tableName)
-    //    print(fieldQuery.keySet)
-    //    print(BaseMeasurement.getColumns())
     //    if (!fieldQuery.keySet.subsetOf(BaseMeasurement.getColumns())) {
     //      throw new IllegalArgumentException("Unexpected field in fieldQuery.")
     //    }
@@ -193,9 +186,9 @@ class EpidataLiteContext() {
 
   /** List the values of the currently saved partition key fields. */
   def listKeys(): Array[Any] = {
-    val con = DriverManager.getConnection("SQLite.url")
-    val query = QueryBuilder.select().all().from(BaseMeasurementsKeys.DBTableName).toString()
-    val rs = con.createStatement().executeQuery(query)
+    val con = DriverManager.getConnection(conf.getString("spark.epidata.SQLite.url"))
+    val query = getKeysStatementString(BaseMeasurementsKeys.DBTableName)
+    val rs = con.prepareStatement(query).executeQuery()
     var keys = Array[Any]()
     measurementClass match {
       case BaseAutomatedTest.NAME =>
@@ -257,4 +250,13 @@ class EpidataLiteContext() {
       "Invalid spark.epidata.measurementClass configuration.")
   }
 
+  private def getSelectStatmentString(tableName: String, epoch: String): String = {
+    val query = s"SELECT * FROM ${tableName} WHERE customer=? AND customer_site=? AND collection=? AND dataset=? AND epoch IN (" + epoch + ") AND ts>=? AND ts<?"
+    query
+  }
+
+  private def getKeysStatementString(tableName: String): String = {
+    val query = s"SELECT * FROM ${tableName}"
+    query
+  }
 }
