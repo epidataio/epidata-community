@@ -8,7 +8,7 @@ import com.datastax.driver.core.exceptions.NoHostAvailableException
 import com.epidata.lib.models.{ AutomatedTest, SensorMeasurement }
 import play.api._
 import play.api.{ Configuration, Environment }
-import service.{ AppEnvironment, Configs, DataService, DataSinkService, KafkaService, ZMQService }
+import service.{ AppEnvironment, Configs, DataService, DataSinkService, KafkaService, ZMQProducer }
 import providers.DemoProvider
 
 import scala.concurrent.Future
@@ -64,7 +64,7 @@ class ApplicationStart @Inject() (env: Environment, conf: Configuration) {
     if (conf.getOptional[String]("queue.service").get.equalsIgnoreCase("Kafka")) {
       KafkaService.init("127.0.0.1:" + conf.getOptional[Int]("queue.servers").get)
     } else if (conf.getOptional[String]("queue.service").get.equalsIgnoreCase("ZMQ")) {
-      // Initiating object that will initiate 3 instances of ZMQService/DataSink to be used across the application
+      // Initiating object that will initiate 3 instances of ZMQProducer/DataSink to be used across the application
       ZMQInit.init(conf)
     } else {
       throw new IllegalStateException(s"Invalid string used to configure queue.service config: " + conf.getOptional[String]("queue.service").get + ". Expected: 'Kafka' or 'ZMQ'")

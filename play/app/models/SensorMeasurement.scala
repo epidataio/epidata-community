@@ -11,7 +11,7 @@ import play.api.Logger
 import play.api.libs.json._
 import _root_.util.Ordering
 import models.SensorMeasurement.keyForMeasurementTopic
-import service.{ Configs, DataService, KafkaService, ZMQService, ZMQInit }
+import service.{ Configs, DataService, KafkaService, ZMQProducer, ZMQInit }
 
 import scala.collection.convert.WrapAsScala
 import scala.language.implicitConversions
@@ -94,8 +94,8 @@ object SensorMeasurement {
   def insertToZMQ(sensorMeasurement: BaseSensorMeasurement): Unit = {
     val key = keyForMeasurementTopic(sensorMeasurement)
     val value = BaseSensorMeasurement.toJson(sensorMeasurement)
-    ZMQInit.ZMQProducer.push(key, value)
-    ZMQInit.ZMQProducer.pub(key, value)
+    ZMQInit._ZMQProducer.push(key, value)
+    ZMQInit._ZMQProducer.pub(key, value)
   }
 
   def insertToZMQ(sensorMeasurementList: List[BaseSensorMeasurement]): Unit = {
