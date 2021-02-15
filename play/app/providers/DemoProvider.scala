@@ -24,6 +24,7 @@ class DemoProvider(
   cacheService) {
 
   val defaultAccessToken = "accessTokenDemo"
+  val expiresIn = -1
   override val id = DemoProvider.Demo
   val userId = "DefaultUser"
   val firstName: Option[String] = Some("FirstName")
@@ -37,7 +38,7 @@ class DemoProvider(
   val passwordInfo: Option[PasswordInfo] = None
 
   override protected def buildInfo(response: WSResponse): OAuth2Info = {
-    OAuth2Info(defaultAccessToken, None, None, None)
+    OAuth2Info(defaultAccessToken, None, Some(expiresIn), None)
   }
 
   override def fillProfile(info: OAuth2Info): Future[BasicProfile] = {
@@ -49,4 +50,5 @@ object DemoProvider {
   val Demo = "demo"
   val user = "DefaultUser"
   val authMethod = AuthenticationMethod("demo token")
+  val authInfo = OAuth2Info("demo token", Some(""), Some(-1), Some(""))
 }

@@ -22,10 +22,10 @@ object User {
   //  type User = SocialUser
 
   def save(user: U): Unit = {
-    if (Configs.DBUser) {
+    if (Configs.userDBLite) {
       DBLite.executeUpdate(
         DBLite.binds(
-          DBLite.prepare(insertStatement),
+          DBLite.prepare(sqlInsertStatement),
           user.providerId,
           user.userId,
           user.firstName.isInstanceOf[Option[String]] match {
@@ -60,12 +60,12 @@ object User {
           }))
     } else {
       DB.execute(
-        DB.prepare(insertStatement).bind(
+        DB.prepare(cqlInsertStatement).bind(
           user.providerId,
           user.userId,
-          user.firstName,
-          user.lastName,
-          user.fullName,
+          user.firstName.getOrElse(""),
+          user.lastName.getOrElse(""),
+          user.fullName.getOrElse(""),
           user.email.getOrElse(""),
           user.avatarUrl.getOrElse(""),
           user.oAuth2Info.get.accessToken,
@@ -79,7 +79,7 @@ object User {
     val query = QueryBuilder.select().all().from("users").where()
       .and(QueryBuilder.eq("userId", userId))
       .and(QueryBuilder.eq("providerId", providerId))
-    if (Configs.DBUser) {
+    if (Configs.userDBLite) {
       val rs: ResultSet = DBLite.execute(DBLite.prepare(query.toString()))
       rs.next() match {
         case false => Option(null)
@@ -90,8 +90,22 @@ object User {
     }
   }
 
-  private lazy val insertStatement =
+  private lazy val sqlInsertStatement =
     """#INSERT OR REPLACE INTO users (
+         #providerId,
+         #userId,
+         #first_name,
+         #last_name,
+         #full_name,
+         #email,
+         #avatar_url,
+         #oauth2_token,
+         #oauth2_token_type,
+         #oauth2_expires_in,
+         #oauth2_refresh_token) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#')
+
+  private lazy val cqlInsertStatement =
+    """#INSERT INTO users (
          #providerId,
          #userId,
          #first_name,
@@ -136,6 +150,7 @@ object User {
 
     user
   }
+
   private implicit def rowToUser(row: ResultSet): U = {
     def blankToNone(string: String): Option[String] = string match {
       case "" => None

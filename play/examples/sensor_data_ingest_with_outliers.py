@@ -13,16 +13,13 @@ from decimal import Decimal
 import struct
 import time
 from time import sleep
+import urllib2
 import requests
-import urllib3
-
 
 
 ##################################
 # Define Variables and Functions #
 ##################################
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument('--host')
@@ -40,7 +37,6 @@ if USE_KAFKA:
 else:
     CREATE_MEASUREMENT_URL = 'https://' + HOST + '/measurements'
     CREATE_MEASUREMENT_ROUTE = '/measurements'
-
 
 def get_time(time_string):
     date_object = datetime.strptime(time_string, '%m/%d/%Y %H:%M:%S.%f')
@@ -62,11 +58,11 @@ current_time = get_time(current_time_string)
 #####################
 
 # Replace quoted string with API Token or GitHub Personal Access Token (REQUIRED)
-ACCESS_TOKEN = ''
+ACCESS_TOKEN = 'epidata123'
 
 # Modify default values (OPTIONAL)
 COMPANY = 'EpiData'
-SITE = 'Redwood_City'
+SITE = 'San_Francisco'
 STATION = 'WSN-1'
 
 
@@ -128,12 +124,12 @@ while (True):
         meas_last_windspeed_value = 8
         meas_last_rh_value = 60
 
-        for data_iteration in range(1, 3):
+        for data_iteration in range(1, 2):
 
             # Construct an empty list of measurement objects
             measurement_list = []
 
-            for log_iteration in range(1, 3):
+            for log_iteration in range(1, 2):
 
                 current_time_string = datetime.now().strftime("%m/%d/%Y %H:%M:%S.%f")
                 current_time = get_time(current_time_string)
@@ -278,7 +274,6 @@ while (True):
                 }
 
             # Construct JSON body with data to be ingested.
-            print measurement_list
             json_body = json.dumps(measurement_list)
 
             # Send the POST request and receive the HTTP response.
@@ -287,11 +282,12 @@ while (True):
             resp = session.send(prepped, stream=None, verify=None, proxies=None, cert=None, timeout=None)
 
             # Check that the response's HTTP response code is 201 (CREATED).
+            print resp.content
             assert resp.status_code == 201
 
             # Print measurement details
             print "iteration: ", data_iteration
-            # print json_body + "\n"
+            print json_body + "\n"
 
             #break
 

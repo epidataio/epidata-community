@@ -51,11 +51,11 @@ current_time = get_time(current_time_string)
 #####################
 
 # Replace quoted string with API Token or GitHub Personal Access Token (REQUIRED)
-ACCESS_TOKEN = ''
+ACCESS_TOKEN = 'epidata123'
 
 # Modify default values (OPTIONAL)
 COMPANY ='EpiData'
-SITE = 'Redwood_City'
+SITE = 'San_Francisco'
 STATION = 'WSN-1'
 SENSOR = "Temperature_Probe"
 
@@ -102,7 +102,7 @@ assert resp.status_code == 200
 
 # Parse the JSON response.
 response_json = json.loads(resp.content)
-print "response - ", response_json
+# print "response - ", response_json
 
 
 ###########################################
@@ -116,15 +116,15 @@ while (True):
 
     try:
         # Specify measurement query parameters
-        begin_time = get_time("1/11/2020 00:00:00.000")
-        end_time = get_time("12/31/2020 00:00:00.000")
+        begin_time = get_time("2/01/2021 00:00:00.000")
+        end_time = get_time("3/31/2021 00:00:00.000")
 
         parameters = {'company': COMPANY, 'site': SITE, 'station': STATION, 'sensor': SENSOR, 'beginTime': begin_time, 'endTime': end_time}
 
         # Construct url with parameters
         url = QUERY_MEASUREMENTS_ORIGINAL_URL+urllib.urlencode(parameters)
-        print url
-#        json_header = {'Cookie': session_cookie, 'Accept': 'text/plain'}
+        # print url
+        # json_header = {'Cookie': session_cookie, 'Accept': 'text/plain'}
         json_header = {
                 'Content-type': 'application/json'
         }
@@ -132,11 +132,12 @@ while (True):
         # Send the GET request and receive the HTTP response.
         req = requests.Request('GET', url, data="", headers=json_header)
         prepped = session.prepare_request(req)
-        print "prepared statement header: \n", prepped.headers
+        # print "prepared statement header: \n", prepped.headers
         resp = session.send(prepped, stream=None, verify=None, proxies=None, cert=None, timeout=None)
 
         # Check that the response's HTTP response code is 200 (OK) and read the response.
         response_json = json.loads(resp.content)
+        print "Measurement Query Results:"
         print response_json
         assert resp.status_code == 200
 

@@ -37,6 +37,7 @@ class DemoAuth @Inject() (val cc: ControllerComponents)(
 
   private implicit val readsOAuth2Info = Json.reads[OAuth2Info]
   val providerId = DemoProvider.Demo
+  val authInfo = DemoProvider.authInfo
   val logger: Logger = Logger(this.getClass())
   override def messagesApi: MessagesApi = super.messagesApi
 
@@ -46,7 +47,7 @@ class DemoAuth @Inject() (val cc: ControllerComponents)(
         request.getQueryString("token") match {
           case Some(token) if DataService.isValidToken(token) => {
             val provider = env.providers(providerId)
-            val user: Future[BasicProfile] = provider.asInstanceOf[OAuth2Provider].fillProfile(null)
+            val user: Future[BasicProfile] = provider.asInstanceOf[OAuth2Provider].fillProfile(authInfo)
             user.map {
               u =>
                 u.isInstanceOf[BasicProfile] match {
@@ -83,7 +84,7 @@ class DemoAuth @Inject() (val cc: ControllerComponents)(
               env.authenticatorService.find(CookieAuthenticator.Id) match {
                 case Some(builder) => {
                   val provider = env.providers(providerId).asInstanceOf[OAuth2Provider]
-                  provider.fillProfile(null).flatMap {
+                  provider.fillProfile(authInfo).flatMap {
                     user =>
                       user.isInstanceOf[BasicProfile] match {
                         case true =>

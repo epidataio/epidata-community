@@ -29,7 +29,7 @@ class SensorMeasurements @Inject() (val cc: ControllerComponents)(
 
   def create = SecuredAction(parse.json) { implicit request =>
     val sensorMeasurements = com.epidata.lib.models.SensorMeasurement.jsonToSensorMeasurements(request.body.toString)
-    SensorMeasurement.insert(sensorMeasurements.flatMap(x => x), Configs.DBMeas)
+    SensorMeasurement.insert(sensorMeasurements.flatMap(x => x), Configs.measDBLite)
 
     val failedIndexes = sensorMeasurements.zipWithIndex.filter(_._1 == None).map(_._2)
     if (failedIndexes.isEmpty)
@@ -100,7 +100,7 @@ class SensorMeasurements @Inject() (val cc: ControllerComponents)(
     batch: String = "",
     ordering: Ordering.Value = Ordering.Unspecified,
     table: String = MeasurementCleansed.DBTableName) = Action {
-    if (Configs.DBMeas) {
+    if (Configs.measDBLite) {
       Ok(SQLiteMeasurementService.query(
         company,
         site,

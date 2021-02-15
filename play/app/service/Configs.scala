@@ -9,28 +9,36 @@ object Configs {
     _metricEnabled = config.getOptional[Boolean]("application.metric.enabled").getOrElse(false)
     _measurementClass = config.getOptional[String]("measurement-class").get
     _twoWaysIngestion = config.getOptional[Boolean]("application.ingestion.2ways").getOrElse(false)
-    _DBMeas = config.getOptional[Boolean]("SQLite.enable").getOrElse(false)
-    _DBMeas = config.getOptional[Boolean]("SQLite.enable").getOrElse(true)
-    _DBUser = config.getOptional[Boolean]("SQLite.User").getOrElse(true)
+    _measDB = config.getOptional[String]("measurements.database").get
+    _userDB = config.getOptional[String]("user.database").get
     _queueService = config.getOptional[String]("queue.service").get
     _queueSocket = config.getOptional[Int]("queue.servers").get
   }
 
-  private var _keyCreation = false
-  private var _metricEnabled = false
-  private var _measurementClass: String = "sensor_measurement"
-  private var _twoWaysIngestion = false
-  private var _DBMeas = true
-  private var _DBUser = true
-  private var _queueService: String = "ZMQ"
-  private var _queueSocket = 0
+  private var _keyCreation: Boolean = _
+  private var _metricEnabled: Boolean = _
+  private var _measurementClass: String = _
+  private var _twoWaysIngestion: Boolean = _
+  private var _measDB: String = _
+  private var _userDB: String = _
+  private var _queueService: String = _
+  private var _queueSocket: Int = _
 
   def ingestionKeyCreation = _keyCreation
   def metricEnabled = _keyCreation
   def measurementClass = _measurementClass
   def twoWaysIngestion = _twoWaysIngestion
-  def DBMeas = _DBMeas
-  def DBUser = _DBUser
+  def measDB = _measDB
+  def userDB = _userDB
+  def measDBLite: Boolean = _measDB match {
+    case "sqlite" => true
+    case "cassandra" => false
+  }
+  def userDBLite: Boolean = _userDB match {
+    case "sqlite" => true
+    case "cassandra" => false
+  }
   def queueService = _queueService
   def queueSocket = _queueSocket
+
 }

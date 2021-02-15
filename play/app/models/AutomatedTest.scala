@@ -51,14 +51,14 @@ object AutomatedTest {
 
   def insertRecordFromKafka(str: String) = {
     Model.jsonToAutomatedTest(str) match {
-      case Some(m) => insert(m, Configs.DBMeas)
+      case Some(m) => insert(m, Configs.measDBLite)
       case _ => logger.error("Bad json format!")
     }
   }
 
   def insertRecordFromZMQ(str: String): Unit = {
     Model.jsonToAutomatedTest(str) match {
-      case Some(sensorMeasurement) => insert(sensorMeasurement, Configs.DBMeas)
+      case Some(sensorMeasurement) => insert(sensorMeasurement, Configs.measDBLite)
       case _ => logger.error("Bad json format!")
     }
   }
@@ -66,7 +66,7 @@ object AutomatedTest {
   def insertToKafka(list: List[Model]): Unit = {
     list.foreach(m => insertToKafka(m))
     if (Configs.twoWaysIngestion) {
-      models.AutomatedTest.insertList(list, Configs.DBMeas)
+      models.AutomatedTest.insertList(list, Configs.measDBLite)
     }
   }
 

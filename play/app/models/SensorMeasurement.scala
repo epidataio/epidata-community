@@ -57,14 +57,14 @@ object SensorMeasurement {
 
   def insertRecordFromKafka(str: String) = {
     BaseSensorMeasurement.jsonToSensorMeasurement(str) match {
-      case Some(sensorMeasurement) => insert(sensorMeasurement, Configs.DBMeas)
+      case Some(sensorMeasurement) => insert(sensorMeasurement, Configs.measDBLite)
       case _ => logger.error("Bad json format!")
     }
   }
 
   def insertRecordFromZMQ(str: String): Unit = {
     BaseSensorMeasurement.jsonToSensorMeasurement(str) match {
-      case Some(sensorMeasurement) => insert(sensorMeasurement, Configs.DBMeas)
+      case Some(sensorMeasurement) => insert(sensorMeasurement, Configs.measDBLite)
       case _ => logger.error("Bad json format!")
     }
   }
@@ -83,7 +83,7 @@ object SensorMeasurement {
   def insertToKafka(sensorMeasurementList: List[BaseSensorMeasurement]): Unit = {
     sensorMeasurementList.foreach(m => insertToKafka(m))
     if (Configs.twoWaysIngestion) {
-      insert(sensorMeasurementList, Configs.DBMeas)
+      insert(sensorMeasurementList, Configs.measDBLite)
     }
   }
 
@@ -101,7 +101,7 @@ object SensorMeasurement {
   def insertToZMQ(sensorMeasurementList: List[BaseSensorMeasurement]): Unit = {
     sensorMeasurementList.foreach(m => insertToZMQ(m))
     if (Configs.twoWaysIngestion) {
-      insert(sensorMeasurementList, Configs.DBMeas)
+      insert(sensorMeasurementList, Configs.measDBLite)
     }
   }
 
