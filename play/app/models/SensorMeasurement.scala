@@ -39,16 +39,16 @@ object SensorMeasurement {
    * Insert a Double sensor measurement into the database.
    * @param sensorMeasurement The SensorMeasurement to insert.
    */
-  def insert(sensorMeasurement: BaseSensorMeasurement, Sqlite_enable: Boolean) = {
-    if (Sqlite_enable) {
+  def insert(sensorMeasurement: BaseSensorMeasurement, sqliteEnable: Boolean) = {
+    if (sqliteEnable) {
       SQLiteMeasurementService.insert(sensorMeasurement)
     } else {
       MeasurementService.insert(sensorMeasurement)
     }
   }
 
-  def insert(sensorMeasurementList: List[BaseSensorMeasurement], Sqlite_enable: Boolean) = {
-    if (Sqlite_enable) {
+  def insert(sensorMeasurementList: List[BaseSensorMeasurement], sqliteEnable: Boolean) = {
+    if (sqliteEnable) {
       SQLiteMeasurementService.bulkInsert(sensorMeasurementList)
     } else {
       MeasurementService.bulkInsert(sensorMeasurementList)

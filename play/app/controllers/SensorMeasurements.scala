@@ -14,7 +14,7 @@ import util.{ EpidataMetrics, Ordering }
 import play.api.libs.json.Json
 import play.api.mvc._
 import play.api.i18n.{ I18nSupport, Messages }
-import play.api.{ Configuration, Environment }
+import play.api.{ Configuration, Environment, Logger }
 import service.{ AppEnvironment, Configs }
 import securesocial.core.{ IdentityProvider, RuntimeEnvironment, SecureSocial }
 import service.Configs
@@ -26,6 +26,8 @@ class SensorMeasurements @Inject() (val cc: ControllerComponents)(
   with SecureSocial {
 
   override def messagesApi = env.messagesApi
+
+  val logger: Logger = Logger(this.getClass())
 
   def create = SecuredAction(parse.json) { implicit request =>
     val sensorMeasurements = com.epidata.lib.models.SensorMeasurement.jsonToSensorMeasurements(request.body.toString)
@@ -57,9 +59,10 @@ class SensorMeasurements @Inject() (val cc: ControllerComponents)(
     val sensorMeasurements = com.epidata.lib.models.SensorMeasurement.jsonToSensorMeasurements(request.body.toString)
     if (Configs.queueService.equalsIgnoreCase("Kafka")) {
       models.SensorMeasurement.insertToKafka(sensorMeasurements.flatMap(x => x))
-    }
-    if (Configs.queueService.equalsIgnoreCase("ZMQ")) {
+    } else if (Configs.queueService.equalsIgnoreCase("ZMQ")) {
       models.SensorMeasurement.insertToZMQ(sensorMeasurements.flatMap(x => x))
+    } else {
+      logger.error("queueService not recognized. Data not written to queue.")
     }
 
     val failedIndexes = sensorMeasurements.zipWithIndex.filter(_._1 == None).map(_._2)
