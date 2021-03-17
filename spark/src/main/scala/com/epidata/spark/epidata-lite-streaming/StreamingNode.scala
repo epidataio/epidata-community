@@ -7,7 +7,7 @@ import com.epidata.spark.ops.Transformation
 import play.api.libs.json._
 import play.api.libs.json.Reads._
 import org.zeromq.ZMQ
-import com.epidata.lib.models.{ SensorMeasurement => BaseSensorMeasurement }
+import com.epidata.lib.models.{ Measurement => BaseMeasurement, SensorMeasurement => BaseSensorMeasurement, AutomatedTest => BaseAutomatedTest }
 
 object StreamingNode {
   var subSocket: ZMQ.Socket = _ //add as parameter
@@ -108,8 +108,10 @@ object StreamingNode {
     publish(Map(
       "topic" -> publishTopic,
       "key" -> messageObject("key"),
-      "value" -> Json.stringify(Json.toJson(this.transformation.apply(BaseSensorMeasurement.jsonToSensorMeasurement(messageObject("value")), Map)))))
+      "value" -> BaseSensorMeasurement.toJson(this.transformation.apply(messageObject("value").asInstanceOf[List[BaseMeasurement]]))))
   }
+
+  //  "value" -> Json.stringify(Json.toJson(this.transformation.apply(BaseSensorMeasurement.jsonToSensorMeasurement(messageObject("value")), Map)))))
 
   def publish(processedMessage: Map[String, String]): Unit = {
     //val processedMessage: Message = epidataLiteStreamingContext(ZMQInit.streamQueue.dequeue)

@@ -6,12 +6,12 @@ package com.epidata.spark
 
 import com.typesafe.config.ConfigFactory
 import java.io.File
-import java.sql.{DriverManager, Timestamp}
+import java.sql.{ DriverManager, Timestamp, SQLException }
 import scala.io.Source
 
 object elcTest extends App {
   val ec = new EpidataLiteContext()
-  val conf = ConfigFactory.parseFile(new File("/Users/JFu/Documents/epidata-interns/spark/conf/sqlite-defaults.conf"))
+  val conf = ConfigFactory.parseResources("sqlite-defaults.conf")
   val con = DriverManager.getConnection(conf.getString("spark.epidata.SQLite.url"))
   val stmt = con.createStatement()
 
@@ -53,9 +53,9 @@ object elcTest extends App {
     "Meas-1", "just_a_check", 45.7, meas_value_l, "meas_value_s", meas_value_b, "degree C", "PASS", 40.0, meas_lower_limit_l, 90.0, meas_upper_limit_l, "Description", "PASS", "PASS")
   val columns = Array("customer", "customer_site",
     "collection", "dataset", "epoch", "ts", "key1", "key2", "key3", "meas_datatype", "meas_value", "meas_value_l", "meas_value_s", "meas_value_b", "meas_unit",
-    "meas_status", "meas_lower_limit", "meas_lower_limit_l"," meas_upper_limit", "meas_upper_limit_l", "meas_description", "val1", "val2")
+    "meas_status", "meas_lower_limit", "meas_lower_limit_l", " meas_upper_limit", "meas_upper_limit_l", "meas_description", "val1", "val2")
   val insert_q =
-  s"""#INSERT OR REPLACE INTO ${com.epidata.lib.models.Measurement.DBTableName} (
+    s"""#INSERT OR REPLACE INTO ${com.epidata.lib.models.Measurement.DBTableName} (
      #customer,
      #customer_site,
      #collection,
@@ -72,7 +72,7 @@ object elcTest extends App {
      #meas_description,
      #val1,
      #val2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#')
-//  println(s"prebinding: ${insert_q.toString}")
+  //  println(s"prebinding: ${insert_q.toString}")
 
   val prepare_insert = con.prepareStatement(insert_q.toString)
   prepare_insert.setString(1, to_check(0).asInstanceOf[String])
@@ -161,7 +161,12 @@ object elcTest extends App {
   }
 
   val k_results = ec.listKeys()
-  con.close()
+  try { k_rs.close() } catch { case e: SQLException => println("Error closing ResultSet") }
+  try { rs.close() } catch { case e: SQLException => println("Error closing ResultSet") }
+  try { keys_stmt.close() } catch { case e: SQLException => println("Error closing Statement") }
+  try { prepare_insert.close() } catch { case e: SQLException => println("Error closing Statement") }
+  try { stmt.close() } catch { case e: SQLException => println("Error closing Statement") }
+  try { con.close() } catch { case e: SQLException => println("Error closing database connection") }
   for (i <- k_results.indices) {
     println(s"keys row ${i}: ${k_results(i)}")
   }

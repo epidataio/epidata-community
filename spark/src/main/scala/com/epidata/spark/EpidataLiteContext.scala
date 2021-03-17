@@ -4,16 +4,16 @@
 
 package com.epidata.spark
 
-import java.sql.{Connection, DriverManager, ResultSet, SQLException, Statement, Timestamp}
-import com.epidata.lib.models.{Measurement => BaseMeasurement, MeasurementCleansed => BaseMeasurementCleansed, MeasurementsKeys => BaseMeasurementsKeys}
-import com.epidata.lib.models.{MeasurementSummary, AutomatedTest => BaseAutomatedTest, SensorMeasurement => BaseSensorMeasurement}
+import java.sql.{ Connection, DriverManager, ResultSet, SQLException, Statement, Timestamp }
+import com.epidata.lib.models.{ Measurement => BaseMeasurement, MeasurementCleansed => BaseMeasurementCleansed, MeasurementsKeys => BaseMeasurementsKeys }
+import com.epidata.lib.models.{ MeasurementSummary, AutomatedTest => BaseAutomatedTest, SensorMeasurement => BaseSensorMeasurement }
 import com.typesafe.config.ConfigFactory
 import java.io.File
 /**
  * The context of an Epidata connection to SQLite.
  */
 class EpidataLiteContext() {
-  private val conf = ConfigFactory.parseFile(new File("/Users/JFu/Documents/epidata-interns/spark/conf/sqlite-defaults.conf"))
+  private val conf = ConfigFactory.parseResources("sqlite-defaults.conf")
   private lazy val SQLiteDBName = conf.getString("spark.epidata.SQLiteDBName")
   private lazy val measurementClass = conf.getString("spark.epidata.measurementClass")
   private lazy val streamingBatchDuration = conf.getInt("spark.epidata.streamingBatchDuration")
@@ -45,7 +45,7 @@ class EpidataLiteContext() {
     for (i <- 1 to epoch.length) {
       epoch_str += "?,"
     }
-    epoch_str = epoch_str.slice(0, epoch_str.length-1)
+    epoch_str = epoch_str.slice(0, epoch_str.length - 1)
 
     // Create a ResultSet for a specified epoch
     def rsQuery(parameter: List[AnyRef]): ResultSet = {
@@ -56,7 +56,7 @@ class EpidataLiteContext() {
       stmt.setString(3, parameter(2).asInstanceOf[String])
       stmt.setString(4, parameter(3).asInstanceOf[String])
       for (i <- 1 to epoch.length) {
-        stmt.setInt(4 + i, epoch(i-1))
+        stmt.setInt(4 + i, epoch(i - 1))
       }
       stmt.setTimestamp(4 + epoch.length + 1, beginTime)
       stmt.setTimestamp(4 + epoch.length + 2, endTime)
