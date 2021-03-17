@@ -1,5 +1,6 @@
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 import scalariform.formatter.preferences._
+import scala.sys.process._
 
 name := "epidata-play"
 
@@ -21,13 +22,17 @@ libraryDependencies ++= Seq(
   "com.typesafe.play" %% "twirl-api" % "1.5.0",
   "com.typesafe.play" %% "filters-helpers" % "2.6.25",
   "org.scalacheck" %% "scalacheck" % "1.14.3" % Test,
-  "org.scalatest" %% "scalatest" % "3.2.0" % Test,
+  "org.scalactic" %% "scalactic" % "3.2.5",
+  "org.scalatest" %% "scalatest" % "3.2.5" % "test",
   "org.scalatestplus" %% "scalacheck-1-14" % "3.2.0.0" % "test",
+  "org.specs2" %% "specs2-core" % "3.9.5" % "test",
   "org.mockito" % "mockito-core" % "3.3.3" % Test,
   "org.apache.kafka" %% "kafka" % "2.4.1",
   "org.apache.kafka" % "kafka-streams" % "2.4.1",
   "org.apache.kafka" % "kafka-clients" % "2.4.1"
 )
+
+scalacOptions in Test ++= Seq("-Yrangepos")
 
 routesImport ++= List("java.util.Date",
                       "util.Ordering",
@@ -35,15 +40,12 @@ routesImport ++= List("java.util.Date",
 
 lazy val autopep8 = taskKey[Unit]("autopep8")
 
-// TODO - update
-//autopep8 := {
-//  "find play -name *.py" #| "xargs autopep8 -i -aa" !
-//}
+autopep8 := {
+  "find play -name *.py" #| "xargs autopep8 -i -aa" !
+}
 
-// TODO - update
-//(test in Test) <<= (test in Test)
-//  .dependsOn(autopep8)
-
+(test in Test) := ((test in Test)
+  .dependsOn(autopep8)).value
 
 //TwirlKeys.templateImports += "org.example._"
 

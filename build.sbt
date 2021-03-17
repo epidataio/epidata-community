@@ -18,6 +18,7 @@ scalaVersion := "2.12.11"
 concurrentRestrictions in Global += Tags.limit(Tags.Test, 1)
 
 lazy val root = project.in(file(".")).aggregate(
+  jupyter,
   ipython,
   models,
   play,
@@ -29,6 +30,9 @@ lazy val scripts = project
 
 lazy val ipython = project
   .dependsOn(spark)
+
+lazy val jupyter = project
+    .dependsOn(spark)
 
 lazy val models = (project in file("models"))
   .settings(
@@ -44,10 +48,10 @@ lazy val play = project
 lazy val spark = project
   .dependsOn(models)
 
-//ToDo
-//lazy val sparkAssembly = TaskKey[File]("spark-assembly")
 
-//sparkAssembly in Global := (assembly in spark)
+lazy val sparkAssembly = TaskKey[File]("spark-assembly")
+
+sparkAssembly in Global := (assembly in spark).value
 
 
 ScalariformKeys.preferences := ScalariformKeys.preferences.value
