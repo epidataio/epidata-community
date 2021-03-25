@@ -7,8 +7,11 @@ package com.epidata.spark
 import java.sql.{ Connection, DriverManager, ResultSet, SQLException, Statement, Timestamp }
 import com.epidata.lib.models.{ Measurement => BaseMeasurement, MeasurementCleansed => BaseMeasurementCleansed, MeasurementsKeys => BaseMeasurementsKeys }
 import com.epidata.lib.models.{ MeasurementSummary, AutomatedTest => BaseAutomatedTest, SensorMeasurement => BaseSensorMeasurement }
+import java.util.{ Date, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList }
 import com.typesafe.config.ConfigFactory
+import scala.collection.JavaConversions._
 import java.io.File
+
 /**
  * The context of an Epidata connection to SQLite.
  */
@@ -21,7 +24,7 @@ class EpidataLiteContext() {
   def query(
     fieldQuery: Map[String, List[String]],
     beginTime: Timestamp,
-    endTime: Timestamp): Array[Any] = {
+    endTime: Timestamp): JLinkedList[JLinkedHashMap[String, Object]] = {
     query(fieldQuery, beginTime, endTime, com.epidata.lib.models.Measurement.DBTableName)
   }
 
@@ -29,7 +32,7 @@ class EpidataLiteContext() {
     fieldQuery: Map[String, List[String]],
     beginTime: Timestamp,
     endTime: Timestamp,
-    tableName: String): Array[Any] = {
+    tableName: String): JLinkedList[JLinkedHashMap[String, Object]] = {
 
     // Find the equality queries for the partition key fields.
     val FieldsQuery = genericPartitionFields
@@ -72,18 +75,18 @@ class EpidataLiteContext() {
     rs
   }
 
-  private def transformResultSet(rs: ResultSet, tableName: String): Array[Any] = {
-    var df_list = Array[Any]()
+  private def transformResultSet(rs: ResultSet, tableName: String): JLinkedList[JLinkedHashMap[String, Object]] = {
+    var maps = new JLinkedList[JLinkedHashMap[String, Object]]()
     tableName match {
       case BaseMeasurement.DBTableName =>
         measurementClass match {
           case BaseAutomatedTest.NAME =>
             while (rs.next()) {
-              df_list :+= AutomatedTest.measurementToAutomatedTest(BaseMeasurement.rowToMeasurement(rs))
+              maps.add(BaseMeasurement.rowToJLinkedHashMap(rs, tableName, measurementClass))
             }
           case BaseSensorMeasurement.NAME =>
             while (rs.next()) {
-              df_list :+= SensorMeasurement.measurementToSensorMeasurement(BaseMeasurement.rowToMeasurement(rs))
+              maps.add(BaseMeasurement.rowToJLinkedHashMap(rs, tableName, measurementClass))
             }
         }
 
@@ -91,11 +94,11 @@ class EpidataLiteContext() {
         measurementClass match {
           case BaseAutomatedTest.NAME =>
             while (rs.next()) {
-              df_list :+= AutomatedTestCleansed.measurementCleansedToAutomatedTestCleansed(BaseMeasurementCleansed.rowToMeasurementCleansed(rs))
+              maps.add(BaseMeasurement.rowToJLinkedHashMap(rs, tableName, measurementClass))
             }
           case BaseSensorMeasurement.NAME =>
             while (rs.next()) {
-              df_list :+= SensorMeasurementCleansed.measurementCleansedToSensorMeasurementCleansed(BaseMeasurementCleansed.rowToMeasurementCleansed(rs))
+              maps.add(BaseMeasurement.rowToJLinkedHashMap(rs, tableName, measurementClass))
             }
         }
 
@@ -103,16 +106,15 @@ class EpidataLiteContext() {
         measurementClass match {
           case BaseAutomatedTest.NAME =>
             while (rs.next()) {
-              df_list :+= BaseAutomatedTest.measurementSummaryToAutomatedTestSummary(MeasurementSummary.rowToMeasurementSummary(rs))
+              maps.add(BaseMeasurement.rowToJLinkedHashMap(rs, tableName, measurementClass))
             }
           case BaseSensorMeasurement.NAME =>
             while (rs.next()) {
-              df_list :+= BaseSensorMeasurement.measurementSummaryToSensorMeasurementSummary(MeasurementSummary.rowToMeasurementSummary(rs))
+              maps.add(BaseMeasurement.rowToJLinkedHashMap(rs, tableName, measurementClass))
             }
         }
     }
-
-    df_list
+    maps
   }
 
   /**
@@ -124,7 +126,7 @@ class EpidataLiteContext() {
     fieldQuery: Map[String, List[String]],
     beginTime: Timestamp,
     endTime: Timestamp,
-    tableName: String): Array[Any] = {
+    tableName: String): JLinkedList[JLinkedHashMap[String, Object]] = {
 
     if (beginTime.getTime > endTime.getTime) {
       throw new IllegalArgumentException("beginTime must not be after endTime. ")
@@ -140,7 +142,7 @@ class EpidataLiteContext() {
         "All fieldQuery entries must have at least one match value.")
     }
 
-    val dataFrame = getDataFrame(fieldQuery, beginTime, endTime, tableName)
+    val map = getDataFrame(fieldQuery, beginTime, endTime, tableName)
     //    if (!fieldQuery.keySet.subsetOf(BaseMeasurement.getColumns())) {
     //      throw new IllegalArgumentException("Unexpected field in fieldQuery.")
     //    }
@@ -154,14 +156,14 @@ class EpidataLiteContext() {
     //      df.filter(df.col(filter._1).isin(filter._2.map(lit(_)): _*)))
 
     //    filtered
-    dataFrame
+    map
   }
 
   /** Query interface for Java and Python. */
   def query(
     fieldQuery: java.util.Map[String, java.util.List[String]],
     beginTime: Timestamp,
-    endTime: Timestamp): Array[Any] = {
+    endTime: Timestamp): JLinkedList[JLinkedHashMap[String, Object]] = {
     import scala.collection.JavaConversions._
     query(fieldQuery.toMap.mapValues(_.toList), beginTime, endTime, BaseMeasurement.DBTableName)
   }
@@ -170,7 +172,7 @@ class EpidataLiteContext() {
   def queryMeasurementCleansed(
     fieldQuery: java.util.Map[String, java.util.List[String]],
     beginTime: Timestamp,
-    endTime: Timestamp): Array[Any] = {
+    endTime: Timestamp): JLinkedList[JLinkedHashMap[String, Object]] = {
     import scala.collection.JavaConversions._
     query(fieldQuery.toMap.mapValues(_.toList), beginTime, endTime, BaseMeasurementCleansed.DBTableName)
   }
@@ -179,17 +181,17 @@ class EpidataLiteContext() {
   def queryMeasurementSummary(
     fieldQuery: java.util.Map[String, java.util.List[String]],
     beginTime: Timestamp,
-    endTime: Timestamp): Array[Any] = {
+    endTime: Timestamp): JLinkedList[JLinkedHashMap[String, Object]] = {
     import scala.collection.JavaConversions._
     query(fieldQuery.toMap.mapValues(_.toList), beginTime, endTime, MeasurementSummary.DBTableName)
   }
 
   /** List the values of the currently saved partition key fields. */
-  def listKeys(): Array[Any] = {
+  def listKeys(): JLinkedList[JLinkedHashMap[String, Object]] = {
     val con = DriverManager.getConnection(conf.getString("spark.epidata.SQLite.url"))
     val query = getKeysStatementString(BaseMeasurementsKeys.DBTableName)
     val rs = con.prepareStatement(query).executeQuery()
-    var keys = Array[Any]()
+    var keys = new JLinkedList[JLinkedHashMap[String, Object]]()
     measurementClass match {
       case BaseAutomatedTest.NAME =>
         while (rs.next()) {
@@ -198,8 +200,9 @@ class EpidataLiteContext() {
             Option(rs.getString("customer_site")).get,
             Option(rs.getString("collection")).get,
             Option(rs.getString("dataset")).get)
-          keys :+= AutomatedTestKey.keyToAutomatedTest(meas_key)
+          keys.add(AutomatedTestKey.toJLinkedHashMap(AutomatedTestKey.keyToAutomatedTest(meas_key)))
         }
+
       case BaseSensorMeasurement.NAME =>
         while (rs.next()) {
           val meas_key = MeasurementKey(
@@ -207,10 +210,10 @@ class EpidataLiteContext() {
             Option(rs.getString("customer_site")).get,
             Option(rs.getString("collection")).get,
             Option(rs.getString("dataset")).get)
-          keys :+= SensorMeasurementKey.keyToSensorMeasurement(meas_key)
+          keys.add(AutomatedTestKey.toJLinkedHashMap(AutomatedTestKey.keyToAutomatedTest(meas_key)))
         }
     }
-
+    con.close()
     keys
   }
 

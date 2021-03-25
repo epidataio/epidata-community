@@ -127,8 +127,9 @@ object elcTest extends App {
     beginTime,
     endTime)
 
-  for (i <- results.indices) {
-    println(s"meas_orig row ${i}: ${results(i)}")
+  val measIter = results.iterator()
+  while (measIter.hasNext()) {
+    println(s"meas_orig row: ${measIter.next()}")
   }
 
   // Measurement Keys
@@ -167,8 +168,10 @@ object elcTest extends App {
   try { prepare_insert.close() } catch { case e: SQLException => println("Error closing Statement") }
   try { stmt.close() } catch { case e: SQLException => println("Error closing Statement") }
   try { con.close() } catch { case e: SQLException => println("Error closing database connection") }
-  for (i <- k_results.indices) {
-    println(s"keys row ${i}: ${k_results(i)}")
+
+  val keysIter = k_results.iterator()
+  while (keysIter.hasNext()) {
+    println(s"key query row: ${keysIter.next()}")
   }
 
 }

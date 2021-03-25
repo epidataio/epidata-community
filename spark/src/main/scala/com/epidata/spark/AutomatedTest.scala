@@ -2,6 +2,10 @@ package com.epidata.spark
 
 import java.sql.Timestamp
 
+import java.sql.Timestamp
+import com.epidata.spark.utils.ConvertUtils
+import java.util.{ Map => JMap, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList }
+import com.epidata.lib.models.util.JsonHelpers._
 import org.apache.spark.MeasurementValue
 
 /** Specialization of MeasurementKey representing an automated test key. */
@@ -19,6 +23,17 @@ object AutomatedTestKey {
       key.customer_site,
       key.collection,
       key.dataset)
+
+  implicit def toJLinkedHashMap(key: AutomatedTestKey): JLinkedHashMap[String, Object] = {
+    val map = new JLinkedHashMap[String, Object]()
+
+    putToMap(map, "company", key.company)
+    putToMap(map, "site", key.site)
+    putToMap(map, "device_group", key.device_group)
+    putToMap(map, "tester", key.tester)
+
+    map
+  }
 }
 
 /** Specialization of Measurement representing automated test data. */

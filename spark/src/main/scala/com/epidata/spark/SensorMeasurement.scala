@@ -6,6 +6,8 @@ package com.epidata.spark
 
 import java.sql.Timestamp
 import com.epidata.spark.utils.ConvertUtils
+import java.util.{ Map => JMap, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList }
+import com.epidata.lib.models.util.JsonHelpers._
 
 import org.apache.spark.MeasurementValue
 
@@ -24,6 +26,17 @@ object SensorMeasurementKey {
       key.customer_site,
       key.collection,
       key.dataset)
+
+  implicit def toJLinkedHashMap(key: SensorMeasurementKey): JLinkedHashMap[String, Object] = {
+    val map = new JLinkedHashMap[String, Object]()
+
+    putToMap(map, "company", key.company)
+    putToMap(map, "site", key.site)
+    putToMap(map, "station", key.station)
+    putToMap(map, "sensor", key.sensor)
+
+    map
+  }
 }
 
 /** Specialization of Measurement representing sensor data. */
