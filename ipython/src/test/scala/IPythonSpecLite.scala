@@ -244,9 +244,9 @@ object IPythonSpecLite extends App{
 
     }
 
-//    Process(List("python",
-//      "ipython/test/test_automated_test_lite.py")
-//    ).run()
+   Process(List("python",
+     "ipython/test/test_automated_test_lite.py")
+   ).run()
 
 
 
