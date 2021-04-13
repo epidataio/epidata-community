@@ -9,6 +9,8 @@ import re
 import time
 import urllib
 from threading import Thread
+from py4j.java_gateway import JavaGateway
+import pandas as pd
 #from streaming import EpidataStreamingContext
 from _private.transformation import Transformation
 from py4j.java_gateway import JavaGateway
