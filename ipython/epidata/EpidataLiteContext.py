@@ -11,7 +11,7 @@ import urllib
 from threading import Thread
 #from streaming import EpidataStreamingContext
 from _private.transformation import Transformation
-
+from py4j.java_gateway import JavaGateway
 
 '''
 from py4j.java_gateway import JavaGateway 
@@ -30,7 +30,7 @@ class EpidataLiteContext:
         #java_import(self._sc._jvm, "com.epidata.spark.EpidataContext")
         #self._jec = self._sc._jvm.EpidataContext(self._sc._jsc)
         #other confs and connections
-        gg = gate.launch_gateway(classpath="spark/target/scala-2.12/epidata-spark_2.12-1.0-SNAPSHOT.jar")
+        gg = gateway.launch_gateway(classpath="spark/target/scala-2.12/epidata-spark_2.12-1.0-SNAPSHOT.jar")
         java_entry = gg.jvm.com.epidata.spark.EpidataLiteContext() 
 
         

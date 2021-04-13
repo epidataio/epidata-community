@@ -3,7 +3,7 @@
 #
 
 from datetime import datetime, timedelta
-from epidata.contextLite import ec
+from epidata.EpidataLiteContext import EpidataLiteContext
 from epidata_common.data_types import Waveform
 import numpy
 import pandas
@@ -50,6 +50,7 @@ database = "/Users/lujiajun/Documents/epidata-community/data/epidata_test.db"
 
 con = create_connection(database)
 
+ec = EpidataLiteContext()
 
 
 

@@ -2,10 +2,7 @@
 * Copyright (c) 2015-2017 EpiData, Inc.
 */
 package ipython
-import javax.sql.rowset.serial
 import java.nio.file.{Files, Paths, StandardCopyOption}
-
-import com.datastax.driver.core.{Cluster, Session}
 import com.epidata.lib.models.util.Datatype
 import com.epidata.spark.Measurement
 import java.nio.ByteBuffer
@@ -23,7 +20,7 @@ import com.typesafe.config.ConfigFactory
 
 import scala.io.Source
 
-import javax.sql.rowset.serial.SerialBlob
+
 
 
 object IPythonSpecLite extends App{
@@ -47,7 +44,7 @@ object IPythonSpecLite extends App{
     val sql3 = Source.fromFile(original).getLines.mkString
     val sql4 = Source.fromFile(summary).getLines.mkString
     val sql5 = Source.fromFile(users).getLines.mkString
-//    session.executeUpdate(sql1)
+    session.executeUpdate(sql1)
     session.executeUpdate(sql2)
     session.executeUpdate(sql3)
 //    session.createStatement().executeUpdate(sql4)
@@ -247,6 +244,7 @@ object IPythonSpecLite extends App{
    Process(List("python",
      "ipython/test/test_automated_test_lite.py")
    ).run()
+
 
 
 
