@@ -1,5 +1,6 @@
-import context
-from data_frame import DataFrame
+# import context
+import EpidataLiteContext
+# from data_frame import DataFrame
 
 __doc__ = """
 epidata - Tools for querying and analyzing measurements stored on a remote cluster.
