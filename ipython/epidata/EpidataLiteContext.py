@@ -27,13 +27,12 @@ result = myclass_instance.my_method()
 class EpidataLiteContext:
     def __init__(self):
         gateway = JavaGateway()
-        #jvm = gateway.jvm
-        #java_import(self._sc._jvm, "com.epidata.spark.EpidataContext")
-        #self._jec = self._sc._jvm.EpidataContext(self._sc._jsc)
         #other confs and connections
-        gg = gateway.launch_gateway(classpath="/Users/raja/AA/InternshipsResearch/EpiData/epidataInterns-scala-2.12/epidata-community/spark/target/scala-2.12/epidata-spark-assembly-1.0-SNAPSHOT.jar")
+
+        #relative path works if you run from within an outer folder inside which epidata-community exists
+        #works with an absolute path as well
+        gg = gateway.launch_gateway(classpath="epidata-community/spark/target/scala-2.12/epidata-spark-assembly-1.0-SNAPSHOT.jar") 
         java_entry = gg.jvm.com.epidata.spark.EpidataLiteContext() 
-        # "../../spark/target/scala-2.12/epidata-spark-assembly-1.0-SNAPSHOT.jar"
 
         
     def to_pandas_dataframe(self, list_of_dicts):
@@ -124,3 +123,4 @@ testing code to see if it compiles
 cc = EpidataLiteContext() 
 print(cc.to_pandas_dataframe([ {"hi": "hi"}, {"two": "three"}]))
 '''
+
