@@ -20,3 +20,5 @@ jupyterhub/jupyterhub.sqlite
 jupyterhub/jupyterhub_cookie_secret
 ipython/epidata.egg-info/
 ipython/build/
+.metals
+.vscode
