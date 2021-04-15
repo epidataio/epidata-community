@@ -30,7 +30,11 @@ class EpidataLiteContext:
         #java_import(self._sc._jvm, "com.epidata.spark.EpidataContext")
         #self._jec = self._sc._jvm.EpidataContext(self._sc._jsc)
         #other confs and connections
+<<<<<<< HEAD
+        gg = gateway.launch_gateway(classpath="../../spark/target/scala-2.12/epidata-spark_2.12-1.0-SNAPSHOT.jar")
+=======
         gg = gate.launch_gateway(classpath="spark/target/scala-2.12/epidata-spark_2.12-1.0-SNAPSHOT.jar")
+>>>>>>> 95dec4e7596f265274d38cd4d73c0a437b553f64
         java_entry = gg.jvm.com.epidata.spark.EpidataLiteContext() 
 
         
@@ -61,21 +65,21 @@ class EpidataLiteContext:
     
     def query_measurements_original(self, field_query, begin_time, end_time):
         java_field_query, java_begin_time, java_end_time = self._to_java_params(field_query, begin_time, end_time)
-        java_df = java_entry.query(java_field_query, java_begin_time, java_end_time)
-        pdf = to_pandas_dataframe(java_df)
+        java_df = self.java_entry.query(java_field_query, java_begin_time, java_end_time)
+        pdf = self.to_pandas_dataframe(java_df)
         return pdf
         
 
     def query_measurements_cleansed(self, field_query, begin_time, end_time):
         java_field_query, java_begin_time, java_end_time = self._to_java_params(field_query, begin_time, end_time)
-        java_df = java_entry.queryMeasurementCleansed(java_field_query, java_begin_time, java_end_time)
-        pdf = to_pandas_dataframe(java_df)
+        java_df = self.java_entry.queryMeasurementCleansed(java_field_query, java_begin_time, java_end_time)
+        pdf = self.to_pandas_dataframe(java_df)
         return pdf
  
     def query_measurements_summary(self, field_query, begin_time, end_time):
         java_field_query, java_begin_time, java_end_time = self._to_java_params(field_query, begin_time, end_time)
-        java_df = java_entry.queryMeasurementSummary(java_field_query, java_begin_time, java_end_time)
-        pdf = to_pandas_dataframe(java_df)
+        java_df = self.java_entry.queryMeasurementSummary(java_field_query, java_begin_time, java_end_time)
+        pdf = self.to_pandas_dataframe(java_df)
         return pdf
 
     def list_keys(self):
@@ -88,8 +92,8 @@ class EpidataLiteContext:
             A DataFrame containing values of the principal fields used for
             classifying measurements.
         """
-        java_df = java_entry.listKeys() 
-        return to_pandas_dataframe(java_df) #does/should this return pandas dataframe or epidata dataframe? 
+        java_df = self.java_entry.listKeys() 
+        return self.to_pandas_dataframe(java_df) #does/should this return pandas dataframe or epidata dataframe? 
 
     def _to_java_params(self, field_query, begin_time, end_time):
         #gc = gateway.gateway_client #????
@@ -109,7 +113,7 @@ class EpidataLiteContext:
     def _to_java_timestamp(self, dt):
         stamp = time.mktime(dt.timetuple()) * 1e3 + dt.microsecond / 1e3
         timestamp = long(stamp)
-        return jvm.java.sql.Timestamp(timestamp)
+        return self.gg.jvm.java.sql.Timestamp(timestamp)
 
     def _check_cluster_memory(self):
         pass  #not needed with the lite version?
