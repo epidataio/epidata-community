@@ -15,15 +15,6 @@ from py4j.java_gateway import JavaGateway
 import pandas as pd
 import py4j
 
-'''
-from py4j.java_gateway import JavaGateway 
-
-gate = JavaGateway() 
-gg = gate.launch_gateway(classpath="./gatewayclass/JarExample.jar")
-
-myclass_instance = gg.jvm.gatewayclass.MyClass()
-result = myclass_instance.my_method()
-'''
 
 class EpidataLiteContext:
     def __init__(self):
@@ -114,6 +105,9 @@ class EpidataLiteContext:
         return self.to_pandas_dataframe(java_df) #does/should this return pandas dataframe or epidata dataframe? 
 
     def _to_java_params(self, field_query, begin_time, end_time):
+
+        #https://www.py4j.org/advanced_topics.html 
+
         gateway = JavaGateway()
         gg = gateway.launch_gateway(classpath="./spark/target/scala-2.12/epidata-spark-assembly-1.0-SNAPSHOT.jar") 
         java_entry = gg.jvm.com.epidata.spark.EpidataLiteContext() 
@@ -146,7 +140,7 @@ class EpidataLiteContext:
 
 '''
 testing code to see if it compiles
-'''
+
 from datetime import datetime, timedelta
 ec = EpidataLiteContext() 
 print(ec.to_pandas_dataframe([ {"hi": "hi"}, {"two": "three"}]))
@@ -161,5 +155,6 @@ result = ec.query_measurements_original({'company': 'Company-1',
                                             ts[5] + timedelta(seconds=0.5)
                                             )
 print(result)
+'''
 
 
