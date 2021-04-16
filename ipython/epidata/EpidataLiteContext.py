@@ -27,11 +27,11 @@ result = myclass_instance.my_method()
 class EpidataLiteContext:
     def __init__(self):
         gateway = JavaGateway()
+       
         #other confs and connections
 
-        #relative path works if you run from within an outer folder inside which epidata-community exists
         #works with an absolute path as well
-        gg = gateway.launch_gateway(classpath="epidata-community/spark/target/scala-2.12/epidata-spark-assembly-1.0-SNAPSHOT.jar") 
+        gg = gateway.launch_gateway(classpath="./spark/target/scala-2.12/epidata-spark-assembly-1.0-SNAPSHOT.jar") 
         java_entry = gg.jvm.com.epidata.spark.EpidataLiteContext() 
 
         
@@ -93,12 +93,12 @@ class EpidataLiteContext:
         return self.to_pandas_dataframe(java_df) #does/should this return pandas dataframe or epidata dataframe? 
 
     def _to_java_params(self, field_query, begin_time, end_time):
-        #gc = gateway.gateway_client #????
+        gc = JavaGateway().gateway_client #????
  
         def to_java_list(x):
-            if isinstance(x, basestring):
-                return ListConverter().convert([x])
-            return ListConverter().convert(x)
+            if isinstance(x, str): #or str
+                return ListConverter().convert([x], gc)
+            return ListConverter().convert(x, gc)
         
         java_list_field_query = {k: to_java_list(v) for k, v in field_query.items()}
         java_field_query = MapConverter().convert(java_list_field_query)
@@ -117,10 +117,23 @@ class EpidataLiteContext:
         
     #streaming, transformation methods as needed 
 
+
 '''
 testing code to see if it compiles
 
-cc = EpidataLiteContext() 
-print(cc.to_pandas_dataframe([ {"hi": "hi"}, {"two": "three"}]))
+from datetime import datetime, timedelta
+ec = EpidataLiteContext() 
+print(ec.to_pandas_dataframe([ {"hi": "hi"}, {"two": "three"}]))
+
+ts = [datetime.fromtimestamp(1428004316.123 + x) for x in range(6)]
+result = ec.query_measurements_original({'company': 'Company-1',
+                                             'site': 'Site-1',
+                                             'device_group': '1000',
+                                             'tester': 'Station-1',
+                                             'test_name': 'Test-1'},
+                                            ts[0],
+                                            ts[5] + timedelta(seconds=0.5)
+                                            )
+print(result)
 '''
 
