@@ -111,10 +111,10 @@ class EpidataLiteContext:
         gateway = JavaGateway()
         gg = gateway.launch_gateway(classpath="./spark/target/scala-2.12/epidata-spark-assembly-1.0-SNAPSHOT.jar") 
         java_entry = gg.jvm.com.epidata.spark.EpidataLiteContext() 
-        gc = gateway.gateway_client
+        gc = gg._gateway_client
  
         def to_java_list(x):
-            if isinstance(x, str): #or str
+            if isinstance(x, basestring): #or str
                 return ListConverter().convert([x], gc)
             return ListConverter().convert(x, gc)
         
@@ -140,21 +140,15 @@ class EpidataLiteContext:
 
 '''
 testing code to see if it compiles
+'''
 
 from datetime import datetime, timedelta
 ec = EpidataLiteContext() 
 print(ec.to_pandas_dataframe([ {"hi": "hi"}, {"two": "three"}]))
 
 ts = [datetime.fromtimestamp(1428004316.123 + x) for x in range(6)]
-result = ec.query_measurements_original({'company': 'Company-1',
-                                             'site': 'Site-1',
-                                             'device_group': '1000',
-                                             'tester': 'Station-1',
-                                             'test_name': 'Test-1'},
-                                            ts[0],
-                                            ts[5] + timedelta(seconds=0.5)
-                                            )
+result = ec.query_measurements_original({'company': 'Company-1', 'site': 'Site-1','device_group': '1000','tester': 'Station-1','test_name': 'Test-1'}, ts[0], ts[5])
 print(result)
-'''
+
 
 
