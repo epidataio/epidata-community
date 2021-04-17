@@ -18,13 +18,14 @@ import py4j
 
 class EpidataLiteContext:
     def __init__(self):
-        gateway = JavaGateway()
+        self.gateway = JavaGateway()
        
         #other confs and connections
 
         #works with an absolute path as well
-        gg = gateway.launch_gateway(classpath="./spark/target/scala-2.12/epidata-spark-assembly-1.0-SNAPSHOT.jar") 
-        java_entry = gg.jvm.com.epidata.spark.EpidataLiteContext() 
+        self.gg = self.gateway.launch_gateway(classpath="./spark/target/scala-2.12/epidata-spark-assembly-1.0-SNAPSHOT.jar") 
+        self.java_entry = self.gg.jvm.com.epidata.spark.EpidataLiteContext() 
+        
 
         
     def to_pandas_dataframe(self, list_of_dicts):
@@ -53,23 +54,15 @@ class EpidataLiteContext:
     """
     
     def query_measurements_original(self, field_query, begin_time, end_time):
-        params = py4j.java_gateway.GatewayParameters(auto_convert=True)
-        gateway = JavaGateway(gateway_parameters=params)
-        gg = gateway.launch_gateway(classpath="./spark/target/scala-2.12/epidata-spark-assembly-1.0-SNAPSHOT.jar") 
-        java_entry = gg.jvm.com.epidata.spark.EpidataLiteContext() 
 
         #java_field_query, java_begin_time, java_end_time = field_query, begin_time, end_time
         java_field_query, java_begin_time, java_end_time = self._to_java_params(field_query, begin_time, end_time)
-        java_df = java_entry.query(java_field_query, java_begin_time, java_end_time)
+        java_df = self.java_entry.query(java_field_query, java_begin_time, java_end_time)
         pdf = self.to_pandas_dataframe(java_df)
         return pdf
         
 
     def query_measurements_cleansed(self, field_query, begin_time, end_time):
-        params = py4j.java_gateway.GatewayParameters(auto_convert=True)
-        gateway = JavaGateway(gateway_parameters=params)
-        gg = gateway.launch_gateway(classpath="./spark/target/scala-2.12/epidata-spark-assembly-1.0-SNAPSHOT.jar") 
-        java_entry = gg.jvm.com.epidata.spark.EpidataLiteContext() 
 
         java_field_query, java_begin_time, java_end_time = self._to_java_params(field_query, begin_time, end_time)
         java_df = self.java_entry.queryMeasurementCleansed(java_field_query, java_begin_time, java_end_time)
@@ -77,21 +70,13 @@ class EpidataLiteContext:
         return pdf
  
     def query_measurements_summary(self, field_query, begin_time, end_time):
-        params = py4j.java_gateway.GatewayParameters(auto_convert=True)
-        gateway = JavaGateway(gateway_parameters=params)
-        gg = gateway.launch_gateway(classpath="./spark/target/scala-2.12/epidata-spark-assembly-1.0-SNAPSHOT.jar") 
-        java_entry = gg.jvm.com.epidata.spark.EpidataLiteContext() 
-
+    
         java_field_query, java_begin_time, java_end_time = self._to_java_params(field_query, begin_time, end_time)
         java_df = self.java_entry.queryMeasurementSummary(java_field_query, java_begin_time, java_end_time)
         pdf = self.to_pandas_dataframe(java_df)
         return pdf
 
     def list_keys(self):
-        params = py4j.java_gateway.GatewayParameters(auto_convert=True)
-        gateway = JavaGateway(gateway_parameters=params)
-        gg = gateway.launch_gateway(classpath="./spark/target/scala-2.12/epidata-spark-assembly-1.0-SNAPSHOT.jar") 
-        java_entry = gg.jvm.com.epidata.spark.EpidataLiteContext() 
         """
         List the epidata measurement keys.
 
@@ -108,29 +93,24 @@ class EpidataLiteContext:
 
         #https://www.py4j.org/advanced_topics.html 
 
-        gateway = JavaGateway()
-        gg = gateway.launch_gateway(classpath="./spark/target/scala-2.12/epidata-spark-assembly-1.0-SNAPSHOT.jar") 
-        java_entry = gg.jvm.com.epidata.spark.EpidataLiteContext() 
-        gc = gg._gateway_client
- 
+        self.gc = self.gg._gateway_client
+        
         def to_java_list(x):
             if isinstance(x, basestring): #or str
-                return ListConverter().convert([x], gc)
-            return ListConverter().convert(x, gc)
+                return ListConverter().convert([x], self.gc)
+            return ListConverter().convert(x, self.gc)
         
         java_list_field_query = {k: to_java_list(v) for k, v in field_query.items()}
-        java_field_query = MapConverter().convert(field_query, gc)
+        java_field_query = MapConverter().convert(java_list_field_query, self.gc)
         java_begin_time = self._to_java_timestamp(begin_time)
         java_end_time = self._to_java_timestamp(end_time)
-        return field_query, java_begin_time, java_end_time
+        return java_field_query, java_begin_time, java_end_time
 
 
     def _to_java_timestamp(self, dt):
-        gg = JavaGateway().launch_gateway(classpath="./spark/target/scala-2.12/epidata-spark-assembly-1.0-SNAPSHOT.jar") 
-        java_entry = gg.jvm.com.epidata.spark.EpidataLiteContext() 
         stamp = time.mktime(dt.timetuple()) * 1e3 + dt.microsecond / 1e3
         timestamp = int(float(stamp))
-        return gg.jvm.java.sql.Timestamp(timestamp)
+        return self.gg.jvm.java.sql.Timestamp(timestamp)
 
     def _check_cluster_memory(self):
         pass  #not needed with the lite version?
@@ -150,5 +130,6 @@ ts = [datetime.fromtimestamp(1428004316.123 + x) for x in range(6)]
 result = ec.query_measurements_original({'company': 'Company-1', 'site': 'Site-1','device_group': '1000','tester': 'Station-1','test_name': 'Test-1'}, ts[0], ts[5])
 print(result)
 '''
+
 
 
