@@ -1,4 +1,5 @@
 #from data_frame import DataFrame
+
 from datetime import datetime
 import _private.py4j_additions
 import json
@@ -26,15 +27,14 @@ result = myclass_instance.my_method()
 
 class EpidataLiteContext:
     def __init__(self):
-        gateway = JavaGateway()
-        #jvm = gateway.jvm
-        #java_import(self._sc._jvm, "com.epidata.spark.EpidataContext")
-        #self._jec = self._sc._jvm.EpidataContext(self._sc._jsc)
+        self.gateway = JavaGateway()
         #other confs and connections
 
-        gg = gateway.launch_gateway(classpath="epidata-intern/spark/target/scala-2.12/epidata-spark-assembly-1.0-SNAPSHOT.jar")
+        #relative path works if you run from within an outer folder inside which epidata-community exists
+        #works with an absolute path as well
+        # gg = self.gateway.launch_gateway(classpath="../../spark/target/scala-2.12/epidata-spark-assembly-1.0-SNAPSHOT.jar")
+        gg = self.gateway.launch_gateway(classpath="spark/target/scala-2.12/epidata-spark-assembly-1.0-SNAPSHOT.jar")
         java_entry = gg.jvm.com.epidata.spark.EpidataLiteContext() 
-
 
         
     def to_pandas_dataframe(self, list_of_dicts):
@@ -95,13 +95,14 @@ class EpidataLiteContext:
         return self.to_pandas_dataframe(java_df) #does/should this return pandas dataframe or epidata dataframe? 
 
     def _to_java_params(self, field_query, begin_time, end_time):
-        #gc = gateway.gateway_client #????
+        gc = self.gateway.gateway_client
  
         def to_java_list(x):
-            if isinstance(x, basestring):
-                return ListConverter().convert([x])
-            return ListConverter().convert(x)
-        
+            if isinstance(x, str):
+                return ListConverter().convert([x], gc)
+            return ListConverter().convert(x, gc)
+        # for k, v in field_query.items():
+        #     print(v)
         java_list_field_query = {k: to_java_list(v) for k, v in field_query.items()}
         java_field_query = MapConverter().convert(java_list_field_query)
         java_begin_time = self._to_java_timestamp(begin_time)
@@ -119,4 +120,10 @@ class EpidataLiteContext:
         
     #streaming, transformation methods as needed 
 
+'''
+testing code to see if it compiles
+
+cc = EpidataLiteContext() 
+print(cc.to_pandas_dataframe([ {"hi": "hi"}, {"two": "three"}]))
+'''
 
