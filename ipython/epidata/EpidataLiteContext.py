@@ -140,7 +140,7 @@ class EpidataLiteContext:
 
 '''
 testing code to see if it compiles
-'''
+
 
 from datetime import datetime, timedelta
 ec = EpidataLiteContext() 
@@ -149,6 +149,6 @@ print(ec.to_pandas_dataframe([ {"hi": "hi"}, {"two": "three"}]))
 ts = [datetime.fromtimestamp(1428004316.123 + x) for x in range(6)]
 result = ec.query_measurements_original({'company': 'Company-1', 'site': 'Site-1','device_group': '1000','tester': 'Station-1','test_name': 'Test-1'}, ts[0], ts[5])
 print(result)
-
+'''
 
 
