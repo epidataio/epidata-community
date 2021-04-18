@@ -9,7 +9,7 @@ scalaVersion := "2.12.11"
 
 libraryDependencies ++= Seq(
   "com.typesafe.play" %% "play-json" % "2.7.4",
-  "org.xerial" % "sqlite-jdbc" % "3.34.0",
+  "org.xerial" % "sqlite-jdbc" % "3.32.3.3",
   "com.datastax.spark" %% "spark-cassandra-connector" % "2.4.3",
   "com.datastax.cassandra" % "cassandra-driver-core" % "3.9.0",
   "org.apache.spark" %% "spark-core" % "2.4.6",

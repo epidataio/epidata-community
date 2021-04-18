@@ -12,6 +12,8 @@ import scala.io.Source
 object elcTest extends App {
   val ec = new EpidataLiteContext()
   val conf = ConfigFactory.parseResources("sqlite-defaults.conf")
+
+  Class.forName("org.sqlite.JDBC");
   val con = DriverManager.getConnection(conf.getString("spark.epidata.SQLite.url"))
   val stmt = con.createStatement()
 

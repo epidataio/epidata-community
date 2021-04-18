@@ -60,6 +60,7 @@ object DB {
 
 private class ConnectionLite(url: String) {
 
+  Class.forName("org.sqlite.JDBC");
   val session = DriverManager.getConnection(url)
 
   val cleansed = "play/conf/schema//measurements_cleansed"

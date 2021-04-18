@@ -21,6 +21,9 @@ class EpidataLiteContext() {
   private lazy val measurementClass = conf.getString("spark.epidata.measurementClass")
   private lazy val streamingBatchDuration = conf.getInt("spark.epidata.streamingBatchDuration")
 
+  Class.forName("org.sqlite.JDBC")
+  private var con: Connection = DriverManager.getConnection(conf.getString("spark.epidata.SQLite.url"))
+
   def query(
     fieldQuery: Map[String, List[String]],
     beginTime: Timestamp,
@@ -38,11 +41,9 @@ class EpidataLiteContext() {
     val FieldsQuery = genericPartitionFields
       .map(partitionFieldsMap).flatMap(fieldQuery)
 
-    // Add config file for SQLite in folder?
-    val con = DriverManager.getConnection(conf.getString("spark.epidata.SQLite.url"))
-
     val orderedEpochs = Measurement.epochForTs(beginTime) to Measurement.epochForTs(endTime)
     val epoch = orderedEpochs.toArray
+
     // Calculating # of bindmarkers
     var epoch_str = ""
     for (i <- 1 to epoch.length) {
@@ -64,15 +65,27 @@ class EpidataLiteContext() {
       stmt.setTimestamp(4 + epoch.length + 1, beginTime)
       stmt.setTimestamp(4 + epoch.length + 2, endTime)
       val rs = stmt.executeQuery()
+
+      try {
+        stmt.close()
+      } catch {
+        case e: SQLException => println("Error closing Statement")
+      }
+
       rs
     }
 
     // Transform ResultSet to corresponding objects
     val select_rs = rsQuery(FieldsQuery)
-    val rs = transformResultSet(select_rs, tableName)
+    val maps = transformResultSet(select_rs, tableName)
 
-    con.close()
-    rs
+    try {
+      select_rs.close()
+    } catch {
+      case e: SQLException => println("Error closing ResultSet")
+    }
+
+    maps
   }
 
   private def transformResultSet(rs: ResultSet, tableName: String): JLinkedList[JLinkedHashMap[String, Object]] = {
@@ -143,6 +156,7 @@ class EpidataLiteContext() {
     }
 
     val map = getDataFrame(fieldQuery, beginTime, endTime, tableName)
+
     //    if (!fieldQuery.keySet.subsetOf(BaseMeasurement.getColumns())) {
     //      throw new IllegalArgumentException("Unexpected field in fieldQuery.")
     //    }
@@ -156,6 +170,7 @@ class EpidataLiteContext() {
     //      df.filter(df.col(filter._1).isin(filter._2.map(lit(_)): _*)))
 
     //    filtered
+
     map
   }
 
@@ -188,9 +203,12 @@ class EpidataLiteContext() {
 
   /** List the values of the currently saved partition key fields. */
   def listKeys(): JLinkedList[JLinkedHashMap[String, Object]] = {
-    val con = DriverManager.getConnection(conf.getString("spark.epidata.SQLite.url"))
+
+    //val con = DriverManager.getConnection(conf.getString("spark.epidata.SQLite.url"))
+
     val query = getKeysStatementString(BaseMeasurementsKeys.DBTableName)
-    val rs = con.prepareStatement(query).executeQuery()
+    val stmt = con.prepareStatement(query)
+    val rs = stmt.executeQuery()
     var keys = new JLinkedList[JLinkedHashMap[String, Object]]()
     measurementClass match {
       case BaseAutomatedTest.NAME =>
@@ -213,7 +231,13 @@ class EpidataLiteContext() {
           keys.add(AutomatedTestKey.toJLinkedHashMap(AutomatedTestKey.keyToAutomatedTest(meas_key)))
         }
     }
-    con.close()
+
+    try {
+      rs.close()
+    } catch {
+      case e: SQLException => println("Error closing ResultSet")
+    }
+
     keys
   }
 
@@ -262,4 +286,5 @@ class EpidataLiteContext() {
     val query = s"SELECT * FROM ${tableName}"
     query
   }
+
 }
