@@ -22,7 +22,7 @@ class EpidataLiteContext() {
   private lazy val streamingBatchDuration = conf.getInt("spark.epidata.streamingBatchDuration")
 
   Class.forName("org.sqlite.JDBC")
-  private var con: Connection = DriverManager.getConnection(conf.getString("spark.epidata.SQLite.url"))
+  private val con: Connection = DriverManager.getConnection(conf.getString("spark.epidata.SQLite.url"))
 
   def query(
     fieldQuery: Map[String, List[String]],
