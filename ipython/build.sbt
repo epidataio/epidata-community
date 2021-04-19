@@ -7,11 +7,12 @@ name := "epidata-ipython-tests"
 scalaVersion := "2.12.11"
 
 libraryDependencies ++= Seq(
-  "org.xerial" % "sqlite-jdbc" % "3.34.0",
+  "org.xerial" % "sqlite-jdbc" % "3.32.3.3",
   "com.datastax.cassandra" % "cassandra-driver-core" % "3.9.0",
   "org.apache.spark" %% "spark-sql" % "2.4.6",
   "org.scalactic" %% "scalactic" % "3.2.5",
   "org.scalatest" %% "scalatest" % "3.2.5" % "test"
+
 )
 
 ScalariformKeys.preferences := ScalariformKeys.preferences.value

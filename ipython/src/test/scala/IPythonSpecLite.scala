@@ -28,7 +28,7 @@ object IPythonSpecLite extends App{
   try { // create a database connection
 
     val conf = ConfigFactory.parseResources("sqlite-defaults.conf")
-    val con = DriverManager.getConnection("jdbc:sqlite:data/epidata_test.db")
+    val con = DriverManager.getConnection("jdbc:sqlite:data/epidata_development.db")
     val session = con.createStatement()
     val ts = (0 to 5).map(x => new Timestamp(1428004316123L + x * 1000))
     val epoch = ts.map(Measurement.epochForTs(_))

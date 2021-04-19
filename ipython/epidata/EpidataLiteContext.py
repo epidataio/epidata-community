@@ -1,4 +1,5 @@
 #from data_frame import DataFrame
+
 from datetime import datetime
 import _private.py4j_additions
 import json
@@ -18,14 +19,16 @@ import py4j
 
 class EpidataLiteContext:
     def __init__(self):
+
         self.gateway = JavaGateway()
        
         #other confs and connections
 
         #works with an absolute path as well
-        self.gg = self.gateway.launch_gateway(classpath="./spark/target/scala-2.12/epidata-spark-assembly-1.0-SNAPSHOT.jar") 
+        self.gg = self.gateway.launch_gateway(classpath="spark/target/scala-2.12/epidata-spark-assembly-1.0-SNAPSHOT.jar")
         self.java_entry = self.gg.jvm.com.epidata.spark.EpidataLiteContext() 
         
+
 
         
     def to_pandas_dataframe(self, list_of_dicts):
@@ -54,6 +57,7 @@ class EpidataLiteContext:
     """
     
     def query_measurements_original(self, field_query, begin_time, end_time):
+
 
         #java_field_query, java_begin_time, java_end_time = field_query, begin_time, end_time
         java_field_query, java_begin_time, java_end_time = self._to_java_params(field_query, begin_time, end_time)
@@ -94,12 +98,13 @@ class EpidataLiteContext:
         #https://www.py4j.org/advanced_topics.html 
 
         self.gc = self.gg._gateway_client
-        
+
         def to_java_list(x):
             if isinstance(x, basestring): #or str
                 return ListConverter().convert([x], self.gc)
             return ListConverter().convert(x, self.gc)
         
+
         java_list_field_query = {k: to_java_list(v) for k, v in field_query.items()}
         java_field_query = MapConverter().convert(java_list_field_query, self.gc)
         java_begin_time = self._to_java_timestamp(begin_time)
@@ -108,6 +113,7 @@ class EpidataLiteContext:
 
 
     def _to_java_timestamp(self, dt):
+
         stamp = time.mktime(dt.timetuple()) * 1e3 + dt.microsecond / 1e3
         timestamp = int(float(stamp))
         return self.gg.jvm.java.sql.Timestamp(timestamp)

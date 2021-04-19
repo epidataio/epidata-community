@@ -1,7 +1,7 @@
 #
 # Copyright (c) 2015-2017 EpiData, Inc.
 #
-
+#!/usr/bin/env python2.7
 from datetime import datetime, timedelta
 from epidata.EpidataLiteContext import EpidataLiteContext
 from epidata_common.data_types import Waveform
