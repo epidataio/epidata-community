@@ -22,3 +22,5 @@ ipython/epidata.egg-info/
 ipython/build/
 .metals
 .vscode
+ipython/lib
+spark/lib
