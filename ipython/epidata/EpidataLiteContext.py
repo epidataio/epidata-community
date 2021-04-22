@@ -27,11 +27,11 @@ class EpidataLiteContext:
         #works with an absolute path as well
         self.gg = self.gateway.launch_gateway(classpath="spark/target/scala-2.12/epidata-spark-assembly-1.0-SNAPSHOT.jar")
         self.java_entry = self.gg.jvm.com.epidata.spark.EpidataLiteContext() 
-        
-
 
         
     def to_pandas_dataframe(self, list_of_dicts):
+        #print(type(list_of_dicts))
+        #print(list_of_dicts)
         pdf = pd.DataFrame.from_records(list_of_dicts) 
         return pdf
    
@@ -62,6 +62,8 @@ class EpidataLiteContext:
         #java_field_query, java_begin_time, java_end_time = field_query, begin_time, end_time
         java_field_query, java_begin_time, java_end_time = self._to_java_params(field_query, begin_time, end_time)
         java_df = self.java_entry.query(java_field_query, java_begin_time, java_end_time)
+        if isinstance(java_df, py4j.java_collections.JavaList) and java_df.size() == 0:
+            java_df = []
         pdf = self.to_pandas_dataframe(java_df)
         return pdf
         
@@ -70,6 +72,8 @@ class EpidataLiteContext:
 
         java_field_query, java_begin_time, java_end_time = self._to_java_params(field_query, begin_time, end_time)
         java_df = self.java_entry.queryMeasurementCleansed(java_field_query, java_begin_time, java_end_time)
+        if isinstance(java_df, py4j.java_collections.JavaList) and java_df.size() == 0:
+            java_df = []
         pdf = self.to_pandas_dataframe(java_df)
         return pdf
  
@@ -77,6 +81,8 @@ class EpidataLiteContext:
     
         java_field_query, java_begin_time, java_end_time = self._to_java_params(field_query, begin_time, end_time)
         java_df = self.java_entry.queryMeasurementSummary(java_field_query, java_begin_time, java_end_time)
+        if isinstance(java_df, py4j.java_collections.JavaList) and java_df.size() == 0:
+            java_df = []
         pdf = self.to_pandas_dataframe(java_df)
         return pdf
 
@@ -91,6 +97,8 @@ class EpidataLiteContext:
             classifying measurements.
         """
         java_df = self.java_entry.listKeys() 
+        if isinstance(java_df, py4j.java_collections.JavaList) and java_df.size() == 0:
+            java_df = []
         return self.to_pandas_dataframe(java_df) #does/should this return pandas dataframe or epidata dataframe? 
 
     def _to_java_params(self, field_query, begin_time, end_time):
@@ -126,18 +134,19 @@ class EpidataLiteContext:
 
 '''
 testing code to see if it compiles
-
+''' 
 
 from datetime import datetime, timedelta
 ec = EpidataLiteContext() 
-print(ec.to_pandas_dataframe([ {"hi": "hi"}, {"two": "three"}]))
-print(ec.list_keys())
-
+#print(ec.to_pandas_dataframe([ {"hi": "hi"}, {"two": "three"}]))
+#print(ec.list_keys())
 
 ts = [datetime.fromtimestamp(1428004316.123 + x) for x in range(6)]
 result = ec.query_measurements_original({'company': 'Company-1', 'site': 'Site-1','device_group': '1000','tester': 'Station-1','test_name': 'Test-1'}, ts[0], ts[5])
 print(result)
-'''
+
+
+
 
 
 
