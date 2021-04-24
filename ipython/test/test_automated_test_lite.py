@@ -44,7 +44,7 @@ def create_connection(db_file):
 
 ts = [datetime.fromtimestamp(1428004316.123 + x) for x in range(6)]
 
-database = "/Users/lujiajun/Documents/epidata-community/data/epidata_test.db"
+database = "/Users/lujiajun/Documents/epidata-intern/data/epidata_development.db"
 
 con = create_connection(database)
 
@@ -86,14 +86,14 @@ class Base(unittest.TestCase):
 
 
 class EpidataContextTests(Base):
-    # def test_simple_query_test(self):
-    #     # create a database connection
-    #     cur = con.cursor()
-    #     cur.execute("select * from measurements_original where key2 = 'Test-5'")
-    #     rows = cur.fetchall()
-    #
-    #     for row in rows:
-    #         print(row)
+    def test_simple_query_test(self):
+        # create a database connection
+        cur = con.cursor()
+        cur.execute("select * from measurements_original where key2 = 'Test-1'")
+        rows = cur.fetchall()
+
+        for row in rows:
+            print(row)
 
     def test_query_double(self):
         df = ec.query_measurements_original({'company': 'Company-1',
@@ -105,7 +105,7 @@ class EpidataContextTests(Base):
                                             ts[0] + timedelta(seconds=0.5)
                                             )
         print(df)
-        # self.assertEqual(1, len(df))
+        self.assertEqual(1, len(df))
         # self.assertEqualRows(
         #     self.make_row(
         #         ['Company-1',
@@ -378,16 +378,16 @@ class EpidataContextTests(Base):
     #             'PASS']),
     #         df.head())
     #
-    # def test_list_keys(self):
-    #     df = ec.list_keys()
-    #     self.assertEqual(
-    #         'company    site device_group     tester\n'
-    #         'Company-1  Site-1         1000  Station-1\n'
-    #         'Company-1  Site-1         1000  Station-3\n'
-    #         'Company-2  Site-1         1000  Station-1',
-    #         df.sort(
-    #             ['company', 'site', 'device_group', 'tester'])
-    #             .to_string(index=False))
+    def test_list_keys(self):
+        df = ec.list_keys()
+        self.assertEqual(
+            'company    site device_group     tester\n'
+            'Company-1  Site-1         1000  Station-1\n'
+            'Company-1  Site-1         1000  Station-3\n'
+            'Company-2  Site-1         1000  Station-1',
+            df.sort(
+                ['company', 'site', 'device_group', 'tester'])
+                .to_string(index=False))
 
 #
 # class DataFrameTests(Base):
