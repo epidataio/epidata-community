@@ -33,15 +33,15 @@ object elcTest extends App {
   val create_key = keys_source.getLines.mkString
   orig_source.close()
   keys_source.close()
-  println(s"measurements_original schema is ${create_orig}")
-  println(s"measurements_keys schema is ${create_key}")
+  //println(s"measurements_original schema is ${create_orig}")
+  //println(s"measurements_keys schema is ${create_key}")
   stmt.execute(create_orig)
   stmt.execute(create_key)
 
   // Manual Insert for measurements_original
-  val beginTime = new Timestamp(1428004316123L)
-  val testTime = new Timestamp(1428004316123L + 5000L)
-  val endTime = new Timestamp(1428004316123L + 10000L)
+  val beginTime = new Timestamp(1619240032000L)
+  val testTime = new Timestamp(1619240032000L + 5000L)
+  val endTime = new Timestamp(1619240032000L + 10000L)
   val ts = beginTime
   val orderedEpochs = Measurement.epochForTs(beginTime) to Measurement.epochForTs(endTime)
   var epoch = orderedEpochs.toArray
@@ -74,7 +74,7 @@ object elcTest extends App {
      #meas_description,
      #val1,
      #val2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#')
-  //  println(s"prebinding: ${insert_q.toString}")
+  //println(s"prebinding: ${insert_q.toString}")
 
   val prepare_insert = con.prepareStatement(insert_q.toString)
   prepare_insert.setString(1, to_check(0).asInstanceOf[String])

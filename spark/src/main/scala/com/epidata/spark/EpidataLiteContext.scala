@@ -66,12 +66,6 @@ class EpidataLiteContext() {
       stmt.setTimestamp(4 + epoch.length + 2, endTime)
       val rs = stmt.executeQuery()
 
-      try {
-        stmt.close()
-      } catch {
-        case e: SQLException => println("Error closing Statement")
-      }
-
       rs
     }
 
@@ -127,6 +121,7 @@ class EpidataLiteContext() {
             }
         }
     }
+
     maps
   }
 
