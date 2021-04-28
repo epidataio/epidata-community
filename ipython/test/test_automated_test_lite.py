@@ -47,7 +47,7 @@ ts_sub = [1428004316123 + x * 100 for x in range(6)]
 
 database = "/Users/lujiajun/Documents/epidata-intern/data/epidata_development.db"
 
-con = create_connection(database)
+# con = create_connection(database)
 
 ec = EpidataLiteContext()
 
@@ -158,7 +158,7 @@ class EpidataContextTests(Base):
                                              'tester': 'Station-1',
                                              'test_name': 'Test-1'},
                                             ts[0],
-                                            ts[5] + timedelta(seconds=0.5)
+                                            ts[3] + timedelta(seconds=0.5)
                                             )
         self.assertEqual(2, len(df.index))
         # self.assertEqualRows(

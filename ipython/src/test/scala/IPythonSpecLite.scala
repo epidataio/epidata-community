@@ -240,14 +240,13 @@ object IPythonSpecLite extends App{
 //
 //
 //    }
+//   rs.close()
+   session.close()
    con.close()
+
    Process(List("python",
      "ipython/test/test_automated_test_lite.py")
    ).run()
-
-
-
-
 
 
 
@@ -256,6 +255,10 @@ object IPythonSpecLite extends App{
       // if the error message is "out of memory",
       // it probably means no database file is found
       System.err.println(e.getMessage)
+  }
+  finally {
+
+
   }
   println("Hello, World!")
 
