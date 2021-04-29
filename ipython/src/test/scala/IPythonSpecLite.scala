@@ -1,4 +1,4 @@
-/*
+/*$
 * Copyright (c) 2015-2017 EpiData, Inc.
 */
 package ipython
@@ -218,36 +218,35 @@ object IPythonSpecLite extends App{
 
 
 
-    val rs = session.executeQuery(s"select * from ${com.epidata.lib.models.MeasurementCleansed.DBTableName} where key2 = 'Test-6'")
-    while ( {
-      rs.next
-    }) { // read the result set
-//      print(rs)
-      System.out.println("customer = " + rs.getString("customer"))
-      System.out.println("customer_site = " + rs.getString("customer_site"))
-      System.out.println("collection = " + rs.getString("collection"))
-      System.out.println("dataset = " + rs.getString("dataset"))
-      System.out.println("ts = " + rs.getTimestamp("ts"))
-      System.out.println("key2 = " + rs.getString("key2"))
-      System.out.println("flag = " + rs.getString("meas_flag"))
-      System.out.println("mess_b = " + rs.getObject("meas_value_b"))
-      System.out.println()
-      val ar = rs.getBytes("meas_value_b");
-
-      for(a <- ar){
-        print(a + " ")
-      }
-
-
-    }
+//    val rs = session.executeQuery(s"select * from ${com.epidata.lib.models.MeasurementCleansed.DBTableName} where key2 = 'Test-6'")
+//    while ( {
+//      rs.next
+//    }) { // read the result set
+////      print(rs)
+//      System.out.println("customer = " + rs.getString("customer"))
+//      System.out.println("customer_site = " + rs.getString("customer_site"))
+//      System.out.println("collection = " + rs.getString("collection"))
+//      System.out.println("dataset = " + rs.getString("dataset"))
+//      System.out.println("ts = " + rs.getTimestamp("ts"))
+//      System.out.println("key2 = " + rs.getString("key2"))
+//      System.out.println("flag = " + rs.getString("meas_flag"))
+//      System.out.println("mess_b = " + rs.getObject("meas_value_b"))
+//      System.out.println()
+//      val ar = rs.getBytes("meas_value_b");
+//
+//      for(a <- ar){
+//        print(a + " ")
+//      }
+//
+//
+//    }
+//   rs.close()
+   session.close()
+   con.close()
 
    Process(List("python",
      "ipython/test/test_automated_test_lite.py")
    ).run()
-
-
-
-
 
 
 
@@ -256,6 +255,10 @@ object IPythonSpecLite extends App{
       // if the error message is "out of memory",
       // it probably means no database file is found
       System.err.println(e.getMessage)
+  }
+  finally {
+
+
   }
   println("Hello, World!")
 

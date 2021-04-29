@@ -62,6 +62,7 @@ class EpidataLiteContext:
         #java_field_query, java_begin_time, java_end_time = field_query, begin_time, end_time
         java_field_query, java_begin_time, java_end_time = self._to_java_params(field_query, begin_time, end_time)
         java_df = self.java_entry.query(java_field_query, java_begin_time, java_end_time)
+        print java_df
         if isinstance(java_df, py4j.java_collections.JavaList):
             if java_df.size() == 0:
                 java_df = []
