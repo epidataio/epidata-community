@@ -4,7 +4,7 @@
 
 package com.epidata.spark
 
-import java.sql.{ Connection, DriverManager, ResultSet, SQLException, Statement, PreparedStatement, Timestamp }
+import java.sql.{ Connection, DriverManager, ResultSet, SQLException, Statement, Timestamp }
 import com.epidata.lib.models.{ Measurement => BaseMeasurement, MeasurementCleansed => BaseMeasurementCleansed, MeasurementsKeys => BaseMeasurementsKeys }
 import com.epidata.lib.models.{ MeasurementSummary, AutomatedTest => BaseAutomatedTest, SensorMeasurement => BaseSensorMeasurement }
 import java.util.{ Date, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList }
@@ -51,36 +51,27 @@ class EpidataLiteContext() {
     }
     epoch_str = epoch_str.slice(0, epoch_str.length - 1)
 
-    val query = getSelectStatmentString(tableName, epoch_str)
-    val stmt = con.prepareStatement(query)
-
     // Create a ResultSet for a specified epoch
-    def rsQuery(statement: PreparedStatement, parameter: List[AnyRef]): ResultSet = {
-      //    val query = getSelectStatmentString(tableName, epoch_str)
-      //    val statement = con.prepareStatement(query)
-      statement.setString(1, parameter.head.asInstanceOf[String])
-      statement.setString(2, parameter(1).asInstanceOf[String])
-      statement.setString(3, parameter(2).asInstanceOf[String])
-      statement.setString(4, parameter(3).asInstanceOf[String])
+    def rsQuery(parameter: List[AnyRef]): ResultSet = {
+      val query = getSelectStatmentString(tableName, epoch_str)
+      val stmt = con.prepareStatement(query)
+      stmt.setString(1, parameter.head.asInstanceOf[String])
+      stmt.setString(2, parameter(1).asInstanceOf[String])
+      stmt.setString(3, parameter(2).asInstanceOf[String])
+      stmt.setString(4, parameter(3).asInstanceOf[String])
       for (i <- 1 to epoch.length) {
-        statement.setInt(4 + i, epoch(i - 1))
+        stmt.setInt(4 + i, epoch(i - 1))
       }
-      statement.setTimestamp(4 + epoch.length + 1, beginTime)
-      statement.setTimestamp(4 + epoch.length + 2, endTime)
-      val rs = statement.executeQuery()
+      stmt.setTimestamp(4 + epoch.length + 1, beginTime)
+      stmt.setTimestamp(4 + epoch.length + 2, endTime)
+      val rs = stmt.executeQuery()
 
       rs
     }
 
     // Transform ResultSet to corresponding objects
-    val select_rs = rsQuery(stmt, FieldsQuery)
+    val select_rs = rsQuery(FieldsQuery)
     val maps = transformResultSet(select_rs, tableName)
-
-    try {
-      stmt.close()
-    } catch {
-      case e: SQLException => println("Error closing Statement")
-    }
 
     try {
       select_rs.close()
@@ -234,12 +225,6 @@ class EpidataLiteContext() {
             Option(rs.getString("dataset")).get)
           keys.add(AutomatedTestKey.toJLinkedHashMap(AutomatedTestKey.keyToAutomatedTest(meas_key)))
         }
-    }
-
-    try {
-      stmt.close()
-    } catch {
-      case e: SQLException => println("Error closing Statement")
     }
 
     try {
