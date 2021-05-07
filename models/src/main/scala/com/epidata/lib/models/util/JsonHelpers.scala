@@ -4,7 +4,7 @@
 
 package com.epidata.lib.models.util
 
-import java.util.{ Map => JMap, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList }
+import java.util.{ Map => JMap, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList, List => JList }
 import java.lang.{ Long => JLong, Double => JDouble }
 import javax.xml.bind.DatatypeConverter
 
@@ -66,7 +66,7 @@ object JsonHelpers {
     }
   }
 
-  def toJson(list: JLinkedList[JLinkedHashMap[String, Object]], nextBatch: String): String = {
+  def toJson(list: JList[JLinkedHashMap[String, Object]], nextBatch: String): String = {
     val map = new JLinkedHashMap[String, Object]()
     map.put("batch", nextBatch)
     map.put("records", list)

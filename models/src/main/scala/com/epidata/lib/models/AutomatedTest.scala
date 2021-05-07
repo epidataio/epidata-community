@@ -9,7 +9,7 @@ import java.sql.Timestamp
 import com.datastax.driver.core.Row
 import java.sql.ResultSet
 import com.epidata.lib.models.util.{ Datatype, TypeUtils, JsonHelpers, Binary }
-import java.util.{ Date, Map => JMap, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList }
+import java.util.{ Date, Map => JMap, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList, List => JList }
 import java.util.Date
 
 import org.json.simple.{ JSONArray, JSONObject }
@@ -314,7 +314,7 @@ object AutomatedTest {
 
   def toJson(list: List[AutomatedTest]): String = {
     import scala.collection.JavaConverters._
-    val arr = new JLinkedList[JLinkedHashMap[String, Object]]()
+    val arr: JList[JLinkedHashMap[String, Object]] = new JLinkedList[JLinkedHashMap[String, Object]]()
     arr.addAll(
       list
         .map(m => toJLinkedHashMap(m))

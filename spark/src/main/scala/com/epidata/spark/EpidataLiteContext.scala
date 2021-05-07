@@ -7,9 +7,10 @@ package com.epidata.spark
 import java.sql.{ Connection, DriverManager, ResultSet, SQLException, Statement, Timestamp }
 import com.epidata.lib.models.{ Measurement => BaseMeasurement, MeasurementCleansed => BaseMeasurementCleansed, MeasurementsKeys => BaseMeasurementsKeys }
 import com.epidata.lib.models.{ MeasurementSummary, AutomatedTest => BaseAutomatedTest, SensorMeasurement => BaseSensorMeasurement }
-import java.util.{ Date, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList }
+import java.util.{ Date, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList, List => JList }
 import com.typesafe.config.ConfigFactory
 import scala.collection.JavaConversions._
+import scala.collection.JavaConversions
 import java.io.File
 
 /**
@@ -27,7 +28,7 @@ class EpidataLiteContext() {
   def query(
     fieldQuery: Map[String, List[String]],
     beginTime: Timestamp,
-    endTime: Timestamp): JLinkedList[JLinkedHashMap[String, Object]] = {
+    endTime: Timestamp): JList[JLinkedHashMap[String, Object]] = {
     query(fieldQuery, beginTime, endTime, com.epidata.lib.models.Measurement.DBTableName)
   }
 
@@ -35,7 +36,7 @@ class EpidataLiteContext() {
     fieldQuery: Map[String, List[String]],
     beginTime: Timestamp,
     endTime: Timestamp,
-    tableName: String): JLinkedList[JLinkedHashMap[String, Object]] = {
+    tableName: String): JList[JLinkedHashMap[String, Object]] = {
 
     // Find the equality queries for the partition key fields.
     val FieldsQuery = genericPartitionFields
@@ -82,8 +83,8 @@ class EpidataLiteContext() {
     maps
   }
 
-  private def transformResultSet(rs: ResultSet, tableName: String): JLinkedList[JLinkedHashMap[String, Object]] = {
-    var maps = new JLinkedList[JLinkedHashMap[String, Object]]()
+  private def transformResultSet(rs: ResultSet, tableName: String): JList[JLinkedHashMap[String, Object]] = {
+    var maps: JList[JLinkedHashMap[String, Object]] = new JLinkedList[JLinkedHashMap[String, Object]]()
     tableName match {
       case BaseMeasurement.DBTableName =>
         measurementClass match {
@@ -134,7 +135,7 @@ class EpidataLiteContext() {
     fieldQuery: Map[String, List[String]],
     beginTime: Timestamp,
     endTime: Timestamp,
-    tableName: String): JLinkedList[JLinkedHashMap[String, Object]] = {
+    tableName: String): JList[JLinkedHashMap[String, Object]] = {
 
     if (beginTime.getTime > endTime.getTime) {
       throw new IllegalArgumentException("beginTime must not be after endTime. ")
@@ -152,28 +153,29 @@ class EpidataLiteContext() {
 
     val map = getDataFrame(fieldQuery, beginTime, endTime, tableName)
 
-    //    if (!fieldQuery.keySet.subsetOf(BaseMeasurement.getColumns())) {
-    //      throw new IllegalArgumentException("Unexpected field in fieldQuery.")
-    //    }
+    //if (!fieldQuery.keySet.subsetOf(BaseMeasurement.getColumns())) {
+    //  throw new IllegalArgumentException("Unexpected field in fieldQuery.")
+    //}
 
     // Find the equality queries for the non partition key fields.
-    //    val nonpartitionFields = fieldQuery.keySet.diff(genericPartitionFields.map(partitionFieldsMap).toSet)
-    //    val nonpartitionFieldsQuery = fieldQuery.filterKeys(nonpartitionFields)
-    //
-    //    // Filter by any applicable non partition key fields.
-    //    val filtered = nonpartitionFieldsQuery.foldLeft(dataFrame)((df, filter) =>
-    //      df.filter(df.col(filter._1).isin(filter._2.map(lit(_)): _*)))
+    val nonpartitionFields = fieldQuery.keySet.diff(genericPartitionFields.map(partitionFieldsMap).toSet)
+    val nonpartitionFieldsQuery = fieldQuery.filterKeys(nonpartitionFields)
+    //println("queried map: " + map + "\n")
 
-    //    filtered
+    var filtered = nonpartitionFieldsQuery.foldLeft(map)((mp, x) => {
+      mp.filter(m => x._2.contains(m.get(x._1)))
+    })
 
-    map
+    //println("filtered map: " + filtered + "\n")
+
+    filtered
   }
 
   /** Query interface for Java and Python. */
   def query(
     fieldQuery: java.util.Map[String, java.util.List[String]],
     beginTime: Timestamp,
-    endTime: Timestamp): JLinkedList[JLinkedHashMap[String, Object]] = {
+    endTime: Timestamp): JList[JLinkedHashMap[String, Object]] = {
     import scala.collection.JavaConversions._
     query(fieldQuery.toMap.mapValues(_.toList), beginTime, endTime, BaseMeasurement.DBTableName)
   }
@@ -182,7 +184,7 @@ class EpidataLiteContext() {
   def queryMeasurementCleansed(
     fieldQuery: java.util.Map[String, java.util.List[String]],
     beginTime: Timestamp,
-    endTime: Timestamp): JLinkedList[JLinkedHashMap[String, Object]] = {
+    endTime: Timestamp): JList[JLinkedHashMap[String, Object]] = {
     import scala.collection.JavaConversions._
     query(fieldQuery.toMap.mapValues(_.toList), beginTime, endTime, BaseMeasurementCleansed.DBTableName)
   }
@@ -191,20 +193,20 @@ class EpidataLiteContext() {
   def queryMeasurementSummary(
     fieldQuery: java.util.Map[String, java.util.List[String]],
     beginTime: Timestamp,
-    endTime: Timestamp): JLinkedList[JLinkedHashMap[String, Object]] = {
+    endTime: Timestamp): JList[JLinkedHashMap[String, Object]] = {
     import scala.collection.JavaConversions._
     query(fieldQuery.toMap.mapValues(_.toList), beginTime, endTime, MeasurementSummary.DBTableName)
   }
 
   /** List the values of the currently saved partition key fields. */
-  def listKeys(): JLinkedList[JLinkedHashMap[String, Object]] = {
+  def listKeys(): JList[JLinkedHashMap[String, Object]] = {
 
     //val con = DriverManager.getConnection(conf.getString("spark.epidata.SQLite.url"))
 
     val query = getKeysStatementString(BaseMeasurementsKeys.DBTableName)
     val stmt = con.prepareStatement(query)
     val rs = stmt.executeQuery()
-    var keys = new JLinkedList[JLinkedHashMap[String, Object]]()
+    var keys: JList[JLinkedHashMap[String, Object]] = new JLinkedList[JLinkedHashMap[String, Object]]()
     measurementClass match {
       case BaseAutomatedTest.NAME =>
         while (rs.next()) {

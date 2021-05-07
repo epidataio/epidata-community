@@ -5,7 +5,7 @@
 package com.epidata.lib.models
 
 import java.sql.Timestamp
-import java.util.{ Date, Map => JMap, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList }
+import java.util.{ Date, Map => JMap, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList, List => JList }
 import java.lang.{ Long => JLong, Double => JDouble }
 
 import com.datastax.driver.core.Row
@@ -201,7 +201,7 @@ object SensorMeasurement {
 
   def toJson(sensorMeasurements: List[SensorMeasurement]): String = {
     import scala.collection.JavaConverters._
-    val arr = new JLinkedList[JLinkedHashMap[String, Object]]()
+    val arr: JList[JLinkedHashMap[String, Object]] = new JLinkedList[JLinkedHashMap[String, Object]]()
     arr.addAll(
       sensorMeasurements
         .map(m => toJLinkedHashMap(m))

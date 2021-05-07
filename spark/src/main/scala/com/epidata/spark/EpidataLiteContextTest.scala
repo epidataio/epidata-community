@@ -51,8 +51,15 @@ object elcTest extends App {
   val meas_upper_limit_l = 7654321
   val meas_value_b = Array[Byte]()
 
-  val to_check = Array("Company-1", "Site-1", "1000", "Station-1", epoch, ts, "100001", "Test-1",
-    "Meas-1", "just_a_check", 45.7, meas_value_l, "meas_value_s", meas_value_b, "degree C", "PASS", 40.0, meas_lower_limit_l, 90.0, meas_upper_limit_l, "Description", "PASS", "PASS")
+  val sample_station1_test1 = Array("Company-1", "Site-1", "1000", "Station-1", epoch, ts, "100001", "Test-1",
+    "Meas-1", "just_a_check", 22.2, meas_value_l, "meas_value_s", meas_value_b, "degree C", "PASS", 20.0, meas_lower_limit_l, 90.0, meas_upper_limit_l, "Description", "PASS", "PASS")
+  val sample_station1_test2 = Array("Company-1", "Site-1", "1000", "Station-1", epoch, ts, "100001", "Test-2",
+    "Meas-1", "just_a_check", 33.3, meas_value_l, "meas_value_s", meas_value_b, "degree C", "PASS", 30.0, meas_lower_limit_l, 90.0, meas_upper_limit_l, "Description", "PASS", "PASS")
+  val sample_station2_test1 = Array("Company-1", "Site-1", "1000", "Station-2", epoch, ts, "100001", "Test-1",
+    "Meas-1", "just_a_check", 44.4, meas_value_l, "meas_value_s", meas_value_b, "degree C", "PASS", 40.0, meas_lower_limit_l, 90.0, meas_upper_limit_l, "Description", "PASS", "PASS")
+  val sample_station2_test2 = Array("Company-1", "Site-1", "1000", "Station-2", epoch, ts, "100001", "Test-2",
+    "Meas-1", "just_a_check", 55.5, meas_value_l, "meas_value_s", meas_value_b, "degree C", "PASS", 50.0, meas_lower_limit_l, 90.0, meas_upper_limit_l, "Description", "PASS", "PASS")
+
   val columns = Array("customer", "customer_site",
     "collection", "dataset", "epoch", "ts", "key1", "key2", "key3", "meas_datatype", "meas_value", "meas_value_l", "meas_value_s", "meas_value_b", "meas_unit",
     "meas_status", "meas_lower_limit", "meas_lower_limit_l", " meas_upper_limit", "meas_upper_limit_l", "meas_description", "val1", "val2")
@@ -77,40 +84,148 @@ object elcTest extends App {
   //println(s"prebinding: ${insert_q.toString}")
 
   val prepare_insert = con.prepareStatement(insert_q.toString)
-  prepare_insert.setString(1, to_check(0).asInstanceOf[String])
-  prepare_insert.setString(2, to_check(1).asInstanceOf[String])
-  prepare_insert.setString(3, to_check(2).asInstanceOf[String])
-  prepare_insert.setString(4, to_check(3).asInstanceOf[String])
+  prepare_insert.setString(1, sample_station1_test1(0).asInstanceOf[String])
+  prepare_insert.setString(2, sample_station1_test1(1).asInstanceOf[String])
+  prepare_insert.setString(3, sample_station1_test1(2).asInstanceOf[String])
+  prepare_insert.setString(4, sample_station1_test1(3).asInstanceOf[String])
   prepare_insert.setInt(5, epoch(0))
   prepare_insert.setTimestamp(6, beginTime)
-  prepare_insert.setString(7, to_check(6).asInstanceOf[String])
-  prepare_insert.setString(8, to_check(7).asInstanceOf[String])
-  prepare_insert.setString(9, to_check(8).asInstanceOf[String])
-  prepare_insert.setString(10, to_check(9).asInstanceOf[String])
-  prepare_insert.setDouble(11, to_check(10).asInstanceOf[Double])
-  prepare_insert.setString(12, to_check(14).asInstanceOf[String])
-  prepare_insert.setString(13, to_check(15).asInstanceOf[String])
-  prepare_insert.setString(14, to_check(20).asInstanceOf[String])
-  prepare_insert.setString(15, to_check(21).asInstanceOf[String])
-  prepare_insert.setString(16, to_check(22).asInstanceOf[String])
+  prepare_insert.setString(7, sample_station1_test1(6).asInstanceOf[String])
+  prepare_insert.setString(8, sample_station1_test1(7).asInstanceOf[String])
+  prepare_insert.setString(9, sample_station1_test1(8).asInstanceOf[String])
+  prepare_insert.setString(10, sample_station1_test1(9).asInstanceOf[String])
+  prepare_insert.setDouble(11, sample_station1_test1(10).asInstanceOf[Double])
+  prepare_insert.setString(12, sample_station1_test1(14).asInstanceOf[String])
+  prepare_insert.setString(13, sample_station1_test1(15).asInstanceOf[String])
+  prepare_insert.setString(14, sample_station1_test1(20).asInstanceOf[String])
+  prepare_insert.setString(15, sample_station1_test1(21).asInstanceOf[String])
+  prepare_insert.setString(16, sample_station1_test1(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
 
-  prepare_insert.setString(1, to_check(0).asInstanceOf[String])
-  prepare_insert.setString(2, to_check(1).asInstanceOf[String])
-  prepare_insert.setString(3, to_check(2).asInstanceOf[String])
-  prepare_insert.setString(4, to_check(3).asInstanceOf[String])
+  prepare_insert.setString(1, sample_station1_test1(0).asInstanceOf[String])
+  prepare_insert.setString(2, sample_station1_test1(1).asInstanceOf[String])
+  prepare_insert.setString(3, sample_station1_test1(2).asInstanceOf[String])
+  prepare_insert.setString(4, sample_station1_test1(3).asInstanceOf[String])
   prepare_insert.setInt(5, epoch(0))
   prepare_insert.setTimestamp(6, testTime)
-  prepare_insert.setString(7, to_check(6).asInstanceOf[String])
-  prepare_insert.setString(8, to_check(7).asInstanceOf[String])
-  prepare_insert.setString(9, to_check(8).asInstanceOf[String])
-  prepare_insert.setString(10, to_check(9).asInstanceOf[String])
+  prepare_insert.setString(7, sample_station1_test1(6).asInstanceOf[String])
+  prepare_insert.setString(8, sample_station1_test1(7).asInstanceOf[String])
+  prepare_insert.setString(9, sample_station1_test1(8).asInstanceOf[String])
+  prepare_insert.setString(10, sample_station1_test1(9).asInstanceOf[String])
   prepare_insert.setDouble(11, 99999.0)
-  prepare_insert.setString(12, to_check(14).asInstanceOf[String])
-  prepare_insert.setString(13, to_check(15).asInstanceOf[String])
-  prepare_insert.setString(14, to_check(20).asInstanceOf[String])
-  prepare_insert.setString(15, to_check(21).asInstanceOf[String])
-  prepare_insert.setString(16, to_check(22).asInstanceOf[String])
+  prepare_insert.setString(12, sample_station1_test1(14).asInstanceOf[String])
+  prepare_insert.setString(13, sample_station1_test1(15).asInstanceOf[String])
+  prepare_insert.setString(14, sample_station1_test1(20).asInstanceOf[String])
+  prepare_insert.setString(15, sample_station1_test1(21).asInstanceOf[String])
+  prepare_insert.setString(16, sample_station1_test1(22).asInstanceOf[String])
+  prepare_insert.executeUpdate()
+
+  prepare_insert.setString(1, sample_station1_test2(0).asInstanceOf[String])
+  prepare_insert.setString(2, sample_station1_test2(1).asInstanceOf[String])
+  prepare_insert.setString(3, sample_station1_test2(2).asInstanceOf[String])
+  prepare_insert.setString(4, sample_station1_test2(3).asInstanceOf[String])
+  prepare_insert.setInt(5, epoch(0))
+  prepare_insert.setTimestamp(6, beginTime)
+  prepare_insert.setString(7, sample_station1_test2(6).asInstanceOf[String])
+  prepare_insert.setString(8, sample_station1_test2(7).asInstanceOf[String])
+  prepare_insert.setString(9, sample_station1_test2(8).asInstanceOf[String])
+  prepare_insert.setString(10, sample_station1_test2(9).asInstanceOf[String])
+  prepare_insert.setDouble(11, sample_station1_test2(10).asInstanceOf[Double])
+  prepare_insert.setString(12, sample_station1_test2(14).asInstanceOf[String])
+  prepare_insert.setString(13, sample_station1_test2(15).asInstanceOf[String])
+  prepare_insert.setString(14, sample_station1_test2(20).asInstanceOf[String])
+  prepare_insert.setString(15, sample_station1_test2(21).asInstanceOf[String])
+  prepare_insert.setString(16, sample_station1_test2(22).asInstanceOf[String])
+  prepare_insert.executeUpdate()
+
+  prepare_insert.setString(1, sample_station1_test2(0).asInstanceOf[String])
+  prepare_insert.setString(2, sample_station1_test2(1).asInstanceOf[String])
+  prepare_insert.setString(3, sample_station1_test2(2).asInstanceOf[String])
+  prepare_insert.setString(4, sample_station1_test2(3).asInstanceOf[String])
+  prepare_insert.setInt(5, epoch(0))
+  prepare_insert.setTimestamp(6, testTime)
+  prepare_insert.setString(7, sample_station1_test2(6).asInstanceOf[String])
+  prepare_insert.setString(8, sample_station1_test2(7).asInstanceOf[String])
+  prepare_insert.setString(9, sample_station1_test2(8).asInstanceOf[String])
+  prepare_insert.setString(10, sample_station1_test2(9).asInstanceOf[String])
+  prepare_insert.setDouble(11, 99999.0)
+  prepare_insert.setString(12, sample_station1_test2(14).asInstanceOf[String])
+  prepare_insert.setString(13, sample_station1_test2(15).asInstanceOf[String])
+  prepare_insert.setString(14, sample_station1_test2(20).asInstanceOf[String])
+  prepare_insert.setString(15, sample_station1_test2(21).asInstanceOf[String])
+  prepare_insert.setString(16, sample_station1_test2(22).asInstanceOf[String])
+  prepare_insert.executeUpdate()
+
+  prepare_insert.setString(1, sample_station2_test1(0).asInstanceOf[String])
+  prepare_insert.setString(2, sample_station2_test1(1).asInstanceOf[String])
+  prepare_insert.setString(3, sample_station2_test1(2).asInstanceOf[String])
+  prepare_insert.setString(4, sample_station2_test1(3).asInstanceOf[String])
+  prepare_insert.setInt(5, epoch(0))
+  prepare_insert.setTimestamp(6, beginTime)
+  prepare_insert.setString(7, sample_station2_test1(6).asInstanceOf[String])
+  prepare_insert.setString(8, sample_station2_test1(7).asInstanceOf[String])
+  prepare_insert.setString(9, sample_station2_test1(8).asInstanceOf[String])
+  prepare_insert.setString(10, sample_station2_test1(9).asInstanceOf[String])
+  prepare_insert.setDouble(11, sample_station2_test1(10).asInstanceOf[Double])
+  prepare_insert.setString(12, sample_station2_test1(14).asInstanceOf[String])
+  prepare_insert.setString(13, sample_station2_test1(15).asInstanceOf[String])
+  prepare_insert.setString(14, sample_station2_test1(20).asInstanceOf[String])
+  prepare_insert.setString(15, sample_station2_test1(21).asInstanceOf[String])
+  prepare_insert.setString(16, sample_station2_test1(22).asInstanceOf[String])
+  prepare_insert.executeUpdate()
+
+  prepare_insert.setString(1, sample_station2_test1(0).asInstanceOf[String])
+  prepare_insert.setString(2, sample_station2_test1(1).asInstanceOf[String])
+  prepare_insert.setString(3, sample_station2_test1(2).asInstanceOf[String])
+  prepare_insert.setString(4, sample_station2_test1(3).asInstanceOf[String])
+  prepare_insert.setInt(5, epoch(0))
+  prepare_insert.setTimestamp(6, testTime)
+  prepare_insert.setString(7, sample_station2_test1(6).asInstanceOf[String])
+  prepare_insert.setString(8, sample_station2_test1(7).asInstanceOf[String])
+  prepare_insert.setString(9, sample_station2_test1(8).asInstanceOf[String])
+  prepare_insert.setString(10, sample_station2_test1(9).asInstanceOf[String])
+  prepare_insert.setDouble(11, 99999.0)
+  prepare_insert.setString(12, sample_station2_test1(14).asInstanceOf[String])
+  prepare_insert.setString(13, sample_station2_test1(15).asInstanceOf[String])
+  prepare_insert.setString(14, sample_station2_test1(20).asInstanceOf[String])
+  prepare_insert.setString(15, sample_station2_test1(21).asInstanceOf[String])
+  prepare_insert.setString(16, sample_station2_test1(22).asInstanceOf[String])
+  prepare_insert.executeUpdate()
+
+  prepare_insert.setString(1, sample_station2_test2(0).asInstanceOf[String])
+  prepare_insert.setString(2, sample_station2_test2(1).asInstanceOf[String])
+  prepare_insert.setString(3, sample_station2_test2(2).asInstanceOf[String])
+  prepare_insert.setString(4, sample_station2_test2(3).asInstanceOf[String])
+  prepare_insert.setInt(5, epoch(0))
+  prepare_insert.setTimestamp(6, beginTime)
+  prepare_insert.setString(7, sample_station2_test2(6).asInstanceOf[String])
+  prepare_insert.setString(8, sample_station2_test2(7).asInstanceOf[String])
+  prepare_insert.setString(9, sample_station2_test2(8).asInstanceOf[String])
+  prepare_insert.setString(10, sample_station2_test2(9).asInstanceOf[String])
+  prepare_insert.setDouble(11, sample_station2_test2(10).asInstanceOf[Double])
+  prepare_insert.setString(12, sample_station2_test2(14).asInstanceOf[String])
+  prepare_insert.setString(13, sample_station2_test2(15).asInstanceOf[String])
+  prepare_insert.setString(14, sample_station2_test2(20).asInstanceOf[String])
+  prepare_insert.setString(15, sample_station2_test2(21).asInstanceOf[String])
+  prepare_insert.setString(16, sample_station2_test2(22).asInstanceOf[String])
+  prepare_insert.executeUpdate()
+
+  prepare_insert.setString(1, sample_station2_test2(0).asInstanceOf[String])
+  prepare_insert.setString(2, sample_station2_test2(1).asInstanceOf[String])
+  prepare_insert.setString(3, sample_station2_test2(2).asInstanceOf[String])
+  prepare_insert.setString(4, sample_station2_test2(3).asInstanceOf[String])
+  prepare_insert.setInt(5, epoch(0))
+  prepare_insert.setTimestamp(6, testTime)
+  prepare_insert.setString(7, sample_station2_test2(6).asInstanceOf[String])
+  prepare_insert.setString(8, sample_station2_test2(7).asInstanceOf[String])
+  prepare_insert.setString(9, sample_station2_test2(8).asInstanceOf[String])
+  prepare_insert.setString(10, sample_station2_test2(9).asInstanceOf[String])
+  prepare_insert.setDouble(11, 99999.0)
+  prepare_insert.setString(12, sample_station2_test2(14).asInstanceOf[String])
+  prepare_insert.setString(13, sample_station2_test2(15).asInstanceOf[String])
+  prepare_insert.setString(14, sample_station2_test2(20).asInstanceOf[String])
+  prepare_insert.setString(15, sample_station2_test2(21).asInstanceOf[String])
+  prepare_insert.setString(16, sample_station2_test2(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
 
   // Insert Check
@@ -119,19 +234,21 @@ object elcTest extends App {
     val t = com.epidata.lib.models.Measurement.rowToMeasurement(rs)
     println(s"Insert Check: ${t.toString}")
   }
+  println()
 
   val results = ec.query(
     Map(
       "company" -> List("Company-1"),
       "site" -> List("Site-1"),
       "device_group" -> List("1000"),
-      "tester" -> List("Station-1")),
+      "tester" -> List("Station-1"),
+      "test_name" -> List("Test-1")),
     beginTime,
     endTime)
 
   val measIter = results.iterator()
   while (measIter.hasNext()) {
-    println(s"meas_orig row: ${measIter.next()}")
+    println(s"meas_orig query row: ${measIter.next()}")
   }
 
   // Measurement Keys
@@ -173,7 +290,7 @@ object elcTest extends App {
 
   val keysIter = k_results.iterator()
   while (keysIter.hasNext()) {
-    println(s"key query row: ${keysIter.next()}")
+    println(s"keys query row: ${keysIter.next()}")
   }
 
 }

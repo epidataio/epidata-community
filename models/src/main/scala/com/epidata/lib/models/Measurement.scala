@@ -12,7 +12,7 @@ import com.epidata.lib.models.util.Binary
 import java.nio.ByteBuffer
 import java.util.Date
 import java.lang.{ Double => JDouble, Long => JLong }
-import java.util.{ Date, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList }
+import java.util.{ Date, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList, List => JList }
 import com.epidata.lib.models.util.TypeUtils._
 
 import scala.collection.mutable
