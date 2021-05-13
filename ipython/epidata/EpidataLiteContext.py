@@ -159,15 +159,24 @@ ec = EpidataLiteContext()
 #print(ec.list_keys())
 print
 
-ts = [datetime.fromtimestamp(1428004316.123 + x) for x in range(6)]
+ts = [datetime.fromtimestamp(1619240032.000 + x) for x in range(6)]
 result = ec.query_measurements_original({'company': 'Company-1', 'site': 'Site-1','device_group': '1000','tester': 'Station-1','test_name': 'Test-1'}, ts[0], ts[0] + timedelta(seconds=0.5))
 df2 = ec.query_measurements_original({'company': 'Company-1','site': 'Site-1','device_group': '1000','tester': 'Station-1','test_name': 'Test-1'},ts[0],ts[3] + timedelta(seconds=0.5))
-
+df3 = ec.query_measurements_original({'company': 'Company-1','site': 'Site-1', 'device_group': '1000', 'tester': 'Station-1', 'test_name': 'Test-3'}, ts[0], ts[5] + timedelta(seconds=0.5) )
 print(result)
 print
 print(df2)
 print
+print(df3)
+print
 '''
+
+
+
+
+
+
+
 
 
 
