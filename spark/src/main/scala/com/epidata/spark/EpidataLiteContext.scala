@@ -290,11 +290,6 @@ class EpidataLiteContext() {
       "Invalid spark.epidata.measurementClass configuration.")
   }
 
-  //  private def getSelectStatmentString(tableName: String, epoch: String): String = {
-  //    val query = s"SELECT * FROM ${tableName} WHERE customer=? AND customer_site=? AND collection=? AND dataset=? AND epoch IN (" + epoch + ") AND ts>=? AND ts<?"
-  //    query
-  //  }
-
   private def getSelectStatmentString(tableName: String, customerStr: String, siteStr: String, collectionStr: String, datasetStr: String, epoch: String): String = {
     val query = s"SELECT * FROM ${tableName} WHERE customer IN (" + customerStr + ") AND customer_site IN (" + siteStr + ") AND collection IN (" + collectionStr + ") AND dataset IN (" + datasetStr + ") AND epoch IN (" + epoch + ") AND ts>=? AND ts<?"
     query
