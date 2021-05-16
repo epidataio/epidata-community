@@ -118,11 +118,11 @@ while (True):
         # Specify measurement query parameters
         begin_time = get_time("2/01/2021 00:00:00.000")
         #end_time = get_time("4/21/2021 00:00:00.000") #for empty data
-        end_time = get_time("4/30/2021 00:00:00.000") #for non-empty data
+        end_time = get_time("5/31/2021 00:00:00.000") #for non-empty data
 
 
         parameters = {'company': COMPANY, 'site': SITE, 'station': STATION, 'sensor': SENSOR, 'beginTime': begin_time, 'endTime': end_time}
-    
+
         # Construct url with parameters
         url = QUERY_MEASUREMENTS_ORIGINAL_URL+urllib.urlencode(parameters)
         # print url

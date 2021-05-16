@@ -40,7 +40,7 @@ class EpidataLiteContext() {
 
     // Find the equality queries for the partition key fields.
     val FieldsQuery = genericPartitionFields
-      .map(partitionFieldsMap).flatMap(fieldQuery)
+      .map(partitionFieldsMap).map(fieldQuery)
 
     val orderedEpochs = Measurement.epochForTs(beginTime) to Measurement.epochForTs(endTime)
     val epoch = orderedEpochs.toArray
@@ -54,17 +54,36 @@ class EpidataLiteContext() {
 
     // Create a ResultSet for a specified epoch
     def rsQuery(parameter: List[AnyRef]): ResultSet = {
-      val query = getSelectStatmentString(tableName, epoch_str)
+      val customerCount = parameter.head.asInstanceOf[List[String]].length
+      val customerStr = List.fill(customerCount)("?").mkString(", ")
+      val siteCount = parameter(1).asInstanceOf[List[String]].length
+      val siteStr = List.fill(siteCount)("?").mkString(", ")
+      val collectionCount = parameter(2).asInstanceOf[List[String]].length
+      val collectionStr = List.fill(collectionCount)("?").mkString(", ")
+      val datasetCount = parameter(3).asInstanceOf[List[String]].length
+      val datasetStr = List.fill(datasetCount)("?").mkString(", ")
+
+      val query = getSelectStatmentString(tableName, customerStr, siteStr, collectionStr, datasetStr, epoch_str)
       val stmt = con.prepareStatement(query)
-      stmt.setString(1, parameter.head.asInstanceOf[String])
-      stmt.setString(2, parameter(1).asInstanceOf[String])
-      stmt.setString(3, parameter(2).asInstanceOf[String])
-      stmt.setString(4, parameter(3).asInstanceOf[String])
-      for (i <- 1 to epoch.length) {
-        stmt.setInt(4 + i, epoch(i - 1))
+
+      for (i <- 1 to customerCount) {
+        stmt.setString(i, parameter(0).asInstanceOf[List[String]](i - 1))
       }
-      stmt.setTimestamp(4 + epoch.length + 1, beginTime)
-      stmt.setTimestamp(4 + epoch.length + 2, endTime)
+      for (i <- 1 to siteCount) {
+        stmt.setString((i + customerCount), parameter(1).asInstanceOf[List[String]](i - 1))
+      }
+      for (i <- 1 to collectionCount) {
+        stmt.setString((i + customerCount + siteCount), parameter(2).asInstanceOf[List[String]](i - 1))
+      }
+      for (i <- 1 to datasetCount) {
+        stmt.setString((i + customerCount + siteCount + collectionCount), parameter(3).asInstanceOf[List[String]](i - 1))
+      }
+      for (i <- 1 to epoch.length) {
+        stmt.setInt((i + customerCount + siteCount + collectionCount + datasetCount), epoch(i - 1))
+      }
+      stmt.setTimestamp((customerCount + siteCount + collectionCount + datasetCount + epoch.length) + 1, beginTime)
+      stmt.setTimestamp((customerCount + siteCount + collectionCount + datasetCount + epoch.length) + 2, endTime)
+
       val rs = stmt.executeQuery()
 
       rs
@@ -160,13 +179,10 @@ class EpidataLiteContext() {
     // Find the equality queries for the non partition key fields.
     val nonpartitionFields = fieldQuery.keySet.diff(genericPartitionFields.map(partitionFieldsMap).toSet)
     val nonpartitionFieldsQuery = fieldQuery.filterKeys(nonpartitionFields)
-    //println("queried map: " + map + "\n")
 
     var filtered = nonpartitionFieldsQuery.foldLeft(map)((mp, x) => {
       mp.filter(m => x._2.contains(m.get(x._1)))
     })
-
-    //println("filtered map: " + filtered + "\n")
 
     filtered
   }
@@ -274,8 +290,13 @@ class EpidataLiteContext() {
       "Invalid spark.epidata.measurementClass configuration.")
   }
 
-  private def getSelectStatmentString(tableName: String, epoch: String): String = {
-    val query = s"SELECT * FROM ${tableName} WHERE customer=? AND customer_site=? AND collection=? AND dataset=? AND epoch IN (" + epoch + ") AND ts>=? AND ts<?"
+  //  private def getSelectStatmentString(tableName: String, epoch: String): String = {
+  //    val query = s"SELECT * FROM ${tableName} WHERE customer=? AND customer_site=? AND collection=? AND dataset=? AND epoch IN (" + epoch + ") AND ts>=? AND ts<?"
+  //    query
+  //  }
+
+  private def getSelectStatmentString(tableName: String, customerStr: String, siteStr: String, collectionStr: String, datasetStr: String, epoch: String): String = {
+    val query = s"SELECT * FROM ${tableName} WHERE customer IN (" + customerStr + ") AND customer_site IN (" + siteStr + ") AND collection IN (" + collectionStr + ") AND dataset IN (" + datasetStr + ") AND epoch IN (" + epoch + ") AND ts>=? AND ts<?"
     query
   }
 
