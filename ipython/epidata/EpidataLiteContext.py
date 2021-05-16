@@ -159,15 +159,39 @@ ec = EpidataLiteContext()
 #print(ec.list_keys())
 print
 
-ts = [datetime.fromtimestamp(1428004316.123 + x) for x in range(6)]
-result = ec.query_measurements_original({'company': 'Company-1', 'site': 'Site-1','device_group': '1000','tester': 'Station-1','test_name': 'Test-1'}, ts[0], ts[0] + timedelta(seconds=0.5))
-df2 = ec.query_measurements_original({'company': 'Company-1','site': 'Site-1','device_group': '1000','tester': 'Station-1','test_name': 'Test-1'},ts[0],ts[3] + timedelta(seconds=0.5))
+#ts = [datetime.fromtimestamp(1428004316.123 + x) for x in range(6)]
+#result = ec.query_measurements_original({'company': 'Company-1', 'site': 'Site-1','device_group': '1000','tester': 'Station-1','test_name': 'Test-1'}, ts[0], ts[0] + timedelta(seconds=0.5))
+#df2 = ec.query_measurements_original({'company': 'Company-1','site': 'Site-1','device_group': '1000','tester': 'Station-1','test_name': 'Test-1'},ts[0],ts[3] + timedelta(seconds=0.5))
 
-print(result)
+#2015
+#ts3 = [datetime.fromtimestamp(1428004316.123 + x) for x in range(6)]
+#df3 = ec.query_measurements_original({'company': 'Company-1','site': 'Site-1', 'device_group': '1000', 'tester': 'Station-1', 'test_name': 'Test-3'}, ts3[0], ts3[5] + timedelta(seconds=0.5) )
+
+#2016
+ts4 = [datetime.fromtimestamp(1463336206.123 + x) for x in range(6)]
+df4 = ec.query_measurements_original({'company': 'Company-1','site': 'Site-1', 'device_group': '1000', 'tester': 'Station-1', 'test_name': 'Test-3'}, ts4[0], ts4[5] + timedelta(seconds=0.5) )
+
+#2017
+ts5 = [datetime.fromtimestamp(1494872206.123 + x) for x in range(6)]
+df5 = ec.query_measurements_original({'company': 'Company-1','site': 'Site-1', 'device_group': '1000', 'tester': 'Station-1', 'test_name': 'Test-3'}, ts5[0], ts5[5] + timedelta(seconds=0.5) )
+
+
+#print(result)
+#print
+#print(df2)
+#print
+#print(df3)
+#print
+print(df4)
 print
-print(df2)
+print(df5)
 print
 '''
+
+
+
+
+
 
 
 
