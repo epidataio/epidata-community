@@ -4,7 +4,10 @@
 
 package service
 
+import org.json.simple.{ JSONArray, JSONObject }
+import java.util.{ Map => JMap, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList }
 import controllers.Assets.JSON
+import play.api.libs.json.Json
 import org.zeromq.ZMQ
 
 object ZMQProducer {
@@ -12,43 +15,92 @@ object ZMQProducer {
   var pubSocket: ZMQ.Socket = _
   var context: ZMQ.Context = _
 
+  var pushPort: String = _
+  var pubPort: String = _
+
   def init(pushPort: String, pubPort: String): ZMQProducer.type = {
     //creating ZMQ context which will be used for PUB and PUSH
+    this.pushPort = pushPort
+    this.pubPort = pubPort
     context = ZMQ.context(1)
     //using context to create PUSH and PUB models and binding them to sockets
     pushSocket = context.socket(ZMQ.PUSH)
-    pushSocket.connect("tcp://127.0.0.1:" + pushPort)
+    pushSocket.connect("tcp://127.0.0.1:" + this.pushPort)
+
+    println("ZMQProducer Init called")
 
     pubSocket = context.socket(ZMQ.PUB)
-    pubSocket.bind("tcp://127.0.0.1:" + pubPort)
+    pubSocket.bind("tcp://127.0.0.1:" + this.pubPort)
     this
   }
 
   def push(key: String, value: String): Unit = {
+    //  def push(key: String, value: Object): Unit = {
     /**
      * Encapsulating key and value as Message object and pushing data to DataSink
      */
     //val message: String = JSON.format(Message("passBack", key, value))
-    val message: String = JSON.format(Map("topic" -> "passBack", "key" -> key, "value" -> value))
+    println("ZMQProducer push called")
+
+    // val message: String = JSON.format(Map("topic" -> "passBack", "key" -> key, "value" -> value))
+
+    val map = new JLinkedHashMap[String, String]()
+    //    map.put("topic", "passBack")
+    map.put("topic", "measurements_original")
+    map.put("key", key)
+    map.put("value", value)
+    val message: String = JSONObject.toJSONString(map)
+
+    //val message: String = Json.stringify(Map("topic" -> "passBack", "key" -> key, "value" -> value))
     pushSocket.send(message.getBytes(ZMQ.CHARSET), 0)
-    println("Pushed: " + message)
+
+    println("Pushed: " + message + "\n")
   }
 
   def pub(key: String, value: String): Unit = {
+    //  def pub(key: String, value: Object): Unit = {
     /**
      * Encapsulating key and value as Message object and publishing data to Stream
      */
     //setting the topic as measurements
-    pubSocket.sendMore("measurements")
+    println("ZMQProducer pub called")
+
+    pubSocket.sendMore("measurements_original")
     //sending the message
     //val message: String = JSON.format(Message("passBack", key, value))
-    val message: String = JSON.format(Map("topic" -> "passBack", "key" -> key, "value" -> value))
+
+    //val message: String = JSON.format(Map("topic" -> "passBack", "key" -> key, "value" -> value))
+
+    val map = new JLinkedHashMap[String, String]()
+    //    map.put("topic", "passBack")
+    map.put("topic", "measurements_original")
+    map.put("key", key)
+    map.put("value", value)
+    val message: String = JSONObject.toJSONString(map)
+
+    //val message: String = Json.stringify(Map("topic" -> "passBack", "key" -> key, "value" -> value))
     pubSocket.send(message.getBytes(ZMQ.CHARSET), 0)
-    println("Published: " + message)
+    println("Published: " + message + "\n")
   }
 
-  def end(): Unit = {
-    pushSocket.close()
-    pubSocket.close()
+  def clear(): Unit = {
+    println("ZMQProducer clear called")
+
+    try {
+      //      pushSocket.send(STOP_MESSAGE, 0)
+      pushSocket.unbind("tcp://127.0.0.1:" + this.pushPort)
+      pushSocket.close()
+    } catch {
+      case e: Throwable => println(e)
+    }
+
+    try {
+      //      pubSocket.send(STOP_MESSAGE, 0)
+      pubSocket.unbind("tcp://127.0.0.1:" + this.pubPort)
+      pubSocket.close()
+    } catch {
+      case e: Throwable => println(e)
+    }
   }
+
 }

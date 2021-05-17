@@ -67,14 +67,14 @@ case class AutomatedTestSummary(
     site: String,
     device_group: String,
     tester: String,
-    start_time: Timestamp,
-    stop_time: Timestamp,
+    start_time: Date,
+    stop_time: Date,
     device_name: String,
     test_name: String,
     meas_name: String,
     meas_summary_name: String,
     meas_summary_value: String,
-    meas_summary_description: String)
+    meas_summary_description: Option[String])
 
 object AutomatedTest {
 
@@ -138,9 +138,9 @@ object AutomatedTest {
       ms.dataset,
       ms.start_time,
       ms.stop_time,
-      ms.key1,
-      ms.key2,
-      ms.key3,
+      ms.key1.get,
+      ms.key2.get,
+      ms.key3.get,
       ms.meas_summary_name,
       ms.meas_summary_value,
       ms.meas_summary_description)

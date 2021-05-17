@@ -6,7 +6,7 @@ package models
 
 import java.util.Date
 
-import com.epidata.lib.models.{ Measurement, SensorMeasurement => BaseSensorMeasurement }
+import com.epidata.lib.models.{ Measurement, SensorMeasurement => BaseSensorMeasurement, SensorMeasurementCleansed => BaseSensorMeasurementCleansed, SensorMeasurementSummary => BaseSensorMeasurementSummary }
 import play.api.Logger
 import play.api.libs.json._
 import _root_.util.Ordering
@@ -55,6 +55,50 @@ object SensorMeasurement {
     }
   }
 
+  /**
+   * Insert a Double cleansed sensor measurement into the database.
+   * @param sensorMeasurementCleansed The SensorMeasurementCleansed to insert.
+   */
+  def insertCleansed(sensorMeasurementCleansed: BaseSensorMeasurementCleansed, sqliteEnable: Boolean) = {
+    if (sqliteEnable) {
+      SQLiteMeasurementService.insertCleansed(sensorMeasurementCleansed)
+    } else {
+      // To Do
+      //MeasurementService.insert(sensorMeasurementCleansed)
+    }
+  }
+
+  def insertCleansed(sensorMeasurementCleansedList: List[BaseSensorMeasurementCleansed], sqliteEnable: Boolean) = {
+    if (sqliteEnable) {
+      SQLiteMeasurementService.bulkInsertCleansed(sensorMeasurementCleansedList)
+    } else {
+      // To Do
+      //MeasurementService.bulkInsert(sensorMeasurementCleansedList)
+    }
+  }
+
+  /**
+   * Insert a Double cleansed sensor measurement into the database.
+   * @param sensorMeasurementCleansed The SensorMeasurementCleansed to insert.
+   */
+  def insertSummary(sensorMeasurementSummary: BaseSensorMeasurementSummary, sqliteEnable: Boolean) = {
+    if (sqliteEnable) {
+      SQLiteMeasurementService.insertSummary(sensorMeasurementSummary)
+    } else {
+      // To Do
+      //MeasurementService.insertSummary(sensorMeasurementSummary)
+    }
+  }
+
+  def insertSummary(sensorMeasurementSummaryList: List[BaseSensorMeasurementSummary], sqliteEnable: Boolean) = {
+    if (sqliteEnable) {
+      SQLiteMeasurementService.bulkInsertSummary(sensorMeasurementSummaryList)
+    } else {
+      // To Do
+      //MeasurementService.bulkInsertSummary(sensorMeasurementSummaryList)
+    }
+  }
+
   def insertRecordFromKafka(str: String) = {
     BaseSensorMeasurement.jsonToSensorMeasurement(str) match {
       case Some(sensorMeasurement) => insert(sensorMeasurement, Configs.measDBLite)
@@ -63,8 +107,25 @@ object SensorMeasurement {
   }
 
   def insertRecordFromZMQ(str: String): Unit = {
+    println("insertRecordFromZMQ called. str: " + str + "\n")
     BaseSensorMeasurement.jsonToSensorMeasurement(str) match {
       case Some(sensorMeasurement) => insert(sensorMeasurement, Configs.measDBLite)
+      case _ => logger.error("Bad json format!")
+    }
+  }
+
+  def insertCleansedRecordFromZMQ(str: String): Unit = {
+    println("insertCleansedRecordFromZMQ called. str: " + str + "\n")
+    BaseSensorMeasurementCleansed.jsonToSensorMeasurementCleansed(str) match {
+      case Some(sensorMeasurementCleansed) => insertCleansed(sensorMeasurementCleansed, Configs.measDBLite)
+      case _ => logger.error("Bad json format!")
+    }
+  }
+
+  def insertSummaryRecordFromZMQ(str: String): Unit = {
+    println("insertSummaryRecordFromZMQ called. str: " + str + "\n")
+    BaseSensorMeasurementSummary.jsonToSensorMeasurementSummary(str) match {
+      case Some(sensorMeasurementSummary) => insertSummary(sensorMeasurementSummary, Configs.measDBLite)
       case _ => logger.error("Bad json format!")
     }
   }
@@ -94,11 +155,13 @@ object SensorMeasurement {
   def insertToZMQ(sensorMeasurement: BaseSensorMeasurement): Unit = {
     val key = keyForMeasurementTopic(sensorMeasurement)
     val value = BaseSensorMeasurement.toJson(sensorMeasurement)
+    println("insertToZMQ called. key: " + key + ", value: " + value + "\n")
     ZMQInit._ZMQProducer.push(key, value)
     ZMQInit._ZMQProducer.pub(key, value)
   }
 
   def insertToZMQ(sensorMeasurementList: List[BaseSensorMeasurement]): Unit = {
+    println("Bulk insertToZMQ called.\n")
     sensorMeasurementList.foreach(m => insertToZMQ(m))
     if (Configs.twoWaysIngestion) {
       insert(sensorMeasurementList, Configs.measDBLite)

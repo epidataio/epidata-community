@@ -41,6 +41,7 @@ object MeasurementCleansed {
 
   val DBTableName: String = "measurements_cleansed"
   val KafkaTopic: String = DBTableName
+  val zmqTopic: String = DBTableName
 
   val FieldNames: List[String] =
     List(
