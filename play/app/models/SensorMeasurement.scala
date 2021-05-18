@@ -6,7 +6,7 @@ package models
 
 import java.util.Date
 
-import com.epidata.lib.models.{ Measurement, SensorMeasurement => BaseSensorMeasurement, SensorMeasurementCleansed => BaseSensorMeasurementCleansed, SensorMeasurementSummary => BaseSensorMeasurementSummary }
+import com.epidata.lib.models.{ Measurement, MeasurementCleansed, MeasurementSummary, SensorMeasurement => BaseSensorMeasurement, SensorMeasurementCleansed => BaseSensorMeasurementCleansed, SensorMeasurementSummary => BaseSensorMeasurementSummary }
 import play.api.Logger
 import play.api.libs.json._
 import _root_.util.Ordering
@@ -19,6 +19,8 @@ import scala.language.implicitConversions
 object SensorMeasurement {
 
   import com.epidata.lib.models.SensorMeasurement._
+  import com.epidata.lib.models.SensorMeasurementCleansed._
+  import com.epidata.lib.models.SensorMeasurementSummary._
   val logger: Logger = Logger(this.getClass())
 
   val name: String = "SensorMeasurement"
@@ -47,33 +49,33 @@ object SensorMeasurement {
     }
   }
 
-  def insert(sensorMeasurementList: List[BaseSensorMeasurement], sqliteEnable: Boolean) = {
+  def insert(sensorMeasurementList: List[BaseSensorMeasurement], sqliteEnable: Boolean): Unit = {
     if (sqliteEnable) {
-      SQLiteMeasurementService.bulkInsert(sensorMeasurementList)
+      SQLiteMeasurementService.bulkInsert(sensorMeasurementList.map(sensorMeasurementToMeasurement))
     } else {
-      MeasurementService.bulkInsert(sensorMeasurementList)
+      MeasurementService.bulkInsert(sensorMeasurementList.map(sensorMeasurementToMeasurement))
     }
   }
 
   /**
    * Insert a Double cleansed sensor measurement into the database.
-   * @param sensorMeasurementCleansed The SensorMeasurementCleansed to insert.
+   * @param sensorMeasurementCleansed The Cleansed SensorMeasurement to insert.
    */
   def insertCleansed(sensorMeasurementCleansed: BaseSensorMeasurementCleansed, sqliteEnable: Boolean) = {
     if (sqliteEnable) {
       SQLiteMeasurementService.insertCleansed(sensorMeasurementCleansed)
     } else {
       // To Do
-      //MeasurementService.insert(sensorMeasurementCleansed)
+      //MeasurementService.insertCleansed(sensorMeasurementCleansed)
     }
   }
 
   def insertCleansed(sensorMeasurementCleansedList: List[BaseSensorMeasurementCleansed], sqliteEnable: Boolean) = {
     if (sqliteEnable) {
-      SQLiteMeasurementService.bulkInsertCleansed(sensorMeasurementCleansedList)
+      SQLiteMeasurementService.bulkInsertCleansed(sensorMeasurementCleansedList.map(sensorMeasurementCleansedToMeasurementCleansed))
     } else {
       // To Do
-      //MeasurementService.bulkInsert(sensorMeasurementCleansedList)
+      //MeasurementService.bulkInsert(sensorMeasurementCleansedList.map(sensorMeasurementCleansedToMeasurementCleansed))
     }
   }
 
@@ -92,10 +94,10 @@ object SensorMeasurement {
 
   def insertSummary(sensorMeasurementSummaryList: List[BaseSensorMeasurementSummary], sqliteEnable: Boolean) = {
     if (sqliteEnable) {
-      SQLiteMeasurementService.bulkInsertSummary(sensorMeasurementSummaryList)
+      SQLiteMeasurementService.bulkInsertSummary(sensorMeasurementSummaryList.map(sensorMeasurementSummaryToMeasurementSummary))
     } else {
       // To Do
-      //MeasurementService.bulkInsertSummary(sensorMeasurementSummaryList)
+      //MeasurementService.bulkInsertSummary(sensorMeasurementSummaryList.map(sensorMeasurementSummaryToMeasurementSummary))
     }
   }
 
@@ -168,6 +170,9 @@ object SensorMeasurement {
     }
   }
 
+  /** Convert a list of SensorMeasurement to a json representation. */
+  def toJson(sensorMeasurements: List[BaseSensorMeasurement]): String = BaseSensorMeasurement.toJson(sensorMeasurements)
+
   /**
    * Find sensor measurements in the database matching the specified parameters.
    * @param company
@@ -189,8 +194,5 @@ object SensorMeasurement {
     ordering: Ordering.Value,
     tableName: String = com.epidata.lib.models.Measurement.DBTableName): List[BaseSensorMeasurement] = MeasurementService.find(company, site, station, sensor, beginTime, endTime, ordering, tableName)
     .map(measurementToSensorMeasurement)
-
-  /** Convert a list of SensorMeasurement to a json representation. */
-  def toJson(sensorMeasurements: List[BaseSensorMeasurement]): String = BaseSensorMeasurement.toJson(sensorMeasurements)
 
 }

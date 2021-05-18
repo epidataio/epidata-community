@@ -21,6 +21,21 @@ class EpidataLiteContext() {
   private lazy val measurementClass = conf.getString("spark.epidata.measurementClass")
   private lazy val streamingBatchDuration = conf.getInt("spark.epidata.streamingBatchDuration")
 
+  // Connect to SQLite database
+  var con: Connection = DriverManager.getConnection(conf.getString("spark.epidata.SQLite.url"))
+
+  //  def open() = {
+  //    con = DriverManager.getConnection(conf.getString("spark.epidata.SQLite.url"))
+  //  }
+
+  //  def close() = {
+  //    try {
+  //      con.close()
+  //    } catch {
+  //      case e: SQLException => println("Error closing Statement")
+  //    }
+  //  }
+
   def query(
     fieldQuery: Map[String, List[String]],
     beginTime: Timestamp,
@@ -39,7 +54,7 @@ class EpidataLiteContext() {
       .map(partitionFieldsMap).flatMap(fieldQuery)
 
     // Add config file for SQLite in folder?
-    val con = DriverManager.getConnection(conf.getString("spark.epidata.SQLite.url"))
+    //val con = DriverManager.getConnection(conf.getString("spark.epidata.SQLite.url"))
 
     val orderedEpochs = Measurement.epochForTs(beginTime) to Measurement.epochForTs(endTime)
     val epoch = orderedEpochs.toArray
@@ -64,6 +79,7 @@ class EpidataLiteContext() {
       stmt.setTimestamp(4 + epoch.length + 1, beginTime)
       stmt.setTimestamp(4 + epoch.length + 2, endTime)
       val rs = stmt.executeQuery()
+      stmt.close()
       rs
     }
 
@@ -71,7 +87,9 @@ class EpidataLiteContext() {
     val select_rs = rsQuery(FieldsQuery)
     val rs = transformResultSet(select_rs, tableName)
 
-    con.close()
+    select_rs.close()
+
+    //    con.close()
     rs
   }
 
@@ -188,7 +206,7 @@ class EpidataLiteContext() {
 
   /** List the values of the currently saved partition key fields. */
   def listKeys(): JLinkedList[JLinkedHashMap[String, Object]] = {
-    val con = DriverManager.getConnection(conf.getString("spark.epidata.SQLite.url"))
+    //    val con = DriverManager.getConnection(conf.getString("spark.epidata.SQLite.url"))
     val query = getKeysStatementString(BaseMeasurementsKeys.DBTableName)
     val rs = con.prepareStatement(query).executeQuery()
     var keys = new JLinkedList[JLinkedHashMap[String, Object]]()
@@ -213,7 +231,9 @@ class EpidataLiteContext() {
           keys.add(AutomatedTestKey.toJLinkedHashMap(AutomatedTestKey.keyToAutomatedTest(meas_key)))
         }
     }
-    con.close()
+
+    rs.close()
+    //    con.close()
     keys
   }
 

@@ -26,7 +26,7 @@ object ZMQInit {
 
     _ZMQService.startThreads(config)
 
-    _ZMQProducer = ZMQProducer.init(config.getOptional[Int]("queue.servers").get.toString, (config.getOptional[Int]("queue.servers").get + 2).toString)
+    _ZMQProducer = ZMQProducer.init(config.getOptional[Int]("queue.servers").get.toString, (config.getOptional[Int]("queue.servers").get + 1).toString)
 
     //_streamQueue = mutable.Queue[Message]()
   }

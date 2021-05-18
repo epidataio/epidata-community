@@ -8,19 +8,26 @@ import com.typesafe.config.ConfigFactory
 import java.io.File
 import java.sql.{ DriverManager, Timestamp, SQLException }
 import scala.io.Source
+import scala.io.StdIn
+import scala.collection.mutable.Map
 
 object elcTest extends App {
   val ec = new EpidataLiteContext()
-  val conf = ConfigFactory.parseResources("sqlite-defaults.conf")
-  val con = DriverManager.getConnection(conf.getString("spark.epidata.SQLite.url"))
-  val stmt = con.createStatement()
+  //  ec.open()
+
+  val esc = new EpidataLiteStreamingContext()
+  esc.init()
+
+  //  val conf = ConfigFactory.parseResources("sqlite-defaults.conf")
+  //  val con = DriverManager.getConnection(conf.getString("spark.epidata.SQLite.url"))
+  //  val stmt = con.createStatement()
 
   // Clear tables
-  val dop_orig_command = s"DROP TABLE IF EXISTS ${com.epidata.lib.models.Measurement.DBTableName}"
-  val drop_keys_command = s"DROP TABLE IF EXISTS ${com.epidata.lib.models.MeasurementsKeys.DBTableName}"
+  //  val dop_orig_command = s"DROP TABLE IF EXISTS ${com.epidata.lib.models.Measurement.DBTableName}"
+  //  val drop_keys_command = s"DROP TABLE IF EXISTS ${com.epidata.lib.models.MeasurementsKeys.DBTableName}"
 
-  stmt.execute(dop_orig_command)
-  stmt.execute(drop_keys_command)
+  //  stmt.execute(dop_orig_command)
+  //  stmt.execute(drop_keys_command)
 
   // Create Tables
   val original = "play/conf/schema/measurements_original"
@@ -29,17 +36,17 @@ object elcTest extends App {
   val keys_source = Source.fromFile(keys)
   val create_orig = orig_source.getLines.mkString
   val create_key = keys_source.getLines.mkString
-  orig_source.close()
-  keys_source.close()
-  println(s"measurements_original schema is ${create_orig}")
-  println(s"measurements_keys schema is ${create_key}")
-  stmt.execute(create_orig)
-  stmt.execute(create_key)
+  //  orig_source.close()
+  //  keys_source.close()
+  //println(s"measurements_original schema is ${create_orig}")
+  //println(s"measurements_keys schema is ${create_key}")
+  //  stmt.execute(create_orig)
+  //  stmt.execute(create_key)
 
   // Manual Insert for measurements_original
-  val beginTime = new Timestamp(1428004316123L)
-  val testTime = new Timestamp(1428004316123L + 5000L)
-  val endTime = new Timestamp(1428004316123L + 10000L)
+  val beginTime = new Timestamp(1615766400000L)
+  val testTime = new Timestamp(1615766400000L + 5000L)
+  val endTime = new Timestamp(1615766400000L + 10000L)
   val ts = beginTime
   val orderedEpochs = Measurement.epochForTs(beginTime) to Measurement.epochForTs(endTime)
   var epoch = orderedEpochs.toArray
@@ -74,6 +81,7 @@ object elcTest extends App {
      #val2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#')
   //  println(s"prebinding: ${insert_q.toString}")
 
+  /*
   val prepare_insert = con.prepareStatement(insert_q.toString)
   prepare_insert.setString(1, to_check(0).asInstanceOf[String])
   prepare_insert.setString(2, to_check(1).asInstanceOf[String])
@@ -110,8 +118,10 @@ object elcTest extends App {
   prepare_insert.setString(15, to_check(21).asInstanceOf[String])
   prepare_insert.setString(16, to_check(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
+*/
 
   // Insert Check
+  /*
   val rs = con.prepareStatement(s"SELECT * FROM ${com.epidata.lib.models.Measurement.DBTableName}").executeQuery()
   while (rs.next()) {
     val t = com.epidata.lib.models.Measurement.rowToMeasurement(rs)
@@ -162,16 +172,60 @@ object elcTest extends App {
   }
 
   val k_results = ec.listKeys()
+  val keysIter = k_results.iterator()
+  while (keysIter.hasNext()) {
+    println(s"key query row: ${keysIter.next()}")
+  }
+*/
+
+  println("Ready to create Transformation. Enter 'Q' to continue.")
+  while ((StdIn.readChar()).toLower.compare('q') != 0) {
+    // print data
+    println("Ready to create Transformation. Enter 'Q' to continue.")
+  }
+
+  // stream test
+  val op = esc.createTransformations("Identity", List("Meas-1"), Map[String, String]())
+  println("transformation created: " + op)
+
+  println("Ready to create Stream. Enter 'Q' to continue.")
+  while ((StdIn.readChar()).toLower.compare('q') != 0) {
+    // print data
+    println("Ready to create Stream. Enter 'Q' to continue.")
+  }
+
+  esc.createStream("measurements_original", "measurements_cleansed", op)
+
+  println("Ready to start stream. Enter 'Q' to continue.")
+  while ((StdIn.readChar()).toLower.compare('q') != 0) {
+    // print data
+    println("Ready to start stream. Enter 'Q' to continue.")
+  }
+
+  esc.startStream()
+
+  println("Stream started successfully. Enter 'Q' to stop streaming.")
+
+  while ((StdIn.readChar()).toLower.compare('q') != 0) {
+    // print data
+    println("Continuing streaming. Enter 'Q' to stop streaming.")
+  }
+
+  // check stream data
+
+  // stop stream
+  esc.stopStream()
+  println("Stream processing stopped successfully.")
+
+  /*
   try { k_rs.close() } catch { case e: SQLException => println("Error closing ResultSet") }
   try { rs.close() } catch { case e: SQLException => println("Error closing ResultSet") }
   try { keys_stmt.close() } catch { case e: SQLException => println("Error closing Statement") }
   try { prepare_insert.close() } catch { case e: SQLException => println("Error closing Statement") }
   try { stmt.close() } catch { case e: SQLException => println("Error closing Statement") }
   try { con.close() } catch { case e: SQLException => println("Error closing database connection") }
+*/
 
-  val keysIter = k_results.iterator()
-  while (keysIter.hasNext()) {
-    println(s"key query row: ${keysIter.next()}")
-  }
-
+  //  ec.close()
+  println("test completed")
 }

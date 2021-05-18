@@ -14,14 +14,14 @@ import org.json.simple.{ JSONArray, JSONObject }
 import java.sql.ResultSet
 
 /**
- * Specialization of Measurement representing sensor data.
+ * Specialization of MeasurementCleansed representing sensor data.
  *
  * @param meas_lower_limit Lower limit of measurement range. May be present for
  *                         numeric types but never for non numeric types.
  * @param meas_upper_limit Upper limit of measurement range. May be present for
  *                         numeric types but never for non numeric types.
  */
-case class SensorMeasurement(
+case class SensorMeasurementCleansed(
     company: String,
     site: String,
     station: String,
@@ -33,99 +33,105 @@ case class SensorMeasurement(
     meas_value: Any,
     meas_unit: Option[String],
     meas_status: Option[String],
+    meas_flag: Option[String],
+    meas_method: Option[String],
     meas_lower_limit: Option[AnyVal],
     meas_upper_limit: Option[AnyVal],
     meas_description: Option[String])
 
-object SensorMeasurement {
+object SensorMeasurementCleansed {
 
-  val NAME: String = "sensor_measurement"
+  val NAME: String = "sensor_measurement_cleansed"
 
   // Model Conversions
-  def rowToSensorMeasurement(row: Row): SensorMeasurement = Measurement.rowToMeasurement(row)
+  def rowToSensorMeasurementCleansed(row: Row): SensorMeasurementCleansed = MeasurementCleansed.rowToMeasurementCleansed(row)
 
   // Model Conversions for SQLite
-  def rowToSensorMeasurement(row: ResultSet): SensorMeasurement = Measurement.rowToMeasurement(row)
+  def rowToSensorMeasurementCleansed(row: ResultSet): SensorMeasurementCleansed = MeasurementCleansed.rowToMeasurementCleansed(row)
 
-  implicit def measurementToSensorMeasurement(measurement: Measurement): SensorMeasurement =
-    SensorMeasurement(
-      measurement.customer,
-      measurement.customer_site,
-      measurement.collection,
-      measurement.dataset,
-      measurement.ts,
-      measurement.key1.get,
-      measurement.key2.get,
-      measurement.meas_datatype,
-      measurement.meas_value,
-      measurement.meas_unit,
-      measurement.meas_status,
-      measurement.meas_lower_limit,
-      measurement.meas_upper_limit,
-      measurement.meas_description)
+  implicit def measurementCleansedToSensorMeasurementCleansed(measurementCleansed: MeasurementCleansed): SensorMeasurementCleansed =
+    SensorMeasurementCleansed(
+      measurementCleansed.customer,
+      measurementCleansed.customer_site,
+      measurementCleansed.collection,
+      measurementCleansed.dataset,
+      measurementCleansed.ts,
+      measurementCleansed.key1.get,
+      measurementCleansed.key2.get,
+      measurementCleansed.meas_datatype,
+      measurementCleansed.meas_value,
+      measurementCleansed.meas_unit,
+      measurementCleansed.meas_status,
+      measurementCleansed.meas_flag,
+      measurementCleansed.meas_method,
+      measurementCleansed.meas_lower_limit,
+      measurementCleansed.meas_upper_limit,
+      measurementCleansed.meas_description)
 
-  implicit def sensorMeasurementToMeasurement(sensorMeasurement: SensorMeasurement): Measurement =
-    Measurement(
-      sensorMeasurement.company,
-      sensorMeasurement.site,
-      sensorMeasurement.station,
-      sensorMeasurement.sensor,
-      sensorMeasurement.ts,
-      Some(sensorMeasurement.event),
-      Some(sensorMeasurement.meas_name),
+  implicit def sensorMeasurementCleansedToMeasurementCleansed(sensorMeasurementCleansed: SensorMeasurementCleansed): MeasurementCleansed =
+    MeasurementCleansed(
+      sensorMeasurementCleansed.company,
+      sensorMeasurementCleansed.site,
+      sensorMeasurementCleansed.station,
+      sensorMeasurementCleansed.sensor,
+      sensorMeasurementCleansed.ts,
+      Some(sensorMeasurementCleansed.event),
+      Some(sensorMeasurementCleansed.meas_name),
       None,
-      sensorMeasurement.meas_datatype,
-      sensorMeasurement.meas_value,
-      sensorMeasurement.meas_unit,
-      sensorMeasurement.meas_status,
-      sensorMeasurement.meas_lower_limit,
-      sensorMeasurement.meas_upper_limit,
-      sensorMeasurement.meas_description,
+      sensorMeasurementCleansed.meas_datatype,
+      sensorMeasurementCleansed.meas_value,
+      sensorMeasurementCleansed.meas_unit,
+      sensorMeasurementCleansed.meas_status,
+      sensorMeasurementCleansed.meas_flag,
+      sensorMeasurementCleansed.meas_method,
+      sensorMeasurementCleansed.meas_lower_limit,
+      sensorMeasurementCleansed.meas_upper_limit,
+      sensorMeasurementCleansed.meas_description,
       None,
       None)
 
-  implicit def sensorMeasurementToMeasurement(sensorMeasurements: List[SensorMeasurement]): List[Measurement] =
-    sensorMeasurements.map(sensorMeasurement => sensorMeasurementToMeasurement(sensorMeasurement))
+  implicit def sensorMeasurementCleansedToMeasurementCleansed(sensorMeasurementsCleansed: List[SensorMeasurementCleansed]): List[MeasurementCleansed] =
+    sensorMeasurementsCleansed.map(sensorMeasurementCleansed => sensorMeasurementCleansedToMeasurementCleansed(sensorMeasurementCleansed))
 
-  implicit def measurementToSensorMeasurement(measurements: List[Measurement]): List[SensorMeasurement] =
-    measurements.map(measurement => measurementToSensorMeasurement(measurement))
+  implicit def measurementCleansedToSensorMeasurementCleansed(measurementsCleansed: List[MeasurementCleansed]): List[SensorMeasurementCleansed] =
+    measurementsCleansed.map(measurementCleansed => measurementCleansedToSensorMeasurementCleansed(measurementCleansed))
 
   // JSON Helpers
-  def rowToJLinkedHashMap(row: Row, tableName: String): JLinkedHashMap[String, Object] = {
+  def rowToJLinkedHashMap(rowCleansed: Row, tableName: String): JLinkedHashMap[String, Object] = {
     tableName match {
-      case com.epidata.lib.models.Measurement.DBTableName =>
-        val m = rowToSensorMeasurement(row)
-        toJLinkedHashMap(m)
+      case com.epidata.lib.models.MeasurementCleansed.DBTableName =>
+        val mc = rowToSensorMeasurementCleansed(rowCleansed)
+        toJLinkedHashMap(mc)
     }
   }
 
   // JSON Helpers for SQLite
-  def rowToJLinkedHashMap(row: ResultSet, tableName: String): JLinkedHashMap[String, Object] = {
+  def rowToJLinkedHashMap(rowCleansed: ResultSet, tableName: String): JLinkedHashMap[String, Object] = {
     tableName match {
-      case com.epidata.lib.models.Measurement.DBTableName =>
-        val m = rowToSensorMeasurement(row)
-        toJLinkedHashMap(m)
+      case com.epidata.lib.models.MeasurementCleansed.DBTableName =>
+        val mc = rowToSensorMeasurementCleansed(rowCleansed)
+        toJLinkedHashMap(mc)
     }
   }
 
   import com.epidata.lib.models.util.JsonHelpers._
 
-  def toJson(m: SensorMeasurement): String = {
-    val map = toJLinkedHashMap(m)
+  def toJson(mc: SensorMeasurementCleansed): String = {
+    val map = toJLinkedHashMap(mc)
     JSONObject.toJSONString(map)
   }
 
-  def toJson(sensorMeasurements: List[SensorMeasurement]): String = {
+  def toJson(sensorMeasurementsCleansed: List[SensorMeasurementCleansed]): String = {
     import scala.collection.JavaConverters._
     val arr = new JLinkedList[JLinkedHashMap[String, Object]]()
     arr.addAll(
-      sensorMeasurements
-        .map(m => toJLinkedHashMap(m))
+      sensorMeasurementsCleansed
+        .map(mc => toJLinkedHashMap(mc))
         .asJavaCollection)
     JSONArray.toJSONString(arr)
   }
 
-  def toJLinkedHashMap(m: SensorMeasurement): JLinkedHashMap[String, Object] = {
+  def toJLinkedHashMap(m: SensorMeasurementCleansed): JLinkedHashMap[String, Object] = {
     val map = new JLinkedHashMap[String, Object]()
 
     putToMap(map, "company", m.company)
@@ -139,6 +145,8 @@ object SensorMeasurement {
     putOptionToMap(map, "meas_unit", m.meas_unit)
     putOptionToMap(map, "meas_status", m.meas_status)
     putOptionToMap(map, "meas_description", m.meas_description)
+    putOptionToMap(map, "meas_flag", m.meas_flag)
+    putOptionToMap(map, "meas_method", m.meas_method)
 
     putOptionToMap(map, "meas_datatype", m.meas_datatype)
     if (m.meas_value != null)
@@ -149,19 +157,19 @@ object SensorMeasurement {
     map
   }
 
-  def jsonToSensorMeasurement(str: String): Option[SensorMeasurement] = {
+  def jsonToSensorMeasurementCleansed(str: String): Option[SensorMeasurementCleansed] = {
     fromJson(str) match {
-      case Some(jSONObject) => Some(jsonToSensorMeasurement(jSONObject))
+      case Some(jSONObject) => Some(jsonToSensorMeasurementCleansed(jSONObject))
       case _ => None
     }
   }
 
-  def jsonToSensorMeasurements(str: String): List[Option[SensorMeasurement]] = {
+  def jsonToSensorMeasurementsCleansed(str: String): List[Option[SensorMeasurementCleansed]] = {
     fromJsonArray(str) match {
       case Some(jSONArray) => jSONArray.toArray.toList.map(
         x =>
           try {
-            Some(jsonToSensorMeasurement(x.asInstanceOf[JSONObject]))
+            Some(jsonToSensorMeasurementCleansed(x.asInstanceOf[JSONObject]))
           } catch {
             case _: Throwable => None
           })
@@ -169,7 +177,7 @@ object SensorMeasurement {
     }
   }
 
-  def jsonToSensorMeasurement(jSONObject: JSONObject): SensorMeasurement = {
+  def jsonToSensorMeasurementCleansed(jSONObject: JSONObject): SensorMeasurementCleansed = {
     val company: String = jSONObject.get("company").asInstanceOf[String]
     val site: String = jSONObject.get("site").asInstanceOf[String]
     val station: String = jSONObject.get("station").asInstanceOf[String]
@@ -180,6 +188,10 @@ object SensorMeasurement {
 
     val meas_unit: Option[String] = TypeUtils.blankToNone(jSONObject.get("meas_unit").asInstanceOf[String])
     val meas_status: Option[String] = TypeUtils.blankToNone(jSONObject.get("meas_status").asInstanceOf[String])
+
+    val meas_flag: Option[String] = TypeUtils.blankToNone(jSONObject.get("meas_flag").asInstanceOf[String])
+    val meas_method: Option[String] = TypeUtils.blankToNone(jSONObject.get("meas_method").asInstanceOf[String])
+
     val meas_description: Option[String] = TypeUtils.blankToNone(jSONObject.get("meas_description").asInstanceOf[String])
 
     val meas_value_jsonObject = jSONObject.get("meas_value")
@@ -201,7 +213,7 @@ object SensorMeasurement {
     if (isInvalid)
       throw new Exception("invalid json format!")
 
-    SensorMeasurement(
+    SensorMeasurementCleansed(
       company,
       site,
       station,
@@ -213,6 +225,8 @@ object SensorMeasurement {
       meas_value,
       meas_unit,
       meas_status,
+      meas_flag,
+      meas_method,
       meas_lower_limit,
       meas_upper_limit,
       meas_description)
