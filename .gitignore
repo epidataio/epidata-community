@@ -24,3 +24,5 @@ ipython/build/
 .vscode
 ipython/lib
 spark/lib
+data/*.db
+
