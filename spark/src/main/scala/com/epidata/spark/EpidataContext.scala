@@ -6,7 +6,7 @@ package com.epidata.spark
 
 import com.datastax.spark.connector._
 import java.sql.Timestamp
-import com.epidata.lib.models.{ Measurement => BaseMeasurement, MeasurementCleansed => BaseMeasurementCleansed, MeasurementSummary, SensorMeasurement => BaseSensorMeasurement, AutomatedTest => BaseAutomatedTest, MeasurementsKeys => BaseMeasurementsKeys }
+import com.epidata.lib.models.{ Measurement => BaseMeasurement, MeasurementCleansed => BaseMeasurementCleansed, MeasurementSummary => BaseMeasurementSummary, SensorMeasurement => BaseSensorMeasurement, SensorMeasurementCleansed => BaseSensorMeasurementCleansed, SensorMeasurementSummary => BaseSensorMeasurementSummary, AutomatedTest => BaseAutomatedTest, AutomatedTestCleansed => BaseAutomatedTestCleansed, AutomatedTestSummary => BaseAutomatedTestSummary, MeasurementsKeys => BaseMeasurementsKeys }
 import com.epidata.spark.ops.{ Identity, OutlierDetector, MeasStatistics, FillMissingValue }
 import com.epidata.spark.utils.DataFrameUtils
 import org.apache.spark.SparkContext
@@ -130,7 +130,7 @@ class EpidataContext(private val sparkContext: SparkContext) {
     fieldQuery: Map[String, List[String]],
     beginTime: Timestamp,
     endTime: Timestamp,
-    tableName: String): RDD[MeasurementSummary] = {
+    tableName: String): RDD[BaseMeasurementSummary] = {
 
     import MeasurementHelpers._
 
@@ -139,10 +139,10 @@ class EpidataContext(private val sparkContext: SparkContext) {
       .map(partitionFieldsMap)
       .map(fieldQuery)
 
-    val table = sparkContext.cassandraTable[MeasurementSummary](cassandraKeyspaceName, tableName)
+    val table = sparkContext.cassandraTable[BaseMeasurementSummary](cassandraKeyspaceName, tableName)
 
     // Create an RDD for a specified epoch, using a CQL query.
-    def rddForPartition(partition: List[Any]): RDD[MeasurementSummary] =
+    def rddForPartition(partition: List[Any]): RDD[BaseMeasurementSummary] =
       table.where(
         DataFrameUtils.whereStatementForTable(tableName),
         partition ++ List(beginTime, endTime): _*).withAscOrder
@@ -181,15 +181,15 @@ class EpidataContext(private val sparkContext: SparkContext) {
       case BaseMeasurementCleansed.DBTableName =>
         val unionRDD = getUnionRDDMeasurementCleansed(fieldQuery, beginTime, endTime, tableName)
         measurementClass match {
-          case BaseAutomatedTest.NAME => sqlContext.createDataFrame(unionRDD.map(AutomatedTestCleansed.measurementCleansedToAutomatedTestCleansed))
-          case BaseSensorMeasurement.NAME => sqlContext.createDataFrame(unionRDD.map(SensorMeasurementCleansed.measurementCleansedToSensorMeasurementCleansed))
+          case BaseAutomatedTestCleansed.NAME => sqlContext.createDataFrame(unionRDD.map(AutomatedTestCleansed.measurementCleansedToAutomatedTestCleansed))
+          case BaseSensorMeasurementCleansed.NAME => sqlContext.createDataFrame(unionRDD.map(SensorMeasurementCleansed.measurementCleansedToSensorMeasurementCleansed))
         }
 
-      case MeasurementSummary.DBTableName =>
+      case BaseMeasurementSummary.DBTableName =>
         val unionRDD = getUnionRDDMeasurementSummary(fieldQuery, beginTime, endTime, tableName)
         measurementClass match {
-          case BaseAutomatedTest.NAME => sqlContext.createDataFrame(unionRDD.map(BaseAutomatedTest.measurementSummaryToAutomatedTestSummary))
-          case BaseSensorMeasurement.NAME => sqlContext.createDataFrame(unionRDD.map(BaseSensorMeasurement.measurementSummaryToSensorMeasurementSummary))
+          case BaseAutomatedTestSummary.NAME => sqlContext.createDataFrame(unionRDD.map(BaseAutomatedTestSummary.measurementSummaryToAutomatedTestSummary))
+          case BaseSensorMeasurementSummary.NAME => sqlContext.createDataFrame(unionRDD.map(BaseSensorMeasurementSummary.measurementSummaryToSensorMeasurementSummary))
         }
     }
 
@@ -264,7 +264,7 @@ class EpidataContext(private val sparkContext: SparkContext) {
     beginTime: Timestamp,
     endTime: Timestamp): DataFrame = {
     import scala.collection.JavaConversions._
-    query(fieldQuery.toMap.mapValues(_.toList), beginTime, endTime, MeasurementSummary.DBTableName)
+    query(fieldQuery.toMap.mapValues(_.toList), beginTime, endTime, BaseMeasurementSummary.DBTableName)
   }
 
   /** List the values of the currently saved partition key fields. */

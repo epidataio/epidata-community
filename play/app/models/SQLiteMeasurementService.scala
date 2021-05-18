@@ -9,7 +9,7 @@ import java.util.{ Date, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedL
 import java.nio.ByteBuffer
 import SQLite.DB
 import service.Configs
-import com.epidata.lib.models.{ Measurement => Model, MeasurementsKeys, MeasurementSummary }
+import com.epidata.lib.models.{ Measurement => Model, MeasurementsKeys, MeasurementCleansed => ModelCleansed, MeasurementSummary => ModelSummary }
 import com.epidata.lib.models.util.{ JsonHelpers, Binary }
 import _root_.util.{ EpidataMetrics, Ordering }
 import com.datastax.driver.core.querybuilder.{ Clause, QueryBuilder }
@@ -73,6 +73,56 @@ object SQLiteMeasurementService {
 
   }
 
+  /**
+   * Insert a cleansed measurement into the database.
+   * @param measurementCleansed The Cleansed Measurement to insert.
+   */
+  def insertCleansed(measurementCleansed: ModelCleansed): Unit = {
+
+    // Prepares the statement and executes it
+    val statementInsertCleansed = getInsertCleansedStatements(measurementCleansed)
+    DB.executeUpdate(statementInsertCleansed)
+
+  }
+
+  /**
+   * Insert a bulk of cleansed measurements into the database.
+   * @param measurementsCleansed The Cleansed Measurement to insert.
+   */
+  def bulkInsertCleansed(measurementsCleansed: List[ModelCleansed]): Unit = {
+
+    // Individually, inserts every statment into the database
+    val t0 = EpidataMetrics.getCurrentTime
+    measurementsCleansed.foreach(modelCleansed => insertCleansed(modelCleansed))
+    EpidataMetrics.increment("DB.batchExecute", t0)
+
+  }
+
+  /**
+   * Insert a summary measurement into the database.
+   * @param measurementSummary The Summary Measurement to insert.
+   */
+  def insertSummary(measurementSummary: ModelSummary): Unit = {
+
+    // Prepares the statement and executes it
+    val statementInsertSummary = getInsertSummaryStatements(measurementSummary)
+    DB.executeUpdate(statementInsertSummary)
+
+  }
+
+  /**
+   * Insert a bulk of summary measurements into the database.
+   * @param measurementsSummary The Summary Measurement to insert.
+   */
+  def bulkInsertSummary(measurementsSummary: List[ModelSummary]): Unit = {
+
+    // Individually, inserts every statment into the database
+    val t0 = EpidataMetrics.getCurrentTime
+    measurementsSummary.foreach(modelSummary => insertSummary(modelSummary))
+    EpidataMetrics.increment("DB.batchExecute", t0)
+
+  }
+
   def getInsertStatements(measurement: Model): PreparedStatement = {
 
     // Insert the measurement itself.
@@ -82,6 +132,27 @@ object SQLiteMeasurementService {
       case _ => getMeasurementInsertStatementForNullMeasValue(measurement)
     }
     measurementInsertStatement
+  }
+
+  def getInsertCleansedStatements(measurementCleansed: ModelCleansed): PreparedStatement = {
+
+    // Insert the measurement itself.
+    val measurementInsertCleansedStatement = measurementCleansed.meas_value match {
+      case _: Double | _: Long => getMeasurementInsertCleansedStatement(measurementCleansed)
+      case _: String | _: Binary => getMeasurementInsertCleansedStatement(measurementCleansed)
+      case _ => getMeasurementInsertCleansedStatementForNullMeasValue(measurementCleansed)
+    }
+    measurementInsertCleansedStatement
+  }
+
+  def getInsertSummaryStatements(measurementSummary: ModelSummary): PreparedStatement = {
+
+    // Insert the measurement itself.
+    val measurementInsertSummaryStatement = measurementSummary.meas_summary_value match {
+      case _: String => getMeasurementInsertSummaryStatement(measurementSummary)
+      case _ => throw new IllegalArgumentException("measurement summary value datatype not supported")
+    }
+    measurementInsertSummaryStatement
   }
 
   def getPartitionKeyStatements(measurement: Model): PreparedStatement = {
@@ -196,7 +267,7 @@ object SQLiteMeasurementService {
 
     // Execute the query
     tableName match {
-      case MeasurementSummary.DBTableName => DB.prepare(queryForMeasurementSummary).executeQuery()
+      case ModelSummary.DBTableName => DB.prepare(queryForMeasurementSummary).executeQuery()
       case _ => DB.prepare(queryForEpoch).executeQuery()
     }
 
@@ -395,6 +466,227 @@ object SQLiteMeasurementService {
     }
   }
 
+  private def getMeasurementInsertCleansedStatement(measurementCleansed: ModelCleansed): PreparedStatement = {
+
+    val insertCleansedStatementsStr = measurementCleansed.meas_value match {
+      case _: Double => insertCleansedDoubleStatements
+      case _: Long => insertCleansedLongStatements
+      case _: String => insertCleansedStringStatement
+      case _: Binary => insertCleansedBlobStatement
+    }
+
+    val meas_value = measurementCleansed.meas_value match {
+      case value: Binary => ByteBuffer.wrap(value.backing)
+      case _ => measurementCleansed.meas_value.asInstanceOf[AnyRef]
+    }
+
+    val insertCleansedStatements = insertCleansedStatementsStr.map(getPrepareStatement(_))
+
+    (measurementCleansed.meas_lower_limit, measurementCleansed.meas_upper_limit) match {
+      case (None, None) =>
+        // Insert with neither a lower nor upper limit.
+        DB.binds(
+          insertCleansedStatements(0),
+          measurementCleansed.customer,
+          measurementCleansed.customer_site,
+          measurementCleansed.collection,
+          measurementCleansed.dataset,
+          measurementCleansed.epoch: java.lang.Integer,
+          measurementCleansed.ts,
+          measurementCleansed.key1.getOrElse(""),
+          measurementCleansed.key2.getOrElse(""),
+          measurementCleansed.key3.getOrElse(""),
+          measurementCleansed.meas_datatype.getOrElse(""),
+          meas_value,
+          measurementCleansed.meas_unit.getOrElse(""),
+          measurementCleansed.meas_status.getOrElse(""),
+          measurementCleansed.meas_description.getOrElse(""),
+          measurementCleansed.val1.getOrElse(""),
+          measurementCleansed.val2.getOrElse(""))
+      case (_, None) =>
+        // Insert with a lower limit only.
+        DB.binds(
+          insertCleansedStatements(1),
+          measurementCleansed.customer,
+          measurementCleansed.customer_site,
+          measurementCleansed.collection,
+          measurementCleansed.dataset,
+          measurementCleansed.epoch: java.lang.Integer,
+          measurementCleansed.ts,
+          measurementCleansed.key1.getOrElse(""),
+          measurementCleansed.key2.getOrElse(""),
+          measurementCleansed.key3.getOrElse(""),
+          measurementCleansed.meas_datatype.getOrElse(""),
+          meas_value,
+          measurementCleansed.meas_unit.getOrElse(""),
+          measurementCleansed.meas_status.getOrElse(""),
+          measurementCleansed.meas_lower_limit.get.asInstanceOf[AnyRef],
+          measurementCleansed.meas_description.getOrElse(""),
+          measurementCleansed.val1.getOrElse(""),
+          measurementCleansed.val2.getOrElse(""))
+      case (None, _) =>
+        // Insert with an upper limit only.
+        DB.binds(
+          insertCleansedStatements(2),
+          measurementCleansed.customer,
+          measurementCleansed.customer_site,
+          measurementCleansed.collection,
+          measurementCleansed.dataset,
+          measurementCleansed.epoch: java.lang.Integer,
+          measurementCleansed.ts,
+          measurementCleansed.key1.getOrElse(""),
+          measurementCleansed.key2.getOrElse(""),
+          measurementCleansed.key3.getOrElse(""),
+          measurementCleansed.meas_datatype.getOrElse(""),
+          meas_value,
+          measurementCleansed.meas_unit.getOrElse(""),
+          measurementCleansed.meas_status.getOrElse(""),
+          measurementCleansed.meas_upper_limit.get.asInstanceOf[AnyRef],
+          measurementCleansed.meas_description.getOrElse(""),
+          measurementCleansed.val1.getOrElse(""),
+          measurementCleansed.val2.getOrElse(""))
+      case _ =>
+        // Insert with both a lower and an upper limit.
+        DB.binds(
+          insertCleansedStatements(3),
+          measurementCleansed.customer,
+          measurementCleansed.customer_site,
+          measurementCleansed.collection,
+          measurementCleansed.dataset,
+          measurementCleansed.epoch: java.lang.Integer,
+          measurementCleansed.ts,
+          measurementCleansed.key1.getOrElse(""),
+          measurementCleansed.key2.getOrElse(""),
+          measurementCleansed.key3.getOrElse(""),
+          measurementCleansed.meas_datatype.getOrElse(""),
+          meas_value,
+          measurementCleansed.meas_unit.getOrElse(""),
+          measurementCleansed.meas_status.getOrElse(""),
+          measurementCleansed.meas_lower_limit.get.asInstanceOf[AnyRef],
+          measurementCleansed.meas_upper_limit.get.asInstanceOf[AnyRef],
+          measurementCleansed.meas_description.getOrElse(""),
+          measurementCleansed.val1.getOrElse(""),
+          measurementCleansed.val2.getOrElse(""))
+    }
+  }
+
+  private def getMeasurementInsertCleansedStatementForNullMeasValue(measurementCleansed: ModelCleansed): PreparedStatement = {
+    val insertCleansedStatementsStr = insertCleansedNullDoubleValueStatement
+
+    val insertCleansedStatements = insertCleansedStatementsStr.map(getPrepareStatement(_))
+
+    (measurementCleansed.meas_lower_limit, measurementCleansed.meas_upper_limit) match {
+      case (None, None) =>
+        // Insert with neither a lower nor upper limit.
+        DB.binds(
+          insertCleansedStatements(0),
+          measurementCleansed.customer,
+          measurementCleansed.customer_site,
+          measurementCleansed.collection,
+          measurementCleansed.dataset,
+          measurementCleansed.epoch: java.lang.Integer,
+          measurementCleansed.ts,
+          measurementCleansed.key1.getOrElse(""),
+          measurementCleansed.key2.getOrElse(""),
+          measurementCleansed.key3.getOrElse(""),
+          measurementCleansed.meas_datatype.getOrElse(""),
+          measurementCleansed.meas_unit.getOrElse(""),
+          measurementCleansed.meas_status.getOrElse(""),
+          measurementCleansed.meas_description.getOrElse(""),
+          measurementCleansed.val1.getOrElse(""),
+          measurementCleansed.val2.getOrElse(""))
+      case (_, None) =>
+        // Insert with a lower limit only.
+        DB.binds(
+          insertCleansedStatements(1),
+          measurementCleansed.customer,
+          measurementCleansed.customer_site,
+          measurementCleansed.collection,
+          measurementCleansed.dataset,
+          measurementCleansed.epoch: java.lang.Integer,
+          measurementCleansed.ts,
+          measurementCleansed.key1.getOrElse(""),
+          measurementCleansed.key2.getOrElse(""),
+          measurementCleansed.key3.getOrElse(""),
+          measurementCleansed.meas_datatype.getOrElse(""),
+          measurementCleansed.meas_unit.getOrElse(""),
+          measurementCleansed.meas_status.getOrElse(""),
+          measurementCleansed.meas_lower_limit.get.asInstanceOf[AnyRef],
+          measurementCleansed.meas_description.getOrElse(""),
+          measurementCleansed.val1.getOrElse(""),
+          measurementCleansed.val2.getOrElse(""))
+      case (None, _) =>
+        // Insert with an upper limit only.
+        DB.binds(
+          insertCleansedStatements(2),
+          measurementCleansed.customer,
+          measurementCleansed.customer_site,
+          measurementCleansed.collection,
+          measurementCleansed.dataset,
+          measurementCleansed.epoch: java.lang.Integer,
+          measurementCleansed.ts,
+          measurementCleansed.key1.getOrElse(""),
+          measurementCleansed.key2.getOrElse(""),
+          measurementCleansed.key3.getOrElse(""),
+          measurementCleansed.meas_datatype.getOrElse(""),
+          measurementCleansed.meas_unit.getOrElse(""),
+          measurementCleansed.meas_status.getOrElse(""),
+          measurementCleansed.meas_upper_limit.get.asInstanceOf[AnyRef],
+          measurementCleansed.meas_description.getOrElse(""),
+          measurementCleansed.val1.getOrElse(""),
+          measurementCleansed.val2.getOrElse(""))
+      case _ =>
+        // Insert with both a lower and an upper limit.
+        DB.binds(
+          insertCleansedStatements(3),
+          measurementCleansed.customer,
+          measurementCleansed.customer_site,
+          measurementCleansed.collection,
+          measurementCleansed.dataset,
+          measurementCleansed.epoch: java.lang.Integer,
+          measurementCleansed.ts,
+          measurementCleansed.key1.getOrElse(""),
+          measurementCleansed.key2.getOrElse(""),
+          measurementCleansed.key3.getOrElse(""),
+          measurementCleansed.meas_datatype.getOrElse(""),
+          measurementCleansed.meas_unit.getOrElse(""),
+          measurementCleansed.meas_status.getOrElse(""),
+          measurementCleansed.meas_lower_limit.get.asInstanceOf[AnyRef],
+          measurementCleansed.meas_upper_limit.get.asInstanceOf[AnyRef],
+          measurementCleansed.meas_description.getOrElse(""),
+          measurementCleansed.val1.getOrElse(""),
+          measurementCleansed.val2.getOrElse(""))
+    }
+  }
+
+  private def getMeasurementInsertSummaryStatement(measurementSummary: ModelSummary): PreparedStatement = {
+
+    val insertSummaryStatementsStr = measurementSummary.meas_summary_value match {
+      case _: String => insertSummaryStringStatement
+      case _ => throw new IllegalArgumentException("measurement summary value datatype not supported")
+    }
+
+    val insertSummaryStatements = insertSummaryStatementsStr.map(getPrepareStatement(_))
+
+    (measurementSummary.meas_summary_value) match {
+      case _ =>
+        DB.binds(
+          insertSummaryStatements(0),
+          measurementSummary.customer,
+          measurementSummary.customer_site,
+          measurementSummary.collection,
+          measurementSummary.dataset,
+          measurementSummary.start_time,
+          measurementSummary.stop_time,
+          measurementSummary.key1.getOrElse(""),
+          measurementSummary.key2.getOrElse(""),
+          measurementSummary.key3.getOrElse(""),
+          measurementSummary.meas_summary_name,
+          measurementSummary.meas_summary_value,
+          measurementSummary.meas_summary_description.getOrElse(""))
+    }
+  }
+
   // Prepared statements for inserting different types of measurements.
   private lazy val insertDoubleStatements = prepareInserts("", "")
   private lazy val insertLongStatements = prepareInserts("_l", "_l")
@@ -406,7 +698,6 @@ object SQLiteMeasurementService {
 
   private def prepareInserts(typeSuffix: String, limitTypeSuffix: String) =
     List(
-
       s"""#INSERT OR REPLACE INTO ${Model.DBTableName} (
             #customer,
             #customer_site,
@@ -462,6 +753,7 @@ object SQLiteMeasurementService {
             #meas_description,
             #val1,
             #val2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#'),
+
       s"""#INSERT OR REPLACE INTO ${Model.DBTableName} (
             #customer,
             #customer_site,
@@ -484,7 +776,6 @@ object SQLiteMeasurementService {
 
   private def prepareNullValueInserts(typeSuffix: String) =
     List(
-
       s"""#INSERT OR REPLACE INTO ${Model.DBTableName} (
          #customer,
          #customer_site,
@@ -537,6 +828,7 @@ object SQLiteMeasurementService {
          #meas_description,
          #val1,
          #val2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#'),
+
       s"""#INSERT OR REPLACE INTO ${Model.DBTableName} (
          #customer,
          #customer_site,
@@ -558,9 +850,204 @@ object SQLiteMeasurementService {
 
   private def prepareKeysInsert =
     s"""#INSERT OR IGNORE INTO ${MeasurementsKeys.DBTableName} (
-         #customer,
-         #customer_site,
-         #collection,
-         #dataset) VALUES (?, ?, ?, ?)""".stripMargin('#')
+        #customer,
+        #customer_site,
+        #collection,
+        #dataset) VALUES (?, ?, ?, ?)""".stripMargin('#')
+
+  // Prepared statements for inserting different types of cleansed measurements.
+  private lazy val insertCleansedDoubleStatements = prepareCleansedInserts("", "")
+  private lazy val insertCleansedLongStatements = prepareCleansedInserts("_l", "_l")
+  private lazy val insertCleansedStringStatement = prepareCleansedInserts("_s", "")
+  private lazy val insertCleansedBlobStatement = prepareCleansedInserts("_b", "")
+  private lazy val insertCleansedNullDoubleValueStatement = prepareCleansedNullValueInserts("")
+  private lazy val insertCleansedNullLongValueStatement = prepareCleansedNullValueInserts("_l")
+
+  private def prepareCleansedInserts(typeSuffix: String, limitTypeSuffix: String) =
+    List(
+      s"""#INSERT OR REPLACE INTO ${ModelCleansed.DBTableName} (
+            #customer,
+            #customer_site,
+            #collection,
+            #dataset,
+            #epoch,
+            #ts,
+            #key1,
+            #key2,
+            #key3,
+            #meas_datatype,
+            #meas_value${typeSuffix},
+            #meas_unit,
+            #meas_status,
+            #meas_flag,
+            #meas_method,
+            #meas_description,
+            #val1,
+            #val2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#'),
+
+      s"""#INSERT OR REPLACE INTO ${ModelCleansed.DBTableName} (
+            #customer,
+            #customer_site,
+            #collection,
+            #dataset,
+            #epoch,
+            #ts,
+            #key1,
+            #key2,
+            #key3,
+            #meas_datatype,
+            #meas_value${typeSuffix},
+            #meas_unit,
+            #meas_status,
+            #meas_lower_limit${limitTypeSuffix},
+            #meas_flag,
+            #meas_method,
+            #meas_description,
+            #val1,
+            #val2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#'),
+
+      s"""#INSERT OR REPLACE INTO ${ModelCleansed.DBTableName} (
+            #customer,
+            #customer_site,
+            #collection,
+            #dataset,
+            #epoch,
+            #ts,
+            #key1,
+            #key2,
+            #key3,
+            #meas_datatype,
+            #meas_value${typeSuffix},
+            #meas_unit,
+            #meas_status,
+            #meas_upper_limit${limitTypeSuffix},
+            #meas_flag,
+            #meas_method,
+            #meas_description,
+            #val1,
+            #val2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#'),
+
+      s"""#INSERT OR REPLACE INTO ${ModelCleansed.DBTableName} (
+            #customer,
+            #customer_site,
+            #collection,
+            #dataset,
+            #epoch,
+            #ts,
+            #key1,
+            #key2,
+            #key3,
+            #meas_datatype,
+            #meas_value${typeSuffix},
+            #meas_unit,
+            #meas_status,
+            #meas_lower_limit${limitTypeSuffix},
+            #meas_upper_limit${limitTypeSuffix},
+            #meas_flag,
+            #meas_method,
+            #meas_description,
+            #val1,
+            #val2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#'))
+
+  private def prepareCleansedNullValueInserts(typeSuffix: String) =
+    List(
+      s"""#INSERT OR REPLACE INTO ${ModelCleansed.DBTableName} (
+            #customer,
+            #customer_site,
+            #collection,
+            #dataset,
+            #epoch,
+            #ts,
+            #key1,
+            #key2,
+            #key3,
+            #meas_datatype,
+            #meas_unit,
+            #meas_status,
+            #meas_flag,
+            #meas_method,
+            #meas_description,
+            #val1,
+            #val2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#'),
+
+      s"""#INSERT OR REPLACE INTO ${ModelCleansed.DBTableName} (
+            #customer,
+            #customer_site,
+            #collection,
+            #dataset,
+            #epoch,
+            #ts,
+            #key1,
+            #key2,
+            #key3,
+            #meas_datatype,
+            #meas_unit,
+            #meas_status,
+            #meas_lower_limit${typeSuffix},
+            #meas_flag,
+            #meas_method,
+            #meas_description,
+            #val1,
+            #val2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#'),
+
+      s"""#INSERT OR REPLACE INTO ${ModelCleansed.DBTableName} (
+            #customer,
+            #customer_site,
+            #collection,
+            #dataset,
+            #epoch,
+            #ts,
+            #key1,
+            #key2,
+            #key3,
+            #meas_datatype,
+            #meas_unit,
+            #meas_status,
+            #meas_upper_limit${typeSuffix},
+            #meas_flag,
+            #meas_method,
+            #meas_description,
+            #val1,
+            #val2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#'),
+
+      s"""#INSERT OR REPLACE INTO ${ModelCleansed.DBTableName} (
+            #customer,
+            #customer_site,
+            #collection,
+            #dataset,
+            #epoch,
+            #ts,
+            #key1,
+            #key2,
+            #key3,
+            #meas_datatype,
+            #meas_unit,
+            #meas_status,
+            #meas_lower_limit${typeSuffix},
+            #meas_upper_limit${typeSuffix},
+            #meas_flag,
+            #meas_method,
+            #meas_description,
+            #val1,
+            #val2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#'))
+
+  // Prepared statements for inserting summary measurements.
+  private lazy val insertSummaryStringStatement = prepareSummaryInserts("")
+
+  private def prepareSummaryInserts(typeSuffix: String) =
+    List(
+      s"""#INSERT OR REPLACE INTO ${ModelSummary.DBTableName} (
+            #customer,
+            #customer_site,
+            #collection,
+            #dataset,
+            #start_time,
+            #stop_time,
+            #key1,
+            #key2,
+            #key3,
+            #meas_summary_name,
+            #meas_summary_value${typeSuffix},
+            #meas_summary_description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#'))
 
 }

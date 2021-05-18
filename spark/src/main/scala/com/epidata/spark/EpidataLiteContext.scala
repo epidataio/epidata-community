@@ -22,6 +22,7 @@ class EpidataLiteContext() {
   private lazy val measurementClass = conf.getString("spark.epidata.measurementClass")
   private lazy val streamingBatchDuration = conf.getInt("spark.epidata.streamingBatchDuration")
 
+  // Connect to SQLite database
   Class.forName("org.sqlite.JDBC")
   private val con: Connection = DriverManager.getConnection(conf.getString("spark.epidata.SQLite.url"))
 
@@ -216,9 +217,6 @@ class EpidataLiteContext() {
 
   /** List the values of the currently saved partition key fields. */
   def listKeys(): JList[JLinkedHashMap[String, Object]] = {
-
-    //val con = DriverManager.getConnection(conf.getString("spark.epidata.SQLite.url"))
-
     val query = getKeysStatementString(BaseMeasurementsKeys.DBTableName)
     val stmt = con.prepareStatement(query)
     val rs = stmt.executeQuery()

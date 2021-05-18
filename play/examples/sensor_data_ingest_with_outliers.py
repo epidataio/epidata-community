@@ -28,12 +28,12 @@ args = arg_parser.parse_args()
 HOST = args.host or '127.0.0.1:9443'
 AUTHENTICATION_URL = 'https://' + HOST + '/authenticate/app'
 AUTHENTICATION_ROUTE = '/authenticate/app'
-USE_KAFKA = False
+EPI_STREAM = True
 LOG_ITERATION = 1
 
-if USE_KAFKA:
-    CREATE_MEASUREMENT_URL = 'https://' + HOST + '/kafka/measurements'
-    CREATE_MEASUREMENT_ROUTE = '/kafka/measurements'
+if EPI_STREAM:
+    CREATE_MEASUREMENT_URL = 'https://' + HOST + '/stream/measurements'
+    CREATE_MEASUREMENT_ROUTE = '/stream/measurements'
 else:
     CREATE_MEASUREMENT_URL = 'https://' + HOST + '/measurements'
     CREATE_MEASUREMENT_ROUTE = '/measurements'

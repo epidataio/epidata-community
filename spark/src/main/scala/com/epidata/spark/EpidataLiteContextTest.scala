@@ -8,21 +8,29 @@ import com.typesafe.config.ConfigFactory
 import java.io.File
 import java.sql.{ DriverManager, Timestamp, SQLException }
 import scala.io.Source
+import scala.io.StdIn
+//import scala.collection.mutable.Map
 
 object elcTest extends App {
   val ec = new EpidataLiteContext()
-  val conf = ConfigFactory.parseResources("sqlite-defaults.conf")
+
+  val esc = new EpidataLiteStreamingContext()
+  esc.init()
+
+  /*  ----- EpiDataLite Batch  Test ----- */
+
+  println("\n EpiDataLite Batch Test Started")
 
   Class.forName("org.sqlite.JDBC");
+  val conf = ConfigFactory.parseResources("sqlite-defaults.conf")
   val con = DriverManager.getConnection(conf.getString("spark.epidata.SQLite.url"))
   val stmt = con.createStatement()
 
   // Clear tables
-  val dop_orig_command = s"DROP TABLE IF EXISTS ${com.epidata.lib.models.Measurement.DBTableName}"
-  val drop_keys_command = s"DROP TABLE IF EXISTS ${com.epidata.lib.models.MeasurementsKeys.DBTableName}"
-
-  stmt.execute(dop_orig_command)
-  stmt.execute(drop_keys_command)
+  //  val dop_orig_command = s"DROP TABLE IF EXISTS ${com.epidata.lib.models.Measurement.DBTableName}"
+  //  val drop_keys_command = s"DROP TABLE IF EXISTS ${com.epidata.lib.models.MeasurementsKeys.DBTableName}"
+  //  stmt.execute(dop_orig_command)
+  //  stmt.execute(drop_keys_command)
 
   // Create Tables
   val original = "play/conf/schema/measurements_original"
@@ -31,6 +39,7 @@ object elcTest extends App {
   val keys_source = Source.fromFile(keys)
   val create_orig = orig_source.getLines.mkString
   val create_key = keys_source.getLines.mkString
+
   orig_source.close()
   keys_source.close()
   //println(s"measurements_original schema is ${create_orig}")
@@ -42,6 +51,7 @@ object elcTest extends App {
   val beginTime = new Timestamp(1619240032000L)
   val testTime = new Timestamp(1619240032000L + 5000L)
   val endTime = new Timestamp(1619240032000L + 10000L)
+
   val ts = beginTime
   val orderedEpochs = Measurement.epochForTs(beginTime) to Measurement.epochForTs(endTime)
   var epoch = orderedEpochs.toArray
@@ -114,7 +124,7 @@ object elcTest extends App {
      #val2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#')
   //println(s"prebinding: ${insert_q.toString}")
 
-  // Company-1 Data
+  // Company-1 Test Data
   val prepare_insert = con.prepareStatement(insert_q.toString)
   prepare_insert.setString(1, company1_site1_station1_test1(0).asInstanceOf[String])
   prepare_insert.setString(2, company1_site1_station1_test1(1).asInstanceOf[String])
@@ -368,8 +378,43 @@ object elcTest extends App {
   prepare_insert.setString(16, company1_site2_station2_test1(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
 
-  // Compnay-2 Data
+  prepare_insert.setString(1, company1_site2_station2_test2(0).asInstanceOf[String])
+  prepare_insert.setString(2, company1_site2_station2_test2(1).asInstanceOf[String])
+  prepare_insert.setString(3, company1_site2_station2_test2(2).asInstanceOf[String])
+  prepare_insert.setString(4, company1_site2_station2_test2(3).asInstanceOf[String])
+  prepare_insert.setInt(5, epoch(0))
+  prepare_insert.setTimestamp(6, beginTime)
+  prepare_insert.setString(7, company1_site2_station2_test2(6).asInstanceOf[String])
+  prepare_insert.setString(8, company1_site2_station2_test2(7).asInstanceOf[String])
+  prepare_insert.setString(9, company1_site2_station2_test2(8).asInstanceOf[String])
+  prepare_insert.setString(10, company1_site2_station2_test2(9).asInstanceOf[String])
+  prepare_insert.setDouble(11, company1_site2_station2_test2(10).asInstanceOf[Double])
+  prepare_insert.setString(12, company1_site2_station2_test2(14).asInstanceOf[String])
+  prepare_insert.setString(13, company1_site2_station2_test2(15).asInstanceOf[String])
+  prepare_insert.setString(14, company1_site2_station2_test2(20).asInstanceOf[String])
+  prepare_insert.setString(15, company1_site2_station2_test2(21).asInstanceOf[String])
+  prepare_insert.setString(16, company1_site2_station2_test2(22).asInstanceOf[String])
+  prepare_insert.executeUpdate()
 
+  prepare_insert.setString(1, company1_site2_station2_test2(0).asInstanceOf[String])
+  prepare_insert.setString(2, company1_site2_station2_test2(1).asInstanceOf[String])
+  prepare_insert.setString(3, company1_site2_station2_test2(2).asInstanceOf[String])
+  prepare_insert.setString(4, company1_site2_station2_test2(3).asInstanceOf[String])
+  prepare_insert.setInt(5, epoch(0))
+  prepare_insert.setTimestamp(6, testTime)
+  prepare_insert.setString(7, company1_site2_station2_test2(6).asInstanceOf[String])
+  prepare_insert.setString(8, company1_site2_station2_test2(7).asInstanceOf[String])
+  prepare_insert.setString(9, company1_site2_station2_test2(8).asInstanceOf[String])
+  prepare_insert.setString(10, company1_site2_station2_test2(9).asInstanceOf[String])
+  prepare_insert.setDouble(11, 99999.0)
+  prepare_insert.setString(12, company1_site2_station2_test2(14).asInstanceOf[String])
+  prepare_insert.setString(13, company1_site2_station2_test2(15).asInstanceOf[String])
+  prepare_insert.setString(14, company1_site2_station2_test2(20).asInstanceOf[String])
+  prepare_insert.setString(15, company1_site2_station2_test2(21).asInstanceOf[String])
+  prepare_insert.setString(16, company1_site2_station2_test2(22).asInstanceOf[String])
+  prepare_insert.executeUpdate()
+
+  // Compnay-2 Test Data
   prepare_insert.setString(1, company2_site1_station1_test1(0).asInstanceOf[String])
   prepare_insert.setString(2, company2_site1_station1_test1(1).asInstanceOf[String])
   prepare_insert.setString(3, company2_site1_station1_test1(2).asInstanceOf[String])
@@ -671,8 +716,8 @@ object elcTest extends App {
       "company" -> List("Company-2", "Company-1"),
       "site" -> List("Site-1", "Site-2"),
       "device_group" -> List("1000"),
-      "tester" -> List("Station-1"),
-      "test_name" -> List("Test-1")),
+      "tester" -> List("Station-1", "Station-2"),
+      "test_name" -> List("Test-1", "Test-2")),
     beginTime,
     endTime)
 
@@ -682,10 +727,11 @@ object elcTest extends App {
   }
 
   // Measurement Keys
-  println("----------------------------------------------------")
+  //println("----------------------------------------------------")
+  println("\n")
   val insert_keys_val = Array[String]("Company-2", "Site-2", "2000", "Station-2")
   val insert_keys_val_1 = Array[String]("Company-3", "Site-3", "3000", "Station-3")
-  val insert_keys_query = s"INSERT INTO ${com.epidata.lib.models.MeasurementsKeys.DBTableName} (customer, customer_site, collection, dataset) VALUES (?, ?, ?, ?)"
+  val insert_keys_query = s"INSERT OR REPLACE INTO ${com.epidata.lib.models.MeasurementsKeys.DBTableName} (customer, customer_site, collection, dataset) VALUES (?, ?, ?, ?)"
   val keys_stmt = con.prepareStatement(insert_keys_query)
   keys_stmt.setString(1, insert_keys_val.head)
   keys_stmt.setString(2, insert_keys_val(1))
@@ -711,6 +757,11 @@ object elcTest extends App {
   }
 
   val k_results = ec.listKeys()
+  val keysIter = k_results.iterator()
+  while (keysIter.hasNext()) {
+    println(s"key query row: ${keysIter.next()}")
+  }
+
   try { k_rs.close() } catch { case e: SQLException => println("Error closing ResultSet") }
   try { rs.close() } catch { case e: SQLException => println("Error closing ResultSet") }
   try { keys_stmt.close() } catch { case e: SQLException => println("Error closing Statement") }
@@ -718,9 +769,36 @@ object elcTest extends App {
   try { stmt.close() } catch { case e: SQLException => println("Error closing Statement") }
   try { con.close() } catch { case e: SQLException => println("Error closing database connection") }
 
-  val keysIter = k_results.iterator()
-  while (keysIter.hasNext()) {
-    println(s"keys query row: ${keysIter.next()}")
+  println("\n EpiDataLite Batch Query Test completed")
+  println("----------------------------------------------------")
+
+  /*  ----- EpiDataLite Stream Test Started ----- */
+  println("\n EpiDataLite Stream Test Started")
+
+  // Create Transformation
+  val op = esc.createTransformations("Identity", List("Meas-1"), Map[String, String]())
+  println("transformation created: " + op)
+
+  // Create Stream
+  esc.createStream("measurements_original", "measurements_cleansed", op)
+  println("stream created: " + op)
+
+  // Start Stream
+  esc.startStream()
+  println("Stream started successfully")
+
+  // check stream data in SQLite database
+
+  println("Enter 'Q' to stop streaming")
+  while ((StdIn.readChar()).toLower.compare('q') != 0) {
+    println("Continuing streaming. Enter 'Q' to stop streaming.")
   }
 
+  // Stop stream
+  esc.stopStream()
+
+  println("Stream processing stopped successfully.")
+
+  println("\n EpiDataLite Stream Test completed")
+  println("----------------------------------------------------")
 }

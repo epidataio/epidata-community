@@ -1,8 +1,6 @@
 package com.epidata.spark
 
 import java.sql.Timestamp
-
-import java.sql.Timestamp
 import com.epidata.spark.utils.ConvertUtils
 import java.util.{ Map => JMap, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList, List => JList }
 import com.epidata.lib.models.util.JsonHelpers._

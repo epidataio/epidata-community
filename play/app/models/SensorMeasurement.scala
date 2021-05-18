@@ -6,7 +6,7 @@ package models
 
 import java.util.Date
 
-import com.epidata.lib.models.{ Measurement, SensorMeasurement => BaseSensorMeasurement }
+import com.epidata.lib.models.{ Measurement, MeasurementCleansed, MeasurementSummary, SensorMeasurement => BaseSensorMeasurement, SensorMeasurementCleansed => BaseSensorMeasurementCleansed, SensorMeasurementSummary => BaseSensorMeasurementSummary }
 import play.api.Logger
 import play.api.libs.json._
 import _root_.util.Ordering
@@ -19,6 +19,8 @@ import scala.language.implicitConversions
 object SensorMeasurement {
 
   import com.epidata.lib.models.SensorMeasurement._
+  import com.epidata.lib.models.SensorMeasurementCleansed._
+  import com.epidata.lib.models.SensorMeasurementSummary._
   val logger: Logger = Logger(this.getClass())
 
   val name: String = "SensorMeasurement"
@@ -47,11 +49,55 @@ object SensorMeasurement {
     }
   }
 
-  def insert(sensorMeasurementList: List[BaseSensorMeasurement], sqliteEnable: Boolean) = {
+  def insert(sensorMeasurementList: List[BaseSensorMeasurement], sqliteEnable: Boolean): Unit = {
     if (sqliteEnable) {
-      SQLiteMeasurementService.bulkInsert(sensorMeasurementList)
+      SQLiteMeasurementService.bulkInsert(sensorMeasurementList.map(sensorMeasurementToMeasurement))
     } else {
-      MeasurementService.bulkInsert(sensorMeasurementList)
+      MeasurementService.bulkInsert(sensorMeasurementList.map(sensorMeasurementToMeasurement))
+    }
+  }
+
+  /**
+   * Insert a Double cleansed sensor measurement into the database.
+   * @param sensorMeasurementCleansed The Cleansed SensorMeasurement to insert.
+   */
+  def insertCleansed(sensorMeasurementCleansed: BaseSensorMeasurementCleansed, sqliteEnable: Boolean) = {
+    if (sqliteEnable) {
+      SQLiteMeasurementService.insertCleansed(sensorMeasurementCleansed)
+    } else {
+      // To Do
+      //MeasurementService.insertCleansed(sensorMeasurementCleansed)
+    }
+  }
+
+  def insertCleansed(sensorMeasurementCleansedList: List[BaseSensorMeasurementCleansed], sqliteEnable: Boolean) = {
+    if (sqliteEnable) {
+      SQLiteMeasurementService.bulkInsertCleansed(sensorMeasurementCleansedList.map(sensorMeasurementCleansedToMeasurementCleansed))
+    } else {
+      // To Do
+      //MeasurementService.bulkInsert(sensorMeasurementCleansedList.map(sensorMeasurementCleansedToMeasurementCleansed))
+    }
+  }
+
+  /**
+   * Insert a Double cleansed sensor measurement into the database.
+   * @param sensorMeasurementCleansed The SensorMeasurementCleansed to insert.
+   */
+  def insertSummary(sensorMeasurementSummary: BaseSensorMeasurementSummary, sqliteEnable: Boolean) = {
+    if (sqliteEnable) {
+      SQLiteMeasurementService.insertSummary(sensorMeasurementSummary)
+    } else {
+      // To Do
+      //MeasurementService.insertSummary(sensorMeasurementSummary)
+    }
+  }
+
+  def insertSummary(sensorMeasurementSummaryList: List[BaseSensorMeasurementSummary], sqliteEnable: Boolean) = {
+    if (sqliteEnable) {
+      SQLiteMeasurementService.bulkInsertSummary(sensorMeasurementSummaryList.map(sensorMeasurementSummaryToMeasurementSummary))
+    } else {
+      // To Do
+      //MeasurementService.bulkInsertSummary(sensorMeasurementSummaryList.map(sensorMeasurementSummaryToMeasurementSummary))
     }
   }
 
@@ -63,8 +109,25 @@ object SensorMeasurement {
   }
 
   def insertRecordFromZMQ(str: String): Unit = {
+    println("insertRecordFromZMQ called. str: " + str + "\n")
     BaseSensorMeasurement.jsonToSensorMeasurement(str) match {
       case Some(sensorMeasurement) => insert(sensorMeasurement, Configs.measDBLite)
+      case _ => logger.error("Bad json format!")
+    }
+  }
+
+  def insertCleansedRecordFromZMQ(str: String): Unit = {
+    println("insertCleansedRecordFromZMQ called. str: " + str + "\n")
+    BaseSensorMeasurementCleansed.jsonToSensorMeasurementCleansed(str) match {
+      case Some(sensorMeasurementCleansed) => insertCleansed(sensorMeasurementCleansed, Configs.measDBLite)
+      case _ => logger.error("Bad json format!")
+    }
+  }
+
+  def insertSummaryRecordFromZMQ(str: String): Unit = {
+    println("insertSummaryRecordFromZMQ called. str: " + str + "\n")
+    BaseSensorMeasurementSummary.jsonToSensorMeasurementSummary(str) match {
+      case Some(sensorMeasurementSummary) => insertSummary(sensorMeasurementSummary, Configs.measDBLite)
       case _ => logger.error("Bad json format!")
     }
   }
@@ -94,16 +157,21 @@ object SensorMeasurement {
   def insertToZMQ(sensorMeasurement: BaseSensorMeasurement): Unit = {
     val key = keyForMeasurementTopic(sensorMeasurement)
     val value = BaseSensorMeasurement.toJson(sensorMeasurement)
+    println("insertToZMQ called. key: " + key + ", value: " + value + "\n")
     ZMQInit._ZMQProducer.push(key, value)
     ZMQInit._ZMQProducer.pub(key, value)
   }
 
   def insertToZMQ(sensorMeasurementList: List[BaseSensorMeasurement]): Unit = {
+    println("Bulk insertToZMQ called.\n")
     sensorMeasurementList.foreach(m => insertToZMQ(m))
     if (Configs.twoWaysIngestion) {
       insert(sensorMeasurementList, Configs.measDBLite)
     }
   }
+
+  /** Convert a list of SensorMeasurement to a json representation. */
+  def toJson(sensorMeasurements: List[BaseSensorMeasurement]): String = BaseSensorMeasurement.toJson(sensorMeasurements)
 
   /**
    * Find sensor measurements in the database matching the specified parameters.
@@ -126,8 +194,5 @@ object SensorMeasurement {
     ordering: Ordering.Value,
     tableName: String = com.epidata.lib.models.Measurement.DBTableName): List[BaseSensorMeasurement] = MeasurementService.find(company, site, station, sensor, beginTime, endTime, ordering, tableName)
     .map(measurementToSensorMeasurement)
-
-  /** Convert a list of SensorMeasurement to a json representation. */
-  def toJson(sensorMeasurements: List[BaseSensorMeasurement]): String = BaseSensorMeasurement.toJson(sensorMeasurements)
 
 }

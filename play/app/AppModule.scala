@@ -44,6 +44,13 @@ class ApplicationStop @Inject() (lifecycle: ApplicationLifecycle) {
       Future.successful(DB.close)
     }
   }
+
+  if (Configs.queueService.equalsIgnoreCase("ZMQ")) {
+    lifecycle.addStopHook { () =>
+      Future.successful(ZMQInit.clear())
+    }
+  }
+
 }
 
 // `ApplicationStart` object for application start-up
@@ -98,8 +105,10 @@ class ApplicationStart @Inject() (env: Environment, conf: Configuration) {
   DataService.init(tokens)
 
   if (!conf.getOptional[Boolean]("application.ingestion.2ways").getOrElse(false)) {
-    val kafkaConsumer = new DataSinkService("127.0.0.1:" + conf.getOptional[Int]("queue.servers").get, "data-sink-group", DataService.MeasurementTopic)
-    kafkaConsumer.run()
+    if (conf.getOptional[String]("queue.service").get.equalsIgnoreCase("Kafka")) {
+      val kafkaConsumer = new DataSinkService("127.0.0.1:" + conf.getOptional[Int]("queue.servers").get, "data-sink-group", DataService.MeasurementTopic)
+      kafkaConsumer.run()
+    }
   }
 
 }

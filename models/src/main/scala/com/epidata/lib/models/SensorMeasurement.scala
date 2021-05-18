@@ -37,50 +37,15 @@ case class SensorMeasurement(
     meas_upper_limit: Option[AnyVal],
     meas_description: Option[String])
 
-case class SensorMeasurementCleansed(
-    company: String,
-    site: String,
-    station: String,
-    sensor: String,
-    ts: Date,
-    event: String,
-    meas_name: String,
-    meas_datatype: Option[String],
-    meas_value: Any,
-    meas_unit: Option[String],
-    meas_status: Option[String],
-    meas_flag: Option[String],
-    meas_method: Option[String],
-    meas_lower_limit: Option[AnyVal],
-    meas_upper_limit: Option[AnyVal],
-    meas_description: Option[String])
-
-case class SensorMeasurementSummary(
-    company: String,
-    site: String,
-    station: String,
-    sensor: String,
-    start_time: Timestamp,
-    stop_time: Timestamp,
-    event: String,
-    meas_name: String,
-    meas_summary_name: String,
-    meas_summary_value: String,
-    meas_summary_description: String)
-
 object SensorMeasurement {
 
   val NAME: String = "sensor_measurement"
 
   // Model Conversions
   def rowToSensorMeasurement(row: Row): SensorMeasurement = Measurement.rowToMeasurement(row)
-  def rowToSensorMeasurementCleansed(row: Row): SensorMeasurementCleansed = MeasurementCleansed.rowToMeasurementCleansed(row)
-  def rowToSensorMeasurementSummary(row: Row): SensorMeasurementSummary = MeasurementSummary.rowToMeasurementSummary(row)
 
   // Model Conversions for SQLite
   def rowToSensorMeasurement(row: ResultSet): SensorMeasurement = Measurement.rowToMeasurement(row)
-  def rowToSensorMeasurementCleansed(row: ResultSet): SensorMeasurementCleansed = MeasurementCleansed.rowToMeasurementCleansed(row)
-  def rowToSensorMeasurementSummary(row: ResultSet): SensorMeasurementSummary = MeasurementSummary.rowToMeasurementSummary(row)
 
   implicit def measurementToSensorMeasurement(measurement: Measurement): SensorMeasurement =
     SensorMeasurement(
@@ -98,39 +63,6 @@ object SensorMeasurement {
       measurement.meas_lower_limit,
       measurement.meas_upper_limit,
       measurement.meas_description)
-
-  implicit def measurementCleansedToSensorMeasurementCleansed(measurement: MeasurementCleansed): SensorMeasurementCleansed =
-    SensorMeasurementCleansed(
-      measurement.customer,
-      measurement.customer_site,
-      measurement.collection,
-      measurement.dataset,
-      measurement.ts,
-      measurement.key1.get,
-      measurement.key2.get,
-      measurement.meas_datatype,
-      measurement.meas_value,
-      measurement.meas_unit,
-      measurement.meas_status,
-      measurement.meas_flag,
-      measurement.meas_method,
-      measurement.meas_lower_limit,
-      measurement.meas_upper_limit,
-      measurement.meas_description)
-
-  implicit def measurementSummaryToSensorMeasurementSummary(ms: MeasurementSummary): SensorMeasurementSummary =
-    SensorMeasurementSummary(
-      ms.customer,
-      ms.customer_site,
-      ms.collection,
-      ms.dataset,
-      ms.start_time,
-      ms.stop_time,
-      ms.key1,
-      ms.key2,
-      ms.meas_summary_name,
-      ms.meas_summary_value,
-      ms.meas_summary_description)
 
   implicit def sensorMeasurementToMeasurement(sensorMeasurement: SensorMeasurement): Measurement =
     Measurement(
@@ -161,14 +93,6 @@ object SensorMeasurement {
   // JSON Helpers
   def rowToJLinkedHashMap(row: Row, tableName: String): JLinkedHashMap[String, Object] = {
     tableName match {
-      case MeasurementSummary.DBTableName =>
-        val m = rowToSensorMeasurementSummary(row)
-        toJLinkedHashMap(m)
-
-      case com.epidata.lib.models.MeasurementCleansed.DBTableName =>
-        val m = rowToSensorMeasurementCleansed(row)
-        toJLinkedHashMap(m)
-
       case com.epidata.lib.models.Measurement.DBTableName =>
         val m = rowToSensorMeasurement(row)
         toJLinkedHashMap(m)
@@ -178,14 +102,6 @@ object SensorMeasurement {
   // JSON Helpers for SQLite
   def rowToJLinkedHashMap(row: ResultSet, tableName: String): JLinkedHashMap[String, Object] = {
     tableName match {
-      case MeasurementSummary.DBTableName =>
-        val m = rowToSensorMeasurementSummary(row)
-        toJLinkedHashMap(m)
-
-      case com.epidata.lib.models.MeasurementCleansed.DBTableName =>
-        val m = rowToSensorMeasurementCleansed(row)
-        toJLinkedHashMap(m)
-
       case com.epidata.lib.models.Measurement.DBTableName =>
         val m = rowToSensorMeasurement(row)
         toJLinkedHashMap(m)
@@ -229,55 +145,6 @@ object SensorMeasurement {
       putAnyToMap(map, "meas_value", m.meas_value)
     putOptionAnyValToMap(map, "meas_lower_limit", m.meas_lower_limit)
     putOptionAnyValToMap(map, "meas_upper_limit", m.meas_upper_limit)
-
-    map
-  }
-
-  def toJLinkedHashMap(m: SensorMeasurementCleansed): JLinkedHashMap[String, Object] = {
-    val map = new JLinkedHashMap[String, Object]()
-
-    putToMap(map, "company", m.company)
-    putToMap(map, "site", m.site)
-    putToMap(map, "station", m.station)
-    putToMap(map, "sensor", m.sensor)
-    if (m.ts != null)
-      putToMap(map, "ts", convertToJLong(m.ts.getTime))
-    putToMap(map, "event", m.event)
-    putToMap(map, "meas_name", m.meas_name)
-    putOptionToMap(map, "meas_unit", m.meas_unit)
-    putOptionToMap(map, "meas_status", m.meas_status)
-    putOptionToMap(map, "meas_description", m.meas_description)
-    putOptionToMap(map, "meas_flag", m.meas_flag)
-    putOptionToMap(map, "meas_method", m.meas_method)
-
-    putOptionToMap(map, "meas_datatype", m.meas_datatype)
-    if (m.meas_value != null)
-      putAnyToMap(map, "meas_value", m.meas_value)
-    putOptionAnyValToMap(map, "meas_lower_limit", m.meas_lower_limit)
-    putOptionAnyValToMap(map, "meas_upper_limit", m.meas_upper_limit)
-
-    map
-  }
-
-  def toJLinkedHashMap(m: SensorMeasurementSummary): JLinkedHashMap[String, Object] = {
-    val map = new JLinkedHashMap[String, Object]()
-
-    putToMap(map, "company", m.company)
-    putToMap(map, "site", m.site)
-    putToMap(map, "station", m.station)
-    putToMap(map, "sensor", m.sensor)
-
-    if (m.start_time != null)
-      putToMap(map, "start_time", convertToJLong(m.start_time.getTime))
-
-    if (m.stop_time != null)
-      putToMap(map, "stop_time", convertToJLong(m.stop_time.getTime))
-
-    putToMap(map, "event", m.event)
-    putToMap(map, "meas_name", m.meas_name)
-    putToMap(map, "meas_summary_name", m.meas_summary_name)
-    putToMap(map, "meas_summary_value", m.meas_summary_value)
-    putToMap(map, "meas_summary_description", m.meas_summary_description)
 
     map
   }
@@ -349,7 +216,6 @@ object SensorMeasurement {
       meas_lower_limit,
       meas_upper_limit,
       meas_description)
-
   }
 
 }

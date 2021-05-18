@@ -30,7 +30,7 @@ class AutomatedTests @Inject() (val cc: ControllerComponents)(
 
   def create = SecuredAction(parse.json) { implicit request =>
     val automatedTests = com.epidata.lib.models.AutomatedTest.jsonToAutomatedTests(request.body.toString)
-    AutomatedTest.insertList(automatedTests.flatMap(x => x), Configs.measDBLite)
+    AutomatedTest.insert(automatedTests.flatMap(x => x), Configs.measDBLite)
 
     val failedIndexes = automatedTests.zipWithIndex.filter(_._1 == None).map(_._2)
     if (failedIndexes.isEmpty)
