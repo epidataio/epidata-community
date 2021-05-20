@@ -4,13 +4,17 @@
 
 import argparse
 import base64
-from data_types import Waveform
-from datetime import datetime
+from datetime import datetime, timedelta
+import httplib
 import json
 import numpy as np
+import random
+from decimal import Decimal
 import struct
 import time
+from time import sleep
 import urllib2
+import requests
 
 
 ##################################
@@ -22,48 +26,79 @@ arg_parser.add_argument('--host')
 arg_parser.add_argument('--access_token')
 args = arg_parser.parse_args()
 
-HOST = args.host or '127.0.0.1'
-ACCESS_TOKEN = args.access_token
+HOST = args.host or '127.0.0.1:9443'
+ACCESS_TOKEN = args.access_token or 'epidata123'
 
-AUTHENTICATION_URL = 'https://' + HOST + '/api/authenticate/github'
-CREATE_MEASUREMENT_URL = 'https://' + HOST + '/measurements'
+AUTHENTICATION_URL = 'https://' + HOST + '/authenticate/app'
+AUTHENTICATION_ROUTE = '/authenticate/app'
+EPI_STREAM = True
+LOG_ITERATION = 1
+
+if EPI_STREAM:
+    CREATE_MEASUREMENT_URL = 'https://' + HOST + '/stream/measurements'
+    CREATE_MEASUREMENT_ROUTE = '/stream/measurements'
+else:
+    CREATE_MEASUREMENT_URL = 'https://' + HOST + '/measurements'
+    CREATE_MEASUREMENT_ROUTE = '/measurements'
+
+def get_time(time_string):
+    date_object = datetime.strptime(time_string, '%m/%d/%Y %H:%M:%S.%f')
+    return long(time.mktime(date_object.timetuple())
+                * 1e3 + date_object.microsecond / 1e3)
+
+def add_time(time_string, delta):
+    date_object = datetime.strptime(
+        time_string, '%m/%d/%Y %H:%M:%S.%f') + timedelta(seconds=delta)
+    return long(time.mktime(date_object.timetuple())
+                * 1e3 + date_object.microsecond / 1e3)
+
+current_time_string = datetime.now().strftime("%m/%d/%Y %H:%M:%S.%f")
+current_time = get_time(current_time_string)
 
 
-def get_current_time():
-    now = datetime.now()
-    return long(time.mktime(now.timetuple()) * 1e3 + now.microsecond / 1e3)
+#########################
+# SKIP SSL VERIFICATION #
+#########################
+import ssl
+
+try:
+    _create_unverified_https_context = ssl._create_unverified_context
+except AttributeError:
+    # Legacy Python that doesn't verify HTTPS certificates by default
+    pass
+else:
+    # Handle target environment that doesn't support HTTPS verification
+    ssl._create_default_https_context = _create_unverified_https_context
 
 
 ##############################
 # AUTHENTICATE with epidata. #
 ##############################
 
+# Create session object for HTTP requests
+session = requests.Session()
+
 # Authentication is achieved by posting to the AUTHENTICATION_URL.
 url = AUTHENTICATION_URL
+print url
 
 # An HTTP POST with JSON content requires the HTTP Content-type header.
-json_header = {'Content-type': 'application/json'}
+json_header = {'Content-type': 'application/json', 'Set-Cookie': "epidata"}
 
 # The access token is povided via JSON.
 json_body = json.dumps({'accessToken': ACCESS_TOKEN})
 
-# Construct the POST request.
-post_request = urllib2.Request(url, headers=json_header, data=json_body)
-
 # Send the POST request and receive the HTTP response.
-post_response = urllib2.urlopen(post_request)
+req = requests.Request('POST', AUTHENTICATION_URL, data=json_body, headers=json_header)
+prepped = session.prepare_request(req)
+resp = session.send(prepped, stream=None, verify=None, proxies=None, cert=None, timeout=None)
 
 # Check that the response's HTTP response code is 200 (OK).
-assert post_response.getcode() == 200
+assert resp.status_code == 200
 
 # Parse the JSON response.
-response_json = json.loads(post_response.read())
-
-# Retrieve the new session id from the JSON response.
-session_id = response_json['sessionId']
-
-# Construct the session cookie.
-session_cookie = 'epidata=' + session_id
+post_response = json.loads(resp.content)
+print "response - ", post_response
 
 
 #####################################################
@@ -75,12 +110,7 @@ url = CREATE_MEASUREMENT_URL
 
 # Request headers add parameters to the request.
 headers = {
-
-    # An HTTP POST with JSON content requires the HTTP Content-type header.
     'Content-type': 'application/json',
-
-    # The session cookie serves as an authentication credential.
-    'Cookie': session_cookie
 }
 
 # The measurement data is assembled in a python dictionary and converted
@@ -92,10 +122,10 @@ json_body = json.dumps([{
     'tester': 'Station-1',
 
     # 'ts' is a 64 bit integer representing a timestamp in milliseconds.
-    'ts': get_current_time(),
+    'ts': current_time,
     'device_name': '100001',
-    'test_name': 'Test-1',
-    'meas_name': 'Meas-1',
+    'test_name': 'Temperature Measurement Test',
+    'meas_name': 'Temperature',
 
     # The meas_value field can contain a number or a text string, depending on
     # the measurement data type.
@@ -113,14 +143,22 @@ json_body = json.dumps([{
     'test_status': 'PASS'
 }])
 
-# Construct the POST request.
-post_request = urllib2.Request(url, headers=headers, data=json_body)
+# Construct and send the POST request.
+#post_request = urllib2.Request(url, headers=headers, data=json_body)
+req = requests.Request('POST', CREATE_MEASUREMENT_URL, data=json_body, headers=json_header)
+prepped = session.prepare_request(req)
+resp = session.send(prepped, stream=None, verify=None, proxies=None, cert=None, timeout=None)
 
 # Send the POST request and receive the HTTP response.
-post_response2 = urllib2.urlopen(post_request)
+#post_response2 = urllib2.urlopen(post_request)
 
 # Check that the response's HTTP response code is 201 (CREATED).
-assert post_response2.getcode() == 201
+#assert post_response2.getcode() == 201
+print resp.content
+assert resp.status_code == 201
+
+# Print measurement details
+print json_body + "\n"
 
 
 ##################################################
@@ -128,16 +166,16 @@ assert post_response2.getcode() == 201
 ##################################################
 
 url = CREATE_MEASUREMENT_URL
-headers = {'Content-type': 'application/json', 'Cookie': session_cookie}
+headers = {'Content-type': 'application/json'}
 json_body = json.dumps([{
     'company': 'Company-2',
     'site': 'Site-2',
     'device_group': '2000',
     'tester': 'Station-2',
-    'ts': get_current_time(),
+    'ts': current_time,
     'device_name': '200002',
     'test_name': 'Power On Test',
-    'meas_name': 'Power On Test',
+    'meas_name': 'Power On Status',
 
     # The meas_value field can contain a text string.
     'meas_value': 'Device Powered On Successfully',
@@ -149,68 +187,19 @@ json_body = json.dumps([{
     'device_status': 'PASS',
     'test_status': 'PASS'
 }])
-post_request = urllib2.Request(url, headers=headers, data=json_body)
-post_response = urllib2.urlopen(post_request)
-assert post_response.getcode() == 201
 
+#post_request = urllib2.Request(url, headers=headers, data=json_body)
+#post_response = urllib2.urlopen(post_request)
+#assert post_response.getcode() == 201
 
-##########################################################
-# CREATE an automated test voltage waveform measurement. #
-##########################################################
+# Construct and send the POST request.
+req = requests.Request('POST', CREATE_MEASUREMENT_URL, data=json_body, headers=json_header)
+prepped = session.prepare_request(req)
+resp = session.send(prepped, stream=None, verify=None, proxies=None, cert=None, timeout=None)
 
-# Prepare a voltage waveform.
-waveform = Waveform(
-    start_time=datetime.now(),
-    sampling_rate=0.01,
-    samples=np.sin(np.arange(0.0, 1.0, 0.01)))
+# Check that the response's HTTP response code is 201 (CREATED).
+print resp.content
+assert resp.status_code == 201
 
-# Pack the waveform into a binary string.
-waveform_data = struct.pack(
-
-    # Specify a format code for creating a packed binary string.
-    '!' +  # Specify network byte order.
-    'q' +  # One long long integer (the waveform timestamp).
-    'd' +  # One double precision floating point value (the sampling rate).
-    # 100 double precision floating point values (the waveform samples).
-    '100d',
-
-    # Now provide the values described in the format string above.
-
-    # The waveform timestamp.
-    long(time.mktime(waveform.start_time.timetuple()) * 1e3 + \
-         waveform.start_time.microsecond / 1e3),
-
-    # The sampling rate.
-    waveform.sampling_rate,
-
-    # The waveform samples.
-    *waveform.samples)
-
-url = CREATE_MEASUREMENT_URL
-headers = {'Content-type': 'application/json', 'Cookie': session_cookie}
-json_body = json.dumps([{
-    'company': 'Company-3',
-    'site': 'Site-3',
-    'device_group': '3000',
-    'tester': 'Station-3',
-    'ts': get_current_time(),
-    'device_name': '300003',
-    'test_name': 'Test-3',
-    'meas_name': 'Meas-3',
-
-    # A binary measurement value must be converted to an ascii text string using
-    # base64 encoding.
-    'meas_value': base64.b64encode(waveform_data),
-
-    # The meas_datatype field indicates the type of binary data provided (in this
-    # case a waveform).
-    'meas_datatype': 'waveform',
-    'meas_unit': 'V',
-    'meas_status': 'PASS',
-    'meas_description': '',
-    'device_status': 'PASS',
-    'test_status': 'PASS'
-}])
-post_request = urllib2.Request(url, headers=headers, data=json_body)
-post_response = urllib2.urlopen(post_request)
-assert post_response.getcode() == 201
+# Print measurement details
+print json_body + "\n"
