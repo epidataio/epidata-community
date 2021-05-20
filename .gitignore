@@ -27,3 +27,4 @@ spark/lib
 data/*.db
 spark/.DS_Store
 .DS_Store
+data
