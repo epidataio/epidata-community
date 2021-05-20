@@ -16,7 +16,7 @@ case class Message(topic: Object, key: Object, value: Object)
 class EpidataLiteStreamingContext {
   var startPort: Integer = 5551
   var endPort: Integer = 5552
-  var processors: Array[StreamingNode.type] = _
+  var processors: Array[StreamingNode] = _
   var _runStream: Boolean = _
   var context: ZMQ.Context = _
   val receiveTimeout: Integer = -1
@@ -27,7 +27,7 @@ class EpidataLiteStreamingContext {
     //ec.start_streaming()
     context = ZMQ.context(1)
     _runStream = true
-    processors = Array[StreamingNode.type]()
+    processors = Array[StreamingNode]()
     topicMap = MutableMap[String, Integer]()
     topicMap.put("measurements_original", startPort)
     topicMap.put("measurements_cleansed", endPort)
@@ -35,7 +35,7 @@ class EpidataLiteStreamingContext {
   }
 
   def createTransformations(opName: String, meas_names: List[String], params: Map[String, String]): Transformation = {
-    println("Transformation being created")
+    //println("Transformation being created")
 
     // create and return a transformation object
     opName match {
@@ -47,16 +47,8 @@ class EpidataLiteStreamingContext {
     }
   }
 
-  //  def createCustomTransformation(opName: String, transformation: Transformation): Transformation {
-  //    transformation
-  //  }
-
-  //  def createStream(sourceTopic: String, destinationTopic: String, operations: Array[Transformation]): Unit {
-  //    processors.add(new StreamingNode(context, port, port, ))
-  //  }
-
   def createStream(sourceTopic: String, destinationTopic: String, operation: Transformation): Unit = {
-    println("Create Stream. Source Topic: " + sourceTopic + ". Destination Topic: " + destinationTopic + ". Transformation: " + operation)
+    //println("Create Stream. Source Topic: " + sourceTopic + ". Destination Topic: " + destinationTopic + ". Transformation: " + operation)
 
     val streamSourcePort = topicMap.get(sourceTopic) match {
       case Some(port) => port.toString
@@ -79,10 +71,10 @@ class EpidataLiteStreamingContext {
       case None => throw new IllegalArgumentException("Destination Topic is not recognized.")
     }
 
-    processors :+= StreamingNode.init(context, streamSourcePort, streamDestinationPort, sourceTopic, destinationTopic, receiveTimeout, operation)
+    processors :+= (new StreamingNode()).init(context, streamSourcePort, streamDestinationPort, sourceTopic, destinationTopic, receiveTimeout, operation)
 
-    println("Source port: " + streamSourcePort + ", destination port: " + streamDestinationPort)
-    println("Processors: " + processors)
+    //println("Source port: " + streamSourcePort + ", destination port: " + streamDestinationPort)
+    //println("Processors: " + processors)
   }
 
   def startStream(): Unit = {
@@ -92,29 +84,26 @@ class EpidataLiteStreamingContext {
 
     //iterate through processors arraylist backwards creating thread
 
-    Executors.newSingleThreadExecutor.execute(new Runnable {
-      override def run(): Unit = {
-        println("processor started in new thread. runstream value - " + _runStream)
-        while (_runStream) {
-          //println("calling processor receive method")
-          //println("number of processors: " + processors.size)
-          for (processor <- processors) {
+    //println("number of processors: " + processors.size)
+    for (processor <- processors) {
+      Executors.newSingleThreadExecutor.execute(new Runnable {
+        override def run(): Unit = {
+          println("processor started in new thread. runstream value - " + _runStream)
+          while (_runStream) {
+            //println("calling processor receive method")
             //println("processor ready to receive: " + processor)
             processor.receive()
             //println("processor received by " + processor)
           }
-          //          Thread.sleep(loopTime)
-        }
 
-        println("while loop exited")
-        for (processor <- processors) {
-          println("clearing processor: " + processor)
+          //println("while loop exited")
+          //println("clearing processor: " + processor)
           processor.clear()
-        }
 
-        println("completing thead execution")
-      }
-    })
+          //println("completing thead execution")
+        }
+      })
+    }
   }
 
   def stopStream(): Unit = {
