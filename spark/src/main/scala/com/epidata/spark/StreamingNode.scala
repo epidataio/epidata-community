@@ -13,7 +13,7 @@ import org.zeromq.ZMQ
 import com.epidata.lib.models.{ Measurement => BaseMeasurement, SensorMeasurement => BaseSensorMeasurement, AutomatedTest => BaseAutomatedTest }
 import scala.io.StdIn
 
-object StreamingNode {
+class StreamingNode {
   var subSocket: ZMQ.Socket = _ //add as parameter
   var publishSocket: ZMQ.Socket = _ //add as parameter
   var subscribePort: String = _
@@ -29,7 +29,7 @@ object StreamingNode {
     receiveTopic: String,
     sendTopic: String,
     receiveTimeout: Integer,
-    transformation: Transformation): StreamingNode.type = {
+    transformation: Transformation): StreamingNode = {
 
     subscribePort = receivePort
     publishPort = sendPort
@@ -50,24 +50,25 @@ object StreamingNode {
 
     this.transformation = transformation
 
-    println("Streaming Node initiated. Subscribe topic: " + subscribeTopic + ", publish topic: " + publishTopic)
+    //println("Streaming Node initiated. Subscribe topic: " + subscribeTopic + ", publish topic: " + publishTopic)
 
     this
   }
 
   def receive(): Unit = {
     //println("StreamingNode receive method called")
+    println("receive port: " + subscribePort)
 
     val topic = subSocket.recvStr()
+    println("receive topic: " + topic)
     val parser = new JSONParser()
     val receivedString = subSocket.recvStr()
-    println("receive topic: " + topic)
     println("received message: " + receivedString + "\n")
     receivedString match {
       case _: String => {
         val jSONObject = parser.parse(receivedString).asInstanceOf[JMap[String, String]]
 
-        //println("received data: " + jSONObject  + "\n")
+        //println("received data: " + jSONObject + "\n")
 
         val map = new JLinkedHashMap[String, String]()
         map.put("topic", publishTopic)
@@ -89,7 +90,7 @@ object StreamingNode {
     val msg: String = JSONObject.toJSONString(processedMap)
     publishSocket.send(msg.getBytes(), 0)
 
-    println("publish topic: " + this.publishTopic)
+    println("publish topic: " + this.publishTopic + ", publish port: " + publishPort)
     println("published message: " + msg + "\n")
   }
 

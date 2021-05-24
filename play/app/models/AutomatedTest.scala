@@ -8,8 +8,8 @@ import java.util.Date
 
 import com.epidata.lib.models.{ Measurement, MeasurementCleansed, MeasurementSummary, AutomatedTest => BaseAutomatedTest, AutomatedTestCleansed => BaseAutomatedTestCleansed, AutomatedTestSummary => BaseAutomatedTestSummary }
 import _root_.util.Ordering
-import models.SensorMeasurement.{ insert, logger }
 import play.api.Logger
+import models.AutomatedTest.keyForMeasurementTopic
 import service.{ Configs, DataService, KafkaService, ZMQProducer, ZMQInit }
 
 object AutomatedTest {
@@ -19,6 +19,8 @@ object AutomatedTest {
   import com.epidata.lib.models.AutomatedTestSummary._
 
   val logger: Logger = Logger(this.getClass())
+
+  val name: String = "AutomatedTest"
 
   private def keyForMeasurementTopic(measurement: BaseAutomatedTest): String = {
     val key =
@@ -84,7 +86,7 @@ object AutomatedTest {
 
   /**
    * Insert an automated test measurement summary into the database.
-   * @param automatedTestSummary The AutomatedTest measurement summary to insert.
+   * @param automatedTestSummary The AutomatedTestSummary data to insert.
    */
   def insertSummary(automatedTestSummary: BaseAutomatedTestSummary, sqliteEnable: Boolean): Unit = {
     if (sqliteEnable) {
@@ -96,8 +98,8 @@ object AutomatedTest {
   }
 
   /**
-   * Insert multiple automated test measurement summaries into the database.
-   * @param automatedTestsSummary Multiple AutomatedTest measurement summaries to insert.
+   * Insert multiple automated test measurement summary data into the database.
+   * @param automatedTestsSummary Multiple AutomatedTestSummary data to insert.
    */
   def insertSummary(automatedTestsSummary: List[BaseAutomatedTestSummary], sqliteEnable: Boolean): Unit = {
     if (sqliteEnable) {
@@ -136,21 +138,14 @@ object AutomatedTest {
     }
   }
 
-  def insertToKafka(list: List[BaseAutomatedTest]): Unit = {
-    list.foreach(m => insertToKafka(m))
-    if (Configs.twoWaysIngestion) {
-      models.AutomatedTest.insert(list, Configs.measDBLite)
-    }
-  }
-
   def insertToKafka(m: BaseAutomatedTest): Unit = {
     val key = keyForMeasurementTopic(m)
     val value = BaseAutomatedTest.toJson(m)
     KafkaService.sendMessage(Measurement.KafkaTopic, key, value)
   }
 
-  def insertToZMQ(list: List[BaseAutomatedTest]): Unit = {
-    list.foreach(m => insertToZMQ(m))
+  def insertToKafka(list: List[BaseAutomatedTest]): Unit = {
+    list.foreach(m => insertToKafka(m))
     if (Configs.twoWaysIngestion) {
       models.AutomatedTest.insert(list, Configs.measDBLite)
     }
@@ -163,6 +158,14 @@ object AutomatedTest {
     ZMQInit._ZMQProducer.pub(key, value)
   }
 
+  def insertToZMQ(list: List[BaseAutomatedTest]): Unit = {
+    list.foreach(m => insertToZMQ(m))
+    if (Configs.twoWaysIngestion) {
+      models.AutomatedTest.insert(list, Configs.measDBLite)
+    }
+  }
+
+  /** Convert a list of AutomatedTest measurements to a json representation. */
   def toJson(automatedTests: List[BaseAutomatedTest]) = BaseAutomatedTest.toJson(automatedTests)
 
   /**

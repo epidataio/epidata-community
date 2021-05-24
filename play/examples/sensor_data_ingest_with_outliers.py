@@ -23,6 +23,7 @@ import requests
 
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument('--host')
+arg_parser.add_argument('--access_token')
 args = arg_parser.parse_args()
 
 HOST = args.host or '127.0.0.1:9443'
@@ -58,7 +59,7 @@ current_time = get_time(current_time_string)
 #####################
 
 # Replace quoted string with API Token or GitHub Personal Access Token (REQUIRED)
-ACCESS_TOKEN = 'epidata123'
+ACCESS_TOKEN = args.access_token or 'epidata123'
 
 # Modify default values (OPTIONAL)
 COMPANY = 'EpiData'
