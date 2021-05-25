@@ -9,7 +9,11 @@
 POST    /measurements                   @controllers.AutomatedTests.create
 
 # Kafka insert
-POST    /kafka/measurements             @controllers.AutomatedTests.insertKafka
+# +nocsrf
+# POST    /kafka/measurements             @controllers.AutomatedTests.insertKafka
+
+# ZMQ or Kafka insert
+POST    /stream/measurements            @controllers.AutomatedTests.insertQueue
 
 # Query Measurement
 GET     /measurements_query             @controllers.AutomatedTests.query(company: String, site: String, device_group: String, tester: String, beginTime: Date, endTime: Date, sort: Ordering.Value ?= Ordering.Unspecified)
@@ -17,4 +21,3 @@ GET     /measurements_query             @controllers.AutomatedTests.query(compan
 GET     /measurements_original          @controllers.AutomatedTests.find(company: String, site: String, device_group: String, tester: String, beginTime: Date, endTime: Date, size: Int ?= 10000, batch: String ?= "", sort: Ordering.Value ?= Ordering.Unspecified, table: String = "measurements_original")
 GET     /measurements_cleansed          @controllers.AutomatedTests.find(company: String, site: String, device_group: String, tester: String, beginTime: Date, endTime: Date, size: Int ?= 10000, batch: String ?= "", sort: Ordering.Value ?= Ordering.Unspecified, table: String = "measurements_cleansed")
 GET     /measurements_summary           @controllers.AutomatedTests.find(company: String, site: String, device_group: String, tester: String, beginTime: Date, endTime: Date, size: Int ?= 10000, batch: String ?= "", sort: Ordering.Value ?= Ordering.Unspecified, table: String = "measurements_summary")
-

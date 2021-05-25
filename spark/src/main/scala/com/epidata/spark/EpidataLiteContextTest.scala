@@ -776,12 +776,18 @@ object elcTest extends App {
   println("\n EpiDataLite Stream Test Started")
 
   // Create Transformation
-  val op = esc.createTransformations("Identity", List("Meas-1"), Map[String, String]())
-  println("transformation created: " + op)
+  val op1 = esc.createTransformations("Identity", List("Meas-1"), Map[String, String]())
+  println("transformation created: " + op1)
+
+  val op2 = esc.createTransformations("Identity", List("Meas-1"), Map[String, String]())
+  println("transformation created: " + op2)
 
   // Create Stream
-  esc.createStream("measurements_original", "measurements_cleansed", op)
-  println("stream created: " + op)
+  esc.createStream("measurements_original", "measurements_intermediate", op1)
+  println("stream 1 created: " + op1)
+
+  esc.createStream("measurements_intermediate", "measurements_cleansed", op2)
+  println("stream 2 created: " + op2)
 
   // Start Stream
   esc.startStream()

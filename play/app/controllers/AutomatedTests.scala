@@ -11,6 +11,7 @@ import models.{ MeasurementService, AutomatedTest, SQLiteMeasurementService }
 import play.api.libs.json.JsError
 import play.api.libs.json.Json
 import play.api.mvc._
+import play.api.{ Configuration, Environment, Logger }
 import play.api.mvc.{ AnyContent, Request }
 import service.DataService
 import providers.DemoProvider
@@ -28,6 +29,8 @@ class AutomatedTests @Inject() (val cc: ControllerComponents)(
 
   override def messagesApi = env.messagesApi
 
+  val logger: Logger = Logger(this.getClass())
+
   def create = SecuredAction(parse.json) { implicit request =>
     val automatedTests = com.epidata.lib.models.AutomatedTest.jsonToAutomatedTests(request.body.toString)
     AutomatedTest.insert(automatedTests.flatMap(x => x), Configs.measDBLite)
@@ -41,11 +44,30 @@ class AutomatedTests @Inject() (val cc: ControllerComponents)(
     }
   }
 
-  def insertKafka = SecuredAction(parse.json) { implicit request =>
-    val list = com.epidata.lib.models.AutomatedTest.jsonToAutomatedTests(request.body.toString)
-    models.AutomatedTest.insertToKafka(list.flatMap(x => x))
+  //  def insertKafka = SecuredAction(parse.json) { implicit request =>
+  //    val list = com.epidata.lib.models.AutomatedTest.jsonToAutomatedTests(request.body.toString)
+  //    models.AutomatedTest.insertToKafka(list.flatMap(x => x))
+  //
+  //    val failedIndexes = list.zipWithIndex.filter(_._1 == None).map(_._2)
+  //    if (failedIndexes.isEmpty)
+  //      Created
+  //    else {
+  //      val message = "Failed objects: " + failedIndexes.mkString(",")
+  //      BadRequest(Json.obj("status" -> "ERROR", "message" -> message))
+  //    }
+  //  }
 
-    val failedIndexes = list.zipWithIndex.filter(_._1 == None).map(_._2)
+  def insertQueue = SecuredAction(parse.json) { implicit request =>
+    val automatedTests = com.epidata.lib.models.AutomatedTest.jsonToAutomatedTests(request.body.toString)
+    if (Configs.queueService.equalsIgnoreCase("Kafka")) {
+      models.AutomatedTest.insertToKafka(automatedTests.flatMap(x => x))
+    } else if (Configs.queueService.equalsIgnoreCase("ZMQ")) {
+      models.AutomatedTest.insertToZMQ(automatedTests.flatMap(x => x))
+    } else {
+      logger.error("queueService not recognized. Data not written to queue.")
+    }
+
+    val failedIndexes = automatedTests.zipWithIndex.filter(_._1 == None).map(_._2)
     if (failedIndexes.isEmpty)
       Created
     else {
