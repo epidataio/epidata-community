@@ -53,11 +53,11 @@ class EpidataContextTests(Base):
 
     def test_simpleTest(self):
         ec.printSomething('god')
-        trans = ec.createTransformations("Identity", ["Meas-1"], {})
-        ec.createStream("measurements_original", "measurements_cleansed", trans)
-        print("Start stream")
-        ec.startStream()
-        ec.stopStream()
+        # trans = ec.createTransformations("Identity", ["Meas-1"], {})
+        # ec.createStream("measurements_original", "measurements_cleansed", trans)
+        # print("Start stream")
+        # ec.startStream()
+        # ec.stopStream()
 
 
 if __name__ == "__main__":
