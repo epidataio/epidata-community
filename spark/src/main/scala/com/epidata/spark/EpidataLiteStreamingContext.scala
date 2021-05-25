@@ -127,4 +127,11 @@ class EpidataLiteStreamingContext {
     //    }
   }
 
+  def printSomething(bar: String): String = {
+
+    val s = "py4j connection working fine "
+    s
+
+  }
+
 }
