@@ -6,7 +6,9 @@ package com.epidata.spark
 
 import com.typesafe.config.ConfigFactory
 import java.io.File
-import java.sql.{ DriverManager, Timestamp, SQLException }
+import java.sql.{ DriverManager, SQLException, Timestamp }
+import java.util
+
 import scala.io.Source
 import scala.io.StdIn
 //import scala.collection.mutable.Map
@@ -781,13 +783,24 @@ object elcTest extends App {
 
   val op2 = esc.createTransformations("Identity", List("Meas-1"), Map[String, String]())
   println("transformation created: " + op2)
+  var list = new util.ArrayList[String]()
+  list.add("Meas-1")
+  val mutableMap = new util.HashMap[String, String]
+  val op3 = esc.createTransformations("Identity", list, mutableMap)
+  println("transformation created: " + op3)
 
   // Create Stream
   esc.createStream("measurements_original", "measurements_intermediate", op1)
   println("stream 1 created: " + op1)
 
-  esc.createStream("measurements_intermediate", "measurements_cleansed", op2)
-  println("stream 2 created: " + op2)
+  esc.createStream("measurements_intermediate", "measurements_cleansed", op3)
+  println("stream 2 created: " + op3)
+
+  esc.testUnit()
+  print(esc.printSomething(""))
+
+  //  esc.createStream("measurements_intermediate", "measurements_cleansed", op2)
+  //  println("stream 3 created: " + op3)
 
   // Start Stream
   esc.startStream()
@@ -803,7 +816,7 @@ object elcTest extends App {
   // Stop stream
   esc.stopStream()
 
-  println("Stream processing stopped successfully.")
+  println("Stream processing stoppqed successfully.")
 
   println("\n EpiDataLite Stream Test completed")
   println("----------------------------------------------------")

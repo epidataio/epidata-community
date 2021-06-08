@@ -8,6 +8,17 @@ import com.epidata.spark.ops.{ FillMissingValue, Identity, MeasStatistics, Outli
 import org.apache.spark.sql.{ DataFrame, SQLContext }
 import scala.collection.mutable.{ Map => MutableMap }
 import scala.io.StdIn
+//import scala.collection.JavaConverters
+//-------------------logger pacakage--------
+import java.io.FileInputStream
+import java.io.IOException
+import java.util.logging.ConsoleHandler
+import java.util.logging.FileHandler
+import java.util.logging.Handler
+import java.util.logging.Level
+import java.util.logging.LogManager
+import java.util.logging.Logger
+//--------------------------------------------
 
 import scala.collection.convert.ImplicitConversions.`list asScalaBuffer`
 
@@ -22,6 +33,7 @@ class EpidataLiteStreamingContext {
   val receiveTimeout: Integer = -1
   var topicMap: MutableMap[String, Integer] = _
   var intermediatePort: Integer = 5553
+  val logger = Logger.getLogger("Epidata lite logger")
 
   def init(): Unit = {
     //ec.start_streaming()
@@ -47,13 +59,37 @@ class EpidataLiteStreamingContext {
     }
   }
 
+  def createTransformations(
+    opName: String,
+    meas_names: java.util.List[String],
+    params: java.util.Map[String, String]): Transformation = {
+    import scala.collection.JavaConversions._
+    val sBuffer = asScalaBuffer(meas_names)
+    createTransformations(opName, sBuffer.toList, params.toMap)
+
+  }
+
   def createStream(sourceTopic: String, destinationTopic: String, operation: Transformation): Unit = {
-    //println("Create Stream. Source Topic: " + sourceTopic + ". Destination Topic: " + destinationTopic + ". Transformation: " + operation)
+    //    println("Create Stream. Source Topic: " + sourceTopic + ". Destination Topic: " + destinationTopic + ". Transformation: " + operation)
+    //---------------------------logger--------------------------------------------
+    //LogManager.getLogManager.readConfiguration(new FileInputStream("mylogging.properties"))
+    //    val logger = Logger.getLogger("Epidata lite logger")
+    logger.setLevel(Level.FINE)
+    logger.addHandler(new ConsoleHandler)
+    //adding custom handler
+    val fileHandler = new FileHandler("/Users/lujiajun/desktop/logger/logger.log")
+    logger.addHandler(fileHandler)
+    logger.log(Level.INFO, "sourcetopic:  " + sourceTopic)
+    logger.log(Level.INFO, "destinationTopic:  " + destinationTopic)
+    logger.log(Level.INFO, "transformation:  " + operation)
+
+    //-------------------------------------------------------
 
     val streamSourcePort = topicMap.get(sourceTopic) match {
       case Some(port) => port.toString
       case None => throw new IllegalArgumentException("Source Topic is not recognized.")
     }
+    logger.log(Level.INFO, "streamSourcePort: ", streamSourcePort)
 
     topicMap.get(destinationTopic) match {
       case None => {
@@ -70,9 +106,10 @@ class EpidataLiteStreamingContext {
       case Some(port) => port.toString
       case None => throw new IllegalArgumentException("Destination Topic is not recognized.")
     }
+    logger.log(Level.INFO, "streamDestinationPort: ", streamDestinationPort)
 
     processors :+= (new StreamingNode()).init(context, streamSourcePort, streamDestinationPort, sourceTopic, destinationTopic, receiveTimeout, operation)
-
+    logger.log(Level.INFO, "processors: ", processors)
     //println("Source port: " + streamSourcePort + ", destination port: " + streamDestinationPort)
     //println("Processors: " + processors)
   }
@@ -104,6 +141,7 @@ class EpidataLiteStreamingContext {
         }
       })
     }
+    logger.log(Level.INFO, "startstream successfully: ", processors)
   }
 
   def stopStream(): Unit = {
@@ -114,6 +152,7 @@ class EpidataLiteStreamingContext {
     //      println("clearing processor: " + processor)
     //      processor.clear()
     //    }
+    logger.log(Level.INFO, "stopstream successfully")
   }
 
   def printSomething(bar: String): String = {
@@ -121,6 +160,10 @@ class EpidataLiteStreamingContext {
     val s = "py4j connection working fine "
     s
 
+  }
+
+  def testUnit(): Unit = {
+    print("testing unit")
   }
 
 }

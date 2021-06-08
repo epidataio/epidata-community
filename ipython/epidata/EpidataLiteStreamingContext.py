@@ -27,8 +27,9 @@ class EpidataLiteStreamingContext:
         #other confs and connections if needed
 
         #works with an absolute path as well
-        self.gg = self.gateway.launch_gateway(classpath="spark/target/scala-2.12/epidata-spark-assembly-1.0-SNAPSHOT.jar")
+        self.gg = self.gateway.launch_gateway(classpath="../../spark/target/scala-2.12/epidata-spark-assembly-1.0-SNAPSHOT.jar")
         self.java_entry = self.gg.jvm.com.epidata.spark.EpidataLiteStreamingContext()
+        self.java_entry.init()
 
     '''
     Converts a python list of dictionaries to a Pandas dataframe
@@ -58,13 +59,15 @@ class EpidataLiteStreamingContext:
     def createTransformations(self, opName, meas_names, params):
         java_meas_names = ListConverter().convert(meas_names, self.gg._gateway_client)
         # java_params = {k: self.to_java_list(v) for k, v in params.items()}
-        java_params = MapConverter().convert({}, self.gg._gateway_client)
+        java_params = MapConverter().convert(params, self.gg._gateway_client)
         trans = self.java_entry.createTransformations(opName, java_meas_names, java_params)
         return trans
 
     def createStream(self, sourceTopic, destinationTopic, transformation):
-        stream = self.java_entry.createStream(sourceTopic, destinationTopic, transformation)
-        return stream
+        print("start creating")
+        # self.java_entry.testUnit()
+        self.java_entry.createStream(sourceTopic, destinationTopic, transformation)
+
 
     def startStream(self):
         self.java_entry.startStream()

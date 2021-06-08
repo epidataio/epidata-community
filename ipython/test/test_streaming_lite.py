@@ -1,8 +1,9 @@
 #!/usr/bin/env python2.7
+
 from datetime import datetime, timedelta
 
 from epidata.EpidataLiteStreamingContext import EpidataLiteStreamingContext
-
+import sys
 import numpy
 import pandas
 import sqlite3
@@ -52,12 +53,18 @@ class EpidataContextTests(Base):
     #         print(row)
 
     def test_simpleTest(self):
+
         ec.printSomething('god')
-        # trans = ec.createTransformations("Identity", ["Meas-1"], {})
-        # ec.createStream("measurements_original", "measurements_cleansed", trans)
-        # print("Start stream")
-        # ec.startStream()
-        # ec.stopStream()
+        trans = ec.createTransformations("Identity", ["Meas-1"], {})
+        print(trans)
+        ec.createStream("measurements_original", "measurements_cleansed", trans)
+        print("Start stream")
+        ec.startStream()
+        print("Enter 'Q' to stop streaming")
+        # data = input("Enter a number to quit")
+        # while data:
+        #     data = input("Enter a number to quit")
+        ec.stopStream()
 
 
 if __name__ == "__main__":
