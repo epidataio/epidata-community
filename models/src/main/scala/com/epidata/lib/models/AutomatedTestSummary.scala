@@ -184,4 +184,20 @@ object AutomatedTestSummary {
       meas_summary_description)
   }
 
+  def getColumns: Set[String] = {
+    val col_set = Set(
+      "company",
+      "site",
+      "device_group",
+      "tester",
+      "start_time",
+      "stop_time",
+      "device_name",
+      "test_name",
+      "meas_name",
+      "meas_summary_name",
+      "meas_summary_value",
+      "meas_summary_description")
+    col_set
+  }
 }

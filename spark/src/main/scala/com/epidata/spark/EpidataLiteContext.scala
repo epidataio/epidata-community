@@ -5,10 +5,12 @@
 package com.epidata.spark
 
 import java.sql.{ Connection, DriverManager, ResultSet, SQLException, Statement, Timestamp }
-import com.epidata.lib.models.{ Measurement => BaseMeasurement, MeasurementCleansed => BaseMeasurementCleansed, MeasurementsKeys => BaseMeasurementsKeys }
-import com.epidata.lib.models.{ MeasurementSummary, AutomatedTest => BaseAutomatedTest, SensorMeasurement => BaseSensorMeasurement }
+import com.epidata.lib.models.{ Measurement => BaseMeasurement, MeasurementCleansed => BaseMeasurementCleansed, MeasurementSummary => BaseMeasurementSummary, MeasurementsKeys => BaseMeasurementsKeys }
+import com.epidata.lib.models.{ AutomatedTest => BaseAutomatedTest, AutomatedTestCleansed => BaseAutomatedTestCleansed, AutomatedTestSummary => BaseAutomatedTestSummary }
+import com.epidata.lib.models.{ SensorMeasurement => BaseSensorMeasurement, SensorMeasurementCleansed => BaseSensorMeasurementCleansed, SensorMeasurementSummary => BaseSensorMeasurementSummary }
 import java.util.{ Date, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList, List => JList }
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{ Config, ConfigFactory }
+import scala.util.Properties
 import scala.collection.JavaConversions._
 import scala.collection.JavaConversions
 import java.io.File
@@ -16,15 +18,33 @@ import java.io.File
 /**
  * The context of an Epidata connection to SQLite.
  */
-class EpidataLiteContext() {
-  private val conf = ConfigFactory.parseResources("sqlite-defaults.conf")
-  private lazy val SQLiteDBName = conf.getString("spark.epidata.SQLiteDBName")
-  private lazy val measurementClass = conf.getString("spark.epidata.measurementClass")
+class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
+
+  //  private val conf = ConfigFactory.parseResources("sqlite-defaults.conf").resolve()
+  private val conf = ConfigFactory.load("sqlite-defaults.conf").resolve()
+
+  private lazy val sqliteDBName = conf.getString("spark.epidata.SQLite.dbFileName")
+
+  private val measurementClass = epidataConf.model match {
+    case m if m.trim.isEmpty => Properties.envOrElse("EPIDATA_MEASUREMENT_MODEL", conf.getString("spark.epidata.measurementClass"))
+    case m: String => m
+  }
+  // println("measurement class: " + measurementClass)
+
   private lazy val streamingBatchDuration = conf.getInt("spark.epidata.streamingBatchDuration")
+  private val basePath = new java.io.File(".").getAbsoluteFile().getParent()
+
+  //  private val sqliteDBUrl = "jdbc:sqlite:" + basePath + "/data/" + sqliteDBName
+  private val sqliteDBUrl = epidataConf.dbUrl match {
+    case s if s.trim.isEmpty => "jdbc:sqlite:" + basePath + "/data/" + sqliteDBName
+    case s => s
+  }
+
+  // println("sqlite db url: " + sqliteDBUrl)
 
   // Connect to SQLite database
   Class.forName("org.sqlite.JDBC")
-  private val con: Connection = DriverManager.getConnection(conf.getString("spark.epidata.SQLite.url"))
+  private val con: Connection = DriverManager.getConnection(sqliteDBUrl)
 
   def query(
     fieldQuery: Map[String, List[String]],
@@ -111,10 +131,12 @@ class EpidataLiteContext() {
           case BaseAutomatedTest.NAME =>
             while (rs.next()) {
               maps.add(BaseMeasurement.rowToJLinkedHashMap(rs, tableName, measurementClass))
+              // println("ATE maps meas_value: " + maps(0).get("meas_value") + ", class: " + maps(0).get("meas_value").getClass)
             }
           case BaseSensorMeasurement.NAME =>
             while (rs.next()) {
               maps.add(BaseMeasurement.rowToJLinkedHashMap(rs, tableName, measurementClass))
+              // println("PAC maps: " + maps)
             }
         }
 
@@ -130,7 +152,7 @@ class EpidataLiteContext() {
             }
         }
 
-      case MeasurementSummary.DBTableName =>
+      case BaseMeasurementSummary.DBTableName =>
         measurementClass match {
           case BaseAutomatedTest.NAME =>
             while (rs.next()) {
@@ -171,11 +193,30 @@ class EpidataLiteContext() {
         "All fieldQuery entries must have at least one match value.")
     }
 
-    val map = getDataFrame(fieldQuery, beginTime, endTime, tableName)
+    val modelColumns = tableName match {
+      case BaseMeasurement.DBTableName =>
+        measurementClass match {
+          case BaseAutomatedTest.NAME => BaseAutomatedTest.getColumns
+          case BaseSensorMeasurement.NAME => BaseSensorMeasurement.getColumns
+        }
 
-    //if (!fieldQuery.keySet.subsetOf(BaseMeasurement.getColumns())) {
-    //  throw new IllegalArgumentException("Unexpected field in fieldQuery.")
-    //}
+      case BaseMeasurementCleansed.DBTableName =>
+        measurementClass match {
+          case BaseAutomatedTest.NAME => BaseAutomatedTestCleansed.getColumns
+          case BaseSensorMeasurement.NAME => BaseSensorMeasurementCleansed.getColumns
+        }
+      case BaseMeasurementSummary.DBTableName =>
+        measurementClass match {
+          case BaseAutomatedTest.NAME => BaseAutomatedTestSummary.getColumns
+          case BaseSensorMeasurement.NAME => BaseSensorMeasurementSummary.getColumns
+        }
+    }
+
+    if (!fieldQuery.keySet.subsetOf(modelColumns)) {
+      throw new IllegalArgumentException("Unexpected field in fieldQuery.")
+    }
+
+    val map = getDataFrame(fieldQuery, beginTime, endTime, tableName)
 
     // Find the equality queries for the non partition key fields.
     val nonpartitionFields = fieldQuery.keySet.diff(genericPartitionFields.map(partitionFieldsMap).toSet)
@@ -212,7 +253,7 @@ class EpidataLiteContext() {
     beginTime: Timestamp,
     endTime: Timestamp): JList[JLinkedHashMap[String, Object]] = {
     import scala.collection.JavaConversions._
-    query(fieldQuery.toMap.mapValues(_.toList), beginTime, endTime, MeasurementSummary.DBTableName)
+    query(fieldQuery.toMap.mapValues(_.toList), beginTime, endTime, BaseMeasurementSummary.DBTableName)
   }
 
   /** List the values of the currently saved partition key fields. */
@@ -252,25 +293,6 @@ class EpidataLiteContext() {
     keys
   }
 
-  // TODO:
-  //  @deprecated
-  //  def createStream(op: String, meas_names: List[String], params: java.util.Map[String, String]): EpidataStreamingContext = {
-  //    val esc = new EpidataStreamingContext(
-  //      this,
-  //      Seconds(streamingBatchDuration),
-  //      com.epidata.lib.models.Measurement.KafkaTopic)
-  //
-  //    op match {
-  //      case "Identity" => esc.saveToCassandra(new Identity())
-  //      case "FillMissingValue" => esc.saveToCassandra(new FillMissingValue(meas_names, "rolling", 3))
-  //      case "OutlierDetector" => esc.saveToCassandra(new OutlierDetector("meas_value", "quartile"))
-  //      case "MeasStatistics" => esc.saveToCassandra(new MeasStatistics(meas_names, "standard"))
-  //    }
-  //
-  //    esc
-  //
-  //  }
-
   private val genericPartitionFields = List("customer", "customer_site", "collection", "dataset")
 
   private def partitionFieldsMap = measurementClass match {
@@ -299,3 +321,5 @@ class EpidataLiteContext() {
   }
 
 }
+
+case class EpiDataConf(model: String, dbUrl: String)

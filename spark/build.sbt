@@ -18,8 +18,9 @@ libraryDependencies ++= Seq(
   "org.apache.spark" %% "spark-streaming-kafka-0-10" % "2.4.6",
   "org.apache.kafka" % "kafka-streams" % "2.4.1",
   "com.datastax.spark" %% "spark-cassandra-connector-embedded" % "2.4.3" % Test,
-  "org.scalatest" %% "scalatest" % "3.2.0" % Test,
-  "junit" % "junit" % "4.13" % Test,
+  "org.scalatest" %% "scalatest" % "3.1.4" % Test,
+  "org.scalatestplus" %% "junit-4-12" % "3.1.2.0" % "test",
+  "junit" % "junit" % "4.12" % Test,
   "org.apache.cassandra" % "cassandra-all" % "3.11.6"
 ).map(_.exclude("org.slf4j", "log4j-over-slf4j"));  // Excluded to allow for Cassandra to run embedded
 
