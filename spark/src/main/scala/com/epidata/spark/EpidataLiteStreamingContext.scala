@@ -9,7 +9,7 @@ import org.apache.spark.sql.{ DataFrame, SQLContext }
 import scala.collection.mutable.{ Map => MutableMap }
 import scala.io.StdIn
 //import scala.collection.JavaConverters
-//-------------------logger pacakage--------
+//-------------------logger package--------
 import java.io.FileInputStream
 import java.io.IOException
 import java.util.logging.ConsoleHandler
@@ -57,13 +57,14 @@ class EpidataLiteStreamingContext {
     // create and return a transformation object
     opName match {
       case "Identity" => new Identity()
-      //case "FillMissingValue" => new FillMissingValue(meas_names, "rolling", 3)
-      //case "OutlierDetector" => new OutlierDetector("meas_value", "quartile")
+      //case "FillMissingValue" => new FillMissingValue(meas_names, params.get("method").getOrElse("rolling"), params.get("s"))
+      //case "OutlierDetector" => new OutlierDetector("meas_value", params.get("method"))
       //case "MeasStatistics" => new MeasStatistics(meas_names, "standard")
       case _ => new Identity()
     }
   }
 
+  /** Interface for Java and Python. */
   def createTransformations(
     opName: String,
     meas_names: java.util.List[String],
@@ -71,7 +72,6 @@ class EpidataLiteStreamingContext {
     import scala.collection.JavaConversions._
     val sBuffer = asScalaBuffer(meas_names)
     createTransformations(opName, sBuffer.toList, params.toMap)
-
   }
 
   def createStream(sourceTopic: String, destinationTopic: String, operation: Transformation): Unit = {
@@ -99,7 +99,7 @@ class EpidataLiteStreamingContext {
         //println("new destination topic - port added")
       }
       case _ => {
-        println("detination topic - port exists")
+        println("destination topic - port exists")
       }
     }
 
@@ -157,10 +157,8 @@ class EpidataLiteStreamingContext {
   }
 
   def printSomething(bar: String): String = {
-
     val s = "py4j connection working fine "
     s
-
   }
 
   def testUnit(): Unit = {

@@ -183,5 +183,19 @@ object SensorMeasurementSummary {
       meas_summary_value,
       meas_summary_description)
   }
-
+  def getColumns: Set[String] = {
+    val col_set = Set(
+      "company",
+      "site",
+      "station",
+      "sensor",
+      "start_time",
+      "stop_time",
+      "event",
+      "meas_name",
+      "meas_summary_name",
+      "meas_summary_value",
+      "meas_summary_description")
+    col_set
+  }
 }

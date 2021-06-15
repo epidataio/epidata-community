@@ -232,4 +232,25 @@ object SensorMeasurementCleansed {
       meas_description)
   }
 
+  def getColumns: Set[String] = {
+    val col_set = Set(
+      "company",
+      "site",
+      "station",
+      "sensor",
+      "ts",
+      "event",
+      "meas_name",
+      "datatype_str",
+      "meas_value",
+      "meas_unit",
+      "meas_status",
+      "meas_flag",
+      "meas_method",
+      "meas_lower_limit",
+      "meas_upper_limit",
+      "meas_description")
+    col_set
+  }
+
 }

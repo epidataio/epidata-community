@@ -6,26 +6,31 @@ package com.epidata.spark
 
 import com.typesafe.config.ConfigFactory
 import java.io.File
-import java.sql.{ DriverManager, SQLException, Timestamp }
+import java.sql.{ Connection, DriverManager, Timestamp, SQLException }
 import java.util
-
 import scala.io.Source
 import scala.io.StdIn
+import scala.util.Properties
 //import scala.collection.mutable.Map
 
 object elcTest extends App {
   val ec = new EpidataLiteContext()
-
-  val esc = new EpidataLiteStreamingContext()
-  esc.init()
 
   /*  ----- EpiDataLite Batch  Test ----- */
 
   println("\n EpiDataLite Batch Test Started")
 
   Class.forName("org.sqlite.JDBC");
-  val conf = ConfigFactory.parseResources("sqlite-defaults.conf")
-  val con = DriverManager.getConnection(conf.getString("spark.epidata.SQLite.url"))
+  private val conf = ConfigFactory.parseResources("sqlite-defaults.conf")
+  private val basePath = new java.io.File(".").getAbsoluteFile().getParent()
+  private val dbName = conf.getString("spark.epidata.SQLite.dbFileName")
+  private val dbUrl = "jdbc:sqlite:" + basePath + "/data/" + dbName
+
+  // println("sqlite db url: " + dbUrl)
+
+  private val con: Connection = DriverManager.getConnection(dbUrl)
+  //  val conf = ConfigFactory.parseResources("sqlite-defaults.conf")
+  //  val con = DriverManager.getConnection(conf.getString("spark.epidata.SQLite.url"))
   val stmt = con.createStatement()
 
   // Clear tables
@@ -709,9 +714,9 @@ object elcTest extends App {
   val rs = con.prepareStatement(s"SELECT * FROM ${com.epidata.lib.models.Measurement.DBTableName}").executeQuery()
   while (rs.next()) {
     val t = com.epidata.lib.models.Measurement.rowToMeasurement(rs)
-    println(s"Insert Check: ${t.toString}")
+    //println(s"Insert Check: ${t.toString}")
   }
-  println()
+  //println()
 
   val results = ec.query(
     Map(
@@ -777,12 +782,16 @@ object elcTest extends App {
   /*  ----- EpiDataLite Stream Test Started ----- */
   println("\n EpiDataLite Stream Test Started")
 
+  val esc = new EpidataLiteStreamingContext()
+  esc.init()
+
   // Create Transformation
   val op1 = esc.createTransformations("Identity", List("Meas-1"), Map[String, String]())
   println("transformation created: " + op1)
 
   val op2 = esc.createTransformations("Identity", List("Meas-1"), Map[String, String]())
   println("transformation created: " + op2)
+
   var list = new util.ArrayList[String]()
   list.add("Meas-1")
   val mutableMap = new util.HashMap[String, String]

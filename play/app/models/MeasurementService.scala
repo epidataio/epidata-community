@@ -112,6 +112,7 @@ object MeasurementService {
     endTime: Date,
     ordering: Ordering.Value = Ordering.Unspecified,
     tableName: String = com.epidata.lib.models.Measurement.DBTableName): List[Model] = {
+
     import WrapAsScala.iterableAsScalaIterable
 
     // Find the epochs from which measurements are required, in timestamp

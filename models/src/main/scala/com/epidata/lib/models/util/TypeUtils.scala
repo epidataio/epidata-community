@@ -7,7 +7,7 @@ package com.epidata.lib.models.util
 import com.datastax.driver.core.Row
 import java.util.Date
 import java.lang.{ Double => JDouble, Long => JLong }
-
+import java.nio.ByteBuffer
 import scala.util.{ Success, Try }
 import java.sql.ResultSet
 
@@ -83,12 +83,26 @@ object TypeUtils {
     }
   }
 
+  /*
   def getOptionBinary(row: ResultSet, field: String): Option[Binary] = {
     val binaryBuf = row.getBlob(field)
     binaryBuf match {
       case null => None
       case _ =>
         val valueBytes = binaryBuf.getBytes(1, binaryBuf.length().toInt)
+        val binary = new Binary(valueBytes)
+        Option(binary)
+    }
+  }
+*/
+
+  def getOptionBinary(row: ResultSet, field: String): Option[Binary] = {
+    val binaryBuf = ByteBuffer.wrap(row.getBytes(field))
+    binaryBuf match {
+      case null => None
+      case _ =>
+        val valueBytes = new Array[Byte](binaryBuf.limit - binaryBuf.position)
+        binaryBuf.get(valueBytes)
         val binary = new Binary(valueBytes)
         Option(binary)
     }
