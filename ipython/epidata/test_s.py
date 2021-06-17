@@ -30,14 +30,14 @@ con = create_connection(database)
 def main():
     print("Hello World!")
     ec.printSomething('god')
-    trans = ec.createTransformations("Identity", ["Meas-1"], {})
-    trans2 = ec.createTransformations("Identity", ["Meas-1"], {})
+    trans = ec.create_transformations("Identity", ["Meas-1"], {})
+    trans2 = ec.create_transformations("Identity", ["Meas-1"], {})
     print(trans)
     print(trans2)
-    ec.createStream("measurements_original", "measurements_intermediate", trans)
-    ec.createStream("measurements_intermediate", "measurements_cleansed", trans)
+    ec.create_stream("measurements_original", "measurements_intermediate", trans)
+    ec.create_stream("measurements_intermediate", "measurements_cleansed", trans)
     print("Start stream")
-    ec.startStream()
+    ec.start_stream()
     print("Enter 'Q' to stop streaming")
 
     state = True
@@ -47,7 +47,7 @@ def main():
             state = False
 
 
-    ec.stopStream()
+    ec.stop_stream()
 
 if __name__ == "__main__":
     main()

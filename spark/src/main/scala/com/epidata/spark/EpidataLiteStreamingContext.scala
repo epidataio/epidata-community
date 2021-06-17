@@ -34,6 +34,11 @@ class EpidataLiteStreamingContext {
   var topicMap: MutableMap[String, Integer] = _
   var intermediatePort: Integer = 5553
   val logger = Logger.getLogger("Epidata lite logger")
+  logger.setLevel(Level.FINE)
+  logger.addHandler(new ConsoleHandler)
+  //adding custom handler
+//  val fileHandler = new FileHandler("users/desktop/logger/logger.log")
+//  logger.addHandler(fileHandler)
 
   def init(): Unit = {
     //ec.start_streaming()
@@ -74,11 +79,7 @@ class EpidataLiteStreamingContext {
     //---------------------------logger--------------------------------------------
     //LogManager.getLogManager.readConfiguration(new FileInputStream("mylogging.properties"))
     //    val logger = Logger.getLogger("Epidata lite logger")
-    logger.setLevel(Level.FINE)
-    logger.addHandler(new ConsoleHandler)
-    //adding custom handler
-    val fileHandler = new FileHandler("/Users/lujiajun/desktop/logger/logger.log")
-    logger.addHandler(fileHandler)
+
     logger.log(Level.INFO, "sourcetopic:  " + sourceTopic)
     logger.log(Level.INFO, "destinationTopic:  " + destinationTopic)
     logger.log(Level.INFO, "transformation:  " + operation)
