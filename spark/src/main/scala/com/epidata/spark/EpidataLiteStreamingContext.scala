@@ -37,8 +37,8 @@ class EpidataLiteStreamingContext {
   logger.setLevel(Level.FINE)
   logger.addHandler(new ConsoleHandler)
   //adding custom handler
-//  val fileHandler = new FileHandler("users/desktop/logger/logger.log")
-//  logger.addHandler(fileHandler)
+  //  val fileHandler = new FileHandler("users/desktop/logger/logger.log")
+  //  logger.addHandler(fileHandler)
 
   def init(): Unit = {
     //ec.start_streaming()

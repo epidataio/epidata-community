@@ -39,9 +39,7 @@ class EpidataContextAutomatedTestSpec extends FlatSpec with BeforeAndAfter with 
 
   useSparkConf(conf)
 
-  println("sc: " + sc)
-
-  val connector = CassandraConnector(conf)
+  lazy val connector = CassandraConnector(conf)
 
   connector.withSessionDo { session =>
     session.execute(CassandraSchema.keyspaceCreation.format(cassandraKeyspaceName))
@@ -62,7 +60,6 @@ class EpidataContextAutomatedTestSpec extends FlatSpec with BeforeAndAfter with 
       session.execute(s"TRUNCATE epidata_test.${com.epidata.lib.models.Measurement.DBTableName}")
       session.execute(s"TRUNCATE epidata_test.${com.epidata.lib.models.MeasurementsKeys.DBTableName}")
     }
-
   }
 
   override def afterAll(): Unit = {
@@ -569,7 +566,7 @@ class EpidataContextSensorMeasurementSpec extends FlatSpec with BeforeAndAfter w
 
   useSparkConf(conf)
 
-  val connector = CassandraConnector(conf)
+  lazy val connector = CassandraConnector(conf)
 
   connector.withSessionDo { session =>
     session.execute(CassandraSchema.keyspaceCreation.format(cassandraKeyspaceName))
@@ -588,7 +585,6 @@ class EpidataContextSensorMeasurementSpec extends FlatSpec with BeforeAndAfter w
       session.execute(s"TRUNCATE epidata_test.${com.epidata.lib.models.Measurement.DBTableName}")
       session.execute(s"TRUNCATE epidata_test.${com.epidata.lib.models.MeasurementsKeys.DBTableName}")
     }
-
   }
 
   override def afterAll(): Unit = {

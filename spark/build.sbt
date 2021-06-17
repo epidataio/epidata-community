@@ -22,8 +22,7 @@ libraryDependencies ++= Seq(
   "org.scalatestplus" %% "junit-4-12" % "3.1.2.0" % "test",
   "junit" % "junit" % "4.12" % Test,
   "org.apache.cassandra" % "cassandra-all" % "3.11.6"
-).map(_.exclude("org.slf4j", "log4j-over-slf4j"))
-.map(_.exclude("org.slf4j", "org.slf4j.impl.Log4jLoggerFactory"));  // Excluded for Cassandra embedded
+).map(_.exclude("org.slf4j", "log4j-over-slf4j"));  // Excluded for Cassandra embedded
 
 dependencyOverrides += "com.fasterxml.jackson.core" % "jackson-core" % "2.10.5"
 dependencyOverrides += "com.fasterxml.jackson.core" % "jackson-databind" % "2.10.5"
