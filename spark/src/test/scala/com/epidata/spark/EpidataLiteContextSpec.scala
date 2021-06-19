@@ -2,7 +2,6 @@
  * Copyright (c) 2015-2021 EpiData, Inc.
 */
 
-/*
 package com.epidata.spark
 
 import java.sql.{ Connection, DriverManager, ResultSet, SQLException, Statement, Timestamp }
@@ -1369,4 +1368,3 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
   }
 
 }
-*/

@@ -529,7 +529,10 @@ class EpidataContextAutomatedTestSpec extends FlatSpec with BeforeAndAfter with 
       .saveToCassandra(cassandraKeyspaceName, com.epidata.lib.models.MeasurementsKeys.DBTableName, SomeColumns("customer", "customer_site",
         "collection", "dataset"))
 
-    val results = ec.listKeys().collect()
+    val results = ec.listKeys().collect().sortBy(_.getAs[String](0))
+    for (result <- results) {
+      println("result: " + result)
+    }
 
     results.length should equal(3)
     results(0).toSeq(0) should equal("Company-1")
