@@ -107,6 +107,7 @@ object AutomatedTest {
     tableName match {
       case com.epidata.lib.models.Measurement.DBTableName =>
         val m = rowToAutomatedTest(row)
+        // println("m meas_value: " + m.meas_value + ", type: " + m.meas_value.getClass)
         toJLinkedHashMap(m)
     }
   }
@@ -231,6 +232,29 @@ object AutomatedTest {
       meas_description,
       device_status,
       test_status)
+  }
+
+  def getColumns: Set[String] = {
+    val col_set = Set(
+      "company",
+      "site",
+      "device_group",
+      "tester",
+      "ts",
+      "device_name",
+      "test_name",
+      "meas_name",
+      "datatype_str",
+      "meas_value",
+      "meas_unit",
+      "meas_status",
+      "meas_lower_limit",
+      "meas_upper_limit",
+      "meas_description",
+      "device_status",
+      "test_status")
+
+    col_set
   }
 
 }

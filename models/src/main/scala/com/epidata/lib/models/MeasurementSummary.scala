@@ -109,4 +109,21 @@ object MeasurementSummary {
       meas_summary_description)
 
   }
+
+  def getColumns: Set[String] = {
+    val col_set = Set(
+      "customer",
+      "customer_site",
+      "collection",
+      "dataset",
+      "start_time",
+      "stop_time",
+      "key1",
+      "key2",
+      "key3",
+      "meas_summary_name",
+      "meas_summary_value",
+      "meas_summary_description")
+    col_set
+  }
 }

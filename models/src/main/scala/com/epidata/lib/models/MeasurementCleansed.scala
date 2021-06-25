@@ -119,4 +119,29 @@ object MeasurementCleansed {
       m.val2)
 
   }
+
+  def getColumns: Set[String] = {
+    val col_set = Set(
+      "customer",
+      "customer_site",
+      "collection",
+      "dataset",
+      "ts",
+      "key1",
+      "key2",
+      "key3",
+      "meas_datatype",
+      "meas_value",
+      "meas_unit",
+      "meas_status",
+      "meas_flag",
+      "meas_method",
+      "meas_lower_limit",
+      "meas_upper_limit",
+      "meas_description",
+      "val1",
+      "val2")
+    col_set
+  }
+
 }

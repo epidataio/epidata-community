@@ -6,24 +6,31 @@ package com.epidata.spark
 
 import com.typesafe.config.ConfigFactory
 import java.io.File
-import java.sql.{ DriverManager, Timestamp, SQLException }
+import java.sql.{ Connection, DriverManager, Timestamp, SQLException }
+import java.util
 import scala.io.Source
 import scala.io.StdIn
+import scala.util.Properties
 //import scala.collection.mutable.Map
 
 object elcTest extends App {
   val ec = new EpidataLiteContext()
-
-  val esc = new EpidataLiteStreamingContext()
-  esc.init()
 
   /*  ----- EpiDataLite Batch  Test ----- */
 
   println("\n EpiDataLite Batch Test Started")
 
   Class.forName("org.sqlite.JDBC");
-  val conf = ConfigFactory.parseResources("sqlite-defaults.conf")
-  val con = DriverManager.getConnection(conf.getString("spark.epidata.SQLite.url"))
+  private val conf = ConfigFactory.parseResources("sqlite-defaults.conf")
+  private val basePath = new java.io.File(".").getAbsoluteFile().getParent()
+  private val dbName = conf.getString("spark.epidata.SQLite.dbFileName")
+  private val dbUrl = "jdbc:sqlite:" + basePath + "/data/" + dbName
+
+  // println("sqlite db url: " + dbUrl)
+
+  private val con: Connection = DriverManager.getConnection(dbUrl)
+  //  val conf = ConfigFactory.parseResources("sqlite-defaults.conf")
+  //  val con = DriverManager.getConnection(conf.getString("spark.epidata.SQLite.url"))
   val stmt = con.createStatement()
 
   // Clear tables
@@ -707,9 +714,9 @@ object elcTest extends App {
   val rs = con.prepareStatement(s"SELECT * FROM ${com.epidata.lib.models.Measurement.DBTableName}").executeQuery()
   while (rs.next()) {
     val t = com.epidata.lib.models.Measurement.rowToMeasurement(rs)
-    println(s"Insert Check: ${t.toString}")
+    //println(s"Insert Check: ${t.toString}")
   }
-  println()
+  //println()
 
   val results = ec.query(
     Map(
@@ -775,6 +782,9 @@ object elcTest extends App {
   /*  ----- EpiDataLite Stream Test Started ----- */
   println("\n EpiDataLite Stream Test Started")
 
+  val esc = new EpidataLiteStreamingContext()
+  esc.init()
+
   // Create Transformation
   val op1 = esc.createTransformations("Identity", List("Meas-1"), Map[String, String]())
   println("transformation created: " + op1)
@@ -782,12 +792,24 @@ object elcTest extends App {
   val op2 = esc.createTransformations("Identity", List("Meas-1"), Map[String, String]())
   println("transformation created: " + op2)
 
+  var list = new util.ArrayList[String]()
+  list.add("Meas-1")
+  val mutableMap = new util.HashMap[String, String]
+  val op3 = esc.createTransformations("Identity", list, mutableMap)
+  println("transformation created: " + op3)
+
   // Create Stream
   esc.createStream("measurements_original", "measurements_intermediate", op1)
   println("stream 1 created: " + op1)
 
-  esc.createStream("measurements_intermediate", "measurements_cleansed", op2)
-  println("stream 2 created: " + op2)
+  esc.createStream("measurements_intermediate", "measurements_cleansed", op3)
+  println("stream 2 created: " + op3)
+
+  esc.testUnit()
+  print(esc.printSomething(""))
+
+  //  esc.createStream("measurements_intermediate", "measurements_cleansed", op2)
+  //  println("stream 3 created: " + op3)
 
   // Start Stream
   esc.startStream()
@@ -803,7 +825,7 @@ object elcTest extends App {
   // Stop stream
   esc.stopStream()
 
-  println("Stream processing stopped successfully.")
+  println("Stream processing stoppqed successfully.")
 
   println("\n EpiDataLite Stream Test completed")
   println("----------------------------------------------------")

@@ -18,8 +18,11 @@ object IPythonSpecStreamingLite extends App{
   try {
 
     println("Hello")
+//    Process(List("python",
+//      "ipython/test/test_streaming_lite.py")
+//    ).run()
     Process(List("python",
-      "ipython/test/test_streaming_lite.py")
+      "ipython/test/test_s.py")
     ).run()
 
   } catch {

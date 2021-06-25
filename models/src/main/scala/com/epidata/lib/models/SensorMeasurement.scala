@@ -95,6 +95,7 @@ object SensorMeasurement {
     tableName match {
       case com.epidata.lib.models.Measurement.DBTableName =>
         val m = rowToSensorMeasurement(row)
+        // println("m: " + m)
         toJLinkedHashMap(m)
     }
   }
@@ -136,15 +137,16 @@ object SensorMeasurement {
       putToMap(map, "ts", convertToJLong(m.ts.getTime))
     putToMap(map, "event", m.event)
     putToMap(map, "meas_name", m.meas_name)
-    putOptionToMap(map, "meas_unit", m.meas_unit)
-    putOptionToMap(map, "meas_status", m.meas_status)
-    putOptionToMap(map, "meas_description", m.meas_description)
-
     putOptionToMap(map, "meas_datatype", m.meas_datatype)
+
     if (m.meas_value != null)
       putAnyToMap(map, "meas_value", m.meas_value)
+
+    putOptionToMap(map, "meas_unit", m.meas_unit)
+    putOptionToMap(map, "meas_status", m.meas_status)
     putOptionAnyValToMap(map, "meas_lower_limit", m.meas_lower_limit)
     putOptionAnyValToMap(map, "meas_upper_limit", m.meas_upper_limit)
+    putOptionToMap(map, "meas_description", m.meas_description)
 
     map
   }
@@ -216,6 +218,25 @@ object SensorMeasurement {
       meas_lower_limit,
       meas_upper_limit,
       meas_description)
+  }
+
+  def getColumns: Set[String] = {
+    val col_set = Set(
+      "company",
+      "site",
+      "station",
+      "sensor",
+      "ts",
+      "event",
+      "meas_name",
+      "datatype_str",
+      "meas_value",
+      "meas_unit",
+      "meas_status",
+      "meas_lower_limit",
+      "meas_upper_limit",
+      "meas_description")
+    col_set
   }
 
 }
