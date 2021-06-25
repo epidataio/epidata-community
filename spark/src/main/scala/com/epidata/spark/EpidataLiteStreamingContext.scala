@@ -22,6 +22,7 @@ class EpidataLiteStreamingContext {
   val receiveTimeout: Integer = -1
   var topicMap: MutableMap[String, Integer] = _
   var intermediatePort: Integer = 5553
+  var bufferSize: Integer = 2 //config setting
 
   def init(): Unit = {
     //ec.start_streaming()
@@ -40,8 +41,8 @@ class EpidataLiteStreamingContext {
     // create and return a transformation object
     opName match {
       case "Identity" => new Identity()
-      //case "FillMissingValue" => new FillMissingValue(meas_names, "rolling", 3)
-      //case "OutlierDetector" => new OutlierDetector("meas_value", "quartile")
+      case "FillMissingValue" => new FillMissingValue(meas_names, params.getOrElse("method"), params.get("s"))
+      case "OutlierDetector" => new OutlierDetector(params.getOrElse("column"), params.get("method"))
       //case "MeasStatistics" => new MeasStatistics(meas_names, "standard")
       case _ => new Identity()
     }

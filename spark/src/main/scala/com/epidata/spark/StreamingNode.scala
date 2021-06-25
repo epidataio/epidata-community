@@ -3,61 +3,104 @@
 */
 package com.epidata.spark
 
-import org.json.simple.{ JSONArray, JSONObject }
-import org.json.simple.parser.{ ParseException, JSONParser }
-import java.util.{ Map => JMap, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList }
+import org.json.simple.{JSONArray, JSONObject}
+import org.json.simple.parser.{JSONParser, ParseException}
+import java.util.{LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList, Map => JMap}
+
+import com.epidata.lib.models.SensorMeasurement.jsonToSensorMeasurement
+
+import scala.collection.mutable._
+import scala.collection.mutable.ArrayBuffer
 import com.epidata.spark.ops.Transformation
 import play.api.libs.json._
 import play.api.libs.json.Reads._
 import org.zeromq.ZMQ
-import com.epidata.lib.models.{ Measurement => BaseMeasurement, SensorMeasurement => BaseSensorMeasurement, AutomatedTest => BaseAutomatedTest }
-import scala.io.StdIn
+import com.epidata.lib.models.{AutomatedTest => BaseAutomatedTest, Measurement => BaseMeasurement, SensorMeasurement => BaseSensorMeasurement}
 
 class StreamingNode {
   var subSocket: ZMQ.Socket = _ //add as parameter
   var publishSocket: ZMQ.Socket = _ //add as parameter
-  var subscribePort: String = _
+
+  var subscribePorts: List[String] = _ //allows Node to subscribe to various ports
+  var subscribeTopics: List[String] = _ //allows Node to listen on various topics
+
   var publishPort: String = _
-  var subscribeTopic: String = _
   var publishTopic: String = _
+
   var transformation: Transformation = _
+
+  //NEW
+  /*
+  Creating array of Queues (here on out referenced to as a Buffer) that hold type BaseMeasurements.
+  Size of array is determined by number of Topics.
+   */
+  var streamBuffers: ArrayBuffer[Queue[BaseMeasurement]] = _
+  /*
+  Each Buffer can have a unique buffer size.
+  For dev purposes all Node Buffers will have default size of 2.
+   */
+  var bufferSizes: List[Int]
+  //NEW
+
+  //temp
+  var TempID = 0
 
   def init(
     context: ZMQ.Context,
-    receivePort: String,
+    //NEW
+    receivePorts: List[String], //allows Node to subscribe to various ports
+    receiveTopics: List[String], //allows Node to listen on various topics
+    bufferSizes: List[Int],
+    //NEW
     sendPort: String,
-    receiveTopic: String,
     sendTopic: String,
     receiveTimeout: Integer,
     transformation: Transformation): StreamingNode = {
 
-    subscribePort = receivePort
+    /*
+    Copying parameters to instance variables.
+     */
+    subscribePorts = receivePorts
+    subscribeTopics = receiveTopics
+
     publishPort = sendPort
-    subscribeTopic = receiveTopic
     publishTopic = sendTopic
 
-    //println("StreamingNode init called.")
-    //println("subscribePort: " + subscribePort + ", publishPort: " + publishPort)
-    //println("subscribeTopic: " + subscribeTopic + ", publishTopic: " + publishTopic)
-
     subSocket = context.socket(ZMQ.SUB)
-    //subSocket.setReceiveTimeOut(receiveTimeout)
-    subSocket.connect("tcp://127.0.0.1:" + subscribePort)
-    subSocket.subscribe(subscribeTopic.getBytes(ZMQ.CHARSET))
+
+    //NEW
+    /*
+    Iterating through all port numbers and binding subscribe socket.
+     */
+    for (port <- subscribePorts) { subSocket.connect("tcp://127.0.0.1:" + port) }
+    /*
+    Iterating through all topics and adding subscribe socket.
+     */
+    for (topic <- subscribeTopics) { subSocket.subscribe(topic.getBytes(ZMQ.CHARSET)) }
+    //NEW
 
     publishSocket = context.socket(ZMQ.PUB)
     publishSocket.bind("tcp://127.0.0.1:" + publishPort)
 
     this.transformation = transformation
 
-    //println("Streaming Node initiated. Subscribe topic: " + subscribeTopic + ", publish topic: " + publishTopic)
+    //NEW
+    /*
+    Iterating through bufferSizes to
+     */
+    for (buffer <- bufferSizes) { streamBuffers :+ Stack[BaseMeasurement] }
+    //NEW
 
     this
   }
 
   def receive(): Unit = {
-    //println("StreamingNode receive method called")
-    println("receive port: " + subscribePort)
+    TempID += 1
+    println("Receiving from:")
+    for (port <- subscribePorts) {
+      println("port: " + port)
+    }
+    println("---------------:")
 
     val topic = subSocket.recvStr()
     println("receive topic: " + topic)
@@ -68,19 +111,45 @@ class StreamingNode {
       case _: String => {
         val jSONObject = parser.parse(receivedString).asInstanceOf[JMap[String, String]]
 
-        //println("received data: " + jSONObject + "\n")
+        //        val map = new JLinkedHashMap[String, String]()
+        //        map.put("topic", publishTopic)
+        //        map.put("key", jSONObject.get("key"))
+        //        map.put("value", jSONObject.get("value"))
 
-        val map = new JLinkedHashMap[String, String]()
-        map.put("topic", publishTopic)
-        map.put("key", jSONObject.get("key"))
-        map.put("value", jSONObject.get("value"))
-
-        //println("publish data: " + map + "\n")
-        publish(map)
+        //NEW
+        val index = subscribeTopics.indexOf(topic) //getting index of corresponding Buffer in streamBuffers
+        streamBuffers(index).enqueue(jsonToSensorMeasurement(jSONObject.get("value"))) //adding current message value to buffer
+        if (streamBuffers(index).size == bufferSizes(index)) { //checking to see if size of Buffer reached max
+          val list = streamBuffers(index).toList //if desired buffer size is achieved -> convert Queued measurements to list
+          streamBuffers(index).clear() //clear buffer
+          transform(list) //transform list of measurements
+        }
+        //NEW
       }
       case _ => println("receive string is null. \n")
     }
   }
+
+  //NEW
+  def transform(map: List[BaseMeasurement]): Unit = {
+    println("Performing Transformation on: ")
+    for (measurement <- map) {
+      println("Meas: " + measurement)
+    }
+    val transformResults = transformation.apply(map)
+
+    for (result <- transformResults) {
+      val transformationMap = new JLinkedHashMap[String, String]()
+      transformationMap.put("topic", publishTopic)
+      transformationMap.put("key", TempID.toString /*create key method from Play*/ )
+      transformationMap.put("value", result.toString)
+
+      publish(transformationMap)
+    }
+
+    //iterate through list of basemeasuremnt to make key value pairs
+  }
+  //NEW
 
   def publish(processedMap: JMap[String, String]): Unit = {
     //val processedMessage: Message = epidataLiteStreamingContext(ZMQInit.streamQueue.dequeue)
@@ -96,8 +165,12 @@ class StreamingNode {
 
   def clear(): Unit = {
     try {
-      subSocket.unsubscribe(subscribeTopic.getBytes(ZMQ.CHARSET))
-      subSocket.unbind("tcp://127.0.0.1:" + subscribePort)
+      for (topic <- subscribeTopics) {
+        subSocket.unsubscribe(topic.getBytes(ZMQ.CHARSET))
+      }
+      for (port <- subscribePorts) {
+        subSocket.unbind("tcp://127.0.0.1:" + port)
+      }
       subSocket.close()
       println("subSocket closed successfully")
     } catch {
