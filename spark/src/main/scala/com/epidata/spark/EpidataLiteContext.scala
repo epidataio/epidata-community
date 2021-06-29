@@ -20,6 +20,11 @@ import java.io.File
  */
 class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
 
+  // Auxiliary constructor for Java and Python
+  def this() = {
+    this(EpiDataConf("", ""))
+  }
+
   //  private val conf = ConfigFactory.parseResources("sqlite-defaults.conf").resolve()
   private val conf = ConfigFactory.load("sqlite-defaults.conf").resolve()
 

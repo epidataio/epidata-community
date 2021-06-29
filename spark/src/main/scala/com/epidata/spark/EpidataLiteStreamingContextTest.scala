@@ -1,3 +1,4 @@
+/*
 package com.epidata.spark
 
 import java.sql.DriverManager
@@ -39,7 +40,7 @@ object EpidataLiteStreamingContextTest extends App {
   val str = EntityUtils.toString(entity, "UTF-8")
   println(str)
 
-  /*  ----- EpiDataLite Stream Test Started ----- */
+  // *  ----- EpiDataLite Stream Test Started ----- * //
   //  println("\n EpiDataLite Stream Test Started")
   //
   //  // Create Transformation
@@ -87,3 +88,4 @@ object EpidataLiteStreamingContextTest extends App {
   //  println("----------------------------------------------------")
 
 }
+*/
