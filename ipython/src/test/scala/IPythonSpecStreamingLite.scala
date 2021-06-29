@@ -1,6 +1,6 @@
 package ipython
 
-import com.epidata.spark.{EpidataLiteContext, Measurement}
+import com.epidata.spark.{ EpidataLiteContext, Measurement }
 //import java.nio.ByteBuffer
 import java.sql.Timestamp
 
@@ -10,20 +10,19 @@ import matchers.should._
 
 import scala.sys.process.Process
 
-
 import scala.io.Source
 
-object IPythonSpecStreamingLite extends App{
+object IPythonSpecStreamingLite extends App {
 
   try {
 
     println("Hello")
-//    Process(List("python",
-//      "ipython/test/test_streaming_lite.py")
-//    ).run()
-    Process(List("python",
-      "ipython/test/test_s.py")
-    ).run()
+    //    Process(List("python",
+    //      "ipython/test/test_streaming_lite.py")
+    //    ).run()
+    Process(List(
+      "python",
+      "ipython/test/test_s.py")).run()
 
   } catch {
     case e: Exception =>
@@ -31,6 +30,5 @@ object IPythonSpecStreamingLite extends App{
       System.err.println(e.getMessage)
 
   }
-
 
 }
