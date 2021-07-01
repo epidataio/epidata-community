@@ -3,11 +3,12 @@
 */
 package com.epidata.spark
 
-import org.json.simple.{JSONArray, JSONObject}
-import org.json.simple.parser.{JSONParser, ParseException}
-import java.util.{LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList, Map => JMap}
+import java.util
 
-import com.epidata.lib.models.SensorMeasurement.jsonToSensorMeasurement
+import org.json.simple.{ JSONArray, JSONObject }
+import org.json.simple.parser.{ JSONParser, ParseException }
+import java.util.{ LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList, Map => JMap }
+import com.epidata.lib.models.SensorMeasurement
 
 import scala.collection.mutable._
 import scala.collection.mutable.ArrayBuffer
@@ -15,7 +16,7 @@ import com.epidata.spark.ops.Transformation
 import play.api.libs.json._
 import play.api.libs.json.Reads._
 import org.zeromq.ZMQ
-import com.epidata.lib.models.{AutomatedTest => BaseAutomatedTest, Measurement => BaseMeasurement, SensorMeasurement => BaseSensorMeasurement}
+import com.epidata.lib.models.{ AutomatedTest => BaseAutomatedTest, Measurement => BaseMeasurement, SensorMeasurement => BaseSensorMeasurement }
 
 class StreamingNode {
   var subSocket: ZMQ.Socket = _ //add as parameter
@@ -34,12 +35,12 @@ class StreamingNode {
   Creating array of Queues (here on out referenced to as a Buffer) that hold type BaseMeasurements.
   Size of array is determined by number of Topics.
    */
-  var streamBuffers: ArrayBuffer[Queue[BaseMeasurement]] = _
+  var streamBuffers: Array[Queue[String]] = _
   /*
   Each Buffer can have a unique buffer size.
   For dev purposes all Node Buffers will have default size of 2.
    */
-  var bufferSizes: List[Int]
+  var bufferSizes: List[Int] = _
   //NEW
 
   //temp
@@ -88,13 +89,14 @@ class StreamingNode {
     /*
     Iterating through bufferSizes to
      */
-    for (buffer <- bufferSizes) { streamBuffers :+ Stack[BaseMeasurement] }
+    var i = 0
+    for (i <- 0 until bufferSizes.length) { streamBuffers(i) = new Queue[String] }
     //NEW
 
     this
   }
 
-  def receive(): Unit = {
+  def receive(): List[String] = {
     TempID += 1
     println("Receiving from:")
     for (port <- subscribePorts) {
@@ -118,49 +120,58 @@ class StreamingNode {
 
         //NEW
         val index = subscribeTopics.indexOf(topic) //getting index of corresponding Buffer in streamBuffers
-        streamBuffers(index).enqueue(jsonToSensorMeasurement(jSONObject.get("value"))) //adding current message value to buffer
+        streamBuffers(index).enqueue(jSONObject.get("value")) //adding current message value to buffer
         if (streamBuffers(index).size == bufferSizes(index)) { //checking to see if size of Buffer reached max
           val list = streamBuffers(index).toList //if desired buffer size is achieved -> convert Queued measurements to list
           streamBuffers(index).clear() //clear buffer
-          transform(list) //transform list of measurements
+          return list //transform list of measurements
+
         }
         //NEW
+        List("SKIP")
       }
-      case _ => println("receive string is null. \n")
+      case _ =>
+        println("receive string is null. \n")
+        List("SKIP")
     }
   }
 
   //NEW
-  def transform(map: List[BaseMeasurement]): Unit = {
+  def transform(map: List[String]): ListBuffer[JLinkedHashMap[String, String]] = {
     println("Performing Transformation on: ")
     for (measurement <- map) {
       println("Meas: " + measurement)
     }
-    val transformResults = transformation.apply(map)
+    //val transformResults = transformation.apply(map) //temp remove and pass through JSON value as identity transformation
 
-    for (result <- transformResults) {
+    var resultsAsMap = new ListBuffer[JLinkedHashMap[String, String]]
+
+    for (result <- map /*transformResults*/ ) {
       val transformationMap = new JLinkedHashMap[String, String]()
       transformationMap.put("topic", publishTopic)
       transformationMap.put("key", TempID.toString /*create key method from Play*/ )
-      transformationMap.put("value", result.toString)
+      transformationMap.put("value", result)
 
-      publish(transformationMap)
+      resultsAsMap += transformationMap
     }
 
+    resultsAsMap
     //iterate through list of basemeasuremnt to make key value pairs
   }
   //NEW
 
-  def publish(processedMap: JMap[String, String]): Unit = {
+  def publish(processedMapList: ListBuffer[JLinkedHashMap[String, String]]): Unit = {
     //val processedMessage: Message = epidataLiteStreamingContext(ZMQInit.streamQueue.dequeue)
     //println("Streamingnode publish method called")
 
-    publishSocket.sendMore(this.publishTopic)
-    val msg: String = JSONObject.toJSONString(processedMap)
-    publishSocket.send(msg.getBytes(), 0)
+    for (map <- processedMapList) {
+      publishSocket.sendMore(this.publishTopic)
+      val msg: String = JSONObject.toJSONString(map)
+      publishSocket.send(msg.getBytes(), 0)
 
-    println("publish topic: " + this.publishTopic + ", publish port: " + publishPort)
-    println("published message: " + msg + "\n")
+      println("publish topic: " + this.publishTopic + ", publish port: " + publishPort)
+      println("published message: " + msg + "\n")
+    }
   }
 
   def clear(): Unit = {

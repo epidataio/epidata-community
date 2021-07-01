@@ -1,3 +1,5 @@
+/*
+
 package com.epidata.spark
 
 import java.sql.DriverManager
@@ -38,52 +40,52 @@ object EpidataLiteStreamingContextTest extends App {
   val entity = response.getEntity
   val str = EntityUtils.toString(entity, "UTF-8")
   println(str)
+*/
+/*  ----- EpiDataLite Stream Test Started ----- */
+//  println("\n EpiDataLite Stream Test Started")
+//
+//  // Create Transformation
+//  val op1 = esc.createTransformations("Identity", List("Meas-1"), Map[String, String]())
+//  println("transformation created: " + op1)
+//
+//  val op2 = esc.createTransformations("Identity", List("Meas-1"), Map[String, String]())
+//  println("transformation created: " + op2)
+//  var list = new util.ArrayList[String]()
+//  list.add("Meas-1")
+//  val mutableMap = new util.HashMap[String, String]
+//  val op3 = esc.createTransformations("Identity", list, mutableMap)
+//  println("transformation created: " + op3)
+//
+//  // Create Stream
+//  esc.createStream("measurements_original", "measurements_intermediate", op1)
+//  println("stream 1 created: " + op1)
+//
+//  esc.createStream("measurements_intermediate", "measurements_cleansed", op3)
+//  println("stream 2 created: " + op3)
+//
+//  esc.testUnit()
+//  print(esc.printSomething(""))
+//
+//  //  esc.createStream("measurements_intermediate", "measurements_cleansed", op2)
+//  //  println("stream 3 created: " + op3)
+//
+//  // Start Stream
+//  esc.startStream()
+//  println("Stream started successfully")
+//
+//  // check stream data in SQLite database
+//
+//  println("Enter 'Q' to stop streaming")
+//  while ((StdIn.readChar()).toLower.compare('q') != 0) {
+//    println("Continuing streaming. Enter 'Q' to stop streaming.")
+//  }
+//
+//  // Stop stream
+//  esc.stopStream()
+//
+//  println("Stream processing stoppqed successfully.")
+//
+//  println("\n EpiDataLite Stream Test completed")
+//  println("----------------------------------------------------")
 
-  /*  ----- EpiDataLite Stream Test Started ----- */
-  //  println("\n EpiDataLite Stream Test Started")
-  //
-  //  // Create Transformation
-  //  val op1 = esc.createTransformations("Identity", List("Meas-1"), Map[String, String]())
-  //  println("transformation created: " + op1)
-  //
-  //  val op2 = esc.createTransformations("Identity", List("Meas-1"), Map[String, String]())
-  //  println("transformation created: " + op2)
-  //  var list = new util.ArrayList[String]()
-  //  list.add("Meas-1")
-  //  val mutableMap = new util.HashMap[String, String]
-  //  val op3 = esc.createTransformations("Identity", list, mutableMap)
-  //  println("transformation created: " + op3)
-  //
-  //  // Create Stream
-  //  esc.createStream("measurements_original", "measurements_intermediate", op1)
-  //  println("stream 1 created: " + op1)
-  //
-  //  esc.createStream("measurements_intermediate", "measurements_cleansed", op3)
-  //  println("stream 2 created: " + op3)
-  //
-  //  esc.testUnit()
-  //  print(esc.printSomething(""))
-  //
-  //  //  esc.createStream("measurements_intermediate", "measurements_cleansed", op2)
-  //  //  println("stream 3 created: " + op3)
-  //
-  //  // Start Stream
-  //  esc.startStream()
-  //  println("Stream started successfully")
-  //
-  //  // check stream data in SQLite database
-  //
-  //  println("Enter 'Q' to stop streaming")
-  //  while ((StdIn.readChar()).toLower.compare('q') != 0) {
-  //    println("Continuing streaming. Enter 'Q' to stop streaming.")
-  //  }
-  //
-  //  // Stop stream
-  //  esc.stopStream()
-  //
-  //  println("Stream processing stoppqed successfully.")
-  //
-  //  println("\n EpiDataLite Stream Test completed")
-  //  println("----------------------------------------------------")
-
-}
+//}

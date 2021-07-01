@@ -111,7 +111,15 @@ class EpidataLiteStreamingContext {
     }
     logger.log(Level.INFO, "streamDestinationPort: ", streamDestinationPort)
 
-    processors :+= (new StreamingNode()).init(context, streamSourcePort, streamDestinationPort, sourceTopic, destinationTopic, receiveTimeout, operation)
+    processors :+= (new StreamingNode()).init(
+      context,
+      List(streamSourcePort),
+      List(streamDestinationPort),
+      List(bufferSize),
+      sourceTopic,
+      destinationTopic,
+      receiveTimeout,
+      operation)
     logger.log(Level.INFO, "processors: ", processors)
     //println("Source port: " + streamSourcePort + ", destination port: " + streamDestinationPort)
     //println("Processors: " + processors)
@@ -132,7 +140,12 @@ class EpidataLiteStreamingContext {
           while (_runStream) {
             //println("calling processor receive method")
             //println("processor ready to receive: " + processor)
-            processor.receive()
+
+            val fullBuffer = processor.receive()
+            if (fullBuffer(0) != "SKIP") {
+              processor.publish(processor.transform(fullBuffer))
+            }
+
             //println("processor received by " + processor)
           }
 
