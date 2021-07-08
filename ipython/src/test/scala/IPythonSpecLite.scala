@@ -236,11 +236,6 @@ class IPythonSpec extends AnyFlatSpec with BeforeAndAfter with Matchers {
   //    }
   //   rs.close()
   session.close()
-  println()
-  //   con.close()
-
-  println("ts(4).getTime:", ts(4).getTime)
-  println("ts(4)", ts(4))
 
   //
   "test_automated_test_lite.py" should "run without error" in {
@@ -250,17 +245,5 @@ class IPythonSpec extends AnyFlatSpec with BeforeAndAfter with Matchers {
       "ipython/test/test_automated_test_lite.py")).run().exitValue() should equal(PROCESS_SUCCESS)
 
   }
-
-  //  } catch {
-  //    case e: SQLException =>
-  //      // if the error message is "out of memory",
-  //      // it probably means no database file is found
-  //      System.err.println(e.getMessage)
-  //  }
-  //  finally {
-  //
-  //
-  //  }
-  println("Hello, World!")
 
 }

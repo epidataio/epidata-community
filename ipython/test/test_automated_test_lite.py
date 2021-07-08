@@ -131,13 +131,38 @@ class EpidataContextTests(Base):
                  'PASS']),
             df.to_dict('record')[0])
 
+        df = ec.query_measurements_cleansed({'company': 'Company-1',
+                                             'site': 'Site-1',
+                                             'device_group': '1000',
+                                             'tester': 'Station-1',
+                                             'test_name': 'Test-1'},
+                                            ts[0],
+                                            ts[0] + timedelta(seconds=0.5)
+                                            )
+
+        self.assertEqual(1, len(df))
+
+        self.assertEqualRows(
+            self.make_row(
+                ['Company-1',
+                 'Site-1',
+                 '1000',
+                 'Station-1',
+                 ts_sub[0],
+                 '100001',
+                 'Test-1',
+                 'Meas-1',
+                 45.7,
+                 'degree C',
+                 'PASS',
+                 40.0,
+                 90.0,
+                 'Description',
+                 'PASS',
+                 'PASS']),
+            df.to_dict('record')[0])
+
     def test_query_two_results(self):
-        print("ts[0]=", ts[0])
-        print("ts[5]=",  datetime.fromtimestamp(1428004316.123 + 7))
-        ts0 = datetime.fromtimestamp(1426478886)
-        ts10 = datetime.fromtimestamp(1389602086.123 + 10)
-        print("ts0", ts0)
-        print("ts2", ts[5])
         df = ec.query_measurements_original({'company': 'Company-1',
                                              'site': 'Site-1',
                                              'device_group': '1000',
@@ -146,15 +171,6 @@ class EpidataContextTests(Base):
                                             ts[0],
                                             ts[5]
                                             )
-        # ts3 = datetime.fromtimestamp(1428004316.123 + 4)
-        # df = ec.query_measurements_original({'company': 'Company-1',
-        #                                      'site': 'Site-1',
-        #                                      'device_group': '1000',
-        #                                      'tester': 'Station-1',
-        #                                      'test_name': 'Test-1'},
-        #                                     ts[0],
-        #                                     ts3
-        #                                     )
         self.assertEqual(2, len(df.index))
         self.assertEqualRows(
             self.make_row(
@@ -196,57 +212,56 @@ class EpidataContextTests(Base):
                     'PASS']),
                 df.to_dict('records')[1])
 
-    # def test_query_two_results(self):
-    #     df = ec.query_measurements_original({'company': 'Company-1',
-    #                                          'site': 'Site-1',
-    #                                          'device_group': '1000',
-    #                                          'tester': 'Station-1',
-    #                                          'test_name': 'Test-1'},
-    #                                         ts[0],
-    #                                         ts[5] + timedelta(seconds=0.5)
-    #                                         )
-    #     self.assertEqual(2, len(df.index))
-    #     self.assertEqualRows(
-    #         self.make_row([
-    #             'Company-1',
-    #             'Site-1',
-    #             '1000',
-    #             'Station-1',
-    #             ts[0],
-    #             '100001',
-    #             'Test-1',
-    #             'Meas-1',
-    #             None,
-    #             45.7,
-    #             'degree C',
-    #             'PASS',
-    #             40.0,
-    #             90.0,
-    #             'Description',
-    #             'PASS',
-    #             'PASS']),
-    #         df.head())
-    #     self.assertEqualRows(
-    #         self.make_row([
-    #             'Company-1',
-    #             'Site-1',
-    #             '1000',
-    #             'Station-1',
-    #             ts[1],
-    #             '101001',
-    #             'Test-1',
-    #             'Meas-2',
-    #             None,
-    #             49.1,
-    #             'degree C',
-    #             'PASS',
-    #             40.0,
-    #             90.0,
-    #             'Description',
-    #             'PASS',
-    #             'PASS']),
-    #         df.retrieve()[1])
-    #
+        # df = ec.query_measurements_cleansed({'company': 'Company-1',
+        #                                      'site': 'Site-1',
+        #                                      'device_group': '1000',
+        #                                      'tester': 'Station-1',
+        #                                      'test_name': 'Test-1'},
+        #                                     ts[0],
+        #                                     ts[5]
+        #                                     )
+        # self.assertEqual(2, len(df.index))
+        # self.assertEqualRows(
+        #     self.make_row(
+        #         ['Company-1',
+        #          'Site-1',
+        #          '1000',
+        #          'Station-1',
+        #          ts_sub[0],
+        #          '100001',
+        #          'Test-1',
+        #          'Meas-1',
+        #          45.7,
+        #          'degree C',
+        #          'PASS',
+        #          40.0,
+        #          90.0,
+        #          'Description',
+        #          'PASS',
+        #          'PASS']),
+        #     df.to_dict('records')[0])
+        #
+        # self.assertEqualRows(
+        #     self.make_row([
+        #         'Company-1',
+        #         'Site-1',
+        #         '1000',
+        #         'Station-1',
+        #         ts_sub[1],
+        #         '101001',
+        #         'Test-1',
+        #         'Meas-2',
+        #         49.1,
+        #         'degree C',
+        #         'PASS',
+        #         40.0,
+        #         90.0,
+        #         'Description',
+        #         'PASS',
+        #         'PASS']),
+        #     df.to_dict('records')[1])
+
+
     def test_query_multiple_partitions(self):
         df = ec.query_measurements_original({'company': ['Company-1'],
                                              'site': ['Site-1'],
@@ -323,6 +338,83 @@ class EpidataContextTests(Base):
             timedelta(
                 seconds=0.5))
         self.assertEqual(5, len(df.index))
+    # def test_query_multiple_partitions_cleansed(self):
+    #     df = ec.query_measurements_cleansed({'company': ['Company-1'],
+    #                                          'site': ['Site-1'],
+    #                                          'device_group': ['1000'],
+    #                                          'tester': ['Station-1'],
+    #                                          'test_name': ['Test-1']},
+    #                                         ts[0],
+    #                                         ts[5] + timedelta(seconds=0.5)
+    #                                         )
+    #     self.assertEqual(2, len(df.index))
+    #
+    #     df = ec.query_measurements_cleansed(
+    #         {
+    #             'company': [
+    #                 'Company-1',
+    #                 'Company-2'],
+    #             'site': ['Site-1'],
+    #             'device_group': ['1000'],
+    #             'tester': ['Station-1'],
+    #             'test_name': ['Test-1']},
+    #         ts[0],
+    #         ts[3] +
+    #         timedelta(
+    #             seconds=0.5))
+    #     self.assertEqual(3, len(df.index))
+    #
+    #     df = ec.query_measurements_cleansed(
+    #         {
+    #             'company': ['Company-1'],
+    #             'site': ['Site-1'],
+    #             'device_group': ['1000'],
+    #             'tester': [
+    #                 'Station-1',
+    #                 'Station-3'],
+    #             'test_name': ['Test-1']},
+    #         ts[0],
+    #         ts[5] +
+    #         timedelta(
+    #             seconds=0.5))
+    #     self.assertEqual(3, len(df.index))
+    #
+    #     df = ec.query_measurements_cleansed(
+    #         {
+    #             'company': [
+    #                 'Company-1',
+    #                 'Company-2'],
+    #             'site': ['Site-1'],
+    #             'device_group': ['1000'],
+    #             'tester': [
+    #                 'Station-1',
+    #                 'Station-3'],
+    #             'test_name': ['Test-1']},
+    #         ts[0],
+    #         ts[5] +
+    #         timedelta(
+    #             seconds=0.5))
+    #     self.assertEqual(4, len(df.index))
+    #
+    #     df = ec.query_measurements_cleansed(
+    #         {
+    #             'company': [
+    #                 'Company-1',
+    #                 'Company-2'],
+    #             'site': ['Site-1'],
+    #             'device_group': ['1000'],
+    #             'tester': [
+    #                 'Station-1',
+    #                 'Station-3'],
+    #             'test_name': [
+    #                 'Test-1',
+    #                 'Test-3']},
+    #         ts[0],
+    #         ts[5] +
+    #         timedelta(
+    #             seconds=0.5))
+    #     self.assertEqual(5, len(df.index))
+
 
     def test_query_int(self):
         df = ec.query_measurements_original({'company': 'Company-1',
@@ -355,6 +447,36 @@ class EpidataContextTests(Base):
                 'PASS']),
             df.to_dict('records')[0])
 
+        # df = ec.query_measurements_cleansed({'company': 'Company-1',
+        #                                      'site': 'Site-1',
+        #                                      'device_group': '1000',
+        #                                      'tester': 'Station-1',
+        #                                      'test_name': 'Test-3'},
+        #                                     ts[0],
+        #                                     ts[5] + timedelta(seconds=0.5)
+        #                                     )
+        # self.assertEqual(1, len(df.index))
+        # large = 3448388841
+        # self.assertEqualRows(
+        #     self.make_row([
+        #         'Company-1',
+        #         'Site-1',
+        #         '1000',
+        #         'Station-1',
+        #         ts_sub[2],
+        #         '101001',
+        #         'Test-3',
+        #         'Meas-2',
+        #         large,
+        #         'ns',
+        #         'PASS',
+        #         large - 1,
+        #         large + 1,
+        #         'Description',
+        #         'PASS',
+        #         'PASS']),
+        #     df.to_dict('records')[0])
+
     def test_query_string(self):
         df = ec.query_measurements_original({'company': 'Company-1',
                                              'site': 'Site-1',
@@ -379,6 +501,30 @@ class EpidataContextTests(Base):
         self.assertEqual('Description', head['meas_description'])
         self.assertEqual('PASS', head['device_status'])
         self.assertEqual('PASS', head['test_status'])
+
+        # df = ec.query_measurements_cleansed({'company': 'Company-1',
+        #                                      'site': 'Site-1',
+        #                                      'device_group': '1000',
+        #                                      'tester': 'Station-1',
+        #                                      'test_name': 'Test-4'},
+        #                                     ts[0],
+        #                                     ts[5] + timedelta(seconds=0.5)
+        #                                     )
+        # self.assertEqual(1, len(df.index))
+        # head = df.to_dict('records')[0]
+        # self.assertEqual('Company-1', head['company'])
+        # self.assertEqual('Site-1', head['site'])
+        # self.assertEqual('1000', head['device_group'])
+        # self.assertEqual('Station-1', head['tester'])
+        # self.assertEqual(ts_sub[3], head['ts'])
+        # self.assertEqual('POWER ON', head['meas_value'])
+        # self.assertEqual('101001', head['device_name'])
+        # self.assertEqual('Test-4', head['test_name'])
+        # self.assertEqual('Meas-2', head['meas_name'])
+        # self.assertEqual('PASS', head['meas_status'])
+        # self.assertEqual('Description', head['meas_description'])
+        # self.assertEqual('PASS', head['device_status'])
+        # self.assertEqual('PASS', head['test_status'])
 
     # def test_query_array(self):
     #     df = ec.query_measurements_original({'company': 'Company-1',
