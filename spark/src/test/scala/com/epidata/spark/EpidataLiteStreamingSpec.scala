@@ -67,22 +67,31 @@ class EpidataLiteStreamingSpec extends FlatSpec with BeforeAndAfter with BeforeA
 
   private val connector: Connection = DriverManager.getConnection(sqliteDBUrl)
 
+
   connector.createStatement().execute(SQLiteSchema.measurementsOriginalTableCreation)
   connector.createStatement().execute(SQLiteSchema.measurementsCleansedTableCreation)
-  //construct http post request to stream/measurements
 
+  var result : ResultSet = null
+  var post: HttpPost = null
+  var response : CloseableHttpResponse = null
+  var jsonBody : String = null
+  var lst: List[Map[String, Any]] = null
+//  val statement = connector.create
+
+
+  //construct http post request to stream/measurements
   private val HOST = "127.0.0.1:9000"
   private val AUTHENTICATION_URL = "http://" + HOST + "/authenticate/app"
   private val CREATE_MEASUREMENT_URL = "http://" + HOST + "/stream/measurements"
   private val json = """{"accessToken":"epidata123"}"""
   private val client = HttpClients.createDefault()
-  private val post: HttpPost = new HttpPost(AUTHENTICATION_URL)
+  post = new HttpPost(AUTHENTICATION_URL)
 
   post.addHeader("Content-Type", "application/json")
   post.addHeader("Set-Cookie", "")
   post.setEntity(new StringEntity(json))
 
-  val response: CloseableHttpResponse = client.execute(post)
+  response = client.execute(post)
   val entity = response.getEntity
   val str = EntityUtils.toString(entity, "UTF-8")
   println(str)
@@ -95,6 +104,10 @@ class EpidataLiteStreamingSpec extends FlatSpec with BeforeAndAfter with BeforeA
     connector.createStatement().execute(s"DELETE from ${com.epidata.lib.models.Measurement.DBTableName}")
     connector.createStatement().execute(s"DELETE from ${com.epidata.lib.models.MeasurementCleansed.DBTableName}")
 
+  }
+
+  after {
+    result.close()
   }
 
   override def afterAll(): Unit = {
@@ -121,7 +134,6 @@ class EpidataLiteStreamingSpec extends FlatSpec with BeforeAndAfter with BeforeA
 
   val op2 = esc.createTransformations("Identity", List("Meas-1"), Map[String, String]())
   println("transformation created: " + op2)
-  var list = new util.ArrayList[String]()
 
   // Create Stream
   esc.createStream("measurements_original", "measurements_intermediate", op1)
@@ -137,21 +149,21 @@ class EpidataLiteStreamingSpec extends FlatSpec with BeforeAndAfter with BeforeA
   esc.startStream()
   println("Stream started successfully")
 
+  val COMPANY = "EpiData"
+  val SITE = "San_Francisco"
+  val STATION = "WSN-1"
+  val timestamp = new Timestamp(System.currentTimeMillis())
+  val current_time = timestamp.getTime()
 
   "Double automated test" should "be returned" in {
-    val COMPANY = "EpiData"
-    val SITE = "San_Francisco"
-    val STATION = "WSN-1"
-    val timestamp = new Timestamp(System.currentTimeMillis())
-    val current_time = timestamp.getTime()
-    val measurement = Map(
-      "company" -> COMPANY,
+    val double_measurement = Map(
+      "company" -> "Epidata_double",
       "site" -> SITE,
       "station" -> STATION,
       "sensor" -> "Anemometer",
       "ts" -> current_time,
       "event" -> "none",
-      "meas_name" -> "Wind_Speed",
+      "meas_name" -> "Wind_Speed_",
       "meas_value" -> 14.0,
       "meas_unit" -> "mph",
       "meas_datatype" -> "double",
@@ -161,23 +173,182 @@ class EpidataLiteStreamingSpec extends FlatSpec with BeforeAndAfter with BeforeA
       "meas_description" -> "test-double")
     //convert list of map object to json string
     //    val parsed = JSON.parseFull(str).get.asInstanceOf[Map[String, Any]]//map[sessionid -> ###]
-    var lst = List(measurement)
+    lst = List(double_measurement)
     //  lst = parsed.asInstanceOf[Map[String, Any]] :: lst
-    val jsonBody = Json(DefaultFormats).write(lst)
-    val post2: HttpPost = new HttpPost(CREATE_MEASUREMENT_URL)
-    post2.addHeader("Content-Type", "application/json")
-    post2.setHeader("Cookie", cookie)
-    post2.setEntity(new StringEntity(jsonBody))
-    val response2: CloseableHttpResponse = client.execute(post2)
+    jsonBody = Json(DefaultFormats).write(lst)
+    post = new HttpPost(CREATE_MEASUREMENT_URL)
+    post.addHeader("Content-Type", "application/json")
+    post.setHeader("Cookie", cookie)
+    post.setEntity(new StringEntity(jsonBody))
+    response = client.execute(post)
     //    print(jsonBody)
 
-    val result = connector.createStatement().executeQuery(s"select * from ${com.epidata.lib.models.MeasurementCleansed.DBTableName} where meas_datatype = 'double'")
+    result = connector.createStatement().executeQuery(s"select * from ${com.epidata.lib.models.Measurement.DBTableName}")
 
-    result.getString("customer") should equal("EpiData")
+    result.getString("customer") should equal("Epidata_double")
     result.getString("meas_datatype") should equal("double")
     result.getDouble("meas_value") should equal(14.0)
-    //    result.getString("meas_description") should equal("test-double")
+
     result.close()
+    result = connector.createStatement().executeQuery(s"select * from ${com.epidata.lib.models.MeasurementCleansed.DBTableName}")
+
+    result.getString("customer") should equal("Epidata_double")
+    result.getString("meas_datatype") should equal("double")
+    result.getDouble("meas_value") should equal(14.0)
+
+
+
+  }
+
+  "int automated test" should "be returned" in {
+    val long_measurement = Map(
+      "company" -> "Epidata_long",
+      "site" -> SITE,
+      "station" -> STATION,
+      "sensor" -> "Anemometer",
+      "ts" -> current_time,
+      "event" -> "none",
+      "meas_name" -> "Wind_Speed",
+      "meas_value" -> 16,
+      "meas_unit" -> "mph",
+      "meas_datatype" -> "long",
+      "meas_status" -> "PASS",
+      "meas_lower_limit" -> 0,
+      "meas_upper_limit" -> 25,
+      "meas_description" -> "test-long")
+    //convert list of map object to json string
+    //    val parsed = JSON.parseFull(str).get.asInstanceOf[Map[String, Any]]//map[sessionid -> ###]
+    lst = List(long_measurement)
+    //  lst = parsed.asInstanceOf[Map[String, Any]] :: lst
+    jsonBody = Json(DefaultFormats).write(lst)
+    post = new HttpPost(CREATE_MEASUREMENT_URL)
+    post.addHeader("Content-Type", "application/json")
+    post.setHeader("Cookie", cookie)
+    post.setEntity(new StringEntity(jsonBody))
+    response = client.execute(post)
+    //    print(jsonBody)
+
+    result = connector.createStatement().executeQuery(s"select * from ${com.epidata.lib.models.Measurement.DBTableName}")
+
+    result.getString("customer") should equal("Epidata_long")
+    result.getString("meas_datatype") should equal("long")
+    result.getInt("meas_value_l") should equal(16)
+
+    result.close()
+
+
+    result = connector.createStatement().executeQuery(s"select * from ${com.epidata.lib.models.MeasurementCleansed.DBTableName} ")
+
+    result.getString("customer") should equal("Epidata_long")
+    result.getString("meas_datatype") should equal("long")
+    result.getInt("meas_value_l") should equal(16)
+
+
+  }
+
+//  "long automated test" should "be returned" in {
+//    val long_measurement = Map(
+//      "company" -> "Epidata_large",
+//      "site" -> SITE,
+//      "station" -> STATION,
+//      "sensor" -> "Anemometer",
+//      "ts" -> current_time,
+//      "event" -> "none",
+//      "meas_name" -> "Wind_Speed",
+//      "meas_value" -> 3448388841L,
+//      "meas_unit" -> "mph",
+//      "meas_datatype" -> "large_long",
+//      "meas_status" -> "PASS",
+//      "meas_lower_limit" -> 0L,
+//      "meas_upper_limit" -> 5000000000L,
+//      "meas_description" -> "test-large-long")
+//    //convert list of map object to json string
+//    //    val parsed = JSON.parseFull(str).get.asInstanceOf[Map[String, Any]]//map[sessionid -> ###]
+//    lst = List(long_measurement)
+//    //  lst = parsed.asInstanceOf[Map[String, Any]] :: lst
+//    jsonBody = Json(DefaultFormats).write(lst)
+//    post = new HttpPost(CREATE_MEASUREMENT_URL)
+//    post.addHeader("Content-Type", "application/json")
+//    post.setHeader("Cookie", cookie)
+//    post.setEntity(new StringEntity(jsonBody))
+//    response = client.execute(post)
+//    //    print(jsonBody)
+//
+//    result = connector.createStatement().executeQuery(s"select * from ${com.epidata.lib.models.Measurement.DBTableName}")
+//
+//    val rsmd = result.getMetaData
+//    val columnsNumber = rsmd.getColumnCount
+//      for (i <- 1 to columnsNumber) {
+//        if (i > 1) System.out.print(",  ")
+//        val columnValue = result.getString(i)
+//        System.out.print(columnValue + " " + rsmd.getColumnName(i))
+//      }
+//
+//
+//
+//    print("record:" + result.toString)
+//
+//    result.getString("customer") should equal("Epidata_large")
+//    result.getString("meas_datatype") should equal("large_long")
+//    result.getLong("meas_value_l") should equal(3448388841L)
+//
+//
+//
+//    result.close()
+//
+//
+//    result = connector.createStatement().executeQuery(s"select * from ${com.epidata.lib.models.MeasurementCleansed.DBTableName}")
+//
+//    result.getString("customer") should equal("Epidata_large")
+//    result.getString("meas_datatype") should equal("large_long")
+//    result.getLong("meas_value_l") should equal(3448388841L)
+//
+//
+//
+//  }
+
+  "String automated test" should "be returned" in {
+    val string_measurement = Map(
+      "company" -> "Epidata_String",
+      "site" -> SITE,
+      "station" -> STATION,
+      "sensor" -> "Anemometer",
+      "ts" -> current_time,
+      "event" -> "none",
+      "meas_name" -> "Wind_Speed_",
+      "meas_value" -> "dummy-string",
+      "meas_unit" -> "mph",
+      "meas_datatype" -> "string",
+      "meas_status" -> "PASS",
+      "meas_lower_limit" -> 0,
+      "meas_upper_limit" -> 25,
+      "meas_description" -> "test-double")
+    //convert list of map object to json string
+    //    val parsed = JSON.parseFull(str).get.asInstanceOf[Map[String, Any]]//map[sessionid -> ###]
+    lst = List(string_measurement)
+    //  lst = parsed.asInstanceOf[Map[String, Any]] :: lst
+    jsonBody = Json(DefaultFormats).write(lst)
+    post = new HttpPost(CREATE_MEASUREMENT_URL)
+    post.addHeader("Content-Type", "application/json")
+    post.setHeader("Cookie", cookie)
+    post.setEntity(new StringEntity(jsonBody))
+    response = client.execute(post)
+    //    print(jsonBody)
+
+    result = connector.createStatement().executeQuery(s"select * from ${com.epidata.lib.models.Measurement.DBTableName}")
+
+    result.getString("customer") should equal("Epidata_String")
+    result.getString("meas_datatype") should equal("string")
+    result.getString("meas_value_s") should equal("dummy-string")
+
+    result.close()
+    result = connector.createStatement().executeQuery(s"select * from ${com.epidata.lib.models.MeasurementCleansed.DBTableName}")
+
+    result.getString("customer") should equal("Epidata_String")
+    result.getString("meas_datatype") should equal("string")
+    result.getString("meas_value_s") should equal("dummy-string")
+
+
 
   }
 
