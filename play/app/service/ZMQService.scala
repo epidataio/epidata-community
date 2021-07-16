@@ -80,6 +80,14 @@ object ZMQService {
                   models.SensorMeasurement.insertCleansedRecordFromZMQ(cleansedData.get("value"))
                   //println("inserted SensorMeasurement cleansedData")
                 }
+                case com.epidata.lib.models.AutomatedTest.NAME => {
+                  models.AutomatedTest.insertSummaryRecordFromZMQ(cleansedData.get("value"))
+                  //println("inserted AutomatedTest summaryData")
+                }
+                case com.epidata.lib.models.SensorMeasurement.NAME => {
+                  models.SensorMeasurement.insertSummaryRecordFromZMQ(cleansedData.get("value"))
+                  //println("inserted SensorMeasurement summaryData")
+                }
                 case _ =>
               }
             } catch {

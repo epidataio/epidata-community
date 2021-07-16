@@ -36,6 +36,8 @@ class AnalyticsAutomatedTestSpec extends FlatSpec with BeforeAndAfter with Befor
     .set("spark.epidata.cassandraKeyspaceName", cassandraKeyspaceName)
     .set("spark.epidata.measurementClass", measurementClass)
 
+  //play/run
+
   useSparkConf(conf)
 
   val connector = CassandraConnector(conf)

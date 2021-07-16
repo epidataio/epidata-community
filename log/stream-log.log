@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE log SYSTEM "logger.dtd">
+<log>
+<record>
+  <date>2021-07-16T12:14:16</date>
+  <millis>1626452056865</millis>
+  <sequence>0</sequence>
+  <logger>Epidata lite logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext</class>
+  <method>createStream</method>
+  <thread>205</thread>
+  <message>sourcetopic:  measurements_original</message>
+</record>
+<record>
+  <date>2021-07-16T12:14:16</date>
+  <millis>1626452056866</millis>
+  <sequence>1</sequence>
+  <logger>Epidata lite logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext</class>
+  <method>createStream</method>
+  <thread>205</thread>
+  <message>destinationTopic:  measurements_intermediate</message>
+</record>
+<record>
+  <date>2021-07-16T12:14:16</date>
+  <millis>1626452056866</millis>
+  <sequence>2</sequence>
+  <logger>Epidata lite logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext</class>
+  <method>createStream</method>
+  <thread>205</thread>
+  <message>transformation:  com.epidata.spark.ops.Identity@fdf7653</message>
+</record>
+<record>
+  <date>2021-07-16T12:14:16</date>
+  <millis>1626452056867</millis>
+  <sequence>3</sequence>
+  <logger>Epidata lite logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext</class>
+  <method>createStream</method>
+  <thread>205</thread>
+  <message>streamSourcePort: </message>
+  <param>5551</param>
+</record>
+<record>
+  <date>2021-07-16T12:14:16</date>
+  <millis>1626452056881</millis>
+  <sequence>4</sequence>
+  <logger>Epidata lite logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext</class>
+  <method>createStream</method>
+  <thread>205</thread>
+  <message>streamDestinationPort: </message>
+  <param>5553</param>
+</record>
+<record>
+  <date>2021-07-16T12:14:16</date>
+  <millis>1626452056972</millis>
+  <sequence>5</sequence>
+  <logger>Epidata lite logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext</class>
+  <method>createStream</method>
+  <thread>205</thread>
+  <message>processors: </message>
+  <param>[Lcom.epidata.spark.StreamingNode;@3828ecb</param>
+</record>
+<record>
+  <date>2021-07-16T12:14:16</date>
+  <millis>1626452056973</millis>
+  <sequence>6</sequence>
+  <logger>Epidata lite logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext</class>
+  <method>createStream</method>
+  <thread>205</thread>
+  <message>sourcetopic:  measurements_intermediate</message>
+</record>
+<record>
+  <date>2021-07-16T12:14:16</date>
+  <millis>1626452056973</millis>
+  <sequence>7</sequence>
+  <logger>Epidata lite logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext</class>
+  <method>createStream</method>
+  <thread>205</thread>
+  <message>destinationTopic:  measurements_cleansed</message>
+</record>
+<record>
+  <date>2021-07-16T12:14:16</date>
+  <millis>1626452056974</millis>
+  <sequence>8</sequence>
+  <logger>Epidata lite logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext</class>
+  <method>createStream</method>
+  <thread>205</thread>
+  <message>transformation:  com.epidata.spark.ops.Identity@114e456f</message>
+</record>
+<record>
+  <date>2021-07-16T12:14:16</date>
+  <millis>1626452056974</millis>
+  <sequence>9</sequence>
+  <logger>Epidata lite logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext</class>
+  <method>createStream</method>
+  <thread>205</thread>
+  <message>streamSourcePort: </message>
+  <param>5553</param>
+</record>
+<record>
+  <date>2021-07-16T12:14:16</date>
+  <millis>1626452056975</millis>
+  <sequence>10</sequence>
+  <logger>Epidata lite logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext</class>
+  <method>createStream</method>
+  <thread>205</thread>
+  <message>streamDestinationPort: </message>
+  <param>5552</param>
+</record>
+<record>
+  <date>2021-07-16T12:14:16</date>
+  <millis>1626452056976</millis>
+  <sequence>11</sequence>
+  <logger>Epidata lite logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext</class>
+  <method>createStream</method>
+  <thread>205</thread>
+  <message>processors: </message>
+  <param>[Lcom.epidata.spark.StreamingNode;@1c072163</param>
+</record>
+<record>
+  <date>2021-07-16T12:14:16</date>
+  <millis>1626452056978</millis>
+  <sequence>12</sequence>
+  <logger>Epidata lite logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext</class>
+  <method>startStream</method>
+  <thread>205</thread>
+  <message>startstream successfully: </message>
+  <param>[Lcom.epidata.spark.StreamingNode;@1c072163</param>
+</record>
+</log>

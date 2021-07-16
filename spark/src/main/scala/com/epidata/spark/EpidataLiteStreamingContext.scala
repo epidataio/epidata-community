@@ -38,8 +38,9 @@ class EpidataLiteStreamingContext {
   logger.addHandler(new ConsoleHandler)
 
   //adding custom handler
-  //  val fileHandler = new FileHandler("users/desktop/logger/logger.log")
-  //  logger.addHandler(fileHandler)
+  val fileHandler = new FileHandler("/Users/rohithnadimpally/downloads/epidata-community/log/stream-log.log")
+  logger.addHandler(fileHandler)
+  var bufferSize: Integer = 2 //config setting
 
   def init(): Unit = {
     //ec.start_streaming()
@@ -58,6 +59,7 @@ class EpidataLiteStreamingContext {
     // create and return a transformation object
     opName match {
       case "Identity" => new Identity()
+
       //case "FillMissingValue" => new FillMissingValue(meas_names, params.get("method").getOrElse("rolling"), params.get("s"))
       //case "OutlierDetector" => new OutlierDetector("meas_value", params.get("method"))
       //case "MeasStatistics" => new MeasStatistics(meas_names, "standard")
@@ -78,7 +80,7 @@ class EpidataLiteStreamingContext {
   def createStream(sourceTopic: String, destinationTopic: String, operation: Transformation): Unit = {
     //    println("Create Stream. Source Topic: " + sourceTopic + ". Destination Topic: " + destinationTopic + ". Transformation: " + operation)
     //---------------------------logger--------------------------------------------
-    //LogManager.getLogManager.readConfiguration(new FileInputStream("mylogging.properties"))
+    //    LogManager.getLogManager.readConfiguration(new FileInputStream("mylogging.properties"))
     //    val logger = Logger.getLogger("Epidata lite logger")
 
     logger.log(Level.INFO, "sourcetopic:  " + sourceTopic)
@@ -91,6 +93,7 @@ class EpidataLiteStreamingContext {
       case Some(port) => port.toString
       case None => throw new IllegalArgumentException("Source Topic is not recognized.")
     }
+
     logger.log(Level.INFO, "streamSourcePort: ", streamSourcePort)
 
     topicMap.get(destinationTopic) match {
@@ -110,10 +113,23 @@ class EpidataLiteStreamingContext {
     }
     logger.log(Level.INFO, "streamDestinationPort: ", streamDestinationPort)
 
-    processors :+= (new StreamingNode()).init(context, streamSourcePort, streamDestinationPort, sourceTopic, destinationTopic, receiveTimeout, operation)
+    processors :+= (new StreamingNode()).init(
+      context,
+      List(streamSourcePort),
+      List(sourceTopic),
+      List(bufferSize),
+      streamDestinationPort,
+      destinationTopic,
+      receiveTimeout,
+      operation)
     logger.log(Level.INFO, "processors: ", processors)
     //println("Source port: " + streamSourcePort + ", destination port: " + streamDestinationPort)
     //println("Processors: " + processors)
+
+    println("STREAMING CONTEXT LINE 128 after streaming init")
+    //    while ((StdIn.readChar()).toLower.compare('q') != 0) {
+    //      println("Continuing streaming. Enter 'Q' to stop streaming.")
+    //    }
   }
 
   def startStream(): Unit = {
@@ -131,7 +147,12 @@ class EpidataLiteStreamingContext {
           while (_runStream) {
             //println("calling processor receive method")
             //println("processor ready to receive: " + processor)
-            processor.receive()
+
+            val fullBuffer = processor.receive()
+            if (fullBuffer(0) != "SKIP") {
+              processor.publish(processor.transform(fullBuffer))
+            }
+
             //println("processor received by " + processor)
           }
 
