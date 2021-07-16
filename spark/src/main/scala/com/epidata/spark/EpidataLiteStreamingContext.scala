@@ -36,6 +36,7 @@ class EpidataLiteStreamingContext {
   val logger = Logger.getLogger("Epidata lite logger")
   logger.setLevel(Level.FINE)
   logger.addHandler(new ConsoleHandler)
+
   //adding custom handler
   val fileHandler = new FileHandler("/Users/rohithnadimpally/downloads/epidata-community/log/stream-log.log")
   logger.addHandler(fileHandler)

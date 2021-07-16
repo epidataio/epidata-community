@@ -1,5 +1,13 @@
-# import context
+import sys
+import os
+py4j_src = os.path.join(os.path.dirname(__file__), 'py4j-0.10.9.2/src')
+py4j_jar = os.path.join(os.path.dirname(__file__), 'py4j-0.10.9.2/py4j-java/py4j0.10.9.2.jar')
+sys.path.insert(0, py4j_src)
+sys.path.insert(0, py4j_jar)
+
 import EpidataLiteContext
+
+# import context
 # from data_frame import DataFrame
 
 __doc__ = """

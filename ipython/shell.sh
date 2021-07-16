@@ -15,6 +15,7 @@ CASSANDRA_KEYSPACE_NAME='epidata_development'
 MEASUREMENT_CLASS='sensor_measurement'
 KAFKA_BROKERS='localhost:9092'
 KAFKA_DURATION='6'
+SQLITE_DB = '../data/epidata_development.db'
 
 SPARK_HOME=$SPARK_HOME \
 EPIDATA_PYTHON_HOME=../python \
