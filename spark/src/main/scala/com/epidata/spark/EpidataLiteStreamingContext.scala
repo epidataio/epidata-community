@@ -37,8 +37,8 @@ class EpidataLiteStreamingContext {
   logger.setLevel(Level.FINE)
   logger.addHandler(new ConsoleHandler)
   //adding custom handler
-  //  val fileHandler = new FileHandler("users/desktop/logger/logger.log")
-  //  logger.addHandler(fileHandler)
+  val fileHandler = new FileHandler("/Users/rohithnadimpally/downloads/epidata-community/log/stream-log.log")
+  logger.addHandler(fileHandler)
   var bufferSize: Integer = 2 //config setting
 
   def init(): Unit = {
@@ -79,7 +79,7 @@ class EpidataLiteStreamingContext {
   def createStream(sourceTopic: String, destinationTopic: String, operation: Transformation): Unit = {
     //    println("Create Stream. Source Topic: " + sourceTopic + ". Destination Topic: " + destinationTopic + ". Transformation: " + operation)
     //---------------------------logger--------------------------------------------
-    //LogManager.getLogManager.readConfiguration(new FileInputStream("mylogging.properties"))
+    //    LogManager.getLogManager.readConfiguration(new FileInputStream("mylogging.properties"))
     //    val logger = Logger.getLogger("Epidata lite logger")
 
     logger.log(Level.INFO, "sourcetopic:  " + sourceTopic)
@@ -92,6 +92,7 @@ class EpidataLiteStreamingContext {
       case Some(port) => port.toString
       case None => throw new IllegalArgumentException("Source Topic is not recognized.")
     }
+
     logger.log(Level.INFO, "streamSourcePort: ", streamSourcePort)
 
     topicMap.get(destinationTopic) match {
@@ -114,15 +115,20 @@ class EpidataLiteStreamingContext {
     processors :+= (new StreamingNode()).init(
       context,
       List(streamSourcePort),
-      List(streamDestinationPort),
+      List(sourceTopic),
       List(bufferSize),
-      sourceTopic,
+      streamDestinationPort,
       destinationTopic,
       receiveTimeout,
       operation)
     logger.log(Level.INFO, "processors: ", processors)
     //println("Source port: " + streamSourcePort + ", destination port: " + streamDestinationPort)
     //println("Processors: " + processors)
+
+    println("STREAMING CONTEXT LINE 128 after streaming init")
+    //    while ((StdIn.readChar()).toLower.compare('q') != 0) {
+    //      println("Continuing streaming. Enter 'Q' to stop streaming.")
+    //    }
   }
 
   def startStream(): Unit = {

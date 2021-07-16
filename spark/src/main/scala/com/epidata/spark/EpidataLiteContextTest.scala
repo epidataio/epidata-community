@@ -785,6 +785,11 @@ object elcTest extends App {
   val esc = new EpidataLiteStreamingContext()
   esc.init()
 
+  //  println("Enter 'Q' to stop streaming DEBUGGING 0")
+  //  while ((StdIn.readChar()).toLower.compare('q') != 0) {
+  //    println("Continuing streaming. Enter 'Q' to stop streaming.")
+  //  }
+
   // Create Transformation
   val op1 = esc.createTransformations("Identity", List("Meas-1"), Map[String, String]())
   println("transformation created: " + op1)
@@ -798,18 +803,37 @@ object elcTest extends App {
   val op3 = esc.createTransformations("Identity", list, mutableMap)
   println("transformation created: " + op3)
 
+  //  println("Enter 'Q' to stop streaming DEBUGGING 1")
+  //  while ((StdIn.readChar()).toLower.compare('q') != 0) {
+  //    println("Continuing streaming. Enter 'Q' to stop streaming.")
+  //  }
+
   // Create Stream
   esc.createStream("measurements_original", "measurements_intermediate", op1)
   println("stream 1 created: " + op1)
 
+  //  println("Enter 'Q' to stop streaming DEBUGGING 2")
+  //  while ((StdIn.readChar()).toLower.compare('q') != 0) {
+  //    println("Continuing streaming. Enter 'Q' to stop streaming.")
+  //  }
+
   esc.createStream("measurements_intermediate", "measurements_cleansed", op3)
   println("stream 2 created: " + op3)
+
+  //  println("Enter 'Q' to stop streaming DEBUGGING 3")
+  //  while ((StdIn.readChar()).toLower.compare('q') != 0) {
+  //    println("Continuing streaming. Enter 'Q' to stop streaming.")
+  //  }
 
   esc.testUnit()
   print(esc.printSomething(""))
 
   //  esc.createStream("measurements_intermediate", "measurements_cleansed", op2)
   //  println("stream 3 created: " + op3)
+  //  println("Enter 'Q' to stop streaming DEBUGGING 4")
+  //  while ((StdIn.readChar()).toLower.compare('q') != 0) {
+  //    println("Continuing streaming. Enter 'Q' to stop streaming.")
+  //  }
 
   // Start Stream
   esc.startStream()

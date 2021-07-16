@@ -5,18 +5,15 @@ package com.epidata.spark
 
 import java.util
 
-import org.json.simple.{ JSONArray, JSONObject }
-import org.json.simple.parser.{ JSONParser, ParseException }
-import java.util.{ LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList, Map => JMap }
-import com.epidata.lib.models.SensorMeasurement
+import org.json.simple.JSONObject
+import org.json.simple.parser.JSONParser
+import java.util.{LinkedHashMap => JLinkedHashMap, Map => JMap}
 
 import scala.collection.mutable._
-import scala.collection.mutable.ArrayBuffer
 import com.epidata.spark.ops.Transformation
-import play.api.libs.json._
-import play.api.libs.json.Reads._
 import org.zeromq.ZMQ
-import com.epidata.lib.models.{ AutomatedTest => BaseAutomatedTest, Measurement => BaseMeasurement, SensorMeasurement => BaseSensorMeasurement }
+
+import scala.collection.mutable
 
 class StreamingNode {
   var subSocket: ZMQ.Socket = _ //add as parameter
@@ -30,37 +27,23 @@ class StreamingNode {
 
   var transformation: Transformation = _
 
-  //NEW
-  /*
-  Creating array of Queues (here on out referenced to as a Buffer) that hold type BaseMeasurements.
-  Size of array is determined by number of Topics.
-   */
   var streamBuffers: Array[Queue[String]] = _
-  /*
-  Each Buffer can have a unique buffer size.
-  For dev purposes all Node Buffers will have default size of 2.
-   */
   var bufferSizes: List[Int] = _
-  //NEW
 
-  //temp
   var TempID = 0
 
   def init(
     context: ZMQ.Context,
-    //NEW
+
     receivePorts: List[String], //allows Node to subscribe to various ports
     receiveTopics: List[String], //allows Node to listen on various topics
     bufferSizes: List[Int],
-    //NEW
+
     sendPort: String,
     sendTopic: String,
     receiveTimeout: Integer,
     transformation: Transformation): StreamingNode = {
 
-    /*
-    Copying parameters to instance variables.
-     */
     subscribePorts = receivePorts
     subscribeTopics = receiveTopics
 
@@ -69,43 +52,33 @@ class StreamingNode {
 
     subSocket = context.socket(ZMQ.SUB)
 
-    //NEW
-    /*
-    Iterating through all port numbers and binding subscribe socket.
-     */
     for (port <- subscribePorts) { subSocket.connect("tcp://127.0.0.1:" + port) }
-    /*
-    Iterating through all topics and adding subscribe socket.
-     */
     for (topic <- subscribeTopics) { subSocket.subscribe(topic.getBytes(ZMQ.CHARSET)) }
-    //NEW
 
     publishSocket = context.socket(ZMQ.PUB)
     publishSocket.bind("tcp://127.0.0.1:" + publishPort)
 
     this.transformation = transformation
 
-    //NEW
-    /*
-    Iterating through bufferSizes to
-     */
-    var i = 0
+    streamBuffers = new Array[Queue[String]](bufferSizes.length)
+
     for (i <- 0 until bufferSizes.length) { streamBuffers(i) = new Queue[String] }
-    //NEW
+
+    this.bufferSizes = bufferSizes
 
     this
   }
 
   def receive(): List[String] = {
-    TempID += 1
-    println("Receiving from:")
+    println("\n\nReceiving----------------------------------------------")
+    println("\nReceiving from--------------:")
     for (port <- subscribePorts) {
       println("port: " + port)
     }
-    println("---------------:")
+    println("-----------------------:")
 
     val topic = subSocket.recvStr()
-    println("receive topic: " + topic)
+    println("receive topic: " + topic + "----------------------------------------------------------------------------------")
     val parser = new JSONParser()
     val receivedString = subSocket.recvStr()
     println("received message: " + receivedString + "\n")
@@ -118,17 +91,18 @@ class StreamingNode {
         //        map.put("key", jSONObject.get("key"))
         //        map.put("value", jSONObject.get("value"))
 
-        //NEW
         val index = subscribeTopics.indexOf(topic) //getting index of corresponding Buffer in streamBuffers
+        print("index: " + index + " in range " + subscribeTopics.length)
+        //print("Obj or Null: " + streamBuffers(index))
         streamBuffers(index).enqueue(jSONObject.get("value")) //adding current message value to buffer
         if (streamBuffers(index).size == bufferSizes(index)) { //checking to see if size of Buffer reached max
+          printf("\n\n DEQUEUING WHEN (" + index + ") BUFFER SIZE IS: " + streamBuffers(index).size + "\n\n")
           val list = streamBuffers(index).toList //if desired buffer size is achieved -> convert Queued measurements to list
           streamBuffers(index).clear() //clear buffer
           return list //transform list of measurements
 
         }
-        //NEW
-        List("SKIP")
+        List("SKIP") //telling streaming context to skip transformation/publish step until stack is filled
       }
       case _ =>
         println("receive string is null. \n")
@@ -136,17 +110,17 @@ class StreamingNode {
     }
   }
 
-  //NEW
   def transform(map: List[String]): ListBuffer[JLinkedHashMap[String, String]] = {
-    println("Performing Transformation on: ")
+    println("\n\nTransforming----------------------------------------------")
+    println("Performing Transformation on-----------------------------------------------------------: ")
     for (measurement <- map) {
-      println("Meas: " + measurement)
+      println("$$$$Meas: " + measurement + "\n")
     }
-    //val transformResults = transformation.apply(map) //temp remove and pass through JSON value as identity transformation
+    val transformResults = transformation.apply(map)
 
     var resultsAsMap = new ListBuffer[JLinkedHashMap[String, String]]
 
-    for (result <- map /*transformResults*/ ) {
+    for (result <- transformResults) {
       val transformationMap = new JLinkedHashMap[String, String]()
       transformationMap.put("topic", publishTopic)
       transformationMap.put("key", TempID.toString /*create key method from Play*/ )
@@ -158,18 +132,19 @@ class StreamingNode {
     resultsAsMap
     //iterate through list of basemeasuremnt to make key value pairs
   }
-  //NEW
 
   def publish(processedMapList: ListBuffer[JLinkedHashMap[String, String]]): Unit = {
     //val processedMessage: Message = epidataLiteStreamingContext(ZMQInit.streamQueue.dequeue)
     //println("Streamingnode publish method called")
+    println("\n\nPublishing----------------------------------------------")
 
     for (map <- processedMapList) {
+      TempID += 1
       publishSocket.sendMore(this.publishTopic)
       val msg: String = JSONObject.toJSONString(map)
       publishSocket.send(msg.getBytes(), 0)
 
-      println("publish topic: " + this.publishTopic + ", publish port: " + publishPort)
+      println("\npublish topic: " + this.publishTopic + ", publish port: " + publishPort)
       println("published message: " + msg + "\n")
     }
   }
