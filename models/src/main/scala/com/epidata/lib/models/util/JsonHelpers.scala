@@ -73,4 +73,19 @@ object JsonHelpers {
     JSONObject.toJSONString(map)
   }
 
+  def messageToJson(message: Message): String = {
+    val map = new JLinkedHashMap[String, String]()
+    map.put("key", message.key)
+    map.put("value", message.value)
+    JSONObject.toJSONString(map)
+  }
+
+  def jsonToMessage(json: String): Message = {
+    val parser = new JSONParser()
+    val map = parser.parse(json).asInstanceOf[JMap[String, String]]
+    Message(map.get("key"), map.get("value"))
+  }
+
 }
+
+case class Message(key: String, value: String)

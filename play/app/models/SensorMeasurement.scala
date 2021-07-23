@@ -171,7 +171,7 @@ object SensorMeasurement {
     val value = BaseSensorMeasurement.toJson(sensorMeasurement)
     // println("insertToZMQ called. key: " + key + ", value: " + value + "\n")
     ZMQInit._ZMQProducer.push(key, value)
-    ZMQInit._ZMQProducer.pub(key, value)
+    ZMQInit._ZMQProducer.pub(Measurement.zmqTopic, key, value)
   }
 
   def insertToZMQ(sensorMeasurementList: List[BaseSensorMeasurement]): Unit = {

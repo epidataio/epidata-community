@@ -62,7 +62,7 @@ object Measurement {
 
   val DBTableName: String = "measurements_original"
   val KafkaTopic: String = "measurements"
-  val zmqTopic: String = DBTableName
+  val zmqTopic: String = "measurements_original"
 
   /** Map a cassandra Row to a Measurement of the proper type. */
   implicit def rowToMeasurement(row: Row): Measurement = {
