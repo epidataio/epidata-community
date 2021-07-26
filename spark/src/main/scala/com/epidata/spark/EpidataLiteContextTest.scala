@@ -23,7 +23,7 @@ object elcTest extends App {
   Class.forName("org.sqlite.JDBC");
   private val conf = ConfigFactory.parseResources("sqlite-defaults.conf")
   private val basePath = new java.io.File(".").getAbsoluteFile().getParent()
-  private val dbName = conf.getString("spark.epidata.SQLite.dbFileName")
+  private val dbName = conf.getString("spark.epidata.SQLite.test.dbFileName")
   private val dbUrl = "jdbc:sqlite:" + basePath + "/data/" + dbName
 
   // println("sqlite db url: " + dbUrl)
@@ -34,10 +34,10 @@ object elcTest extends App {
   val stmt = con.createStatement()
 
   // Clear tables
-  //  val dop_orig_command = s"DROP TABLE IF EXISTS ${com.epidata.lib.models.Measurement.DBTableName}"
-  //  val drop_keys_command = s"DROP TABLE IF EXISTS ${com.epidata.lib.models.MeasurementsKeys.DBTableName}"
-  //  stmt.execute(dop_orig_command)
-  //  stmt.execute(drop_keys_command)
+  val dop_orig_command = s"DROP TABLE IF EXISTS ${com.epidata.lib.models.Measurement.DBTableName}"
+  val drop_keys_command = s"DROP TABLE IF EXISTS ${com.epidata.lib.models.MeasurementsKeys.DBTableName}"
+  stmt.execute(dop_orig_command)
+  stmt.execute(drop_keys_command)
 
   // Create Tables
   val original = "play/conf/schema/measurements_original"
@@ -809,31 +809,32 @@ object elcTest extends App {
   //  }
 
   // Create Stream
-  esc.createStream("measurements_original", "measurements_intermediate", op1)
-  println("stream 1 created: " + op1)
+  //  esc.createStream("measurements_original", "measurements_intermediate", op1)
+  //  println("stream 1 created: " + op1)
 
   //  println("Enter 'Q' to stop streaming DEBUGGING 2")
   //  while ((StdIn.readChar()).toLower.compare('q') != 0) {
   //    println("Continuing streaming. Enter 'Q' to stop streaming.")
   //  }
 
-  esc.createStream("measurements_intermediate", "measurements_cleansed", op3)
-  println("stream 2 created: " + op3)
+  //  esc.createStream("measurements_intermediate", "measurements_cleansed", op2)
+  //  println("stream 2 created: " + op2)
 
   //  println("Enter 'Q' to stop streaming DEBUGGING 3")
   //  while ((StdIn.readChar()).toLower.compare('q') != 0) {
   //    println("Continuing streaming. Enter 'Q' to stop streaming.")
   //  }
 
-  esc.testUnit()
-  print(esc.printSomething(""))
+  esc.createStream("measurements_original", "measurements_cleansed", op3)
+  println("stream 3 created: " + op3)
 
-  //  esc.createStream("measurements_intermediate", "measurements_cleansed", op2)
-  //  println("stream 3 created: " + op3)
   //  println("Enter 'Q' to stop streaming DEBUGGING 4")
   //  while ((StdIn.readChar()).toLower.compare('q') != 0) {
   //    println("Continuing streaming. Enter 'Q' to stop streaming.")
   //  }
+
+  esc.testUnit()
+  print(esc.printSomething(""))
 
   // Start Stream
   esc.startStream()

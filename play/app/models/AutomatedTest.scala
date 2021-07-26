@@ -188,6 +188,6 @@ object AutomatedTest {
     endTime: Date,
     ordering: Ordering.Value): List[BaseAutomatedTest] =
     MeasurementService.find(company, site, device_group, tester, beginTime, endTime, ordering)
-      .map(measurementToAutomatedTest)
+      .map(BaseAutomatedTest.measurementToAutomatedTest)
 
 }

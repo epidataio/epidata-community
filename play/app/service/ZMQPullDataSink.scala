@@ -9,6 +9,8 @@ import org.json.simple.parser.{ ParseException, JSONParser }
 import com.epidata.lib.models.util.JsonHelpers._
 import com.epidata.lib.models.util.Message
 import java.util.{ Map => JMap, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList }
+import com.epidata.lib.models.{ AutomatedTest => BaseAutomatedTest, AutomatedTestCleansed => BaseAutomatedTestCleansed, AutomatedTestSummary => BaseAutomatedTestSummary }
+import com.epidata.lib.models.{ SensorMeasurement => BaseSensorMeasurement, SensorMeasurementCleansed => BaseSensorMeasurementCleansed, SensorMeasurementSummary => BaseSensorMeasurementSummary }
 
 import controllers.Assets.JSON
 import play.api.libs.json.Json
@@ -40,14 +42,15 @@ class ZMQPullDataSink {
     try {
       val receivedString = pullSocket.recvStr()
       println("Pull data: " + receivedString + "\n")
-      val messageObject = jsonToMessage(receivedString)
-      messageObject
+      val message: Message = jsonToMessage(receivedString)
+      message
     } catch {
       case e: Throwable => throw e
     }
   }
 
   def clear(pullPort: String): Unit = {
+    //println("DataSink pull clear called")
     try {
       pullSocket.setLinger(1)
       pullSocket.unbind("tcp://127.0.0.1:" + pullPort)

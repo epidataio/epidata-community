@@ -206,6 +206,6 @@ object SensorMeasurement {
     endTime: Date,
     ordering: Ordering.Value,
     tableName: String = com.epidata.lib.models.Measurement.DBTableName): List[BaseSensorMeasurement] = MeasurementService.find(company, site, station, sensor, beginTime, endTime, ordering, tableName)
-    .map(measurementToSensorMeasurement)
+    .map(BaseSensorMeasurement.measurementToSensorMeasurement)
 
 }

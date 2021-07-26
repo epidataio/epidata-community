@@ -6,6 +6,7 @@ package com.epidata.spark.ops
 
 import com.epidata.spark.utils.{ ConvertUtils, DataFrameUtils }
 import com.epidata.lib.models.{ Measurement => BaseMeasurement }
+import com.epidata.spark.{ Measurement, MeasurementCleansed }
 import org.apache.spark.sql.{ SQLContext, Row, DataFrame }
 import org.apache.spark.sql.functions._
 
@@ -13,23 +14,28 @@ class FillMissingValue(
     val meas_names: List[String],
     val method: String = "rolling",
     val s: Int = 3) extends Transformation {
-  override def apply(measurement: List[BaseMeasurement]): List[BaseMeasurement] = {
+
+  override def apply(measurements: List[Map[String, Object]]): List[Map[String, Object]] = {
 
     val field = "meas_value"
+
+    //convert to an odd number so there are even number of measuremnts on either side
     val size = if (s % 2 == 0) s + 1 else s
 
     method match {
       case "rolling" =>
-
+      
+        // To Be Implemented - placeholder code
+        measurements
     }
-
-    measurement
   }
+
   override def apply(dataFrame: DataFrame, sqlContext: SQLContext): DataFrame = {
 
     val field = "meas_value"
 
-    val size = if (s % 2 == 0) s + 1 else s //convert to an odd number so theres even number of measuremnts on either side
+    //convert to an odd number so theres even number of measuremnts on either side
+    val size = if (s % 2 == 0) s + 1 else s
 
     method match {
       case "rolling" =>
@@ -92,4 +98,3 @@ class FillMissingValue(
 
   override def destination: String = "measurements_cleansed"
 }
-

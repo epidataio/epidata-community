@@ -6,6 +6,8 @@ package service
 import java.util.concurrent.{ Executors, ExecutorService, TimeUnit, Future }
 import org.json.simple.{ JSONArray, JSONObject }
 import java.util.{ Map => JMap, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList }
+import com.epidata.lib.models.{ AutomatedTest => BaseAutomatedTest, AutomatedTestCleansed => BaseAutomatedTestCleansed, AutomatedTestSummary => BaseAutomatedTestSummary }
+import com.epidata.lib.models.{ SensorMeasurement => BaseSensorMeasurement, SensorMeasurementCleansed => BaseSensorMeasurementCleansed, SensorMeasurementSummary => BaseSensorMeasurementSummary }
 import com.fasterxml.jackson.databind.JsonMappingException
 import play.api.Configuration
 import com.epidata.lib.models.util.JsonHelpers._
@@ -45,21 +47,21 @@ object ZMQService {
           val sink = new ZMQPullDataSink()
           sink.init(context, pullPort)
 
-          println("ZMQ DataSink pull running in a new thread.")
+          //println("ZMQ DataSink pull running in a new thread.")
 
           breakable {
             while (!Thread.currentThread().isInterrupted()) {
               try {
-                val rawData: Message = sink.pull()
+                val rawData: String = sink.pull().value
 
                 Configs.measurementClass match {
                   case com.epidata.lib.models.AutomatedTest.NAME => {
-                    models.AutomatedTest.insertRecordFromZMQ(rawData.value)
-                    println("inserted AutomatedTest rawData")
+                    models.AutomatedTest.insertRecordFromZMQ(rawData)
+                    //println("inserted AutomatedTest rawData: " + rawData + "\n")
                   }
                   case com.epidata.lib.models.SensorMeasurement.NAME => {
-                    models.SensorMeasurement.insertRecordFromZMQ(rawData.value)
-                    println("inserted SensorMeasurement rawData")
+                    models.SensorMeasurement.insertRecordFromZMQ(rawData)
+                    //println("inserted SensorMeasurement rawData: " + rawData + "\n")
                   }
                   case _ =>
                 }
@@ -68,13 +70,14 @@ object ZMQService {
                 case e: ZMQException if ZMQ.Error.ETERM.getCode == e.getErrorCode => {
                   break
                   // Thread.currentThread.interrupt()
-                  println("DataSink pull service interrupted")
+                  //println("DataSink pull service interrupted")
                 }
                 case e: ZMQException => println("DataSink pull service thread interrupted")
                 case _: Throwable => throw new Exception("Error while insert data to database from data sink service")
               }
             }
           }
+          //println("DataSink pull loop exited")
           sink.clear(pullPort)
         }
       })
@@ -89,24 +92,24 @@ object ZMQService {
           breakable {
             while (!Thread.currentThread().isInterrupted()) {
               try {
-                val cleansedData: Message = sink.sub()
+                val cleansedData: String = sink.sub().value
 
                 Configs.measurementClass match {
                   case com.epidata.lib.models.AutomatedTest.NAME => {
-                    models.AutomatedTest.insertCleansedRecordFromZMQ(cleansedData.value)
-                    //println("inserted AutomatedTest cleansedData")
+                    models.AutomatedTest.insertCleansedRecordFromZMQ(cleansedData)
+                    //println("inserted AutomatedTest cleansedData: " + cleansedData + "\n")
                   }
                   case com.epidata.lib.models.SensorMeasurement.NAME => {
-                    models.SensorMeasurement.insertCleansedRecordFromZMQ(cleansedData.value)
-                    //println("inserted SensorMeasurement cleansedData")
+                    models.SensorMeasurement.insertCleansedRecordFromZMQ(cleansedData)
+                    //println("inserted SensorMeasurement cleansedData: " + cleansedData + "\n")
                   }
                   case com.epidata.lib.models.AutomatedTest.NAME => {
-                    models.AutomatedTest.insertSummaryRecordFromZMQ(cleansedData.value)
-                    //println("inserted AutomatedTest summaryData")
+                    models.AutomatedTest.insertSummaryRecordFromZMQ(cleansedData)
+                    //println("inserted AutomatedTest summaryData: " + cleansedData + "\n")
                   }
                   case com.epidata.lib.models.SensorMeasurement.NAME => {
-                    models.SensorMeasurement.insertSummaryRecordFromZMQ(cleansedData.value)
-                    //println("inserted SensorMeasurement summaryData")
+                    models.SensorMeasurement.insertSummaryRecordFromZMQ(cleansedData)
+                    //println("inserted SensorMeasurement summaryData: " + cleansedData + "\n")
                   }
                   case _ =>
                 }
@@ -122,6 +125,7 @@ object ZMQService {
               }
             }
           }
+          //println("DataSink Sub loop exited")
           sink.clear(subPort)
         }
       })

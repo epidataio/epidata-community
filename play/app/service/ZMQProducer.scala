@@ -9,6 +9,8 @@ import java.util.{ Map => JMap, LinkedHashMap => JLinkedHashMap, LinkedList => J
 import controllers.Assets.JSON
 import com.epidata.lib.models.util.JsonHelpers._
 import com.epidata.lib.models.util.Message
+import com.epidata.lib.models.{ AutomatedTest => BaseAutomatedTest, AutomatedTestCleansed => BaseAutomatedTestCleansed, AutomatedTestSummary => BaseAutomatedTestSummary }
+import com.epidata.lib.models.{ SensorMeasurement => BaseSensorMeasurement, SensorMeasurementCleansed => BaseSensorMeasurementCleansed, SensorMeasurementSummary => BaseSensorMeasurementSummary }
 import play.api.libs.json.Json
 import org.zeromq.ZMQ
 import play.api.Logger
@@ -47,12 +49,12 @@ object ZMQProducer {
   def push(key: String, value: String): Unit = {
     //println("ZMQProducer push called")
 
-    //create the message
+    //create the Json message with (key, value) pair
     val message: String = messageToJson(Message(key, value))
 
-    //push the message
+    //push the Json message
     pushSocket.send(message.getBytes(ZMQ.CHARSET), 0)
-    //println("Pushed: " + message + "\n")
+    println("Pushed: " + message + "\n")
   }
 
   /**
@@ -69,13 +71,12 @@ object ZMQProducer {
 
     //publish the message
     pubSocket.send(message.getBytes(ZMQ.CHARSET), 0)
-    //println("Published: " + message + "\n")
+    println("Published: " + message + "\n")
   }
 
   def clear(): Unit = {
     try {
-      //      pushSocket.send(STOP_MESSAGE, 0)
-      pushSocket.send("$TERM")
+      //pushSocket.send("$TERM")
       pushSocket.unbind("tcp://127.0.0.1:" + this.pushPort)
       pushSocket.close()
       println("DataSource push service closed successfully")
@@ -84,8 +85,7 @@ object ZMQProducer {
     }
 
     try {
-      //      pubSocket.send(STOP_MESSAGE, 0)
-      pubSocket.send("$TERM")
+      //pubSocket.send("$TERM")
       pubSocket.unbind("tcp://127.0.0.1:" + this.pubPort)
       pubSocket.close()
       println("DataSource pub service closed successfully")

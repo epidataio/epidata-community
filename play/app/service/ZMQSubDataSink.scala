@@ -9,7 +9,8 @@ import org.json.simple.parser.{ ParseException, JSONParser }
 import com.epidata.lib.models.util.JsonHelpers._
 import com.epidata.lib.models.util.Message
 import java.util.{ Map => JMap, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList }
-
+import com.epidata.lib.models.{ AutomatedTest => BaseAutomatedTest, AutomatedTestCleansed => BaseAutomatedTestCleansed, AutomatedTestSummary => BaseAutomatedTestSummary }
+import com.epidata.lib.models.{ SensorMeasurement => BaseSensorMeasurement, SensorMeasurementCleansed => BaseSensorMeasurementCleansed, SensorMeasurementSummary => BaseSensorMeasurementSummary }
 import controllers.Assets.JSON
 import play.api.libs.json.Json
 import org.zeromq.ZMQ
@@ -44,10 +45,11 @@ class ZMQSubDataSink {
     //println("ZMQSubDataSink sub called.")
     try {
       val topic = subSocket.recvStr()
+      //println("Sub topic: " + topic + "\n")
       val receivedString = subSocket.recvStr()
       println("Sub data: " + receivedString + "\n")
-      val messageObject = jsonToMessage(receivedString)
-      messageObject
+      val message = jsonToMessage(receivedString)
+      message
     } catch {
       case e: Throwable => throw e
     }
