@@ -127,7 +127,7 @@ while (True):
         meas_last_windspeed_value = 8
         meas_last_rh_value = 60
 
-        for data_iteration in range(1, 2):
+        for data_iteration in range(1, 5):
 
             # Construct an empty list of measurement objects
             measurement_list = []

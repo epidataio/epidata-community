@@ -155,7 +155,7 @@ object AutomatedTest {
     val key = keyForMeasurementTopic(m)
     val value = BaseAutomatedTest.toJson(m)
     ZMQInit._ZMQProducer.push(key, value)
-    ZMQInit._ZMQProducer.pub(key, value)
+    ZMQInit._ZMQProducer.pub(Measurement.zmqTopic, key, value)
   }
 
   def insertToZMQ(list: List[BaseAutomatedTest]): Unit = {
@@ -188,6 +188,6 @@ object AutomatedTest {
     endTime: Date,
     ordering: Ordering.Value): List[BaseAutomatedTest] =
     MeasurementService.find(company, site, device_group, tester, beginTime, endTime, ordering)
-      .map(measurementToAutomatedTest)
+      .map(BaseAutomatedTest.measurementToAutomatedTest)
 
 }

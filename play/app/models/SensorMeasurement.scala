@@ -171,7 +171,7 @@ object SensorMeasurement {
     val value = BaseSensorMeasurement.toJson(sensorMeasurement)
     // println("insertToZMQ called. key: " + key + ", value: " + value + "\n")
     ZMQInit._ZMQProducer.push(key, value)
-    ZMQInit._ZMQProducer.pub(key, value)
+    ZMQInit._ZMQProducer.pub(Measurement.zmqTopic, key, value)
   }
 
   def insertToZMQ(sensorMeasurementList: List[BaseSensorMeasurement]): Unit = {
@@ -206,6 +206,6 @@ object SensorMeasurement {
     endTime: Date,
     ordering: Ordering.Value,
     tableName: String = com.epidata.lib.models.Measurement.DBTableName): List[BaseSensorMeasurement] = MeasurementService.find(company, site, station, sensor, beginTime, endTime, ordering, tableName)
-    .map(measurementToSensorMeasurement)
+    .map(BaseSensorMeasurement.measurementToSensorMeasurement)
 
 }
