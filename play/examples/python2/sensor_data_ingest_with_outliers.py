@@ -130,7 +130,7 @@ while (True):
             # Construct an empty list of measurement objects
             measurement_list = []
 
-            for log_iteration in range(1, 2):
+            for log_iteration in range(1, 5):
 
                 current_time_string = datetime.now().strftime("%m/%d/%Y %H:%M:%S.%f")
                 current_time = get_time(current_time_string)

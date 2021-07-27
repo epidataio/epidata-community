@@ -54,6 +54,7 @@ object elcTest extends App {
   stmt.execute(create_orig)
   stmt.execute(create_key)
 
+  /*
   // Manual Insert for measurements_original
   val beginTime = new Timestamp(1619240032000L)
   val testTime = new Timestamp(1619240032000L + 5000L)
@@ -778,6 +779,8 @@ object elcTest extends App {
 
   println("\n EpiDataLite Batch Query Test completed")
   println("----------------------------------------------------")
+
+*/
 
   /*  ----- EpiDataLite Stream Test Started ----- */
   println("\n EpiDataLite Stream Test Started")
