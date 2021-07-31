@@ -42,13 +42,6 @@ class StreamingNode {
   private val conf = ConfigFactory.parseResources("sqlite-defaults.conf")
   val measurementClass: String = conf.getString("spark.epidata.measurementClass")
 
-  var outputBuffer: Queue[String] = _
-
-  private val conf = ConfigFactory.parseResources("sqlite-defaults.conf")
-  val measurementClass: String = conf.getString("spark.epidata.measurementClass")
-
-  var TempID = 0
-
   def init(
     context: ZMQ.Context,
 
