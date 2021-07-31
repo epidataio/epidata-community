@@ -3,24 +3,22 @@
 */
 package com.epidata.spark
 
+import java.security.MessageDigest
 import java.util
 
-import org.json.simple.{ JSONObject, JSONArray }
+import org.json.simple.{ JSONArray, JSONObject }
 import org.json.simple.parser.JSONParser
-import java.util.{ LinkedHashMap => JLinkedHashMap, Map => JMap, List => JList }
+import org.zeromq.ZMQ
+
+import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.Queue
+import java.util.{ LinkedHashMap => JLinkedHashMap, List => JList, Map => JMap }
+
 import com.epidata.lib.models.util.JsonHelpers._
 import com.epidata.lib.models.util.Message
-import com.epidata.lib.models.{
-  Measurement => BaseMeasurement,
-  MeasurementCleansed => BaseMeasurementCleansed,
-  MeasurementSummary => BaseMeasurementSummary,
-  SensorMeasurement => BaseSensorMeasurement,
-  SensorMeasurementCleansed => BaseSensorMeasurementCleansed,
-  SensorMeasurementSummary => BaseSensorMeasurementSummary,
-  AutomatedTest => BaseAutomatedTest,
-  AutomatedTestCleansed => BaseAutomatedTestCleansed,
-  AutomatedTestSummary => BaseAutomatedTestSummary
-}
+import com.epidata.spark.ops.Transformation
+import com.epidata.lib.models.{ AutomatedTest => BaseAutomatedTest, AutomatedTestCleansed => BaseAutomatedTestCleansed, AutomatedTestSummary => BaseAutomatedTestSummary, Measurement => BaseMeasurement, MeasurementCleansed => BaseMeasurementCleansed, MeasurementSummary => BaseMeasurementSummary, SensorMeasurement => BaseSensorMeasurement, SensorMeasurementCleansed => BaseSensorMeasurementCleansed, SensorMeasurementSummary => BaseSensorMeasurementSummary }
+import com.typesafe.config.ConfigFactory
 
 class StreamingNode {
   var subSocket: ZMQ.Socket = _ //add as parameter
@@ -35,12 +33,7 @@ class StreamingNode {
   var transformation: Transformation = _
 
   var streamBuffers: Array[Queue[String]] = _
-  var bufferSizes: ListBuffer[Int] = _
-
-  var outputBuffer: Queue[String] = _
-
-  private val conf = ConfigFactory.parseResources("sqlite-defaults.conf")
-  val measurementClass: String = conf.getString("spark.epidata.measurementClass")
+  var bufferSizes: ListBuffer[Integer] = _
 
   var outputBuffer: Queue[String] = _
 
@@ -54,7 +47,7 @@ class StreamingNode {
 
     receivePorts: ListBuffer[String], //allows Node to subscribe to various ports
     receiveTopics: ListBuffer[String], //allows Node to listen on various topics
-    bufferSizes: ListBuffer[Int],
+    bufferSizes: ListBuffer[Integer],
 
     sendPort: String,
     sendTopic: String,
@@ -62,7 +55,7 @@ class StreamingNode {
     transformation: Transformation): StreamingNode = {
 
     if (receivePorts.length > bufferSizes.length) { //more ports than buffer sizes make a pattern
-      val pattern = new ListBuffer[Int]()
+      val pattern = new ListBuffer[Integer]()
       pattern.appendAll(bufferSizes)
       while (receivePorts.length > bufferSizes.length) {
         bufferSizes.appendAll(pattern) //append pattern until buffersizes is same size or greater than recieve ports

@@ -731,8 +731,6 @@ object elcTest extends App {
   println("----------------------------------------------------")
 */
 
-  */
-
   /*  ----- EpiDataLite Stream Test Started ----- */
   println("\n EpiDataLite Stream Test Started")
 
@@ -757,20 +755,27 @@ object elcTest extends App {
   val op3 = esc.createTransformations("Identity", list, mutableMap)
   println("transformation created: " + op3)
 
+  val op4 = esc.createTransformations("FillMissingValue", List("Meas-1"), Map[String, String]())
+  println("transformation created: " + op4)
+
   // Create Streams
   /*
-    play producer
-          |
+     play producer
+           |
+           ↓
+          op1
+        /     \
+       ↓       ↓
+      op2     op3
+       | \     /
+       |  ↓   ↓
+       |   op4
+       |   |
+       \   |
+        \  |
+         \ |
           ↓
-         op1
-       /     \
-      ↓       ↓
-     op2     op3
-       \     /
-        ↓   ↓
-         op4
-          |
-          ↓
+         op5
     play datasink
    */
   //op1
@@ -786,11 +791,21 @@ object elcTest extends App {
   println("stream 3 created: " + op3)
 
   //op4
-  val subtopics = ListBuffer[String]()
-  subtopics += "measurements_intermediate_2"
-  subtopics += "measurements_intermediate_1"
-  esc.createStream(subtopics, "measurements_cleansed", op3)
+  val op4topics = ListBuffer[String]()
+  op4topics += "measurements_intermediate_1"
+  op4topics += "measurements_intermediate_2"
+  val op4buffers = ListBuffer[Integer]()
+  op4buffers += 5
+  op4buffers += 6
+  esc.createStream(op4topics, op4buffers, "measurements_intermediate_3", op3)
   println("stream 4 created: " + op3 + "\n")
+
+  //op5
+  val op5topics = ListBuffer[String]()
+  op5topics += "measurements_intermediate_1"
+  op5topics += "measurements_intermediate_3"
+  esc.createStream(op5topics, "measurements_cleansed", op4)
+  println("stream 5 created: " + op4 + "\n")
 
   esc.testUnit()
   println(esc.printSomething(""))

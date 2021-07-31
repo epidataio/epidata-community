@@ -85,10 +85,26 @@ class EpidataLiteStreamingContext {
   }
 
   def createStream(sourceTopic: String, destinationTopic: String, operation: Transformation): Unit = {
-    createStream(ListBuffer(sourceTopic), destinationTopic, operation)
+    createStream(ListBuffer(sourceTopic), ListBuffer(bufferSize), destinationTopic, operation)
   }
 
   def createStream(sourceTopic: ListBuffer[String], destinationTopic: String, operation: Transformation): Unit = {
+    createStream(sourceTopic, ListBuffer(bufferSize), destinationTopic, operation)
+  }
+
+  def createStream(sourceTopic: String, buffersizes: Integer, destinationTopic: String, operation: Transformation): Unit = {
+    createStream(ListBuffer(sourceTopic), ListBuffer(buffersizes), destinationTopic, operation)
+  }
+
+  def createStream(sourceTopic: ListBuffer[String], buffersizes: Integer, destinationTopic: String, operation: Transformation): Unit = {
+    createStream(sourceTopic, ListBuffer(buffersizes), destinationTopic, operation)
+  }
+
+  def createStream(sourceTopic: String, buffersizes: ListBuffer[Integer], destinationTopic: String, operation: Transformation): Unit = {
+    createStream(ListBuffer(sourceTopic), buffersizes, destinationTopic, operation)
+  }
+
+  def createStream(sourceTopic: ListBuffer[String], buffersizes: ListBuffer[Integer], destinationTopic: String, operation: Transformation): Unit = {
     //logger(Level.INFO, "sourcetopic:  " + sourceTopic)
     //logger.log(Level.INFO, "destinationTopic:  " + destinationTopic)
     //logger.log(Level.INFO, "transformation:  " + operation)
@@ -125,8 +141,7 @@ class EpidataLiteStreamingContext {
       context,
       streamSourcePort,
       sourceTopic,
-      /*currently buffersize is a constant setting for all topics. Expand so that streaming object has buffersize attribute*/
-      ListBuffer(bufferSize),
+      buffersizes,
       streamDestinationPort,
       destinationTopic,
       receiveTimeout,
