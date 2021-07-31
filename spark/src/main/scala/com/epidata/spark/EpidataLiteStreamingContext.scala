@@ -21,13 +21,14 @@ import java.util.logging.Logger
 //--------------------------------------------
 
 import scala.collection.convert.ImplicitConversions.`list asScalaBuffer`
+import scala.collection.mutable.ListBuffer
 
-case class Message(topic: Object, key: Object, value: Object)
+//case class Message(topic: Object, key: Object, value: Object)
 
 class EpidataLiteStreamingContext {
   var startPort: Integer = 5551
   var endPort: Integer = 5552
-  var processors: Array[StreamingNode] = _
+  var processors: ListBuffer[StreamingNode] = _
   var _runStream: Boolean = _
   var context: ZMQ.Context = _
   val receiveTimeout: Integer = -1
@@ -46,7 +47,7 @@ class EpidataLiteStreamingContext {
     //ec.start_streaming()
     context = ZMQ.context(1)
     _runStream = true
-    processors = Array[StreamingNode]()
+    processors = ListBuffer()
     topicMap = MutableMap[String, Integer]()
     topicMap.put("measurements_original", startPort)
     topicMap.put("measurements_cleansed", endPort)
@@ -78,23 +79,24 @@ class EpidataLiteStreamingContext {
   }
 
   def createStream(sourceTopic: String, destinationTopic: String, operation: Transformation): Unit = {
-    //    println("Create Stream. Source Topic: " + sourceTopic + ". Destination Topic: " + destinationTopic + ". Transformation: " + operation)
-    //---------------------------logger--------------------------------------------
-    //    LogManager.getLogManager.readConfiguration(new FileInputStream("mylogging.properties"))
-    //    val logger = Logger.getLogger("Epidata lite logger")
+    createStream(ListBuffer(sourceTopic), destinationTopic, operation)
+  }
 
-    logger.log(Level.INFO, "sourcetopic:  " + sourceTopic)
-    logger.log(Level.INFO, "destinationTopic:  " + destinationTopic)
-    logger.log(Level.INFO, "transformation:  " + operation)
-
+  def createStream(sourceTopic: ListBuffer[String], destinationTopic: String, operation: Transformation): Unit = {
+    //logger(Level.INFO, "sourcetopic:  " + sourceTopic)
+    //logger.log(Level.INFO, "destinationTopic:  " + destinationTopic)
+    //logger.log(Level.INFO, "transformation:  " + operation)
     //-------------------------------------------------------
-
-    val streamSourcePort = topicMap.get(sourceTopic) match {
-      case Some(port) => port.toString
-      case None => throw new IllegalArgumentException("Source Topic is not recognized.")
+    var streamSourcePort: ListBuffer[String] = ListBuffer()
+    for (topic <- sourceTopic) {
+      if (topicMap.get(topic) != None) {
+        streamSourcePort += topicMap.get(topic).toString.replace("Some(", "").dropRight(1)
+      } else {
+        throw new IllegalArgumentException("Source Topic is not recognized.")
+      }
     }
 
-    logger.log(Level.INFO, "streamSourcePort: ", streamSourcePort)
+    //logger.log(Level.INFO, "streamSourcePort: ", streamSourcePort)
 
     topicMap.get(destinationTopic) match {
       case None => {
@@ -103,7 +105,7 @@ class EpidataLiteStreamingContext {
         //println("new destination topic - port added")
       }
       case _ => {
-        println("destination topic - port exists")
+        //println("destination topic - port exists")
       }
     }
 
@@ -111,29 +113,23 @@ class EpidataLiteStreamingContext {
       case Some(port) => port.toString
       case None => throw new IllegalArgumentException("Destination Topic is not recognized.")
     }
-    logger.log(Level.INFO, "streamDestinationPort: ", streamDestinationPort)
+    //.log(Level.INFO, "streamDestinationPort: ", streamDestinationPort)
 
-    processors :+= (new StreamingNode()).init(
+    processors += (new StreamingNode()).init(
       context,
-      List(streamSourcePort),
-      List(sourceTopic),
-      List(bufferSize),
+      streamSourcePort,
+      sourceTopic,
+      /*currently buffersize is a constant setting for all topics. Expand so that streaming object has buffersize attribute*/
+      ListBuffer(bufferSize),
       streamDestinationPort,
       destinationTopic,
       receiveTimeout,
       operation)
-    logger.log(Level.INFO, "processors: ", processors)
-    //println("Source port: " + streamSourcePort + ", destination port: " + streamDestinationPort)
-    //println("Processors: " + processors)
-
-    println("STREAMING CONTEXT LINE 128 after streaming init")
-    //    while ((StdIn.readChar()).toLower.compare('q') != 0) {
-    //      println("Continuing streaming. Enter 'Q' to stop streaming.")
-    //    }
+    //logger.log(Level.INFO, "processors: ", processors)
   }
 
   def startStream(): Unit = {
-    //println("Start Stream called")
+    //println("---------Start Stream called-------" + processors.length)
 
     processors.reverse
 
@@ -143,17 +139,11 @@ class EpidataLiteStreamingContext {
     for (processor <- processors) {
       Executors.newSingleThreadExecutor.execute(new Runnable {
         override def run(): Unit = {
-          println("processor started in new thread. runstream value - " + _runStream)
+          //println("processor started in new thread. runstream value - " + _runStream)
           while (_runStream) {
-            //println("calling processor receive method")
-            //println("processor ready to receive: " + processor)
+            processor.receive()
+            processor.publish()
 
-            val fullBuffer = processor.receive()
-            if (fullBuffer(0) != "SKIP") {
-              processor.publish(processor.transform(fullBuffer))
-            }
-
-            //println("processor received by " + processor)
           }
 
           //println("while loop exited")
@@ -164,7 +154,7 @@ class EpidataLiteStreamingContext {
         }
       })
     }
-    logger.log(Level.INFO, "startstream successfully: ", processors)
+    //logger.log(Level.INFO, "startstream successfully: ", processors)
   }
 
   def stopStream(): Unit = {
@@ -175,7 +165,7 @@ class EpidataLiteStreamingContext {
     //      println("clearing processor: " + processor)
     //      processor.clear()
     //    }
-    logger.log(Level.INFO, "stopstream successfully")
+    //logger.log(Level.INFO, "stopstream successfully")
   }
 
   def printSomething(bar: String): String = {

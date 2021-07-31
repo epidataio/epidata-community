@@ -24,7 +24,7 @@ class FillMissingValue(
 
     method match {
       case "rolling" =>
-      
+
         // To Be Implemented - placeholder code
         measurements
     }
