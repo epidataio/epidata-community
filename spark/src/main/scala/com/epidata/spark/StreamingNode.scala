@@ -5,27 +5,22 @@ package com.epidata.spark
 
 import java.util
 
-import org.json.simple.{ JSONArray, JSONObject }
+import org.json.simple.{ JSONObject, JSONArray }
 import org.json.simple.parser.JSONParser
-import java.util.{ LinkedHashMap => JLinkedHashMap, List => JList, Map => JMap }
-
+import java.util.{ LinkedHashMap => JLinkedHashMap, Map => JMap, List => JList }
 import com.epidata.lib.models.util.JsonHelpers._
 import com.epidata.lib.models.util.Message
-import com.epidata.lib.models.{ AutomatedTest => BaseAutomatedTest, AutomatedTestCleansed => BaseAutomatedTestCleansed, AutomatedTestSummary => BaseAutomatedTestSummary, Measurement => BaseMeasurement, MeasurementCleansed => BaseMeasurementCleansed, MeasurementSummary => BaseMeasurementSummary, SensorMeasurement => BaseSensorMeasurement, SensorMeasurementCleansed => BaseSensorMeasurementCleansed, SensorMeasurementSummary => BaseSensorMeasurementSummary }
-
-import scala.collection.mutable._
-import com.epidata.spark.ops.Transformation
-import org.zeromq.ZMQ
-import com.typesafe.config.{ Config, ConfigFactory }
-import java.security.MessageDigest
-import java.util.logging.{ ConsoleHandler, FileHandler, Level, Logger }
-
-import scala.collection.convert.ImplicitConversions.`collection asJava`
-import scala.collection.mutable.ListBuffer
-import scala.collection.mutable
-import com.epidata.lib.models.util.Message
-
-import scala.io.StdIn
+import com.epidata.lib.models.{
+  Measurement => BaseMeasurement,
+  MeasurementCleansed => BaseMeasurementCleansed,
+  MeasurementSummary => BaseMeasurementSummary,
+  SensorMeasurement => BaseSensorMeasurement,
+  SensorMeasurementCleansed => BaseSensorMeasurementCleansed,
+  SensorMeasurementSummary => BaseSensorMeasurementSummary,
+  AutomatedTest => BaseAutomatedTest,
+  AutomatedTestCleansed => BaseAutomatedTestCleansed,
+  AutomatedTestSummary => BaseAutomatedTestSummary
+}
 
 class StreamingNode {
   var subSocket: ZMQ.Socket = _ //add as parameter
@@ -41,6 +36,11 @@ class StreamingNode {
 
   var streamBuffers: Array[Queue[String]] = _
   var bufferSizes: ListBuffer[Int] = _
+
+  var outputBuffer: Queue[String] = _
+
+  private val conf = ConfigFactory.parseResources("sqlite-defaults.conf")
+  val measurementClass: String = conf.getString("spark.epidata.measurementClass")
 
   var outputBuffer: Queue[String] = _
 
@@ -94,7 +94,7 @@ class StreamingNode {
 
     streamBuffers = new Array[Queue[String]](bufferSizes.length)
 
-    for (i <- 0 until bufferSizes.length) { streamBuffers(i) = new Queue[String] }
+    for (i <- 0 until bufferSizes.length) { streamBuffers(i) = new Queue[String]() }
 
     outputBuffer = new Queue[String]
 
@@ -152,6 +152,11 @@ class StreamingNode {
   def transform(list: List[String]): Unit = {
     println("\n\nTransforming----------------------------------------------")
     println("Performing Transformation on-----------------------------------------------------------: ")
+
+    for (measurement <- list) {
+      println("$$$$Meas: " + measurement + "\n")
+    }
+
     /*    val transformResults = transformation.apply(map)
 
     var resultsAsMap = new ListBuffer[JLinkedHashMap[String, String]]
@@ -178,6 +183,7 @@ class StreamingNode {
           measList += BaseAutomatedTest.jsonToJLinkedHashMap(json)
         }
         println("measurement list: " + measList + "\n")
+
         val resultsList = transformation.apply(measList)
         println("result list: " + resultsList + "\n")
 

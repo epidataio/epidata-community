@@ -19,11 +19,10 @@ import java.util.logging.Level
 import java.util.logging.LogManager
 import java.util.logging.Logger
 //--------------------------------------------
+import com.typesafe.config.{ ConfigFactory, ConfigValueFactory }
 
 import scala.collection.convert.ImplicitConversions.`list asScalaBuffer`
 import scala.collection.mutable.ListBuffer
-
-//case class Message(topic: Object, key: Object, value: Object)
 
 class EpidataLiteStreamingContext {
   var startPort: Integer = 5551
@@ -39,9 +38,16 @@ class EpidataLiteStreamingContext {
   logger.addHandler(new ConsoleHandler)
 
   //adding custom handler
-  val fileHandler = new FileHandler("/Users/rohithnadimpally/downloads/epidata-community/log/stream-log.log")
+  private val conf = ConfigFactory.parseResources("sqlite-defaults.conf")
+  private val basePath = new java.io.File(".").getAbsoluteFile().getParentFile().getParent()
+  private val logFilePath = basePath + "/log/" + conf.getString("spark.epidata.SQLite.logFileName")
+  println("log file path: " + logFilePath)
+
+  val fileHandler = new FileHandler("logFilePath")
   logger.addHandler(fileHandler)
-  var bufferSize: Integer = 2 //config setting
+
+  //default bufferSize based on configuration settings
+  var bufferSize: Integer = conf.getInt("spark.epidata.streamDefaultBufferSize")
 
   def init(): Unit = {
     //ec.start_streaming()
@@ -141,6 +147,7 @@ class EpidataLiteStreamingContext {
         override def run(): Unit = {
           //println("processor started in new thread. runstream value - " + _runStream)
           while (_runStream) {
+
             processor.receive()
             processor.publish()
 
@@ -150,7 +157,7 @@ class EpidataLiteStreamingContext {
           //println("clearing processor: " + processor)
           processor.clear()
 
-          //println("completing thead execution")
+          //println("completing thread execution")
         }
       })
     }
