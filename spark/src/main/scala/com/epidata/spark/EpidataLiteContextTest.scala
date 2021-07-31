@@ -780,15 +780,15 @@ object elcTest extends App {
    */
   //op1
   esc.createStream("measurements_original", "measurements_intermediate", op1)
-  println("stream 1 created: " + op1)
+  println("STREAM 1 created: " + op1)
 
   //op2
   esc.createStream("measurements_intermediate", "measurements_intermediate_1", op2)
-  println("stream 2 created: " + op2)
+  println("STREAM 2 created: " + op2)
 
   //op3
   esc.createStream("measurements_intermediate", "measurements_intermediate_2", op3)
-  println("stream 3 created: " + op3)
+  println("STREAM 3 created: " + op3)
 
   //op4
   val op4topics = ListBuffer[String]()
@@ -798,14 +798,14 @@ object elcTest extends App {
   op4buffers += 5
   op4buffers += 6
   esc.createStream(op4topics, op4buffers, "measurements_intermediate_3", op3)
-  println("stream 4 created: " + op3 + "\n")
+  println("STREAM 4 created: " + op3 + "\n")
 
   //op5
   val op5topics = ListBuffer[String]()
   op5topics += "measurements_intermediate_1"
   op5topics += "measurements_intermediate_3"
   esc.createStream(op5topics, "measurements_cleansed", op4)
-  println("stream 5 created: " + op4 + "\n")
+  println("STREAM 5 created: " + op4 + "\n")
 
   esc.testUnit()
   println(esc.printSomething(""))

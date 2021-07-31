@@ -35,6 +35,8 @@ class StreamingNode {
   var streamBuffers: Array[Queue[String]] = _
   var bufferSizes: ListBuffer[Integer] = _
 
+  var outputBuffer: Queue[String] = _
+
   def init(
     context: ZMQ.Context,
 
