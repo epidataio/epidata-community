@@ -35,13 +35,6 @@ class StreamingNode {
   var streamBuffers: Array[Queue[String]] = _
   var bufferSizes: ListBuffer[Integer] = _
 
-  var outputBuffer: Queue[String] = _
-
-  private val conf = ConfigFactory.parseResources("sqlite-defaults.conf")
-  val measurementClass: String = conf.getString("spark.epidata.measurementClass")
-
-  var TempID = 0
-
   def init(
     context: ZMQ.Context,
 
