@@ -59,14 +59,14 @@ class EpidataLiteStreamingContext {
     topicMap.put("measurements_summary", endPort)
   }
 
-  def createTransformations(opName: String, meas_names: List[String], params: Map[String, String]): Transformation = {
+  def createTransformations(opName: String, meas_names: List[String], params: Map[String, Any]): Transformation = {
     //println("Transformation being created")
 
     // create and return a transformation object
     opName match {
       case "Identity" => new Identity()
 
-      //case "FillMissingValue" => new FillMissingValue(meas_names, params.get("method").getOrElse("rolling"), params.get("s"))
+      case "FillMissingValue" => new FillMissingValue(meas_names, params.get("method").get.asInstanceOf[String], params.get("s").get.asInstanceOf[Int])
       //case "OutlierDetector" => new OutlierDetector("meas_value", params.get("method"))
       //case "MeasStatistics" => new MeasStatistics(meas_names, "standard")
       case _ => new Identity()

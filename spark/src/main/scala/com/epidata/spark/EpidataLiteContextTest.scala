@@ -794,10 +794,10 @@ object elcTest extends App {
   //  }
 
   // Create Transformation
-  val op1 = esc.createTransformations("Identity", List("Meas-1"), Map[String, String]())
+  val op1 = esc.createTransformations("Identity", List("Temperator", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
   println("transformation created: " + op1)
 
-  val op2 = esc.createTransformations("Identity", List("Meas-1"), Map[String, String]())
+  val op2 = esc.createTransformations("FillMissingValue", List("Temperature"), Map("method" -> "rolling", "s" -> 3))
   println("transformation created: " + op2)
 
   var list = new util.ArrayList[String]()
@@ -812,7 +812,7 @@ object elcTest extends App {
   //  }
 
   // Create Stream
-  //  esc.createStream("measurements_original", "measurements_intermediate", op1)
+  //  esc.createStream(List("measurements_original"), "measurements_intermediate", op1)
   //  println("stream 1 created: " + op1)
 
   //  println("Enter 'Q' to stop streaming DEBUGGING 2")
@@ -820,16 +820,16 @@ object elcTest extends App {
   //    println("Continuing streaming. Enter 'Q' to stop streaming.")
   //  }
 
-  //  esc.createStream("measurements_intermediate", "measurements_cleansed", op2)
-  //  println("stream 2 created: " + op2)
+  esc.createStream(List("measurements_original","measurements_intermediate"), "measurements_cleansed", op2)
+  println("stream 2 created: " + op2)
 
   //  println("Enter 'Q' to stop streaming DEBUGGING 3")
   //  while ((StdIn.readChar()).toLower.compare('q') != 0) {
   //    println("Continuing streaming. Enter 'Q' to stop streaming.")
   //  }
 
-  esc.createStream("measurements_original", "measurements_cleansed", op3)
-  println("stream 3 created: " + op3)
+  //  esc.createStream("measurements_original", "measurements_cleansed", op3)
+  //  println("stream 3 created: " + op3)
 
   //  println("Enter 'Q' to stop streaming DEBUGGING 4")
   //  while ((StdIn.readChar()).toLower.compare('q') != 0) {

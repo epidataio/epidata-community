@@ -124,18 +124,6 @@ class StreamingNode {
     getMd5(key)
   }
 
-  private def keyForMeasurementTopic(measurement: BaseSensorMeasurement): String = {
-    val key =
-      s"""
-           |${measurement.customer}${"_"}
-           |${measurement.customer_site}${"_"}
-           |${measurement.collection}${"_"}
-           |${measurement.dataset}${"_"}
-           |${measurement.epoch}
-         """.stripMargin
-    getMd5(key)
-  }
-
   def receive(): List[String] = {
     println("\n\nReceiving----------------------------------------------")
     println("\nReceiving from--------------:")
@@ -153,6 +141,7 @@ class StreamingNode {
     receivedString match {
       case _: String => {
         // val jSONObject = parser.parse(receivedString).asInstanceOf[JMap[String, String]]
+
         val measurement: String = jsonToMessage(receivedString).value
 
         val index = subscribeTopics.indexOf(topic) //getting index of corresponding Buffer in streamBuffers
@@ -210,6 +199,10 @@ class StreamingNode {
         }
         println("measurement list: " + measList + "\n")
 
+        println("transformation type: " + transformation + "\n")
+
+        import scala.collection.JavaConversions._
+
         val resultsList = transformation.apply(measList)
         println("result list: " + resultsList + "\n")
 
@@ -232,6 +225,8 @@ class StreamingNode {
           measList += temp
         }
         println("measurement list: " + measList + "\n")
+
+        println("transformation type: " + transformation + "\n")
 
         val resultsList = transformation.apply(measList)
         println("result List: " + resultsList + "\n")
