@@ -67,7 +67,7 @@ class EpidataLiteStreamingContext {
     opName match {
       case "Identity" => new Identity()
 
-      case "FillMissingValue" => new FillMissingValue(meas_names, params.get("method").get.asInstanceOf[String], params.get("s").get.asInstanceOf[Int])
+      case "FillMissingValue" => new FillMissingValue(meas_names, params.getOrElse("method", "rolling").asInstanceOf[String], params.getOrElse("s", 3).asInstanceOf[Int])
       //case "OutlierDetector" => new OutlierDetector("meas_value", params.get("method"))
       //case "MeasStatistics" => new MeasStatistics(meas_names, "standard")
       case _ => new Identity()
@@ -92,12 +92,12 @@ class EpidataLiteStreamingContext {
     createStream(sourceTopic, ListBuffer(bufferSize), destinationTopic, operation)
   }
 
-  def createStream(sourceTopic: String, buffersizes: Integer, destinationTopic: String, operation: Transformation): Unit = {
-    createStream(ListBuffer(sourceTopic), ListBuffer(buffersizes), destinationTopic, operation)
+  def createStream(sourceTopic: String, buffersize: Integer, destinationTopic: String, operation: Transformation): Unit = {
+    createStream(ListBuffer(sourceTopic), ListBuffer(buffersize), destinationTopic, operation)
   }
 
-  def createStream(sourceTopic: ListBuffer[String], buffersizes: Integer, destinationTopic: String, operation: Transformation): Unit = {
-    createStream(sourceTopic, ListBuffer(buffersizes), destinationTopic, operation)
+  def createStream(sourceTopic: ListBuffer[String], buffersize: Integer, destinationTopic: String, operation: Transformation): Unit = {
+    createStream(sourceTopic, ListBuffer(buffersize), destinationTopic, operation)
   }
 
   def createStream(sourceTopic: String, buffersizes: ListBuffer[Integer], destinationTopic: String, operation: Transformation): Unit = {

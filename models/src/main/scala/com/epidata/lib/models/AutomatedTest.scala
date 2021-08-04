@@ -147,6 +147,8 @@ object AutomatedTest {
 
     if (m.meas_value != null)
       putAnyToMap(map, "meas_value", m.meas_value)
+    //    else
+    //      putAnyToMap(map, "meas_value", null)
 
     putOptionToMap(map, "meas_unit", m.meas_unit)
     putOptionToMap(map, "meas_status", m.meas_status)

@@ -743,7 +743,7 @@ object elcTest extends App {
   //  }
 
   // Create Transformation
-  val op1 = esc.createTransformations("Identity", List("Temperator", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
+  val op1 = esc.createTransformations("Identity", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
   println("transformation created: " + op1)
 
   val op2 = esc.createTransformations("FillMissingValue", List("Temperature"), Map("method" -> "rolling", "s" -> 3))
@@ -755,39 +755,11 @@ object elcTest extends App {
   val op3 = esc.createTransformations("Identity", list, mutableMap)
   println("transformation created: " + op3)
 
-<<<<<<< HEAD
-  //  println("Enter 'Q' to stop streaming DEBUGGING 1")
-  //  while ((StdIn.readChar()).toLower.compare('q') != 0) {
-  //    println("Continuing streaming. Enter 'Q' to stop streaming.")
-  //  }
-
-  // Create Stream
-  //  esc.createStream(List("measurements_original"), "measurements_intermediate", op1)
-  //  println("stream 1 created: " + op1)
-
-  //  println("Enter 'Q' to stop streaming DEBUGGING 2")
-  //  while ((StdIn.readChar()).toLower.compare('q') != 0) {
-  //    println("Continuing streaming. Enter 'Q' to stop streaming.")
-  //  }
-
-  esc.createStream(List("measurements_original","measurements_intermediate"), "measurements_cleansed", op2)
-  println("stream 2 created: " + op2)
-
-  //  println("Enter 'Q' to stop streaming DEBUGGING 3")
-  //  while ((StdIn.readChar()).toLower.compare('q') != 0) {
-  //    println("Continuing streaming. Enter 'Q' to stop streaming.")
-  //  }
-
-  //  esc.createStream("measurements_original", "measurements_cleansed", op3)
-  //  println("stream 3 created: " + op3)
-
-  //  println("Enter 'Q' to stop streaming DEBUGGING 4")
-  //  while ((StdIn.readChar()).toLower.compare('q') != 0) {
-  //    println("Continuing streaming. Enter 'Q' to stop streaming.")
-  //  }
-=======
-  val op4 = esc.createTransformations("FillMissingValue", List("Meas-1"), Map[String, String]())
+  val op4 = esc.createTransformations("FillMissingValue", List("Temperature"), Map[String, String]())
   println("transformation created: " + op4)
+
+  val op5 = esc.createTransformations("Identity", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
+  println("transformation created: " + op5)
 
   // Create Streams
   /*
@@ -809,6 +781,7 @@ object elcTest extends App {
          op5
     play datasink
    */
+
   //op1
   esc.createStream("measurements_original", "measurements_intermediate", op1)
   println("STREAM 1 created: " + op1)
@@ -827,17 +800,16 @@ object elcTest extends App {
   op4topics += "measurements_intermediate_2"
   val op4buffers = ListBuffer[Integer]()
   op4buffers += 5
-  op4buffers += 6
-  esc.createStream(op4topics, op4buffers, "measurements_intermediate_3", op3)
-  println("STREAM 4 created: " + op3 + "\n")
+  op4buffers += 5
+  esc.createStream(op4topics, op4buffers, "measurements_intermediate_3", op4)
+  println("STREAM 4 created: " + op4 + "\n")
 
   //op5
   val op5topics = ListBuffer[String]()
   op5topics += "measurements_intermediate_1"
   op5topics += "measurements_intermediate_3"
-  esc.createStream(op5topics, "measurements_cleansed", op4)
-  println("STREAM 5 created: " + op4 + "\n")
->>>>>>> refs/remotes/origin/scala-2.12
+  esc.createStream(op5topics, "measurements_cleansed", op5)
+  println("STREAM 5 created: " + "\n")
 
   esc.testUnit()
   println(esc.printSomething(""))

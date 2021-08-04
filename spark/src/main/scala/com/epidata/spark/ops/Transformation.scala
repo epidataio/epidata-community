@@ -21,17 +21,13 @@ trait Transformation {
       .withColumn("meas_method", lit(null: String))
 
   def apply(measurements: ListBuffer[JLinkedHashMap[String, Object]]): ListBuffer[JLinkedHashMap[String, Object]] = {
-    // To Be Implemented - Add meas_flag and meas_method columns
+    for (index <- measurements.indices) {
+      measurements(index).put("meas_flag", null)
+      measurements(index).put("meas_method", null)
+    }
     measurements
   }
 
-  /* Interface for Python and Java */
-  /*  def apply(measurements: JList[JLinkedHashMap[String, Object]]): JList[JLinkedHashMap[String, Object]] = {
-    import scala.collection.JavaConversions._
-    // To Be Implemented - perform JList[JLinkedHashMap[String, Object]] -> List[Map[String, Object]] conversion and call Scala native apply method
-    measurements
-  }
-*/
   val name: String = "Default"
   def destination: String
 }

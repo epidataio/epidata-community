@@ -119,16 +119,14 @@ class StreamingNode {
 
     receivedString match {
       case _: String => {
-        // val jSONObject = parser.parse(receivedString).asInstanceOf[JMap[String, String]]
-
         val measurement: String = jsonToMessage(receivedString).value
 
         val index = subscribeTopics.indexOf(topic) //getting index of corresponding Buffer in streamBuffers
-        print("index: " + index + " in range " + subscribeTopics.length)
+        //println("index: " + index + " in range " + subscribeTopics.length)
         //print("Obj or Null: " + streamBuffers(index))
-        //        streamBuffers(index).enqueue(jSONObject.get("value")) //adding current message value to buffer
         streamBuffers(index).enqueue(measurement) //adding current message value to buffer
-        if (streamBuffers(index).size == bufferSizes(index)) { //checking to see if size of Buffer reached max
+
+        if (streamBuffers(index).size >= bufferSizes(index)) { //checking to see if size of Buffer reached max
           printf("\n\n DEQUEUING WHEN (" + index + ") BUFFER SIZE IS: " + streamBuffers(index).size + "\n\n")
           val list = streamBuffers(index).toList //if desired buffer size is achieved -> convert Queued measurements to list
           streamBuffers(index).clear() //clear buffer
@@ -149,74 +147,26 @@ class StreamingNode {
       println("$$$$Meas: " + measurement + "\n")
     }
 
-    /*    val transformResults = transformation.apply(map)
-
-    var resultsAsMap = new ListBuffer[JLinkedHashMap[String, String]]
-
-    for (result <- transformResults) {
-      val transformationMap = new JLinkedHashMap[String, String]()
-      transformationMap.put("topic", publishTopic)
-      transformationMap.put("key", TempID.toString /*create key method from Play*/ )
-      transformationMap.put("value", result)
-
-      resultsAsMap += transformationMap
-    }
-
-    resultsAsMap
-    //iterate through list of basemeasuremnt to make key value pairs
-*/
-
     import scala.collection.JavaConversions._
 
-    measurementClass match {
-      case com.epidata.lib.models.AutomatedTest.NAME => {
-        val measList = new ListBuffer[JLinkedHashMap[String, Object]]()
-        for (json <- list) {
-          measList += BaseAutomatedTest.jsonToJLinkedHashMap(json)
-        }
-        println("measurement list: " + measList + "\n")
-
-        println("transformation type: " + transformation + "\n")
-
-        import scala.collection.JavaConversions._
-
-        val resultsList = transformation.apply(measList)
-        println("result list: " + resultsList + "\n")
-
-        for (result <- resultsList) {
-          val key = keyForAutomatedTest(result)
-          println("key: " + key + "\n")
-          val value = JSONObject.toJSONString(result)
-          println("value: " + value + "\n")
-          val message: String = messageToJson(Message(key, value))
-          println("message: " + message + "\n")
-          outputBuffer.enqueue(message)
-        }
-        println("outputBuffer: " + outputBuffer + "\n")
-      }
-
-      case com.epidata.lib.models.SensorMeasurement.NAME => {
-        val measList = new ListBuffer[JLinkedHashMap[String, Object]]()
-        for (json <- list) {
-          val temp = BaseSensorMeasurement.jsonToJLinkedHashMap(json)
-          measList += temp
-        }
-        println("measurement list: " + measList + "\n")
-
-        println("transformation type: " + transformation + "\n")
-
-        val resultsList = transformation.apply(measList)
-        println("result List: " + resultsList + "\n")
-
-        for (result <- resultsList) {
-          val key = keyForSensorMeasurement(result)
-          val value = JSONObject.toJSONString(result)
-          val message: String = messageToJson(Message(key, value))
-          outputBuffer.enqueue(message)
-        }
-        println("outputBuffer: " + outputBuffer + "\n")
-      }
+    val measList = new ListBuffer[JLinkedHashMap[String, Object]]()
+    for (json <- list) {
+      measList += jsonToMap(json)
     }
+    println("measurement list: " + measList + "\n")
+
+    println("transformation type: " + transformation + "\n")
+
+    val resultsList = transformation.apply(measList)
+    println("result List: " + resultsList + "\n")
+
+    for (result <- resultsList) {
+      val key = keyForSensorMeasurement(result)
+      val value = mapToJson(result)
+      val message: String = messageToJson(Message(key, value))
+      outputBuffer.enqueue(message)
+    }
+    // println("outputBuffer: " + outputBuffer + "\n")
 
   }
 
@@ -224,16 +174,6 @@ class StreamingNode {
     //val processedMessage: Message = epidataLiteStreamingContext(ZMQInit.streamQueue.dequeue)
     //println("Streamingnode publish method called")
     println("\n\nPublishing---------------------------------------------- $$$ " + !outputBuffer.isEmpty)
-
-    //    for (map <- processedMapList) {
-    //      TempID += 1
-    //      publishSocket.sendMore(this.publishTopic)
-    //      val msg: String = JSONObject.toJSONString(map)
-    //      publishSocket.send(msg.getBytes(), 0)
-    //
-    //      println("\npublish topic: " + this.publishTopic + ", publish port: " + publishPort)
-    //      println("published message: " + msg + "\n")
-    //    }
 
     while (!outputBuffer.isEmpty) {
       val msg = outputBuffer.dequeue()

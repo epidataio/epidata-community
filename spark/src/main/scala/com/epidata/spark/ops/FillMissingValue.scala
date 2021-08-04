@@ -26,21 +26,12 @@ class FillMissingValue(
 
     method match {
       case "rolling" =>
-        // To Be Implemented - placeholder code
         val filteredMeas = measurements
           .filter(m => meas_names.contains(m.get("meas_name").asInstanceOf[String]))
-        //          .map(m => m.get("meas_value").getClass match {
-        //            case Long => m.update("meas_value", m.get("meas_value").asInstanceOf[Double])
-        //            case Int =>
-        //              m.update("meas_value", m.get("meas_value").asInstanceOf[Double])
-        //              m
-        //          })
-
-        println("filteredMeas: " + filteredMeas + "\n")
 
         for (index <- filteredMeas.indices) {
           // If value is null, then substitute it!
-          if (filteredMeas(index).get("meas_value") == null || filteredMeas(index).get("meas_value") == 0) { //TODO: it should not need for 0 here!
+          if (filteredMeas(index).get("meas_value") == null) { //TODO: it should not need for 0 here!
             var sum: Double = 0
             var count = 0
 
@@ -54,14 +45,13 @@ class FillMissingValue(
             if (count > 0) {
               val measValue = (sum / count).asInstanceOf[Object]
               filteredMeas(index).put("meas_value", measValue)
-              filteredMeas(index).put("meas_flag", lit("substituted"))
-              filteredMeas(index).put("meas_method", lit(method))
+              filteredMeas(index).put("meas_flag", "substituted")
+              filteredMeas(index).put("meas_method", method)
             }
           }
         }
 
         filteredMeas
-      //        measurements
     }
   }
 
