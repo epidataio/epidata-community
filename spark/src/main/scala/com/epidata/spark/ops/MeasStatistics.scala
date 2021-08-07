@@ -49,6 +49,6 @@ class MeasStatistics(
     }
   }
 
+  override val name: String = "MeasStatistics"
   override def destination: String = "measurements_summary"
 }
-

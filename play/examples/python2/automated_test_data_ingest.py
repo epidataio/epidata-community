@@ -129,7 +129,7 @@ json_body = json.dumps([{
 
     # The meas_value field can contain a number or a text string, depending on
     # the measurement data type.
-    'meas_value': 45.7,
+    'meas_value': 41.7,
 
     # The meas_datatype field represents the type of the meas_value provided (in
     # this case the type is double precision floating point).

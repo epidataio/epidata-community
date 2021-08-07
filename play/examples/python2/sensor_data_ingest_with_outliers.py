@@ -125,12 +125,12 @@ while (True):
         meas_last_windspeed_value = 8
         meas_last_rh_value = 60
 
-        for data_iteration in range(1, 5):
+        for data_iteration in range(1, 6):
 
             # Construct an empty list of measurement objects
             measurement_list = []
 
-            for log_iteration in range(1, 5):
+            for log_iteration in range(1, 2):
 
                 current_time_string = datetime.now().strftime("%m/%d/%Y %H:%M:%S.%f")
                 current_time = get_time(current_time_string)
@@ -147,7 +147,7 @@ while (True):
                     else:
                         meas_value_diff = float(round(random.normalvariate(3.0, 0.25), 2))
                         meas_value = meas_last_temperature_value - meas_value_diff
-                elif ((data_iteration % 6 == 0) and (log_iteration == 3)):
+                elif ((data_iteration % 3 == 0) and (log_iteration == 1)):
                     meas_value = None
                 else:
                     if(data_iteration <= 12):
@@ -190,7 +190,7 @@ while (True):
                 # Simulate Wind Speed measurement data
                 if ((data_iteration % 4 == 0) and (log_iteration == 2)):
                     meas_value = float(30)
-                elif ((data_iteration % 21 == 0) and (log_iteration == 3)):
+                elif ((data_iteration % 3 == 0) and (log_iteration == 1)):
                     meas_value = None
                 else:
                     meas_value = float(round(random.normalvariate(8, 2), 2))

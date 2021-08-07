@@ -743,10 +743,10 @@ object elcTest extends App {
   //  }
 
   // Create Transformation
-  val op1 = esc.createTransformations("Identity", List("Meas-1"), Map[String, String]())
+  val op1 = esc.createTransformations("Identity", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
   println("transformation created: " + op1)
 
-  val op2 = esc.createTransformations("Identity", List("Meas-1"), Map[String, String]())
+  val op2 = esc.createTransformations("FillMissingValue", List("Temperature"), Map("method" -> "rolling", "s" -> 3))
   println("transformation created: " + op2)
 
   var list = new util.ArrayList[String]()
@@ -755,8 +755,11 @@ object elcTest extends App {
   val op3 = esc.createTransformations("Identity", list, mutableMap)
   println("transformation created: " + op3)
 
-  val op4 = esc.createTransformations("FillMissingValue", List("Meas-1"), Map[String, String]())
+  val op4 = esc.createTransformations("FillMissingValue", List("Temperature"), Map[String, String]())
   println("transformation created: " + op4)
+
+  val op5 = esc.createTransformations("Identity", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
+  println("transformation created: " + op5)
 
   // Create Streams
   /*
@@ -780,6 +783,7 @@ object elcTest extends App {
           ↓
     play datasink
    */
+
   //op1
   esc.createStream("measurements_original", "measurements_intermediate", op1)
   println("STREAM 1 created: " + op1)
@@ -798,16 +802,16 @@ object elcTest extends App {
   op4topics += "measurements_intermediate_2"
   val op4buffers = ListBuffer[Integer]()
   op4buffers += 5
-  op4buffers += 6
-  esc.createStream(op4topics, op4buffers, "measurements_intermediate_3", op3)
-  println("STREAM 4 created: " + op3 + "\n")
+  op4buffers += 5
+  esc.createStream(op4topics, op4buffers, "measurements_intermediate_3", op4)
+  println("STREAM 4 created: " + op4 + "\n")
 
   //op5
   val op5topics = ListBuffer[String]()
   op5topics += "measurements_intermediate_1"
   op5topics += "measurements_intermediate_3"
-  esc.createStream(op5topics, "measurements_cleansed", op4)
-  println("STREAM 5 created: " + op4 + "\n")
+  esc.createStream(op5topics, "measurements_cleansed", op5)
+  println("STREAM 5 created: " + "\n")
 
   esc.createStream("measurements_intermediate", "measurements_intermediate_6", op3)
 
