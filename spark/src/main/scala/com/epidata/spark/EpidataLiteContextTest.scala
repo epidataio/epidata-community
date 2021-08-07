@@ -763,19 +763,21 @@ object elcTest extends App {
      play producer
            |
            ↓
-          op1
-        /     \
-       ↓       ↓
-      op2     op3
-       | \     /
-       |  ↓   ↓
-       |   op4
-       |   |
-       \   |
-        \  |
-         \ |
-          ↓
+          op1 -------
+        /     \     |
+       ↓       ↓    |
+      op2     op3   |
+       | \     /    |
+       |  ↓   ↓     |
+       |   op4      |
+       |   |        |
+       \   |        |
+        \  |        |
+         \ |        ↓
+          ↓        op6
          op5
+          |
+          ↓
     play datasink
    */
   //op1
@@ -807,13 +809,10 @@ object elcTest extends App {
   esc.createStream(op5topics, "measurements_cleansed", op4)
   println("STREAM 5 created: " + op4 + "\n")
 
+  esc.createStream("measurements_intermediate", "measurements_intermediate_6", op3)
+
   esc.testUnit()
   println(esc.printSomething(""))
-
-  println("\nEnter 'Q' to start streaming")
-  while ((StdIn.readChar()).toLower.compare('q') != 0) {
-    println("Continuing streaming. Enter 'Q' to stop streaming.")
-  }
 
   // Start Stream
   esc.startStream()

@@ -6,7 +6,8 @@ import java.util.concurrent.Executors
 import org.zeromq.ZMQ
 import com.epidata.spark.ops.{ FillMissingValue, Identity, MeasStatistics, OutlierDetector, Transformation }
 import org.apache.spark.sql.{ DataFrame, SQLContext }
-import scala.collection.mutable.{ Map => MutableMap }
+
+import scala.collection.mutable.{ HashMap, Map => MutableMap }
 import scala.io.StdIn
 //import scala.collection.JavaConverters
 //-------------------logger package--------
@@ -28,6 +29,7 @@ class EpidataLiteStreamingContext {
   var startPort: Integer = 5551
   var endPort: Integer = 5552
   var processors: ListBuffer[StreamingNode] = _
+  val streamAuditor = new EpidataStreamValidation()
   var _runStream: Boolean = _
   var context: ZMQ.Context = _
   val receiveTimeout: Integer = -1
@@ -58,6 +60,7 @@ class EpidataLiteStreamingContext {
     topicMap.put("measurements_original", startPort)
     topicMap.put("measurements_cleansed", endPort)
     topicMap.put("measurements_summary", endPort)
+    streamAuditor.init()
   }
 
   def createTransformations(opName: String, meas_names: List[String], params: Map[String, String]): Transformation = {
@@ -135,48 +138,71 @@ class EpidataLiteStreamingContext {
       case Some(port) => port.toString
       case None => throw new IllegalArgumentException("Destination Topic is not recognized.")
     }
-    //.log(Level.INFO, "streamDestinationPort: ", streamDestinationPort)
+    //    processors += (new StreamingNode()).init(
+    //      context,
+    //      streamSourcePort,
+    //      sourceTopic,
+    //      buffersizes,
+    //      streamDestinationPort,
+    //      destinationTopic,
+    //      receiveTimeout,
+    //      operation)
 
-    processors += (new StreamingNode()).init(
-      context,
+    streamAuditor.addProcessor(
       streamSourcePort,
       sourceTopic,
       buffersizes,
       streamDestinationPort,
       destinationTopic,
-      receiveTimeout,
       operation)
-    //logger.log(Level.INFO, "processors: ", processors)
   }
 
   def startStream(): Unit = {
-    //println("---------Start Stream called-------" + processors.length)
-
+    val processorConfigs: ListBuffer[MutableMap[String, Any]] = streamAuditor.validate(topicMap, intermediatePort)
+    for (processor <- processorConfigs) {
+      processor.get("transformation") match {
+        case operation: Transformation => {
+          processors += new StreamingNode().init(
+            context,
+            processor.get("receivePorts") match { case Some(list: ListBuffer[String]) => list },
+            processor.get("receiveTopics") match { case Some(list: ListBuffer[String]) => list },
+            processor.get("bufferSizes") match { case Some(list: ListBuffer[Integer]) => list },
+            processor.get("sendPort") match { case Some(list: String) => list },
+            processor.get("sendTopic") match { case Some(list: String) => list },
+            receiveTimeout,
+            operation)
+        }
+        case operation: Some[String] => {
+          processors += new StreamingNode().init(
+            context,
+            processor.get("receivePorts") match { case Some(list: ListBuffer[String]) => list },
+            processor.get("receiveTopics") match { case Some(list: ListBuffer[String]) => list },
+            processor.get("bufferSizes") match { case Some(list: ListBuffer[Integer]) => list },
+            processor.get("sendPort") match { case Some(list: String) => list },
+            processor.get("sendTopic") match { case Some(list: String) => list },
+            receiveTimeout,
+            createTransformations(operation.toString, List("Meas-1"), Map[String, String]()))
+        }
+      }
+    }
     processors.reverse
 
-    //iterate through processors arraylist backwards creating thread
+    println("Enter 'Q' to start streaming")
+    while ((StdIn.readChar()).toLower.compare('q') != 0) {
+      println("Enter 'Q' to start streaming.")
+    }
 
-    //println("number of processors: " + processors.size)
     for (processor <- processors) {
       Executors.newSingleThreadExecutor.execute(new Runnable {
         override def run(): Unit = {
-          //println("processor started in new thread. runstream value - " + _runStream)
           while (_runStream) {
-
             processor.receive()
             processor.publish()
-
           }
-
-          //println("while loop exited")
-          //println("clearing processor: " + processor)
           processor.clear()
-
-          //println("completing thread execution")
         }
       })
     }
-    //logger.log(Level.INFO, "startstream successfully: ", processors)
   }
 
   def stopStream(): Unit = {
