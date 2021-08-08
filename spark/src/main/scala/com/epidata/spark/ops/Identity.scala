@@ -11,5 +11,6 @@ import com.epidata.spark.{ Measurement, MeasurementCleansed }
 
 class Identity extends Transformation {
 
+  override val name: String = "Identity"
   override def destination: String = "measurements_cleansed"
 }

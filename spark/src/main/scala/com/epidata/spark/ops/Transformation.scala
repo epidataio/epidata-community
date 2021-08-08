@@ -12,6 +12,7 @@ import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{ SQLContext, DataFrame }
 import java.util.{ Date, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList, List => JList }
+import scala.collection.mutable.{ Map => MutableMap, ListBuffer }
 
 trait Transformation {
   def apply(dataFrame: DataFrame, sqlContext: SQLContext): DataFrame =
@@ -19,17 +20,14 @@ trait Transformation {
       .withColumn("meas_flag", lit(null: String))
       .withColumn("meas_method", lit(null: String))
 
-  def apply(measurements: List[Map[String, Object]]): List[Map[String, Object]] = {
-    // To Be Implemented - Add meas_flag and meas_method columns
+  def apply(measurements: ListBuffer[JLinkedHashMap[String, Object]]): ListBuffer[JLinkedHashMap[String, Object]] = {
+    for (index <- measurements.indices) {
+      measurements(index).put("meas_flag", null)
+      measurements(index).put("meas_method", null)
+    }
     measurements
   }
 
-  /* Interface for Python and Java */
-  def apply(measurements: JList[JLinkedHashMap[String, Object]]): JList[JLinkedHashMap[String, Object]] = {
-    import scala.collection.JavaConversions._
-    // To Be Implemented - perform JList[JLinkedHashMap[String, Object]] -> List[Map[String, Object]] conversion and call Scala native apply method
-    measurements
-  }
-
+  val name: String = "Default"
   def destination: String
 }
