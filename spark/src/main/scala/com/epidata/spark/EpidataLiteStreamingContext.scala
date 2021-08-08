@@ -27,14 +27,15 @@ import scala.collection.mutable.ListBuffer
 
 class EpidataLiteStreamingContext {
   var startPort: Integer = 5551
-  var endPort: Integer = 5552
+  var cleansedPort: Integer = 5552
+  var summaryPort: Integer = 5553
   var processors: ListBuffer[StreamingNode] = _
   val streamAuditor = new EpidataStreamValidation()
   var _runStream: Boolean = _
   var context: ZMQ.Context = _
   val receiveTimeout: Integer = -1
   var topicMap: MutableMap[String, Integer] = _
-  var intermediatePort: Integer = 5553
+  var intermediatePort: Integer = 5554
   val logger = Logger.getLogger("Epidata lite logger")
   logger.setLevel(Level.FINE)
   logger.addHandler(new ConsoleHandler)
@@ -58,8 +59,8 @@ class EpidataLiteStreamingContext {
     processors = ListBuffer()
     topicMap = MutableMap[String, Integer]()
     topicMap.put("measurements_original", startPort)
-    topicMap.put("measurements_cleansed", endPort)
-    topicMap.put("measurements_summary", endPort)
+    topicMap.put("measurements_cleansed", cleansedPort)
+    topicMap.put("measurements_summary", summaryPort)
     streamAuditor.init()
   }
 

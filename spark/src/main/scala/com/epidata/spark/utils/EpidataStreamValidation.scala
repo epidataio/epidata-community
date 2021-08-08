@@ -191,7 +191,9 @@ class EpidataStreamValidation {
 
       val newNodes = getNewNodeConfigs(cleansedCounter, summaryCounter, looseSources)
 
+      var topic: Integer = 0
       for (newNodeTopics <- newNodes) {
+        topic += 1
         // println(newNodeTopics + "\n")
         val newNodePorts: ListBuffer[String] = ListBuffer()
         for (topic <- newNodeTopics) {
@@ -202,13 +204,23 @@ class EpidataStreamValidation {
           }
         }
 
-        processorConfigs += HashMap(
-          "receivePorts" -> newNodePorts,
-          "receiveTopics" -> newNodeTopics,
-          "bufferSizes" -> ListBuffer(0),
-          "sendPort" -> "5552",
-          "sendTopic" -> "measurements_cleansed",
-          "transformation" -> "Identity")
+        if (topic == 1) {
+          processorConfigs += HashMap(
+            "receivePorts" -> newNodePorts,
+            "receiveTopics" -> newNodeTopics,
+            "bufferSizes" -> ListBuffer(0),
+            "sendPort" -> "5552",
+            "sendTopic" -> "measurements_cleansed",
+            "transformation" -> "Identity")
+        } else {
+          processorConfigs += HashMap(
+            "receivePorts" -> newNodePorts,
+            "receiveTopics" -> newNodeTopics,
+            "bufferSizes" -> ListBuffer(0),
+            "sendPort" -> "5553",
+            "sendTopic" -> "measurements_summary",
+            "transformation" -> "Identity")
+        }
       }
     }
 
