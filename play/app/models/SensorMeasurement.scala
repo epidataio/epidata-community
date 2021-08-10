@@ -133,7 +133,7 @@ object SensorMeasurement {
     // println("insertCleansedRecordFromZMQ called." + "\n")
     // println("str: " + str + "\n")
     BaseSensorMeasurementCleansed.jsonToSensorMeasurementCleansed(str) match {
-      case Some(sensorMeasurementCleansed) => insertCleansed(sensorMeasurementCleansed, Configs.measDBLite)
+      case Some(smc) => insertCleansed(smc, Configs.measDBLite)
       case _ => logger.error("Bad json format!")
     }
   }
@@ -142,10 +142,40 @@ object SensorMeasurement {
     // println("insertSummaryRecordFromZMQ called." + "\n")
     // println("str: " + str + "\n")
     BaseSensorMeasurementSummary.jsonToSensorMeasurementSummary(str) match {
-      case Some(sensorMeasurementSummary) => {
-        insertSummary(sensorMeasurementSummary, Configs.measDBLite)
+      case Some(sms) => {
+        insertSummary(sms, Configs.measDBLite)
       }
       case _ => logger.error("Bad json format!")
+    }
+  }
+
+  def insertDynamicRecordFromZMQ(str: String): Unit = {
+    try {
+      BaseSensorMeasurementCleansed.jsonToSensorMeasurementCleansed(str) match {
+        case Some(smc: BaseSensorMeasurementCleansed) => {
+          // println("inserting dynamic record as measurements cleansed record.\n")
+          insertCleansed(smc, Configs.measDBLite)
+          return
+        }
+        case _ => throw new Exception("Dynamic data is not of type MeasurementCleansed.")
+      }
+    } catch {
+      case _: Throwable => {
+        try {
+          BaseSensorMeasurementSummary.jsonToSensorMeasurementSummary(str) match {
+            case Some(sms: BaseSensorMeasurementSummary) => {
+              // println("inserting dynamic record as measurements summary record.\n")
+              insertSummary(sms, Configs.measDBLite)
+              return
+            }
+            case _ => throw new Exception("Dynamic data is not of type MeasurementSummary.")
+          }
+        } catch {
+          case _: Throwable => {
+            logger.error("Bad json format!")
+          }
+        }
+      }
     }
   }
 

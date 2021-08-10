@@ -22,6 +22,7 @@ object ZMQInit {
      * ZMQPullDataSink: pullPort: 5550,
      * ZMQCleansedDataSink: cleansedSubPort: 5552
      * ZMQSummaryDataSink: summarySubPort: 5553
+     * ZMQDynamicDataSink: dynamicSubPort: 5554
      * ZMQService executes ZMQStream and ZMQDataSink as threads
      */
 
@@ -29,7 +30,8 @@ object ZMQInit {
       context,
       config.getOptional[Int]("queue.servers").get.toString,
       (config.getOptional[Int]("queue.servers").get + 2).toString,
-      (config.getOptional[Int]("queue.servers").get + 3).toString)
+      (config.getOptional[Int]("queue.servers").get + 3).toString,
+      (config.getOptional[Int]("queue.servers").get + 4).toString)
 
     _ZMQService.start()
 

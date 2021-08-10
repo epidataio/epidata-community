@@ -189,8 +189,13 @@ object SensorMeasurementSummary {
     val site: String = jSONObject.get("site").asInstanceOf[String]
     val station: String = jSONObject.get("station").asInstanceOf[String]
     val sensor: String = jSONObject.get("sensor").asInstanceOf[String]
+
+    if (jSONObject.get("start_time") == null || jSONObject.get("stop_time") == null)
+      throw new Exception("invalid json format!")
+
     val start_time: Date = new Date(jSONObject.get("start_time").asInstanceOf[Long])
     val stop_time: Date = new Date(jSONObject.get("stop_time").asInstanceOf[Long])
+
     val event: String = jSONObject.get("event").asInstanceOf[String]
     val meas_name: String = jSONObject.get("meas_name").asInstanceOf[String]
     val meas_summary_name: String = jSONObject.get("meas_summary_name").asInstanceOf[String]

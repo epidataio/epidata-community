@@ -21,18 +21,20 @@ object ZMQService {
   private var pullPort: String = _
   private var cleansedSubPort: String = _
   private var summarySubPort: String = _
+  private var dynamicSubPort: String = _
   private var context: ZMQ.Context = _
 
   val logger: Logger = Logger(this.getClass())
 
-  private val poolSize: Int = 3
+  private val poolSize: Int = 4
   private val executorService: ExecutorService = Executors.newFixedThreadPool(poolSize)
 
-  def init(context: ZMQ.Context, pullPort: String, cleansedSubPort: String, summarySubPort: String): ZMQService.type = {
+  def init(context: ZMQ.Context, pullPort: String, cleansedSubPort: String, summarySubPort: String, dynamicSubPort: String): ZMQService.type = {
     this.context = context
     this.pullPort = pullPort
     this.cleansedSubPort = cleansedSubPort
     this.summarySubPort = summarySubPort
+    this.dynamicSubPort = dynamicSubPort
     this
   }
 
@@ -97,7 +99,7 @@ object ZMQService {
                 val data: (String, Message) = sink.sub()
                 val topic = data._1
                 val processedData: String = data._2.value
-                // println("Sub topic: " + topic + ", Sub data: " + processedData + "\n")
+                println("Sub topic: " + topic + ", Sub data: " + processedData + "\n")
 
                 Configs.measurementClass match {
                   case com.epidata.lib.models.AutomatedTest.NAME => {
@@ -147,13 +149,13 @@ object ZMQService {
                 val data: (String, Message) = sink.sub()
                 val topic = data._1
                 val processedData: String = data._2.value
-                // println("Sub topic: " + topic + ", Sub data: " + processedData + "\n")
+                println("Sub topic: " + topic + ", Sub data: " + processedData + "\n")
 
                 Configs.measurementClass match {
                   case com.epidata.lib.models.AutomatedTest.NAME => {
                     if (topic == "measurements_summary") {
                       models.AutomatedTest.insertSummaryRecordFromZMQ(processedData)
-                      // println("inserted AutomatedTest summary data: " + processedData + "\n")
+                      println("inserted AutomatedTest summary data: " + processedData + "\n")
                     } else {
                       logger.error("unrecognized topic")
                     }
@@ -161,7 +163,7 @@ object ZMQService {
                   case com.epidata.lib.models.SensorMeasurement.NAME => {
                     if (topic == "measurements_summary") {
                       models.SensorMeasurement.insertSummaryRecordFromZMQ(processedData)
-                      // println("inserted SensorMeasurement summary data: " + processedData + "\n")
+                      println("inserted SensorMeasurement summary data: " + processedData + "\n")
                     } else {
                       logger.error("unrecognized topic")
                     }
@@ -182,6 +184,56 @@ object ZMQService {
           }
           //println("DataSink Sub loop exited")
           sink.clear(summarySubPort)
+        }
+      })
+
+      // Subscribe Thread - Dynamic (Cleansed and/or Summary) Data
+      executorService.submit(new Runnable {
+        override def run(): Unit = {
+          val sink = new ZMQDynamicDataSink()
+          sink.init(context, dynamicSubPort)
+
+          breakable {
+            while (!Thread.currentThread().isInterrupted()) {
+              try {
+                val data: (String, Message) = sink.sub()
+                val topic = data._1
+                val processedData: String = data._2.value
+                println("Sub topic: " + topic + ", Sub data: " + processedData + "\n")
+
+                Configs.measurementClass match {
+                  case com.epidata.lib.models.AutomatedTest.NAME => {
+                    if (topic == "measurements_dynamic") {
+                      models.AutomatedTest.insertDynamicRecordFromZMQ(processedData)
+                      println("inserted AutomatedTest dynamic data: " + processedData + "\n")
+                    } else {
+                      logger.error("unrecognized topic")
+                    }
+                  }
+                  case com.epidata.lib.models.SensorMeasurement.NAME => {
+                    if (topic == "measurements_dynamic") {
+                      models.SensorMeasurement.insertDynamicRecordFromZMQ(processedData)
+                      println("inserted SensorMeasurement dynamic data: " + processedData + "\n")
+                    } else {
+                      logger.error("unrecognized topic")
+                    }
+                  }
+                  case _ =>
+                }
+              } catch {
+                case e: JsonMappingException => throw new Exception(e.getMessage)
+                case e: ZMQException if ZMQ.Error.ETERM.getCode == e.getErrorCode => {
+                  break
+                  // Thread.currentThread.interrupt()
+                  // println("DataSink sub service interrupted")
+                }
+                case e: ZMQException => println("ZMQ sub service thread interrupted")
+                case _: Throwable => throw new Exception("Error while insert data to database from data sink service")
+              }
+            }
+          }
+          //println("DataSink Sub loop exited")
+          sink.clear(dynamicSubPort)
         }
       })
 

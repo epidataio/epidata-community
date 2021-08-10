@@ -26,8 +26,9 @@ import scala.collection.mutable.ListBuffer
 
 class EpidataLiteStreamingContext {
   var startPort: Integer = 5551
-  var cleansedEndPort: Integer = 5553
-  var summaryEndPort: Integer = 5553
+  var cleansedEndPort: Integer = 5554
+  var summaryEndPort: Integer = 5554
+  var dynamicEndPort: Integer = 5554
   var processors: ListBuffer[StreamingNode] = _
   var _runStream: Boolean = _
   var context: ZMQ.Context = _
@@ -59,6 +60,7 @@ class EpidataLiteStreamingContext {
     topicMap.put("measurements_original", startPort)
     topicMap.put("measurements_cleansed", cleansedEndPort)
     topicMap.put("measurements_summary", summaryEndPort)
+    topicMap.put("measurements_dynamic", dynamicEndPort)
   }
 
   def createTransformations(opName: String, meas_names: List[String], params: Map[String, Any]): Transformation = {
