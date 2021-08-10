@@ -17,17 +17,15 @@ import org.zeromq.ZMQ
 import org.zeromq.ZMQException
 import play.api.Logger
 
-class ZMQSubDataSink {
+class ZMQSummaryDataSink {
   var context: ZMQ.Context = _
   var subSocket: ZMQ.Socket = _
-  val subTopicOriginal: String = "measurements_original"
-  val subTopicCleansed: String = "measurements_cleansed"
   val subTopicSummary: String = "measurements_summary"
 
   val logger: Logger = Logger(this.getClass())
 
   def init(context: ZMQ.Context, subPort: String): Unit = {
-    println("ZMQSubDataSink initialized")
+    println("ZMQSummaryDataSink initialized")
 
     //initializing ZMQ context which will be used for SUB
     this.context = context
@@ -36,20 +34,18 @@ class ZMQSubDataSink {
     subSocket = context.socket(ZMQ.SUB)
     subSocket.connect("tcp://127.0.0.1:" + subPort)
 
-    subSocket.subscribe(subTopicOriginal.getBytes(ZMQ.CHARSET))
-    subSocket.subscribe(subTopicCleansed.getBytes(ZMQ.CHARSET))
     subSocket.subscribe(subTopicSummary.getBytes(ZMQ.CHARSET))
   }
 
-  def sub(): Message = {
-    //println("ZMQSubDataSink sub called.")
+  def sub(): (String, Message) = {
+    //println("ZMQSummaryDataSink sub called.")
     try {
       val topic = subSocket.recvStr()
-      //println("Sub topic: " + topic + "\n")
+      // println("Sub topic: " + topic + "\n")
       val receivedString = subSocket.recvStr()
-      println("Sub data: " + receivedString + "\n")
+      // println("Sub data: " + receivedString + "\n")
       val message = jsonToMessage(receivedString)
-      message
+      (topic, message)
     } catch {
       case e: Throwable => throw e
     }
@@ -57,13 +53,11 @@ class ZMQSubDataSink {
 
   def clear(subPort: String): Unit = {
     try {
-      subSocket.unsubscribe(subTopicOriginal.getBytes(ZMQ.CHARSET))
-      subSocket.unsubscribe(subTopicCleansed.getBytes(ZMQ.CHARSET))
       subSocket.unsubscribe(subTopicSummary.getBytes(ZMQ.CHARSET))
       subSocket.setLinger(1)
       subSocket.disconnect("tcp://127.0.0.1:" + subPort)
       subSocket.close()
-      println("DataSink sub service closed successfully")
+      println("Summary DataSink service closed successfully")
     } catch {
       case e: Throwable => println("Exception while closing DataSink sub service", e.getMessage)
     }

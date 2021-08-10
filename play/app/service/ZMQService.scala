@@ -19,18 +19,20 @@ import play.api.Logger
 
 object ZMQService {
   private var pullPort: String = _
-  private var subPort: String = _
+  private var cleansedSubPort: String = _
+  private var summarySubPort: String = _
   private var context: ZMQ.Context = _
 
   val logger: Logger = Logger(this.getClass())
 
-  private val poolSize: Int = 2
+  private val poolSize: Int = 3
   private val executorService: ExecutorService = Executors.newFixedThreadPool(poolSize)
 
-  def init(context: ZMQ.Context, pullPort: String, subPort: String): ZMQService.type = {
+  def init(context: ZMQ.Context, pullPort: String, cleansedSubPort: String, summarySubPort: String): ZMQService.type = {
     this.context = context
     this.pullPort = pullPort
-    this.subPort = subPort
+    this.cleansedSubPort = cleansedSubPort
+    this.summarySubPort = summarySubPort
     this
   }
 
@@ -41,6 +43,7 @@ object ZMQService {
     println("ZMQService started")
 
     try {
+
       // Pull Thread - Original Data
       executorService.submit(new Runnable {
         override def run(): Unit = {
@@ -84,32 +87,34 @@ object ZMQService {
 
       // Subscribe Thread - Cleansed Data
       executorService.submit(new Runnable {
-        //Executors.newSingleThreadExecutor.execute(new Runnable {
         override def run(): Unit = {
-          val sink = new ZMQSubDataSink()
-          sink.init(context, subPort)
+          val sink = new ZMQCleansedDataSink()
+          sink.init(context, cleansedSubPort)
 
           breakable {
             while (!Thread.currentThread().isInterrupted()) {
               try {
-                val cleansedData: String = sink.sub().value
+                val data: (String, Message) = sink.sub()
+                val topic = data._1
+                val processedData: String = data._2.value
+                // println("Sub topic: " + topic + ", Sub data: " + processedData + "\n")
 
                 Configs.measurementClass match {
                   case com.epidata.lib.models.AutomatedTest.NAME => {
-                    models.AutomatedTest.insertCleansedRecordFromZMQ(cleansedData)
-                    //println("inserted AutomatedTest cleansedData: " + cleansedData + "\n")
+                    if (topic == "measurements_cleansed") {
+                      models.AutomatedTest.insertCleansedRecordFromZMQ(processedData)
+                      // println("inserted AutomatedTest cleansed data: " + processedData + "\n")
+                    } else {
+                      logger.error("unrecognized topic")
+                    }
                   }
                   case com.epidata.lib.models.SensorMeasurement.NAME => {
-                    models.SensorMeasurement.insertCleansedRecordFromZMQ(cleansedData)
-                    //println("inserted SensorMeasurement cleansedData: " + cleansedData + "\n")
-                  }
-                  case com.epidata.lib.models.AutomatedTest.NAME => {
-                    models.AutomatedTest.insertSummaryRecordFromZMQ(cleansedData)
-                    //println("inserted AutomatedTest summaryData: " + cleansedData + "\n")
-                  }
-                  case com.epidata.lib.models.SensorMeasurement.NAME => {
-                    models.SensorMeasurement.insertSummaryRecordFromZMQ(cleansedData)
-                    //println("inserted SensorMeasurement summaryData: " + cleansedData + "\n")
+                    if (topic == "measurements_cleansed") {
+                      models.SensorMeasurement.insertCleansedRecordFromZMQ(processedData)
+                      // println("inserted SensorMeasurement cleansed data: " + processedData + "\n")
+                    } else {
+                      logger.error("unrecognized topic")
+                    }
                   }
                   case _ =>
                 }
@@ -118,7 +123,7 @@ object ZMQService {
                 case e: ZMQException if ZMQ.Error.ETERM.getCode == e.getErrorCode => {
                   break
                   // Thread.currentThread.interrupt()
-                  println("DataSink sub service interrupted")
+                  // println("DataSink sub service interrupted")
                 }
                 case e: ZMQException => println("ZMQ sub service thread interrupted")
                 case _: Throwable => throw new Exception("Error while insert data to database from data sink service")
@@ -126,7 +131,57 @@ object ZMQService {
             }
           }
           //println("DataSink Sub loop exited")
-          sink.clear(subPort)
+          sink.clear(cleansedSubPort)
+        }
+      })
+
+      // Subscribe Thread - Summary Data
+      executorService.submit(new Runnable {
+        override def run(): Unit = {
+          val sink = new ZMQSummaryDataSink()
+          sink.init(context, summarySubPort)
+
+          breakable {
+            while (!Thread.currentThread().isInterrupted()) {
+              try {
+                val data: (String, Message) = sink.sub()
+                val topic = data._1
+                val processedData: String = data._2.value
+                // println("Sub topic: " + topic + ", Sub data: " + processedData + "\n")
+
+                Configs.measurementClass match {
+                  case com.epidata.lib.models.AutomatedTest.NAME => {
+                    if (topic == "measurements_summary") {
+                      models.AutomatedTest.insertSummaryRecordFromZMQ(processedData)
+                      // println("inserted AutomatedTest summary data: " + processedData + "\n")
+                    } else {
+                      logger.error("unrecognized topic")
+                    }
+                  }
+                  case com.epidata.lib.models.SensorMeasurement.NAME => {
+                    if (topic == "measurements_summary") {
+                      models.SensorMeasurement.insertSummaryRecordFromZMQ(processedData)
+                      // println("inserted SensorMeasurement summary data: " + processedData + "\n")
+                    } else {
+                      logger.error("unrecognized topic")
+                    }
+                  }
+                  case _ =>
+                }
+              } catch {
+                case e: JsonMappingException => throw new Exception(e.getMessage)
+                case e: ZMQException if ZMQ.Error.ETERM.getCode == e.getErrorCode => {
+                  break
+                  // Thread.currentThread.interrupt()
+                  // println("DataSink sub service interrupted")
+                }
+                case e: ZMQException => println("ZMQ sub service thread interrupted")
+                case _: Throwable => throw new Exception("Error while insert data to database from data sink service")
+              }
+            }
+          }
+          //println("DataSink Sub loop exited")
+          sink.clear(summarySubPort)
         }
       })
 

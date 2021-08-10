@@ -130,7 +130,8 @@ object SensorMeasurement {
   }
 
   def insertCleansedRecordFromZMQ(str: String): Unit = {
-    // println("insertCleansedRecordFromZMQ called. str: " + str + "\n")
+    // println("insertCleansedRecordFromZMQ called." + "\n")
+    // println("str: " + str + "\n")
     BaseSensorMeasurementCleansed.jsonToSensorMeasurementCleansed(str) match {
       case Some(sensorMeasurementCleansed) => insertCleansed(sensorMeasurementCleansed, Configs.measDBLite)
       case _ => logger.error("Bad json format!")
@@ -138,9 +139,12 @@ object SensorMeasurement {
   }
 
   def insertSummaryRecordFromZMQ(str: String): Unit = {
-    // println("insertSummaryRecordFromZMQ called. str: " + str + "\n")
+    // println("insertSummaryRecordFromZMQ called." + "\n")
+    // println("str: " + str + "\n")
     BaseSensorMeasurementSummary.jsonToSensorMeasurementSummary(str) match {
-      case Some(sensorMeasurementSummary) => insertSummary(sensorMeasurementSummary, Configs.measDBLite)
+      case Some(sensorMeasurementSummary) => {
+        insertSummary(sensorMeasurementSummary, Configs.measDBLite)
+      }
       case _ => logger.error("Bad json format!")
     }
   }

@@ -19,6 +19,7 @@ import com.epidata.lib.models.util.Message
 import com.epidata.spark.ops.Transformation
 import com.epidata.lib.models.{ AutomatedTest => BaseAutomatedTest, AutomatedTestCleansed => BaseAutomatedTestCleansed, AutomatedTestSummary => BaseAutomatedTestSummary, Measurement => BaseMeasurement, MeasurementCleansed => BaseMeasurementCleansed, MeasurementSummary => BaseMeasurementSummary, SensorMeasurement => BaseSensorMeasurement, SensorMeasurementCleansed => BaseSensorMeasurementCleansed, SensorMeasurementSummary => BaseSensorMeasurementSummary }
 import com.typesafe.config.ConfigFactory
+import scala.io.StdIn
 
 class StreamingNode {
   var subSocket: ZMQ.Socket = _ //add as parameter
@@ -72,6 +73,8 @@ class StreamingNode {
 
     publishPort = sendPort
     publishTopic = sendTopic
+
+    println("subscribePorts: ", subscribePorts, "subscribeTopics: ", subscribeTopics, "publishPort: ", publishPort, "publishTopic: ", publishTopic)
 
     subSocket = context.socket(ZMQ.SUB)
 

@@ -26,13 +26,14 @@ import scala.collection.mutable.ListBuffer
 
 class EpidataLiteStreamingContext {
   var startPort: Integer = 5551
-  var endPort: Integer = 5552
+  var cleansedEndPort: Integer = 5553
+  var summaryEndPort: Integer = 5553
   var processors: ListBuffer[StreamingNode] = _
   var _runStream: Boolean = _
   var context: ZMQ.Context = _
   val receiveTimeout: Integer = -1
   var topicMap: MutableMap[String, Integer] = _
-  var intermediatePort: Integer = 5553
+  var intermediatePort: Integer = 5554
   val logger = Logger.getLogger("Epidata lite logger")
   logger.setLevel(Level.FINE)
   logger.addHandler(new ConsoleHandler)
@@ -56,8 +57,8 @@ class EpidataLiteStreamingContext {
     processors = ListBuffer()
     topicMap = MutableMap[String, Integer]()
     topicMap.put("measurements_original", startPort)
-    topicMap.put("measurements_cleansed", endPort)
-    topicMap.put("measurements_summary", endPort)
+    topicMap.put("measurements_cleansed", cleansedEndPort)
+    topicMap.put("measurements_summary", summaryEndPort)
   }
 
   def createTransformations(opName: String, meas_names: List[String], params: Map[String, Any]): Transformation = {
@@ -69,7 +70,7 @@ class EpidataLiteStreamingContext {
 
       case "FillMissingValue" => new FillMissingValue(meas_names, params.getOrElse("method", "rolling").asInstanceOf[String], params.getOrElse("s", 3).asInstanceOf[Int])
       //case "OutlierDetector" => new OutlierDetector("meas_value", params.get("method"))
-      //case "MeasStatistics" => new MeasStatistics(meas_names, "standard")
+      case "MeasStatistics" => new MeasStatistics(meas_names, params.getOrElse("method", "standard").asInstanceOf[String])
       case _ => new Identity()
     }
   }
@@ -124,10 +125,10 @@ class EpidataLiteStreamingContext {
       case None => {
         topicMap.put(destinationTopic, intermediatePort)
         intermediatePort += 1
-        //println("new destination topic - port added")
+        println("new destination topic - port added")
       }
       case _ => {
-        //println("destination topic - port exists")
+        println("destination topic - port exists")
       }
     }
 
@@ -136,6 +137,11 @@ class EpidataLiteStreamingContext {
       case None => throw new IllegalArgumentException("Destination Topic is not recognized.")
     }
     //.log(Level.INFO, "streamDestinationPort: ", streamDestinationPort)
+
+    println("\nEnter 'Q' to create processor for stream 6")
+    while ((StdIn.readChar()).toLower.compare('q') != 0) {
+      println("Continuing streaming. Enter 'Q' to stop streaming.")
+    }
 
     processors += (new StreamingNode()).init(
       context,

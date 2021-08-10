@@ -60,10 +60,10 @@ object SensorMeasurementSummary {
 
   implicit def sensorMeasurementSummaryToMeasurementSummary(sms: SensorMeasurementSummary): MeasurementSummary =
     MeasurementSummary(
-      sms.customer,
-      sms.customer_site,
-      sms.collection,
-      sms.dataset,
+      sms.company,
+      sms.site,
+      sms.station,
+      sms.sensor,
       sms.start_time,
       sms.stop_time,
       Some(sms.event),
