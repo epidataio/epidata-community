@@ -256,7 +256,12 @@ object AutomatedTestCleansed {
     val site: String = jSONObject.get("site").asInstanceOf[String]
     val device_group: String = jSONObject.get("device_group").asInstanceOf[String]
     val tester: String = jSONObject.get("tester").asInstanceOf[String]
+
+    if (jSONObject.get("ts") == null)
+      throw new Exception("invalid json format!")
+
     val ts: Date = new Date(jSONObject.get("ts").asInstanceOf[Long])
+
     val device_name: String = jSONObject.get("device_name").asInstanceOf[String]
     val test_name: String = jSONObject.get("test_name").asInstanceOf[String]
     val meas_name: String = jSONObject.get("meas_name").asInstanceOf[String]

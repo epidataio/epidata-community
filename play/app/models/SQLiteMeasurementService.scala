@@ -107,7 +107,6 @@ object SQLiteMeasurementService {
     // Prepares the statement and executes it
     val statementInsertSummary = getInsertSummaryStatements(measurementSummary)
     DB.executeUpdate(statementInsertSummary)
-
   }
 
   /**
@@ -120,7 +119,6 @@ object SQLiteMeasurementService {
     val t0 = EpidataMetrics.getCurrentTime
     measurementsSummary.foreach(modelSummary => insertSummary(modelSummary))
     EpidataMetrics.increment("DB.batchExecute", t0)
-
   }
 
   def getInsertStatements(measurement: Model): PreparedStatement = {
