@@ -60,9 +60,9 @@ class EpidataLiteStreamingContext {
     processors = ListBuffer()
     topicMap = MutableMap[String, Integer]()
     topicMap.put("measurements_original", startPort)
-    topicMap.put("measurements_cleansed", cleansedEndPort)
-    topicMap.put("measurements_summary", summaryEndPort)
-    topicMap.put("measurements_dynamic", dynamicEndPort)
+    topicMap.put("measurements_cleansed", cleansedPort)
+    topicMap.put("measurements_summary", summaryPort)
+    topicMap.put("measurements_dynamic", dynamicPort)
     streamAuditor.init()
   }
 
