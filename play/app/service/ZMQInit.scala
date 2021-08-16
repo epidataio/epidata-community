@@ -19,19 +19,22 @@ object ZMQInit {
   def init(config: Configuration) = {
     /**
      * ZMQProducer: pushPort: 5550, pubPort: 5551
-     * ZMQDataSink: pullPort: 5550, subPort: 5551
+     * ZMQPullDataSink: pullPort: 5550,
+     * ZMQCleansedDataSink: cleansedSubPort: 5552
+     * ZMQSummaryDataSink: summarySubPort: 5553
+     * ZMQDynamicDataSink: dynamicSubPort: 5554
      * ZMQService executes ZMQStream and ZMQDataSink as threads
      */
-
-    //_ZMQService = ZMQService
-    //_ZMQService.start(config)
-    //_ZMQProducer = ZMQProducer.init(config.getOptional[Int]("queue.servers").get.toString, (config.getOptional[Int]("queue.servers").get + 1).toString)
 
     _ZMQService = ZMQService.init(
       context,
       config.getOptional[Int]("queue.servers").get.toString,
-      (config.getOptional[Int]("queue.servers").get + 2).toString)
+      (config.getOptional[Int]("queue.servers").get + 2).toString,
+      (config.getOptional[Int]("queue.servers").get + 3).toString,
+      (config.getOptional[Int]("queue.servers").get + 4).toString)
+
     _ZMQService.start()
+
     _ZMQProducer = ZMQProducer.init(
       context,
       config.getOptional[Int]("queue.servers").get.toString,

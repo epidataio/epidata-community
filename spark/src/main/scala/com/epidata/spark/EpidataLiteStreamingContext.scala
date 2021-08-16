@@ -60,8 +60,9 @@ class EpidataLiteStreamingContext {
     processors = ListBuffer()
     topicMap = MutableMap[String, Integer]()
     topicMap.put("measurements_original", startPort)
-    topicMap.put("measurements_cleansed", cleansedPort)
-    topicMap.put("measurements_summary", summaryPort)
+    topicMap.put("measurements_cleansed", cleansedEndPort)
+    topicMap.put("measurements_summary", summaryEndPort)
+    topicMap.put("measurements_dynamic", dynamicEndPort)
     streamAuditor.init()
   }
 
@@ -74,7 +75,7 @@ class EpidataLiteStreamingContext {
 
       case "FillMissingValue" => new FillMissingValue(meas_names, params.getOrElse("method", "rolling").asInstanceOf[String], params.getOrElse("s", 3).asInstanceOf[Int])
       //case "OutlierDetector" => new OutlierDetector("meas_value", params.get("method"))
-      //case "MeasStatistics" => new MeasStatistics(meas_names, "standard")
+      case "MeasStatistics" => new MeasStatistics(meas_names, params.getOrElse("method", "standard").asInstanceOf[String])
       case _ => new Identity()
     }
   }
@@ -129,10 +130,10 @@ class EpidataLiteStreamingContext {
       case None => {
         topicMap.put(destinationTopic, intermediatePort)
         intermediatePort += 1
-        //println("new destination topic - port added")
+        println("new destination topic - port added")
       }
       case _ => {
-        //println("destination topic - port exists")
+        println("destination topic - port exists")
       }
     }
 
@@ -140,15 +141,6 @@ class EpidataLiteStreamingContext {
       case Some(port) => port.toString
       case None => throw new IllegalArgumentException("Destination Topic is not recognized.")
     }
-    //    processors += (new StreamingNode()).init(
-    //      context,
-    //      streamSourcePort,
-    //      sourceTopic,
-    //      buffersizes,
-    //      streamDestinationPort,
-    //      destinationTopic,
-    //      receiveTimeout,
-    //      operation)
 
     streamAuditor.addProcessor(
       streamSourcePort,

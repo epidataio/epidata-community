@@ -138,6 +138,36 @@ object AutomatedTest {
     }
   }
 
+  def insertDynamicRecordFromZMQ(str: String): Unit = {
+    try {
+      BaseAutomatedTestCleansed.jsonToAutomatedTestCleansed(str) match {
+        case Some(mc: BaseAutomatedTestCleansed) => {
+          // println("inserting dynamic record as measurements cleansed record.\n")
+          insertCleansed(mc, Configs.measDBLite)
+          return
+        }
+        case _ => throw new Exception("Dynamic data is not of type MeasurementCleansed.")
+      }
+    } catch {
+      case _: Throwable => {
+        try {
+          BaseAutomatedTestSummary.jsonToAutomatedTestSummary(str) match {
+            case Some(ms: BaseAutomatedTestSummary) => {
+              // println("inserting dynamic record as measurements summary record.\n")
+              insertSummary(ms, Configs.measDBLite)
+              return
+            }
+            case _ => throw new Exception("Dynamic data is not of type MeasurementSummary.")
+          }
+        } catch {
+          case _: Throwable => {
+            logger.error("Bad json format!")
+          }
+        }
+      }
+    }
+  }
+
   def insertToKafka(m: BaseAutomatedTest): Unit = {
     val key = keyForMeasurementTopic(m)
     val value = BaseAutomatedTest.toJson(m)

@@ -195,6 +195,10 @@ object AutomatedTestSummary {
     val site: String = jSONObject.get("site").asInstanceOf[String]
     val device_group: String = jSONObject.get("device_group").asInstanceOf[String]
     val tester: String = jSONObject.get("tester").asInstanceOf[String]
+
+    if (jSONObject.get("start_time") == null || jSONObject.get("stop_time") == null)
+      throw new Exception("invalid json format!")
+
     val start_time: Date = new Date(jSONObject.get("start_time").asInstanceOf[Long])
     val stop_time: Date = new Date(jSONObject.get("stop_time").asInstanceOf[Long])
 
