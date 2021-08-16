@@ -226,7 +226,7 @@ class EpidataStreamValidation {
             "receiveTopics" -> newNodeTopics,
             "bufferSizes" -> ListBuffer(0),
             "sendPort" -> "5554",
-            "sendTopic" -> "measurements_dynamic",   //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
+            "sendTopic" -> "measurements_dynamic",
             "transformation" -> "Identity")
         }
       }
