@@ -212,13 +212,21 @@ class EpidataStreamValidation {
             "sendPort" -> "5552",
             "sendTopic" -> "measurements_cleansed",
             "transformation" -> "Identity")
-        } else {
+        } else if (topic == 2) {
           processorConfigs += HashMap(
             "receivePorts" -> newNodePorts,
             "receiveTopics" -> newNodeTopics,
             "bufferSizes" -> ListBuffer(0),
             "sendPort" -> "5553",
             "sendTopic" -> "measurements_summary",
+            "transformation" -> "Identity")
+        } else {
+          processorConfigs += HashMap(
+            "receivePorts" -> newNodePorts,
+            "receiveTopics" -> newNodeTopics,
+            "bufferSizes" -> ListBuffer(0),
+            "sendPort" -> "5554",
+            "sendTopic" -> "measurements_dynamic",
             "transformation" -> "Identity")
         }
       }
@@ -233,8 +241,8 @@ class EpidataStreamValidation {
     val newNodes: ListBuffer[ListBuffer[String]] = ListBuffer[ListBuffer[String]]()
 
     val newCleansedNodeTopics: ListBuffer[String] = ListBuffer()
-
     val newSummaryNodeTopics: ListBuffer[String] = ListBuffer()
+    val newDynamicNodeTopics: ListBuffer[String] = ListBuffer()
 
     for (i <- 0 until cleansedCounter) {
       newCleansedNodeTopics.append("measurements_cleansed" + i)
@@ -248,15 +256,12 @@ class EpidataStreamValidation {
       /*
       Get the processorConfigs for current topic and inspect Transformation object here
        */
-      if (true) { //check the data model whether its summary or cleansed data
-        newCleansedNodeTopics.append(looseSource)
-      } else {
-        newSummaryNodeTopics.append(looseSource)
-      }
+      newDynamicNodeTopics.append(looseSource)
     }
 
-    if (newCleansedNodeTopics.length > 0) newNodes.append(newCleansedNodeTopics)
-    if (newSummaryNodeTopics.length > 0) newNodes.append(newSummaryNodeTopics)
+    newNodes.append(newCleansedNodeTopics)
+    newNodes.append(newSummaryNodeTopics)
+    newNodes.append(newDynamicNodeTopics)
 
     newNodes
   }
