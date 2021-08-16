@@ -21,6 +21,8 @@ import com.epidata.lib.models.{ AutomatedTest => BaseAutomatedTest, AutomatedTes
 import com.typesafe.config.ConfigFactory
 import scala.io.StdIn
 
+import scala.io.StdIn
+
 class StreamingNode {
   var subSocket: ZMQ.Socket = _ //add as parameter
   var publishSocket: ZMQ.Socket = _ //add as parameter
@@ -52,7 +54,6 @@ class StreamingNode {
     sendTopic: String,
     receiveTimeout: Integer,
     transformation: Transformation): StreamingNode = {
-
     if (receivePorts.length > bufferSizes.length) { //more ports than buffer sizes make a pattern
       val pattern = new ListBuffer[Integer]()
       pattern.appendAll(bufferSizes)
@@ -82,6 +83,7 @@ class StreamingNode {
     for (topic <- subscribeTopics) { subSocket.subscribe(topic.getBytes(ZMQ.CHARSET)) }
 
     publishSocket = context.socket(ZMQ.PUB)
+    println("LINE 84: " + publishPort)
     publishSocket.bind("tcp://127.0.0.1:" + publishPort)
 
     this.transformation = transformation
@@ -98,11 +100,10 @@ class StreamingNode {
     println("Sub Topic: " + subscribeTopics)
     println("Sub Port: " + subscribePorts)
     println("Pub Topic: " + publishTopic)
-    println("Sub Port: " + publishPort)
+    println("Pub Port: " + publishPort)
     println("Stream Buffers: " + streamBuffers)
     println("Stream Buffer Sizes: " + bufferSizes)
     println("StreamNode Configs----------------------------------------------")
-
     this
   }
 
