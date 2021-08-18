@@ -784,16 +784,18 @@ object elcTest extends App {
     play datasink
    */
 
+  esc.createStream("measurements_original", "measurements_cleansed", op2)
+
   //op1
-  esc.createStream("measurements_original", "measurements_intermediate", op1)
+  //esc.createStream("measurements_original", "measurements_intermediate", op1)
   println("STREAM 1 created: " + op1)
 
   //op2
-  esc.createStream("measurements_intermediate", "measurements_intermediate_1", op2)
+  //esc.createStream("measurements_intermediate", "measurements_intermediate_1", op2)
   println("STREAM 2 created: " + op2)
 
   //op3
-  esc.createStream("measurements_intermediate", "measurements_intermediate_2", op3)
+  //esc.createStream("measurements_intermediate", "measurements_intermediate_2", op3)
   println("STREAM 3 created: " + op3)
 
   //op4
@@ -803,17 +805,17 @@ object elcTest extends App {
   val op4buffers = ListBuffer[Integer]()
   op4buffers += 5
   op4buffers += 5
-  esc.createStream(op4topics, op4buffers, "measurements_intermediate_3", op4)
+  //esc.createStream(op4topics, op4buffers, "measurements_intermediate_3", op4)
   println("STREAM 4 created: " + op4 + "\n")
 
   //op5
   val op5topics = ListBuffer[String]()
   op5topics += "measurements_intermediate_1"
   op5topics += "measurements_intermediate_3"
-  esc.createStream(op5topics, "measurements_cleansed", op5)
+  //esc.createStream(op5topics, "measurements_cleansed", op5)
   println("STREAM 5 created: " + "\n")
 
-  esc.createStream("measurements_intermediate", "measurements_intermediate_6", op3)
+  //esc.createStream("measurements_intermediate", "measurements_intermediate_6", op3)
 
   esc.testUnit()
   println(esc.printSomething(""))

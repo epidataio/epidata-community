@@ -55,7 +55,7 @@ class EpidataStreamValidation {
     looseStreamValidation()
 
     for (processor <- processorConfigs) {
-      //println(processor + "\n")
+      //println("Operation: " + processor.get("transformation").getClass + "\n")
     }
 
     processorConfigs
