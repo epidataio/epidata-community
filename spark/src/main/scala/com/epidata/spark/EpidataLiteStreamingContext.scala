@@ -155,7 +155,8 @@ class EpidataLiteStreamingContext {
     val processorConfigs: ListBuffer[MutableMap[String, Any]] = streamAuditor.validate(topicMap, intermediatePort)
     for (processor <- processorConfigs) {
       processor.get("transformation") match {
-        case operation: Transformation => {
+        case Some(operation: Transformation) => {
+          //println("!!@Operation is of type Object")
           processors += new StreamingNode().init(
             context,
             processor.get("receivePorts") match { case Some(list: ListBuffer[String]) => list },
@@ -167,6 +168,7 @@ class EpidataLiteStreamingContext {
             operation)
         }
         case operation: Some[String] => {
+          //println("!!@Operation is of type String")
           processors += new StreamingNode().init(
             context,
             processor.get("receivePorts") match { case Some(list: ListBuffer[String]) => list },
