@@ -1,15 +1,17 @@
 /*
-* Copyright (c) 2015-2020 EpiData, Inc.
+* Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 package com.epidata.lib.models
 
 import java.sql.Timestamp
-import java.util.Date
-
 import com.datastax.driver.core.Row
 import java.sql.ResultSet
+
 import com.epidata.lib.models.util.TypeUtils._
+import com.epidata.lib.models.util.Binary
+import java.lang.{ Double => JDouble, Long => JLong }
+import java.util.{ Date, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList, List => JList }
 
 case class MeasurementSummary(
     customer: String,
@@ -108,6 +110,22 @@ object MeasurementSummary {
       meas_summary_value,
       meas_summary_description)
 
+  }
+
+  def rowToJLinkedHashMap(row: Row, tableName: String, modelName: String): JLinkedHashMap[String, Object] = {
+    modelName match {
+      case SensorMeasurement.NAME => SensorMeasurementSummary.rowToJLinkedHashMap(row, tableName)
+      case AutomatedTest.NAME => AutomatedTestSummary.rowToJLinkedHashMap(row, tableName)
+      case _ => new JLinkedHashMap[String, Object]()
+    }
+  }
+
+  def rowToJLinkedHashMap(row: ResultSet, tableName: String, modelName: String): JLinkedHashMap[String, Object] = {
+    modelName match {
+      case SensorMeasurement.NAME => SensorMeasurementSummary.rowToJLinkedHashMap(row, tableName)
+      case AutomatedTest.NAME => AutomatedTestSummary.rowToJLinkedHashMap(row, tableName)
+      case _ => new JLinkedHashMap[String, Object]()
+    }
   }
 
   def getColumns: Set[String] = {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2021 EpiData, Inc.
+ * Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 package com.epidata.spark
@@ -7,7 +7,8 @@ package com.epidata.spark
 import com.typesafe.config.ConfigFactory
 import java.io.File
 import java.sql.{ Connection, DriverManager, SQLException, Timestamp }
-import java.util
+// import java.util
+import java.util.{ Date, LinkedHashMap => JLinkedHashMap, HashMap => JHashMap, LinkedList => JLinkedList, List => JList, ArrayList => JArrayList, Arrays => JArrays }
 
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
@@ -36,27 +37,40 @@ object elcTest extends App {
   val stmt = con.createStatement()
 
   // Clear tables
-  val dop_orig_command = s"DROP TABLE IF EXISTS ${com.epidata.lib.models.Measurement.DBTableName}"
+  val dop_original_command = s"DROP TABLE IF EXISTS ${com.epidata.lib.models.Measurement.DBTableName}"
+  val dop_cleansed_command = s"DROP TABLE IF EXISTS ${com.epidata.lib.models.MeasurementCleansed.DBTableName}"
+  val dop_summary_command = s"DROP TABLE IF EXISTS ${com.epidata.lib.models.MeasurementSummary.DBTableName}"
   val drop_keys_command = s"DROP TABLE IF EXISTS ${com.epidata.lib.models.MeasurementsKeys.DBTableName}"
-  stmt.execute(dop_orig_command)
+  stmt.execute(dop_original_command)
+  stmt.execute(dop_cleansed_command)
+  stmt.execute(dop_summary_command)
   stmt.execute(drop_keys_command)
 
   // Create Tables
   val original = "play/conf/schema/measurements_original"
+  val cleansed = "play/conf/schema/measurements_cleansed"
+  val summary = "play/conf/schema/measurements_summary"
   val keys = "play/conf/schema/measurements_keys"
-  val orig_source = Source.fromFile(original)
+  val original_source = Source.fromFile(original)
+  val cleansed_source = Source.fromFile(cleansed)
+  val summary_source = Source.fromFile(summary)
   val keys_source = Source.fromFile(keys)
-  val create_orig = orig_source.getLines.mkString
+  val create_original = original_source.getLines.mkString
+  val create_cleansed = cleansed_source.getLines.mkString
+  val create_summary = summary_source.getLines.mkString
   val create_key = keys_source.getLines.mkString
 
-  orig_source.close()
+  original_source.close()
+  cleansed_source.close()
+  summary_source.close()
   keys_source.close()
-  //println(s"measurements_original schema is ${create_orig}")
+  //println(s"measurements_original schema is ${create_original}")
   //println(s"measurements_keys schema is ${create_key}")
-  stmt.execute(create_orig)
+  stmt.execute(create_original)
+  stmt.execute(create_cleansed)
+  stmt.execute(create_summary)
   stmt.execute(create_key)
 
-  /*
   // Manual Insert for measurements_original
   val beginTime = new Timestamp(1619240032000L)
   val testTime = new Timestamp(1619240032000L + 5000L)
@@ -669,26 +683,1039 @@ object elcTest extends App {
   prepare_insert.setString(15, company2_site2_station2_test2(21).asInstanceOf[String])
   prepare_insert.setString(16, company2_site2_station2_test2(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
-  // Insert Check
-  val rs = con.prepareStatement(s"SELECT * FROM ${com.epidata.lib.models.Measurement.DBTableName}").executeQuery()
-  while (rs.next()) {
-    val t = com.epidata.lib.models.Measurement.rowToMeasurement(rs)
-    //println(s"Insert Check: ${t.toString}")
+
+  // Insert Check - Measurements Original
+  val rsOriginal = con.prepareStatement(s"SELECT * FROM ${com.epidata.lib.models.Measurement.DBTableName}").executeQuery()
+  while (rsOriginal.next()) {
+    val t = com.epidata.lib.models.Measurement.rowToMeasurement(rsOriginal)
+    println(s"Insert Check: ${t.toString}")
   }
   //println()
-  val results = ec.query(
-    Map(
-      "company" -> List("Company-2", "Company-1"),
-      "site" -> List("Site-1", "Site-2"),
-      "device_group" -> List("1000"),
-      "tester" -> List("Station-1", "Station-2"),
-      "test_name" -> List("Test-1", "Test-2")),
+
+  var fieldQueryOriginal = new JLinkedHashMap[String, JList[String]]()
+  fieldQueryOriginal.put("company", JArrays.asList("Company-2", "Company-1"))
+  fieldQueryOriginal.put("site", JArrays.asList("Site-1", "Site-2"))
+  fieldQueryOriginal.put("device_group", JArrays.asList("1000"))
+  fieldQueryOriginal.put("tester", JArrays.asList("Station-1", "Station-2"))
+  fieldQueryOriginal.put("test_name", JArrays.asList("Test-1", "Test-2"))
+
+  val resultsOriginal = ec.query(
+    fieldQueryOriginal,
     beginTime,
     endTime)
-  val measIter = results.iterator()
-  while (measIter.hasNext()) {
-    println(s"meas_orig query row: ${measIter.next()}")
+  val measOriginalIter = resultsOriginal.iterator()
+  while (measOriginalIter.hasNext()) {
+    println(s"meas_original query row: ${measOriginalIter.next()}")
   }
+
+  // Manual Insert for measurements_cleansed
+  val company1_site1_station1_test1_cleansed = Array("Company-1", "Site-1", "1000", "Station-1", epoch, ts, "100001", "Test-1",
+    "Meas-1", "just_a_check", 11.1, meas_value_l, "meas_value_s", meas_value_b, "degree C", "PASS", "meas_cleansed_flag", "meas_cleansed_method", 20.0, meas_lower_limit_l, 90.0, meas_upper_limit_l, "Description", "PASS", "PASS")
+  val company1_site1_station1_test2_cleansed = Array("Company-1", "Site-1", "1000", "Station-1", epoch, ts, "100001", "Test-2",
+    "Meas-1", "just_a_check", 12.2, meas_value_l, "meas_value_s", meas_value_b, "degree C", "PASS", "meas_cleansed_flag", "meas_cleansed_method", 30.0, meas_lower_limit_l, 90.0, meas_upper_limit_l, "Description", "PASS", "PASS")
+  val company1_site1_station2_test1_cleansed = Array("Company-1", "Site-1", "1000", "Station-2", epoch, ts, "100001", "Test-1",
+    "Meas-1", "just_a_check", 13.3, meas_value_l, "meas_value_s", meas_value_b, "degree C", "PASS", "meas_cleansed_flag", "meas_cleansed_method", 40.0, meas_lower_limit_l, 90.0, meas_upper_limit_l, "Description", "PASS", "PASS")
+  val company1_site1_station2_test2_cleansed = Array("Company-1", "Site-1", "1000", "Station-2", epoch, ts, "100001", "Test-2",
+    "Meas-1", "just_a_check", 14.4, meas_value_l, "meas_value_s", meas_value_b, "degree C", "PASS", "meas_cleansed_flag", "meas_cleansed_method", 50.0, meas_lower_limit_l, 90.0, meas_upper_limit_l, "Description", "PASS", "PASS")
+  val company1_site2_station1_test1_cleansed = Array("Company-1", "Site-2", "1000", "Station-1", epoch, ts, "100001", "Test-1",
+    "Meas-1", "just_a_check", 15.5, meas_value_l, "meas_value_s", meas_value_b, "degree C", "PASS", "meas_cleansed_flag", "meas_cleansed_method", 50.0, meas_lower_limit_l, 90.0, meas_upper_limit_l, "Description", "PASS", "PASS")
+  val company1_site2_station1_test2_cleansed = Array("Company-1", "Site-2", "1000", "Station-1", epoch, ts, "100001", "Test-2",
+    "Meas-1", "just_a_check", 16.6, meas_value_l, "meas_value_s", meas_value_b, "degree C", "PASS", "meas_cleansed_flag", "meas_cleansed_method", 50.0, meas_lower_limit_l, 90.0, meas_upper_limit_l, "Description", "PASS", "PASS")
+  val company1_site2_station2_test1_cleansed = Array("Company-1", "Site-2", "1000", "Station-2", epoch, ts, "100001", "Test-1",
+    "Meas-1", "just_a_check", 17.7, meas_value_l, "meas_value_s", meas_value_b, "degree C", "PASS", "meas_cleansed_flag", "meas_cleansed_method", 50.0, meas_lower_limit_l, 90.0, meas_upper_limit_l, "Description", "PASS", "PASS")
+  val company1_site2_station2_test2_cleansed = Array("Company-1", "Site-2", "1000", "Station-2", epoch, ts, "100001", "Test-2",
+    "Meas-1", "just_a_check", 18.8, meas_value_l, "meas_value_s", meas_value_b, "degree C", "PASS", "meas_cleansed_flag", "meas_cleansed_method", 50.0, meas_lower_limit_l, 90.0, meas_upper_limit_l, "Description", "PASS", "PASS")
+  val company2_site1_station1_test1_cleansed = Array("Company-2", "Site-1", "1000", "Station-1", epoch, ts, "100001", "Test-1",
+    "Meas-1", "just_a_check", 21.1, meas_value_l, "meas_value_s", meas_value_b, "degree C", "PASS", "meas_cleansed_flag", "meas_cleansed_method", 20.0, meas_lower_limit_l, 90.0, meas_upper_limit_l, "Description", "PASS", "PASS")
+  val company2_site1_station1_test2_cleansed = Array("Company-2", "Site-1", "1000", "Station-1", epoch, ts, "100001", "Test-2",
+    "Meas-1", "just_a_check", 22.2, meas_value_l, "meas_value_s", meas_value_b, "degree C", "PASS", "meas_cleansed_flag", "meas_cleansed_method", 30.0, meas_lower_limit_l, 90.0, meas_upper_limit_l, "Description", "PASS", "PASS")
+  val company2_site1_station2_test1_cleansed = Array("Company-2", "Site-1", "1000", "Station-2", epoch, ts, "100001", "Test-1",
+    "Meas-1", "just_a_check", 23.3, meas_value_l, "meas_value_s", meas_value_b, "degree C", "PASS", "meas_cleansed_flag", "meas_cleansed_method", 40.0, meas_lower_limit_l, 90.0, meas_upper_limit_l, "Description", "PASS", "PASS")
+  val company2_site1_station2_test2_cleansed = Array("Company-2", "Site-1", "1000", "Station-2", epoch, ts, "100001", "Test-2",
+    "Meas-1", "just_a_check", 24.4, meas_value_l, "meas_value_s", meas_value_b, "degree C", "PASS", "meas_cleansed_flag", "meas_cleansed_method", 50.0, meas_lower_limit_l, 90.0, meas_upper_limit_l, "Description", "PASS", "PASS")
+  val company2_site2_station1_test1_cleansed = Array("Company-2", "Site-2", "1000", "Station-1", epoch, ts, "100001", "Test-1",
+    "Meas-1", "just_a_check", 25.5, meas_value_l, "meas_value_s", meas_value_b, "degree C", "PASS", "meas_cleansed_flag", "meas_cleansed_method", 50.0, meas_lower_limit_l, 90.0, meas_upper_limit_l, "Description", "PASS", "PASS")
+  val company2_site2_station1_test2_cleansed = Array("Company-2", "Site-2", "1000", "Station-1", epoch, ts, "100001", "Test-2",
+    "Meas-1", "just_a_check", 26.6, meas_value_l, "meas_value_s", meas_value_b, "degree C", "PASS", "meas_cleansed_flag", "meas_cleansed_method", 50.0, meas_lower_limit_l, 90.0, meas_upper_limit_l, "Description", "PASS", "PASS")
+  val company2_site2_station2_test1_cleansed = Array("Company-2", "Site-2", "1000", "Station-2", epoch, ts, "100001", "Test-1",
+    "Meas-1", "just_a_check", 27.7, meas_value_l, "meas_value_s", meas_value_b, "degree C", "PASS", "meas_cleansed_flag", "meas_cleansed_method", 50.0, meas_lower_limit_l, 90.0, meas_upper_limit_l, "Description", "PASS", "PASS")
+  val company2_site2_station2_test2_cleansed = Array("Company-2", "Site-2", "1000", "Station-2", epoch, ts, "100001", "Test-2",
+    "Meas-1", "just_a_check", 28.8, meas_value_l, "meas_value_s", meas_value_b, "degree C", "PASS", "meas_cleansed_flag", "meas_cleansed_method", 50.0, meas_lower_limit_l, 90.0, meas_upper_limit_l, "Description", "PASS", "PASS")
+  val columns_cleansed = Array("customer", "customer_site",
+    "collection", "dataset", "epoch", "ts", "key1", "key2", "key3", "meas_datatype", "meas_value", "meas_value_l", "meas_value_s", "meas_value_b", "meas_unit",
+    "meas_status", "meas_flag", "meas_method", "meas_lower_limit", "meas_lower_limit_l", " meas_upper_limit", "meas_upper_limit_l", "meas_description", "val1", "val2")
+  val insert_q_cleansed =
+    s"""#INSERT OR REPLACE INTO ${com.epidata.lib.models.MeasurementCleansed.DBTableName} (
+     #customer,
+     #customer_site,
+     #collection,
+     #dataset,
+     #epoch,
+     #ts,
+     #key1,
+     #key2,
+     #key3,
+     #meas_datatype,
+     #meas_value,
+     #meas_unit,
+     #meas_status,
+     #meas_flag,
+     #meas_method,
+     #meas_description,
+     #val1,
+     #val2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#')
+  //println(s"prebinding: ${insert_q_cleansed.toString}")
+  // Company-1 Test Data
+  val prepare_insert_cleansed = con.prepareStatement(insert_q_cleansed.toString)
+  prepare_insert_cleansed.setString(1, company1_site1_station1_test1_cleansed(0).asInstanceOf[String])
+  prepare_insert_cleansed.setString(2, company1_site1_station1_test1_cleansed(1).asInstanceOf[String])
+  prepare_insert_cleansed.setString(3, company1_site1_station1_test1_cleansed(2).asInstanceOf[String])
+  prepare_insert_cleansed.setString(4, company1_site1_station1_test1_cleansed(3).asInstanceOf[String])
+  prepare_insert_cleansed.setInt(5, epoch(0))
+  prepare_insert_cleansed.setTimestamp(6, beginTime)
+  prepare_insert_cleansed.setString(7, company1_site1_station1_test1_cleansed(6).asInstanceOf[String])
+  prepare_insert_cleansed.setString(8, company1_site1_station1_test1_cleansed(7).asInstanceOf[String])
+  prepare_insert_cleansed.setString(9, company1_site1_station1_test1_cleansed(8).asInstanceOf[String])
+  prepare_insert_cleansed.setString(10, company1_site1_station1_test1_cleansed(9).asInstanceOf[String])
+  prepare_insert_cleansed.setDouble(11, company1_site1_station1_test1_cleansed(10).asInstanceOf[Double])
+  prepare_insert_cleansed.setString(12, company1_site1_station1_test1_cleansed(14).asInstanceOf[String])
+  prepare_insert_cleansed.setString(13, company1_site1_station1_test1_cleansed(15).asInstanceOf[String])
+  prepare_insert_cleansed.setString(14, company1_site1_station1_test1_cleansed(16).asInstanceOf[String])
+  prepare_insert_cleansed.setString(15, company1_site1_station1_test1_cleansed(17).asInstanceOf[String])
+  prepare_insert_cleansed.setString(16, company1_site1_station1_test1_cleansed(22).asInstanceOf[String])
+  prepare_insert_cleansed.setString(17, company1_site1_station1_test1_cleansed(23).asInstanceOf[String])
+  prepare_insert_cleansed.setString(18, company1_site1_station1_test1_cleansed(24).asInstanceOf[String])
+  prepare_insert_cleansed.executeUpdate()
+  prepare_insert_cleansed.setString(1, company1_site1_station1_test1_cleansed(0).asInstanceOf[String])
+  prepare_insert_cleansed.setString(2, company1_site1_station1_test1_cleansed(1).asInstanceOf[String])
+  prepare_insert_cleansed.setString(3, company1_site1_station1_test1_cleansed(2).asInstanceOf[String])
+  prepare_insert_cleansed.setString(4, company1_site1_station1_test1_cleansed(3).asInstanceOf[String])
+  prepare_insert_cleansed.setInt(5, epoch(0))
+  prepare_insert_cleansed.setTimestamp(6, testTime)
+  prepare_insert_cleansed.setString(7, company1_site1_station1_test1_cleansed(6).asInstanceOf[String])
+  prepare_insert_cleansed.setString(8, company1_site1_station1_test1_cleansed(7).asInstanceOf[String])
+  prepare_insert_cleansed.setString(9, company1_site1_station1_test1_cleansed(8).asInstanceOf[String])
+  prepare_insert_cleansed.setString(10, company1_site1_station1_test1_cleansed(9).asInstanceOf[String])
+  prepare_insert_cleansed.setDouble(11, 99999.0)
+  prepare_insert_cleansed.setString(12, company1_site1_station1_test1_cleansed(14).asInstanceOf[String])
+  prepare_insert_cleansed.setString(13, company1_site1_station1_test1_cleansed(15).asInstanceOf[String])
+  prepare_insert_cleansed.setString(14, company1_site1_station1_test1_cleansed(16).asInstanceOf[String])
+  prepare_insert_cleansed.setString(15, company1_site1_station1_test1_cleansed(17).asInstanceOf[String])
+  prepare_insert_cleansed.setString(16, company1_site1_station1_test1_cleansed(22).asInstanceOf[String])
+  prepare_insert_cleansed.setString(17, company1_site1_station1_test1_cleansed(23).asInstanceOf[String])
+  prepare_insert_cleansed.setString(18, company1_site1_station1_test1_cleansed(24).asInstanceOf[String])
+  prepare_insert_cleansed.executeUpdate()
+  prepare_insert_cleansed.setString(1, company1_site1_station1_test2_cleansed(0).asInstanceOf[String])
+  prepare_insert_cleansed.setString(2, company1_site1_station1_test2_cleansed(1).asInstanceOf[String])
+  prepare_insert_cleansed.setString(3, company1_site1_station1_test2_cleansed(2).asInstanceOf[String])
+  prepare_insert_cleansed.setString(4, company1_site1_station1_test2_cleansed(3).asInstanceOf[String])
+  prepare_insert_cleansed.setInt(5, epoch(0))
+  prepare_insert_cleansed.setTimestamp(6, beginTime)
+  prepare_insert_cleansed.setString(7, company1_site1_station1_test2_cleansed(6).asInstanceOf[String])
+  prepare_insert_cleansed.setString(8, company1_site1_station1_test2_cleansed(7).asInstanceOf[String])
+  prepare_insert_cleansed.setString(9, company1_site1_station1_test2_cleansed(8).asInstanceOf[String])
+  prepare_insert_cleansed.setString(10, company1_site1_station1_test2_cleansed(9).asInstanceOf[String])
+  prepare_insert_cleansed.setDouble(11, company1_site1_station1_test2_cleansed(10).asInstanceOf[Double])
+  prepare_insert_cleansed.setString(12, company1_site1_station1_test2_cleansed(14).asInstanceOf[String])
+  prepare_insert_cleansed.setString(13, company1_site1_station1_test2_cleansed(15).asInstanceOf[String])
+  prepare_insert_cleansed.setString(14, company1_site1_station1_test2_cleansed(16).asInstanceOf[String])
+  prepare_insert_cleansed.setString(15, company1_site1_station1_test2_cleansed(17).asInstanceOf[String])
+  prepare_insert_cleansed.setString(16, company1_site1_station1_test2_cleansed(22).asInstanceOf[String])
+  prepare_insert_cleansed.setString(17, company1_site1_station1_test2_cleansed(23).asInstanceOf[String])
+  prepare_insert_cleansed.setString(18, company1_site1_station1_test2_cleansed(24).asInstanceOf[String])
+  prepare_insert_cleansed.executeUpdate()
+  prepare_insert_cleansed.setString(1, company1_site1_station1_test2_cleansed(0).asInstanceOf[String])
+  prepare_insert_cleansed.setString(2, company1_site1_station1_test2_cleansed(1).asInstanceOf[String])
+  prepare_insert_cleansed.setString(3, company1_site1_station1_test2_cleansed(2).asInstanceOf[String])
+  prepare_insert_cleansed.setString(4, company1_site1_station1_test2_cleansed(3).asInstanceOf[String])
+  prepare_insert_cleansed.setInt(5, epoch(0))
+  prepare_insert_cleansed.setTimestamp(6, testTime)
+  prepare_insert_cleansed.setString(7, company1_site1_station1_test2_cleansed(6).asInstanceOf[String])
+  prepare_insert_cleansed.setString(8, company1_site1_station1_test2_cleansed(7).asInstanceOf[String])
+  prepare_insert_cleansed.setString(9, company1_site1_station1_test2_cleansed(8).asInstanceOf[String])
+  prepare_insert_cleansed.setString(10, company1_site1_station1_test2_cleansed(9).asInstanceOf[String])
+  prepare_insert_cleansed.setDouble(11, 99999.0)
+  prepare_insert_cleansed.setString(12, company1_site1_station1_test2_cleansed(14).asInstanceOf[String])
+  prepare_insert_cleansed.setString(13, company1_site1_station1_test2_cleansed(15).asInstanceOf[String])
+  prepare_insert_cleansed.setString(14, company1_site1_station1_test2_cleansed(16).asInstanceOf[String])
+  prepare_insert_cleansed.setString(15, company1_site1_station1_test2_cleansed(17).asInstanceOf[String])
+  prepare_insert_cleansed.setString(16, company1_site1_station1_test2_cleansed(22).asInstanceOf[String])
+  prepare_insert_cleansed.setString(17, company1_site1_station1_test2_cleansed(23).asInstanceOf[String])
+  prepare_insert_cleansed.setString(18, company1_site1_station1_test2_cleansed(24).asInstanceOf[String])
+  prepare_insert_cleansed.executeUpdate()
+  prepare_insert_cleansed.setString(1, company1_site1_station2_test1_cleansed(0).asInstanceOf[String])
+  prepare_insert_cleansed.setString(2, company1_site1_station2_test1_cleansed(1).asInstanceOf[String])
+  prepare_insert_cleansed.setString(3, company1_site1_station2_test1_cleansed(2).asInstanceOf[String])
+  prepare_insert_cleansed.setString(4, company1_site1_station2_test1_cleansed(3).asInstanceOf[String])
+  prepare_insert_cleansed.setInt(5, epoch(0))
+  prepare_insert_cleansed.setTimestamp(6, beginTime)
+  prepare_insert_cleansed.setString(7, company1_site1_station2_test1_cleansed(6).asInstanceOf[String])
+  prepare_insert_cleansed.setString(8, company1_site1_station2_test1_cleansed(7).asInstanceOf[String])
+  prepare_insert_cleansed.setString(9, company1_site1_station2_test1_cleansed(8).asInstanceOf[String])
+  prepare_insert_cleansed.setString(10, company1_site1_station2_test1_cleansed(9).asInstanceOf[String])
+  prepare_insert_cleansed.setDouble(11, company1_site1_station2_test1_cleansed(10).asInstanceOf[Double])
+  prepare_insert_cleansed.setString(12, company1_site1_station2_test1_cleansed(14).asInstanceOf[String])
+  prepare_insert_cleansed.setString(13, company1_site1_station2_test1_cleansed(15).asInstanceOf[String])
+  prepare_insert_cleansed.setString(14, company1_site1_station2_test1_cleansed(16).asInstanceOf[String])
+  prepare_insert_cleansed.setString(15, company1_site1_station2_test1_cleansed(17).asInstanceOf[String])
+  prepare_insert_cleansed.setString(16, company1_site1_station2_test1_cleansed(22).asInstanceOf[String])
+  prepare_insert_cleansed.setString(17, company1_site1_station2_test1_cleansed(23).asInstanceOf[String])
+  prepare_insert_cleansed.setString(18, company1_site1_station2_test1_cleansed(24).asInstanceOf[String])
+  prepare_insert_cleansed.executeUpdate()
+  prepare_insert_cleansed.setString(1, company1_site1_station2_test1_cleansed(0).asInstanceOf[String])
+  prepare_insert_cleansed.setString(2, company1_site1_station2_test1_cleansed(1).asInstanceOf[String])
+  prepare_insert_cleansed.setString(3, company1_site1_station2_test1_cleansed(2).asInstanceOf[String])
+  prepare_insert_cleansed.setString(4, company1_site1_station2_test1_cleansed(3).asInstanceOf[String])
+  prepare_insert_cleansed.setInt(5, epoch(0))
+  prepare_insert_cleansed.setTimestamp(6, testTime)
+  prepare_insert_cleansed.setString(7, company1_site1_station2_test1_cleansed(6).asInstanceOf[String])
+  prepare_insert_cleansed.setString(8, company1_site1_station2_test1_cleansed(7).asInstanceOf[String])
+  prepare_insert_cleansed.setString(9, company1_site1_station2_test1_cleansed(8).asInstanceOf[String])
+  prepare_insert_cleansed.setString(10, company1_site1_station2_test1_cleansed(9).asInstanceOf[String])
+  prepare_insert_cleansed.setDouble(11, 99999.0)
+  prepare_insert_cleansed.setString(12, company1_site1_station2_test1_cleansed(14).asInstanceOf[String])
+  prepare_insert_cleansed.setString(13, company1_site1_station2_test1_cleansed(15).asInstanceOf[String])
+  prepare_insert_cleansed.setString(14, company1_site1_station2_test1_cleansed(16).asInstanceOf[String])
+  prepare_insert_cleansed.setString(15, company1_site1_station2_test1_cleansed(17).asInstanceOf[String])
+  prepare_insert_cleansed.setString(16, company1_site1_station2_test1_cleansed(22).asInstanceOf[String])
+  prepare_insert_cleansed.setString(17, company1_site1_station2_test1_cleansed(23).asInstanceOf[String])
+  prepare_insert_cleansed.setString(18, company1_site1_station2_test1_cleansed(24).asInstanceOf[String])
+  prepare_insert_cleansed.executeUpdate()
+  prepare_insert_cleansed.setString(1, company1_site1_station2_test2_cleansed(0).asInstanceOf[String])
+  prepare_insert_cleansed.setString(2, company1_site1_station2_test2_cleansed(1).asInstanceOf[String])
+  prepare_insert_cleansed.setString(3, company1_site1_station2_test2_cleansed(2).asInstanceOf[String])
+  prepare_insert_cleansed.setString(4, company1_site1_station2_test2_cleansed(3).asInstanceOf[String])
+  prepare_insert_cleansed.setInt(5, epoch(0))
+  prepare_insert_cleansed.setTimestamp(6, beginTime)
+  prepare_insert_cleansed.setString(7, company1_site1_station2_test2_cleansed(6).asInstanceOf[String])
+  prepare_insert_cleansed.setString(8, company1_site1_station2_test2_cleansed(7).asInstanceOf[String])
+  prepare_insert_cleansed.setString(9, company1_site1_station2_test2_cleansed(8).asInstanceOf[String])
+  prepare_insert_cleansed.setString(10, company1_site1_station2_test2_cleansed(9).asInstanceOf[String])
+  prepare_insert_cleansed.setDouble(11, company1_site1_station2_test2_cleansed(10).asInstanceOf[Double])
+  prepare_insert_cleansed.setString(12, company1_site1_station2_test2_cleansed(14).asInstanceOf[String])
+  prepare_insert_cleansed.setString(13, company1_site1_station2_test2_cleansed(15).asInstanceOf[String])
+  prepare_insert_cleansed.setString(14, company1_site1_station2_test2_cleansed(16).asInstanceOf[String])
+  prepare_insert_cleansed.setString(15, company1_site1_station2_test2_cleansed(17).asInstanceOf[String])
+  prepare_insert_cleansed.setString(16, company1_site1_station2_test2_cleansed(22).asInstanceOf[String])
+  prepare_insert_cleansed.setString(17, company1_site1_station2_test2_cleansed(23).asInstanceOf[String])
+  prepare_insert_cleansed.setString(18, company1_site1_station2_test2_cleansed(24).asInstanceOf[String])
+  prepare_insert_cleansed.executeUpdate()
+  prepare_insert_cleansed.setString(1, company1_site1_station2_test2_cleansed(0).asInstanceOf[String])
+  prepare_insert_cleansed.setString(2, company1_site1_station2_test2_cleansed(1).asInstanceOf[String])
+  prepare_insert_cleansed.setString(3, company1_site1_station2_test2_cleansed(2).asInstanceOf[String])
+  prepare_insert_cleansed.setString(4, company1_site1_station2_test2_cleansed(3).asInstanceOf[String])
+  prepare_insert_cleansed.setInt(5, epoch(0))
+  prepare_insert_cleansed.setTimestamp(6, testTime)
+  prepare_insert_cleansed.setString(7, company1_site1_station2_test2_cleansed(6).asInstanceOf[String])
+  prepare_insert_cleansed.setString(8, company1_site1_station2_test2_cleansed(7).asInstanceOf[String])
+  prepare_insert_cleansed.setString(9, company1_site1_station2_test2_cleansed(8).asInstanceOf[String])
+  prepare_insert_cleansed.setString(10, company1_site1_station2_test2_cleansed(9).asInstanceOf[String])
+  prepare_insert_cleansed.setDouble(11, 99999.0)
+  prepare_insert_cleansed.setString(12, company1_site1_station2_test2_cleansed(14).asInstanceOf[String])
+  prepare_insert_cleansed.setString(13, company1_site1_station2_test2_cleansed(15).asInstanceOf[String])
+
+  prepare_insert_cleansed.setString(14, company1_site1_station2_test2_cleansed(16).asInstanceOf[String])
+  prepare_insert_cleansed.setString(15, company1_site1_station2_test2_cleansed(17).asInstanceOf[String])
+
+  prepare_insert_cleansed.setString(16, company1_site1_station2_test2_cleansed(22).asInstanceOf[String])
+  prepare_insert_cleansed.setString(17, company1_site1_station2_test2_cleansed(23).asInstanceOf[String])
+  prepare_insert_cleansed.setString(18, company1_site1_station2_test2_cleansed(24).asInstanceOf[String])
+  prepare_insert_cleansed.executeUpdate()
+  prepare_insert_cleansed.setString(1, company1_site2_station1_test1_cleansed(0).asInstanceOf[String])
+  prepare_insert_cleansed.setString(2, company1_site2_station1_test1_cleansed(1).asInstanceOf[String])
+  prepare_insert_cleansed.setString(3, company1_site2_station1_test1_cleansed(2).asInstanceOf[String])
+  prepare_insert_cleansed.setString(4, company1_site2_station1_test1_cleansed(3).asInstanceOf[String])
+  prepare_insert_cleansed.setInt(5, epoch(0))
+  prepare_insert_cleansed.setTimestamp(6, beginTime)
+  prepare_insert_cleansed.setString(7, company1_site2_station1_test1_cleansed(6).asInstanceOf[String])
+  prepare_insert_cleansed.setString(8, company1_site2_station1_test1_cleansed(7).asInstanceOf[String])
+  prepare_insert_cleansed.setString(9, company1_site2_station1_test1_cleansed(8).asInstanceOf[String])
+  prepare_insert_cleansed.setString(10, company1_site2_station1_test1_cleansed(9).asInstanceOf[String])
+  prepare_insert_cleansed.setDouble(11, company1_site2_station1_test1_cleansed(10).asInstanceOf[Double])
+  prepare_insert_cleansed.setString(12, company1_site2_station1_test1_cleansed(14).asInstanceOf[String])
+  prepare_insert_cleansed.setString(13, company1_site2_station1_test1_cleansed(15).asInstanceOf[String])
+  prepare_insert_cleansed.setString(14, company1_site2_station1_test1_cleansed(16).asInstanceOf[String])
+  prepare_insert_cleansed.setString(15, company1_site2_station1_test1_cleansed(17).asInstanceOf[String])
+  prepare_insert_cleansed.setString(16, company1_site2_station1_test1_cleansed(22).asInstanceOf[String])
+  prepare_insert_cleansed.setString(17, company1_site2_station1_test1_cleansed(23).asInstanceOf[String])
+  prepare_insert_cleansed.setString(18, company1_site2_station1_test1_cleansed(24).asInstanceOf[String])
+  prepare_insert_cleansed.executeUpdate()
+  prepare_insert_cleansed.setString(1, company1_site2_station1_test1_cleansed(0).asInstanceOf[String])
+  prepare_insert_cleansed.setString(2, company1_site2_station1_test1_cleansed(1).asInstanceOf[String])
+  prepare_insert_cleansed.setString(3, company1_site2_station1_test1_cleansed(2).asInstanceOf[String])
+  prepare_insert_cleansed.setString(4, company1_site2_station1_test1_cleansed(3).asInstanceOf[String])
+  prepare_insert_cleansed.setInt(5, epoch(0))
+  prepare_insert_cleansed.setTimestamp(6, testTime)
+  prepare_insert_cleansed.setString(7, company1_site2_station1_test1_cleansed(6).asInstanceOf[String])
+  prepare_insert_cleansed.setString(8, company1_site2_station1_test1_cleansed(7).asInstanceOf[String])
+  prepare_insert_cleansed.setString(9, company1_site2_station1_test1_cleansed(8).asInstanceOf[String])
+  prepare_insert_cleansed.setString(10, company1_site2_station1_test1_cleansed(9).asInstanceOf[String])
+  prepare_insert_cleansed.setDouble(11, 99999.0)
+  prepare_insert_cleansed.setString(12, company1_site2_station1_test1_cleansed(14).asInstanceOf[String])
+  prepare_insert_cleansed.setString(13, company1_site2_station1_test1_cleansed(15).asInstanceOf[String])
+  prepare_insert_cleansed.setString(14, company1_site2_station1_test1_cleansed(16).asInstanceOf[String])
+  prepare_insert_cleansed.setString(15, company1_site2_station1_test1_cleansed(17).asInstanceOf[String])
+  prepare_insert_cleansed.setString(16, company1_site2_station1_test1_cleansed(22).asInstanceOf[String])
+  prepare_insert_cleansed.setString(17, company1_site2_station1_test1_cleansed(23).asInstanceOf[String])
+  prepare_insert_cleansed.setString(18, company1_site2_station1_test1_cleansed(24).asInstanceOf[String])
+  prepare_insert_cleansed.executeUpdate()
+  prepare_insert_cleansed.setString(1, company1_site2_station1_test2_cleansed(0).asInstanceOf[String])
+  prepare_insert_cleansed.setString(2, company1_site2_station1_test2_cleansed(1).asInstanceOf[String])
+  prepare_insert_cleansed.setString(3, company1_site2_station1_test2_cleansed(2).asInstanceOf[String])
+  prepare_insert_cleansed.setString(4, company1_site2_station1_test2_cleansed(3).asInstanceOf[String])
+  prepare_insert_cleansed.setInt(5, epoch(0))
+  prepare_insert_cleansed.setTimestamp(6, beginTime)
+  prepare_insert_cleansed.setString(7, company1_site2_station1_test2_cleansed(6).asInstanceOf[String])
+  prepare_insert_cleansed.setString(8, company1_site2_station1_test2_cleansed(7).asInstanceOf[String])
+  prepare_insert_cleansed.setString(9, company1_site2_station1_test2_cleansed(8).asInstanceOf[String])
+  prepare_insert_cleansed.setString(10, company1_site2_station1_test2_cleansed(9).asInstanceOf[String])
+  prepare_insert_cleansed.setDouble(11, company1_site2_station1_test2_cleansed(10).asInstanceOf[Double])
+  prepare_insert_cleansed.setString(12, company1_site2_station1_test2_cleansed(14).asInstanceOf[String])
+  prepare_insert_cleansed.setString(13, company1_site2_station1_test2_cleansed(15).asInstanceOf[String])
+  prepare_insert_cleansed.setString(14, company1_site2_station1_test2_cleansed(16).asInstanceOf[String])
+  prepare_insert_cleansed.setString(15, company1_site2_station1_test2_cleansed(17).asInstanceOf[String])
+  prepare_insert_cleansed.setString(16, company1_site2_station1_test2_cleansed(22).asInstanceOf[String])
+  prepare_insert_cleansed.setString(17, company1_site2_station1_test2_cleansed(23).asInstanceOf[String])
+  prepare_insert_cleansed.setString(18, company1_site2_station1_test2_cleansed(24).asInstanceOf[String])
+  prepare_insert_cleansed.executeUpdate()
+  prepare_insert_cleansed.setString(1, company1_site2_station1_test2_cleansed(0).asInstanceOf[String])
+  prepare_insert_cleansed.setString(2, company1_site2_station1_test2_cleansed(1).asInstanceOf[String])
+  prepare_insert_cleansed.setString(3, company1_site2_station1_test2_cleansed(2).asInstanceOf[String])
+  prepare_insert_cleansed.setString(4, company1_site2_station1_test2_cleansed(3).asInstanceOf[String])
+  prepare_insert_cleansed.setInt(5, epoch(0))
+  prepare_insert_cleansed.setTimestamp(6, testTime)
+  prepare_insert_cleansed.setString(7, company1_site2_station1_test2_cleansed(6).asInstanceOf[String])
+  prepare_insert_cleansed.setString(8, company1_site2_station1_test2_cleansed(7).asInstanceOf[String])
+  prepare_insert_cleansed.setString(9, company1_site2_station1_test2_cleansed(8).asInstanceOf[String])
+  prepare_insert_cleansed.setString(10, company1_site2_station1_test2_cleansed(9).asInstanceOf[String])
+  prepare_insert_cleansed.setDouble(11, 99999.0)
+  prepare_insert_cleansed.setString(12, company1_site2_station1_test2_cleansed(14).asInstanceOf[String])
+  prepare_insert_cleansed.setString(13, company1_site2_station1_test2_cleansed(15).asInstanceOf[String])
+  prepare_insert_cleansed.setString(14, company1_site2_station1_test2_cleansed(16).asInstanceOf[String])
+  prepare_insert_cleansed.setString(15, company1_site2_station1_test2_cleansed(17).asInstanceOf[String])
+  prepare_insert_cleansed.setString(16, company1_site2_station1_test2_cleansed(22).asInstanceOf[String])
+  prepare_insert_cleansed.setString(17, company1_site2_station1_test2_cleansed(23).asInstanceOf[String])
+  prepare_insert_cleansed.setString(18, company1_site2_station1_test2_cleansed(24).asInstanceOf[String])
+  prepare_insert_cleansed.executeUpdate()
+  prepare_insert_cleansed.setString(1, company1_site2_station2_test1_cleansed(0).asInstanceOf[String])
+  prepare_insert_cleansed.setString(2, company1_site2_station2_test1_cleansed(1).asInstanceOf[String])
+  prepare_insert_cleansed.setString(3, company1_site2_station2_test1_cleansed(2).asInstanceOf[String])
+  prepare_insert_cleansed.setString(4, company1_site2_station2_test1_cleansed(3).asInstanceOf[String])
+  prepare_insert_cleansed.setInt(5, epoch(0))
+  prepare_insert_cleansed.setTimestamp(6, beginTime)
+  prepare_insert_cleansed.setString(7, company1_site2_station2_test1_cleansed(6).asInstanceOf[String])
+  prepare_insert_cleansed.setString(8, company1_site2_station2_test1_cleansed(7).asInstanceOf[String])
+  prepare_insert_cleansed.setString(9, company1_site2_station2_test1_cleansed(8).asInstanceOf[String])
+  prepare_insert_cleansed.setString(10, company1_site2_station2_test1_cleansed(9).asInstanceOf[String])
+  prepare_insert_cleansed.setDouble(11, company1_site2_station2_test1_cleansed(10).asInstanceOf[Double])
+  prepare_insert_cleansed.setString(12, company1_site2_station2_test1_cleansed(14).asInstanceOf[String])
+  prepare_insert_cleansed.setString(13, company1_site2_station2_test1_cleansed(15).asInstanceOf[String])
+  prepare_insert_cleansed.setString(14, company1_site2_station2_test1_cleansed(16).asInstanceOf[String])
+  prepare_insert_cleansed.setString(15, company1_site2_station2_test1_cleansed(17).asInstanceOf[String])
+  prepare_insert_cleansed.setString(16, company1_site2_station2_test1_cleansed(22).asInstanceOf[String])
+  prepare_insert_cleansed.setString(17, company1_site2_station2_test1_cleansed(23).asInstanceOf[String])
+  prepare_insert_cleansed.setString(18, company1_site2_station2_test1_cleansed(24).asInstanceOf[String])
+  prepare_insert_cleansed.executeUpdate()
+  prepare_insert_cleansed.setString(1, company1_site2_station2_test1_cleansed(0).asInstanceOf[String])
+  prepare_insert_cleansed.setString(2, company1_site2_station2_test1_cleansed(1).asInstanceOf[String])
+  prepare_insert_cleansed.setString(3, company1_site2_station2_test1_cleansed(2).asInstanceOf[String])
+  prepare_insert_cleansed.setString(4, company1_site2_station2_test1_cleansed(3).asInstanceOf[String])
+  prepare_insert_cleansed.setInt(5, epoch(0))
+  prepare_insert_cleansed.setTimestamp(6, testTime)
+  prepare_insert_cleansed.setString(7, company1_site2_station2_test1_cleansed(6).asInstanceOf[String])
+  prepare_insert_cleansed.setString(8, company1_site2_station2_test1_cleansed(7).asInstanceOf[String])
+  prepare_insert_cleansed.setString(9, company1_site2_station2_test1_cleansed(8).asInstanceOf[String])
+  prepare_insert_cleansed.setString(10, company1_site2_station2_test1_cleansed(9).asInstanceOf[String])
+  prepare_insert_cleansed.setDouble(11, 99999.0)
+  prepare_insert_cleansed.setString(12, company1_site2_station2_test1_cleansed(14).asInstanceOf[String])
+  prepare_insert_cleansed.setString(13, company1_site2_station2_test1_cleansed(15).asInstanceOf[String])
+  prepare_insert_cleansed.setString(14, company1_site2_station2_test1_cleansed(16).asInstanceOf[String])
+  prepare_insert_cleansed.setString(15, company1_site2_station2_test1_cleansed(17).asInstanceOf[String])
+  prepare_insert_cleansed.setString(16, company1_site2_station2_test1_cleansed(22).asInstanceOf[String])
+  prepare_insert_cleansed.setString(17, company1_site2_station2_test1_cleansed(23).asInstanceOf[String])
+  prepare_insert_cleansed.setString(18, company1_site2_station2_test1_cleansed(24).asInstanceOf[String])
+  prepare_insert_cleansed.executeUpdate()
+  prepare_insert_cleansed.setString(1, company1_site2_station2_test2_cleansed(0).asInstanceOf[String])
+  prepare_insert_cleansed.setString(2, company1_site2_station2_test2_cleansed(1).asInstanceOf[String])
+  prepare_insert_cleansed.setString(3, company1_site2_station2_test2_cleansed(2).asInstanceOf[String])
+  prepare_insert_cleansed.setString(4, company1_site2_station2_test2_cleansed(3).asInstanceOf[String])
+  prepare_insert_cleansed.setInt(5, epoch(0))
+  prepare_insert_cleansed.setTimestamp(6, beginTime)
+  prepare_insert_cleansed.setString(7, company1_site2_station2_test2_cleansed(6).asInstanceOf[String])
+  prepare_insert_cleansed.setString(8, company1_site2_station2_test2_cleansed(7).asInstanceOf[String])
+  prepare_insert_cleansed.setString(9, company1_site2_station2_test2_cleansed(8).asInstanceOf[String])
+  prepare_insert_cleansed.setString(10, company1_site2_station2_test2_cleansed(9).asInstanceOf[String])
+  prepare_insert_cleansed.setDouble(11, company1_site2_station2_test2_cleansed(10).asInstanceOf[Double])
+  prepare_insert_cleansed.setString(12, company1_site2_station2_test2_cleansed(14).asInstanceOf[String])
+  prepare_insert_cleansed.setString(13, company1_site2_station2_test2_cleansed(15).asInstanceOf[String])
+  prepare_insert_cleansed.setString(14, company1_site2_station2_test2_cleansed(16).asInstanceOf[String])
+  prepare_insert_cleansed.setString(15, company1_site2_station2_test2_cleansed(17).asInstanceOf[String])
+  prepare_insert_cleansed.setString(16, company1_site2_station2_test2_cleansed(22).asInstanceOf[String])
+  prepare_insert_cleansed.setString(17, company1_site2_station2_test2_cleansed(23).asInstanceOf[String])
+  prepare_insert_cleansed.setString(18, company1_site2_station2_test2_cleansed(24).asInstanceOf[String])
+  prepare_insert_cleansed.executeUpdate()
+  prepare_insert_cleansed.setString(1, company1_site2_station2_test2_cleansed(0).asInstanceOf[String])
+  prepare_insert_cleansed.setString(2, company1_site2_station2_test2_cleansed(1).asInstanceOf[String])
+  prepare_insert_cleansed.setString(3, company1_site2_station2_test2_cleansed(2).asInstanceOf[String])
+  prepare_insert_cleansed.setString(4, company1_site2_station2_test2_cleansed(3).asInstanceOf[String])
+  prepare_insert_cleansed.setInt(5, epoch(0))
+  prepare_insert_cleansed.setTimestamp(6, testTime)
+  prepare_insert_cleansed.setString(7, company1_site2_station2_test2_cleansed(6).asInstanceOf[String])
+  prepare_insert_cleansed.setString(8, company1_site2_station2_test2_cleansed(7).asInstanceOf[String])
+  prepare_insert_cleansed.setString(9, company1_site2_station2_test2_cleansed(8).asInstanceOf[String])
+  prepare_insert_cleansed.setString(10, company1_site2_station2_test2_cleansed(9).asInstanceOf[String])
+  prepare_insert_cleansed.setDouble(11, 99999.0)
+  prepare_insert_cleansed.setString(12, company1_site2_station2_test2_cleansed(14).asInstanceOf[String])
+  prepare_insert_cleansed.setString(13, company1_site2_station2_test2_cleansed(15).asInstanceOf[String])
+  prepare_insert_cleansed.setString(14, company1_site2_station2_test2_cleansed(16).asInstanceOf[String])
+  prepare_insert_cleansed.setString(15, company1_site2_station2_test2_cleansed(17).asInstanceOf[String])
+  prepare_insert_cleansed.setString(16, company1_site2_station2_test2_cleansed(22).asInstanceOf[String])
+  prepare_insert_cleansed.setString(17, company1_site2_station2_test2_cleansed(23).asInstanceOf[String])
+  prepare_insert_cleansed.setString(18, company1_site2_station2_test2_cleansed(24).asInstanceOf[String])
+  prepare_insert_cleansed.executeUpdate()
+  // Compnay-2 Test Data
+  prepare_insert_cleansed.setString(1, company2_site1_station1_test1_cleansed(0).asInstanceOf[String])
+  prepare_insert_cleansed.setString(2, company2_site1_station1_test1_cleansed(1).asInstanceOf[String])
+  prepare_insert_cleansed.setString(3, company2_site1_station1_test1_cleansed(2).asInstanceOf[String])
+  prepare_insert_cleansed.setString(4, company2_site1_station1_test1_cleansed(3).asInstanceOf[String])
+  prepare_insert_cleansed.setInt(5, epoch(0))
+  prepare_insert_cleansed.setTimestamp(6, beginTime)
+  prepare_insert_cleansed.setString(7, company2_site1_station1_test1_cleansed(6).asInstanceOf[String])
+  prepare_insert_cleansed.setString(8, company2_site1_station1_test1_cleansed(7).asInstanceOf[String])
+  prepare_insert_cleansed.setString(9, company2_site1_station1_test1_cleansed(8).asInstanceOf[String])
+  prepare_insert_cleansed.setString(10, company2_site1_station1_test1_cleansed(9).asInstanceOf[String])
+  prepare_insert_cleansed.setDouble(11, company2_site1_station1_test1_cleansed(10).asInstanceOf[Double])
+  prepare_insert_cleansed.setString(12, company2_site1_station1_test1_cleansed(14).asInstanceOf[String])
+  prepare_insert_cleansed.setString(13, company2_site1_station1_test1_cleansed(15).asInstanceOf[String])
+  prepare_insert_cleansed.setString(14, company2_site1_station1_test1_cleansed(16).asInstanceOf[String])
+  prepare_insert_cleansed.setString(15, company2_site1_station1_test1_cleansed(17).asInstanceOf[String])
+  prepare_insert_cleansed.setString(16, company2_site1_station1_test1_cleansed(22).asInstanceOf[String])
+  prepare_insert_cleansed.setString(17, company2_site1_station1_test1_cleansed(23).asInstanceOf[String])
+  prepare_insert_cleansed.setString(18, company2_site1_station1_test1_cleansed(24).asInstanceOf[String])
+  prepare_insert_cleansed.executeUpdate()
+  prepare_insert_cleansed.setString(1, company2_site1_station1_test1_cleansed(0).asInstanceOf[String])
+  prepare_insert_cleansed.setString(2, company2_site1_station1_test1_cleansed(1).asInstanceOf[String])
+  prepare_insert_cleansed.setString(3, company2_site1_station1_test1_cleansed(2).asInstanceOf[String])
+  prepare_insert_cleansed.setString(4, company2_site1_station1_test1_cleansed(3).asInstanceOf[String])
+  prepare_insert_cleansed.setInt(5, epoch(0))
+  prepare_insert_cleansed.setTimestamp(6, testTime)
+  prepare_insert_cleansed.setString(7, company2_site1_station1_test1_cleansed(6).asInstanceOf[String])
+  prepare_insert_cleansed.setString(8, company2_site1_station1_test1_cleansed(7).asInstanceOf[String])
+  prepare_insert_cleansed.setString(9, company2_site1_station1_test1_cleansed(8).asInstanceOf[String])
+  prepare_insert_cleansed.setString(10, company2_site1_station1_test1_cleansed(9).asInstanceOf[String])
+  prepare_insert_cleansed.setDouble(11, 99999.0)
+  prepare_insert_cleansed.setString(12, company2_site1_station1_test1_cleansed(14).asInstanceOf[String])
+  prepare_insert_cleansed.setString(13, company2_site1_station1_test1_cleansed(15).asInstanceOf[String])
+  prepare_insert_cleansed.setString(14, company2_site1_station1_test1_cleansed(16).asInstanceOf[String])
+  prepare_insert_cleansed.setString(15, company2_site1_station1_test1_cleansed(17).asInstanceOf[String])
+  prepare_insert_cleansed.setString(16, company2_site1_station1_test1_cleansed(22).asInstanceOf[String])
+  prepare_insert_cleansed.setString(17, company2_site1_station1_test1_cleansed(23).asInstanceOf[String])
+  prepare_insert_cleansed.setString(18, company2_site1_station1_test1_cleansed(24).asInstanceOf[String])
+  prepare_insert_cleansed.executeUpdate()
+  prepare_insert_cleansed.setString(1, company2_site1_station1_test2_cleansed(0).asInstanceOf[String])
+  prepare_insert_cleansed.setString(2, company2_site1_station1_test2_cleansed(1).asInstanceOf[String])
+  prepare_insert_cleansed.setString(3, company2_site1_station1_test2_cleansed(2).asInstanceOf[String])
+  prepare_insert_cleansed.setString(4, company2_site1_station1_test2_cleansed(3).asInstanceOf[String])
+  prepare_insert_cleansed.setInt(5, epoch(0))
+  prepare_insert_cleansed.setTimestamp(6, beginTime)
+  prepare_insert_cleansed.setString(7, company2_site1_station1_test2_cleansed(6).asInstanceOf[String])
+  prepare_insert_cleansed.setString(8, company2_site1_station1_test2_cleansed(7).asInstanceOf[String])
+  prepare_insert_cleansed.setString(9, company2_site1_station1_test2_cleansed(8).asInstanceOf[String])
+  prepare_insert_cleansed.setString(10, company2_site1_station1_test2_cleansed(9).asInstanceOf[String])
+  prepare_insert_cleansed.setDouble(11, company2_site1_station1_test2_cleansed(10).asInstanceOf[Double])
+  prepare_insert_cleansed.setString(12, company2_site1_station1_test2_cleansed(14).asInstanceOf[String])
+  prepare_insert_cleansed.setString(13, company2_site1_station1_test2_cleansed(15).asInstanceOf[String])
+  prepare_insert_cleansed.setString(14, company2_site1_station1_test2_cleansed(16).asInstanceOf[String])
+  prepare_insert_cleansed.setString(15, company2_site1_station1_test2_cleansed(17).asInstanceOf[String])
+  prepare_insert_cleansed.setString(16, company2_site1_station1_test2_cleansed(22).asInstanceOf[String])
+  prepare_insert_cleansed.setString(17, company2_site1_station1_test2_cleansed(23).asInstanceOf[String])
+  prepare_insert_cleansed.setString(18, company2_site1_station1_test2_cleansed(24).asInstanceOf[String])
+  prepare_insert_cleansed.executeUpdate()
+  prepare_insert_cleansed.setString(1, company2_site1_station1_test2_cleansed(0).asInstanceOf[String])
+  prepare_insert_cleansed.setString(2, company2_site1_station1_test2_cleansed(1).asInstanceOf[String])
+  prepare_insert_cleansed.setString(3, company2_site1_station1_test2_cleansed(2).asInstanceOf[String])
+  prepare_insert_cleansed.setString(4, company2_site1_station1_test2_cleansed(3).asInstanceOf[String])
+  prepare_insert_cleansed.setInt(5, epoch(0))
+  prepare_insert_cleansed.setTimestamp(6, testTime)
+  prepare_insert_cleansed.setString(7, company2_site1_station1_test2_cleansed(6).asInstanceOf[String])
+  prepare_insert_cleansed.setString(8, company2_site1_station1_test2_cleansed(7).asInstanceOf[String])
+  prepare_insert_cleansed.setString(9, company2_site1_station1_test2_cleansed(8).asInstanceOf[String])
+  prepare_insert_cleansed.setString(10, company2_site1_station1_test2_cleansed(9).asInstanceOf[String])
+  prepare_insert_cleansed.setDouble(11, 99999.0)
+  prepare_insert_cleansed.setString(12, company2_site1_station1_test2_cleansed(14).asInstanceOf[String])
+  prepare_insert_cleansed.setString(13, company2_site1_station1_test2_cleansed(15).asInstanceOf[String])
+  prepare_insert_cleansed.setString(14, company2_site1_station1_test2_cleansed(16).asInstanceOf[String])
+  prepare_insert_cleansed.setString(15, company2_site1_station1_test2_cleansed(17).asInstanceOf[String])
+  prepare_insert_cleansed.setString(16, company2_site1_station1_test2_cleansed(22).asInstanceOf[String])
+  prepare_insert_cleansed.setString(17, company2_site1_station1_test2_cleansed(23).asInstanceOf[String])
+  prepare_insert_cleansed.setString(18, company2_site1_station1_test2_cleansed(24).asInstanceOf[String])
+  prepare_insert_cleansed.executeUpdate()
+  prepare_insert_cleansed.setString(1, company2_site1_station2_test1_cleansed(0).asInstanceOf[String])
+  prepare_insert_cleansed.setString(2, company2_site1_station2_test1_cleansed(1).asInstanceOf[String])
+  prepare_insert_cleansed.setString(3, company2_site1_station2_test1_cleansed(2).asInstanceOf[String])
+  prepare_insert_cleansed.setString(4, company2_site1_station2_test1_cleansed(3).asInstanceOf[String])
+  prepare_insert_cleansed.setInt(5, epoch(0))
+  prepare_insert_cleansed.setTimestamp(6, beginTime)
+  prepare_insert_cleansed.setString(7, company2_site1_station2_test1_cleansed(6).asInstanceOf[String])
+  prepare_insert_cleansed.setString(8, company2_site1_station2_test1_cleansed(7).asInstanceOf[String])
+  prepare_insert_cleansed.setString(9, company2_site1_station2_test1_cleansed(8).asInstanceOf[String])
+  prepare_insert_cleansed.setString(10, company2_site1_station2_test1_cleansed(9).asInstanceOf[String])
+  prepare_insert_cleansed.setDouble(11, company2_site1_station2_test1_cleansed(10).asInstanceOf[Double])
+  prepare_insert_cleansed.setString(12, company2_site1_station2_test1_cleansed(14).asInstanceOf[String])
+  prepare_insert_cleansed.setString(13, company2_site1_station2_test1_cleansed(15).asInstanceOf[String])
+  prepare_insert_cleansed.setString(14, company2_site1_station2_test1_cleansed(16).asInstanceOf[String])
+  prepare_insert_cleansed.setString(15, company2_site1_station2_test1_cleansed(17).asInstanceOf[String])
+  prepare_insert_cleansed.setString(16, company2_site1_station2_test1_cleansed(22).asInstanceOf[String])
+  prepare_insert_cleansed.setString(17, company2_site1_station2_test1_cleansed(23).asInstanceOf[String])
+  prepare_insert_cleansed.setString(18, company2_site1_station2_test1_cleansed(24).asInstanceOf[String])
+  prepare_insert_cleansed.executeUpdate()
+  prepare_insert_cleansed.setString(1, company2_site1_station2_test1_cleansed(0).asInstanceOf[String])
+  prepare_insert_cleansed.setString(2, company2_site1_station2_test1_cleansed(1).asInstanceOf[String])
+  prepare_insert_cleansed.setString(3, company2_site1_station2_test1_cleansed(2).asInstanceOf[String])
+  prepare_insert_cleansed.setString(4, company2_site1_station2_test1_cleansed(3).asInstanceOf[String])
+  prepare_insert_cleansed.setInt(5, epoch(0))
+  prepare_insert_cleansed.setTimestamp(6, testTime)
+  prepare_insert_cleansed.setString(7, company2_site1_station2_test1_cleansed(6).asInstanceOf[String])
+  prepare_insert_cleansed.setString(8, company2_site1_station2_test1_cleansed(7).asInstanceOf[String])
+  prepare_insert_cleansed.setString(9, company2_site1_station2_test1_cleansed(8).asInstanceOf[String])
+  prepare_insert_cleansed.setString(10, company2_site1_station2_test1_cleansed(9).asInstanceOf[String])
+  prepare_insert_cleansed.setDouble(11, 99999.0)
+  prepare_insert_cleansed.setString(12, company2_site1_station2_test1_cleansed(14).asInstanceOf[String])
+  prepare_insert_cleansed.setString(13, company2_site1_station2_test1_cleansed(15).asInstanceOf[String])
+  prepare_insert_cleansed.setString(14, company2_site1_station2_test1_cleansed(16).asInstanceOf[String])
+  prepare_insert_cleansed.setString(15, company2_site1_station2_test1_cleansed(17).asInstanceOf[String])
+  prepare_insert_cleansed.setString(16, company2_site1_station2_test1_cleansed(22).asInstanceOf[String])
+  prepare_insert_cleansed.setString(17, company2_site1_station2_test1_cleansed(23).asInstanceOf[String])
+  prepare_insert_cleansed.setString(18, company2_site1_station2_test1_cleansed(24).asInstanceOf[String])
+  prepare_insert_cleansed.executeUpdate()
+  prepare_insert_cleansed.setString(1, company2_site1_station2_test2_cleansed(0).asInstanceOf[String])
+  prepare_insert_cleansed.setString(2, company2_site1_station2_test2_cleansed(1).asInstanceOf[String])
+  prepare_insert_cleansed.setString(3, company2_site1_station2_test2_cleansed(2).asInstanceOf[String])
+  prepare_insert_cleansed.setString(4, company2_site1_station2_test2_cleansed(3).asInstanceOf[String])
+  prepare_insert_cleansed.setInt(5, epoch(0))
+  prepare_insert_cleansed.setTimestamp(6, beginTime)
+  prepare_insert_cleansed.setString(7, company2_site1_station2_test2_cleansed(6).asInstanceOf[String])
+  prepare_insert_cleansed.setString(8, company2_site1_station2_test2_cleansed(7).asInstanceOf[String])
+  prepare_insert_cleansed.setString(9, company2_site1_station2_test2_cleansed(8).asInstanceOf[String])
+  prepare_insert_cleansed.setString(10, company2_site1_station2_test2_cleansed(9).asInstanceOf[String])
+  prepare_insert_cleansed.setDouble(11, company2_site1_station2_test2_cleansed(10).asInstanceOf[Double])
+  prepare_insert_cleansed.setString(12, company2_site1_station2_test2_cleansed(14).asInstanceOf[String])
+  prepare_insert_cleansed.setString(13, company2_site1_station2_test2_cleansed(15).asInstanceOf[String])
+  prepare_insert_cleansed.setString(14, company2_site1_station2_test2_cleansed(16).asInstanceOf[String])
+  prepare_insert_cleansed.setString(15, company2_site1_station2_test2_cleansed(17).asInstanceOf[String])
+  prepare_insert_cleansed.setString(16, company2_site1_station2_test2_cleansed(22).asInstanceOf[String])
+  prepare_insert_cleansed.setString(17, company2_site1_station2_test2_cleansed(23).asInstanceOf[String])
+  prepare_insert_cleansed.setString(18, company2_site1_station2_test2_cleansed(24).asInstanceOf[String])
+  prepare_insert_cleansed.executeUpdate()
+  prepare_insert_cleansed.setString(1, company2_site1_station2_test2_cleansed(0).asInstanceOf[String])
+  prepare_insert_cleansed.setString(2, company2_site1_station2_test2_cleansed(1).asInstanceOf[String])
+  prepare_insert_cleansed.setString(3, company2_site1_station2_test2_cleansed(2).asInstanceOf[String])
+  prepare_insert_cleansed.setString(4, company2_site1_station2_test2_cleansed(3).asInstanceOf[String])
+  prepare_insert_cleansed.setInt(5, epoch(0))
+  prepare_insert_cleansed.setTimestamp(6, testTime)
+  prepare_insert_cleansed.setString(7, company2_site1_station2_test2_cleansed(6).asInstanceOf[String])
+  prepare_insert_cleansed.setString(8, company2_site1_station2_test2_cleansed(7).asInstanceOf[String])
+  prepare_insert_cleansed.setString(9, company2_site1_station2_test2_cleansed(8).asInstanceOf[String])
+  prepare_insert_cleansed.setString(10, company2_site1_station2_test2_cleansed(9).asInstanceOf[String])
+  prepare_insert_cleansed.setDouble(11, 99999.0)
+  prepare_insert_cleansed.setString(12, company2_site1_station2_test2_cleansed(14).asInstanceOf[String])
+  prepare_insert_cleansed.setString(13, company2_site1_station2_test2_cleansed(15).asInstanceOf[String])
+  prepare_insert_cleansed.setString(14, company2_site1_station2_test2_cleansed(16).asInstanceOf[String])
+  prepare_insert_cleansed.setString(15, company2_site1_station2_test2_cleansed(17).asInstanceOf[String])
+  prepare_insert_cleansed.setString(16, company2_site1_station2_test2_cleansed(22).asInstanceOf[String])
+  prepare_insert_cleansed.setString(17, company2_site1_station2_test2_cleansed(23).asInstanceOf[String])
+  prepare_insert_cleansed.setString(18, company2_site1_station2_test2_cleansed(24).asInstanceOf[String])
+  prepare_insert_cleansed.executeUpdate()
+  prepare_insert_cleansed.setString(1, company2_site2_station1_test1_cleansed(0).asInstanceOf[String])
+  prepare_insert_cleansed.setString(2, company2_site2_station1_test1_cleansed(1).asInstanceOf[String])
+  prepare_insert_cleansed.setString(3, company2_site2_station1_test1_cleansed(2).asInstanceOf[String])
+  prepare_insert_cleansed.setString(4, company2_site2_station1_test1_cleansed(3).asInstanceOf[String])
+  prepare_insert_cleansed.setInt(5, epoch(0))
+  prepare_insert_cleansed.setTimestamp(6, beginTime)
+  prepare_insert_cleansed.setString(7, company2_site2_station1_test1_cleansed(6).asInstanceOf[String])
+  prepare_insert_cleansed.setString(8, company2_site2_station1_test1_cleansed(7).asInstanceOf[String])
+  prepare_insert_cleansed.setString(9, company2_site2_station1_test1_cleansed(8).asInstanceOf[String])
+  prepare_insert_cleansed.setString(10, company2_site2_station1_test1_cleansed(9).asInstanceOf[String])
+  prepare_insert_cleansed.setDouble(11, company2_site2_station1_test1_cleansed(10).asInstanceOf[Double])
+  prepare_insert_cleansed.setString(12, company2_site2_station1_test1_cleansed(14).asInstanceOf[String])
+  prepare_insert_cleansed.setString(13, company2_site2_station1_test1_cleansed(15).asInstanceOf[String])
+  prepare_insert_cleansed.setString(14, company2_site2_station1_test1_cleansed(16).asInstanceOf[String])
+  prepare_insert_cleansed.setString(15, company2_site2_station1_test1_cleansed(17).asInstanceOf[String])
+  prepare_insert_cleansed.setString(16, company2_site2_station1_test1_cleansed(22).asInstanceOf[String])
+  prepare_insert_cleansed.setString(17, company2_site2_station1_test1_cleansed(23).asInstanceOf[String])
+  prepare_insert_cleansed.setString(18, company2_site2_station1_test1_cleansed(24).asInstanceOf[String])
+  prepare_insert_cleansed.executeUpdate()
+  prepare_insert_cleansed.setString(1, company2_site2_station1_test1_cleansed(0).asInstanceOf[String])
+  prepare_insert_cleansed.setString(2, company2_site2_station1_test1_cleansed(1).asInstanceOf[String])
+  prepare_insert_cleansed.setString(3, company2_site2_station1_test1_cleansed(2).asInstanceOf[String])
+  prepare_insert_cleansed.setString(4, company2_site2_station1_test1_cleansed(3).asInstanceOf[String])
+  prepare_insert_cleansed.setInt(5, epoch(0))
+  prepare_insert_cleansed.setTimestamp(6, testTime)
+  prepare_insert_cleansed.setString(7, company2_site2_station1_test1_cleansed(6).asInstanceOf[String])
+  prepare_insert_cleansed.setString(8, company2_site2_station1_test1_cleansed(7).asInstanceOf[String])
+  prepare_insert_cleansed.setString(9, company2_site2_station1_test1_cleansed(8).asInstanceOf[String])
+  prepare_insert_cleansed.setString(10, company2_site2_station1_test1_cleansed(9).asInstanceOf[String])
+  prepare_insert_cleansed.setDouble(11, 99999.0)
+  prepare_insert_cleansed.setString(12, company2_site2_station1_test1_cleansed(14).asInstanceOf[String])
+  prepare_insert_cleansed.setString(13, company2_site2_station1_test1_cleansed(15).asInstanceOf[String])
+  prepare_insert_cleansed.setString(14, company2_site2_station1_test1_cleansed(16).asInstanceOf[String])
+  prepare_insert_cleansed.setString(15, company2_site2_station1_test1_cleansed(17).asInstanceOf[String])
+  prepare_insert_cleansed.setString(16, company2_site2_station1_test1_cleansed(22).asInstanceOf[String])
+  prepare_insert_cleansed.setString(17, company2_site2_station1_test1_cleansed(23).asInstanceOf[String])
+  prepare_insert_cleansed.setString(18, company2_site2_station1_test1_cleansed(24).asInstanceOf[String])
+  prepare_insert_cleansed.executeUpdate()
+  prepare_insert_cleansed.setString(1, company2_site2_station1_test2_cleansed(0).asInstanceOf[String])
+  prepare_insert_cleansed.setString(2, company2_site2_station1_test2_cleansed(1).asInstanceOf[String])
+  prepare_insert_cleansed.setString(3, company2_site2_station1_test2_cleansed(2).asInstanceOf[String])
+  prepare_insert_cleansed.setString(4, company2_site2_station1_test2_cleansed(3).asInstanceOf[String])
+  prepare_insert_cleansed.setInt(5, epoch(0))
+  prepare_insert_cleansed.setTimestamp(6, beginTime)
+  prepare_insert_cleansed.setString(7, company2_site2_station1_test2_cleansed(6).asInstanceOf[String])
+  prepare_insert_cleansed.setString(8, company2_site2_station1_test2_cleansed(7).asInstanceOf[String])
+  prepare_insert_cleansed.setString(9, company2_site2_station1_test2_cleansed(8).asInstanceOf[String])
+  prepare_insert_cleansed.setString(10, company2_site2_station1_test2_cleansed(9).asInstanceOf[String])
+  prepare_insert_cleansed.setDouble(11, company2_site2_station1_test2_cleansed(10).asInstanceOf[Double])
+  prepare_insert_cleansed.setString(12, company2_site2_station1_test2_cleansed(14).asInstanceOf[String])
+  prepare_insert_cleansed.setString(13, company2_site2_station1_test2_cleansed(15).asInstanceOf[String])
+  prepare_insert_cleansed.setString(14, company2_site2_station1_test2_cleansed(16).asInstanceOf[String])
+  prepare_insert_cleansed.setString(15, company2_site2_station1_test2_cleansed(17).asInstanceOf[String])
+  prepare_insert_cleansed.setString(16, company2_site2_station1_test2_cleansed(22).asInstanceOf[String])
+  prepare_insert_cleansed.setString(17, company2_site2_station1_test2_cleansed(23).asInstanceOf[String])
+  prepare_insert_cleansed.setString(18, company2_site2_station1_test2_cleansed(24).asInstanceOf[String])
+  prepare_insert_cleansed.executeUpdate()
+  prepare_insert_cleansed.setString(1, company2_site2_station1_test2_cleansed(0).asInstanceOf[String])
+  prepare_insert_cleansed.setString(2, company2_site2_station1_test2_cleansed(1).asInstanceOf[String])
+  prepare_insert_cleansed.setString(3, company2_site2_station1_test2_cleansed(2).asInstanceOf[String])
+  prepare_insert_cleansed.setString(4, company2_site2_station1_test2_cleansed(3).asInstanceOf[String])
+  prepare_insert_cleansed.setInt(5, epoch(0))
+  prepare_insert_cleansed.setTimestamp(6, testTime)
+  prepare_insert_cleansed.setString(7, company2_site2_station1_test2_cleansed(6).asInstanceOf[String])
+  prepare_insert_cleansed.setString(8, company2_site2_station1_test2_cleansed(7).asInstanceOf[String])
+  prepare_insert_cleansed.setString(9, company2_site2_station1_test2_cleansed(8).asInstanceOf[String])
+  prepare_insert_cleansed.setString(10, company2_site2_station1_test2_cleansed(9).asInstanceOf[String])
+  prepare_insert_cleansed.setDouble(11, 99999.0)
+  prepare_insert_cleansed.setString(12, company2_site2_station1_test2_cleansed(14).asInstanceOf[String])
+  prepare_insert_cleansed.setString(13, company2_site2_station1_test2_cleansed(15).asInstanceOf[String])
+  prepare_insert_cleansed.setString(14, company2_site2_station1_test2_cleansed(16).asInstanceOf[String])
+  prepare_insert_cleansed.setString(15, company2_site2_station1_test2_cleansed(17).asInstanceOf[String])
+  prepare_insert_cleansed.setString(16, company2_site2_station1_test2_cleansed(22).asInstanceOf[String])
+  prepare_insert_cleansed.setString(17, company2_site2_station1_test2_cleansed(23).asInstanceOf[String])
+  prepare_insert_cleansed.setString(18, company2_site2_station1_test2_cleansed(24).asInstanceOf[String])
+  prepare_insert_cleansed.executeUpdate()
+  prepare_insert_cleansed.setString(1, company2_site2_station2_test1_cleansed(0).asInstanceOf[String])
+  prepare_insert_cleansed.setString(2, company2_site2_station2_test1_cleansed(1).asInstanceOf[String])
+  prepare_insert_cleansed.setString(3, company2_site2_station2_test1_cleansed(2).asInstanceOf[String])
+  prepare_insert_cleansed.setString(4, company2_site2_station2_test1_cleansed(3).asInstanceOf[String])
+  prepare_insert_cleansed.setInt(5, epoch(0))
+  prepare_insert_cleansed.setTimestamp(6, beginTime)
+  prepare_insert_cleansed.setString(7, company2_site2_station2_test1_cleansed(6).asInstanceOf[String])
+  prepare_insert_cleansed.setString(8, company2_site2_station2_test1_cleansed(7).asInstanceOf[String])
+  prepare_insert_cleansed.setString(9, company2_site2_station2_test1_cleansed(8).asInstanceOf[String])
+  prepare_insert_cleansed.setString(10, company2_site2_station2_test1_cleansed(9).asInstanceOf[String])
+  prepare_insert_cleansed.setDouble(11, company2_site2_station2_test1_cleansed(10).asInstanceOf[Double])
+  prepare_insert_cleansed.setString(12, company2_site2_station2_test1_cleansed(14).asInstanceOf[String])
+  prepare_insert_cleansed.setString(13, company2_site2_station2_test1_cleansed(15).asInstanceOf[String])
+  prepare_insert_cleansed.setString(14, company2_site2_station2_test1_cleansed(16).asInstanceOf[String])
+  prepare_insert_cleansed.setString(15, company2_site2_station2_test1_cleansed(17).asInstanceOf[String])
+  prepare_insert_cleansed.setString(16, company2_site2_station2_test1_cleansed(22).asInstanceOf[String])
+  prepare_insert_cleansed.setString(17, company2_site2_station2_test1_cleansed(23).asInstanceOf[String])
+  prepare_insert_cleansed.setString(18, company2_site2_station2_test1_cleansed(24).asInstanceOf[String])
+  prepare_insert_cleansed.executeUpdate()
+  prepare_insert_cleansed.setString(1, company2_site2_station2_test1_cleansed(0).asInstanceOf[String])
+  prepare_insert_cleansed.setString(2, company2_site2_station2_test1_cleansed(1).asInstanceOf[String])
+  prepare_insert_cleansed.setString(3, company2_site2_station2_test1_cleansed(2).asInstanceOf[String])
+  prepare_insert_cleansed.setString(4, company2_site2_station2_test1_cleansed(3).asInstanceOf[String])
+  prepare_insert_cleansed.setInt(5, epoch(0))
+  prepare_insert_cleansed.setTimestamp(6, testTime)
+  prepare_insert_cleansed.setString(7, company2_site2_station2_test1_cleansed(6).asInstanceOf[String])
+  prepare_insert_cleansed.setString(8, company2_site2_station2_test1_cleansed(7).asInstanceOf[String])
+  prepare_insert_cleansed.setString(9, company2_site2_station2_test1_cleansed(8).asInstanceOf[String])
+  prepare_insert_cleansed.setString(10, company2_site2_station2_test1_cleansed(9).asInstanceOf[String])
+  prepare_insert_cleansed.setDouble(11, 99999.0)
+  prepare_insert_cleansed.setString(12, company2_site2_station2_test1_cleansed(14).asInstanceOf[String])
+  prepare_insert_cleansed.setString(13, company2_site2_station2_test1_cleansed(15).asInstanceOf[String])
+  prepare_insert_cleansed.setString(14, company2_site2_station2_test1_cleansed(16).asInstanceOf[String])
+  prepare_insert_cleansed.setString(15, company2_site2_station2_test1_cleansed(17).asInstanceOf[String])
+  prepare_insert_cleansed.setString(16, company2_site2_station2_test1_cleansed(22).asInstanceOf[String])
+  prepare_insert_cleansed.setString(17, company2_site2_station2_test1_cleansed(23).asInstanceOf[String])
+  prepare_insert_cleansed.setString(18, company2_site2_station2_test1_cleansed(24).asInstanceOf[String])
+  prepare_insert_cleansed.executeUpdate()
+  prepare_insert_cleansed.setString(1, company2_site2_station2_test2_cleansed(0).asInstanceOf[String])
+  prepare_insert_cleansed.setString(2, company2_site2_station2_test2_cleansed(1).asInstanceOf[String])
+  prepare_insert_cleansed.setString(3, company2_site2_station2_test2_cleansed(2).asInstanceOf[String])
+  prepare_insert_cleansed.setString(4, company2_site2_station2_test2_cleansed(3).asInstanceOf[String])
+  prepare_insert_cleansed.setInt(5, epoch(0))
+  prepare_insert_cleansed.setTimestamp(6, beginTime)
+  prepare_insert_cleansed.setString(7, company2_site2_station2_test2_cleansed(6).asInstanceOf[String])
+  prepare_insert_cleansed.setString(8, company2_site2_station2_test2_cleansed(7).asInstanceOf[String])
+  prepare_insert_cleansed.setString(9, company2_site2_station2_test2_cleansed(8).asInstanceOf[String])
+  prepare_insert_cleansed.setString(10, company2_site2_station2_test2_cleansed(9).asInstanceOf[String])
+  prepare_insert_cleansed.setDouble(11, company2_site2_station2_test2_cleansed(10).asInstanceOf[Double])
+  prepare_insert_cleansed.setString(12, company2_site2_station2_test2_cleansed(14).asInstanceOf[String])
+  prepare_insert_cleansed.setString(13, company2_site2_station2_test2_cleansed(15).asInstanceOf[String])
+  prepare_insert_cleansed.setString(14, company2_site2_station2_test2_cleansed(16).asInstanceOf[String])
+  prepare_insert_cleansed.setString(15, company2_site2_station2_test2_cleansed(17).asInstanceOf[String])
+  prepare_insert_cleansed.setString(16, company2_site2_station2_test2_cleansed(22).asInstanceOf[String])
+  prepare_insert_cleansed.setString(17, company2_site2_station2_test2_cleansed(23).asInstanceOf[String])
+  prepare_insert_cleansed.setString(18, company2_site2_station2_test2_cleansed(24).asInstanceOf[String])
+  prepare_insert_cleansed.executeUpdate()
+  prepare_insert_cleansed.setString(1, company2_site2_station2_test2_cleansed(0).asInstanceOf[String])
+  prepare_insert_cleansed.setString(2, company2_site2_station2_test2_cleansed(1).asInstanceOf[String])
+  prepare_insert_cleansed.setString(3, company2_site2_station2_test2_cleansed(2).asInstanceOf[String])
+  prepare_insert_cleansed.setString(4, company2_site2_station2_test2_cleansed(3).asInstanceOf[String])
+  prepare_insert_cleansed.setInt(5, epoch(0))
+  prepare_insert_cleansed.setTimestamp(6, testTime)
+  prepare_insert_cleansed.setString(7, company2_site2_station2_test2_cleansed(6).asInstanceOf[String])
+  prepare_insert_cleansed.setString(8, company2_site2_station2_test2_cleansed(7).asInstanceOf[String])
+  prepare_insert_cleansed.setString(9, company2_site2_station2_test2_cleansed(8).asInstanceOf[String])
+  prepare_insert_cleansed.setString(10, company2_site2_station2_test2_cleansed(9).asInstanceOf[String])
+  prepare_insert_cleansed.setDouble(11, 99999.0)
+  prepare_insert_cleansed.setString(12, company2_site2_station2_test2_cleansed(14).asInstanceOf[String])
+  prepare_insert_cleansed.setString(13, company2_site2_station2_test2_cleansed(15).asInstanceOf[String])
+  prepare_insert_cleansed.setString(14, company2_site2_station2_test2_cleansed(16).asInstanceOf[String])
+  prepare_insert_cleansed.setString(15, company2_site2_station2_test2_cleansed(17).asInstanceOf[String])
+  prepare_insert_cleansed.setString(16, company2_site2_station2_test2_cleansed(22).asInstanceOf[String])
+  prepare_insert_cleansed.setString(17, company2_site2_station2_test2_cleansed(23).asInstanceOf[String])
+  prepare_insert_cleansed.setString(18, company2_site2_station2_test2_cleansed(24).asInstanceOf[String])
+  prepare_insert_cleansed.executeUpdate()
+
+  // Insert Check - Measurements Cleansed
+  val rsCleansed = con.prepareStatement(s"SELECT * FROM ${com.epidata.lib.models.MeasurementCleansed.DBTableName}").executeQuery()
+  while (rsCleansed.next()) {
+    val t = com.epidata.lib.models.MeasurementCleansed.rowToMeasurementCleansed(rsCleansed)
+    println(s"Insert Check: ${t.toString}")
+  }
+  //println()
+
+  val fieldQueryCleansed = new JLinkedHashMap[String, JList[String]]()
+  fieldQueryCleansed.put("company", JArrays.asList("Company-2", "Company-1"))
+  fieldQueryCleansed.put("site", JArrays.asList("Site-1", "Site-2"))
+  fieldQueryCleansed.put("device_group", JArrays.asList("1000"))
+  fieldQueryCleansed.put("tester", JArrays.asList("Station-1", "Station-2"))
+  fieldQueryCleansed.put("test_name", JArrays.asList("Test-1", "Test-2"))
+
+  val resultsCleansed = ec.queryMeasurementCleansed(
+    fieldQueryCleansed,
+    beginTime,
+    endTime)
+  val measCleansedIter = resultsCleansed.iterator()
+  while (measCleansedIter.hasNext()) {
+    println(s"meas_cleansed query row: ${measCleansedIter.next()}")
+  }
+
+  // Manual Insert for measurements_summary
+  val testStartTime = new Timestamp(1619240032000L + 1000L)
+  val testStopTime = new Timestamp(1619240032000L + 9000L)
+
+  val company1_site1_station1_test1_summary = Array("Company-1", "Site-1", "1000", "Station-1", testStartTime, testStopTime, "100001", "Test-1",
+    "Meas-1", "meas_statistics", Map("count" -> 10, "mean" -> 5.01, "std" -> 0.151, "min" -> 4.51, "max" -> 5.51).toString(), "basic_statistics")
+  val company1_site1_station1_test2_summary = Array("Company-1", "Site-1", "1000", "Station-1", testStartTime, testStopTime, "100001", "Test-2",
+    "Meas-1", "meas_statistics", Map("count" -> 10, "mean" -> 100.1, "std" -> 3.01, "min" -> 90.1, "max" -> 110.1).toString(), "basic_statistics")
+
+  val company1_site1_station2_test1_summary = Array("Company-1", "Site-1", "1000", "Station-2", testStartTime, testStopTime, "100001", "Test-1",
+    "Meas-1", "meas_statistics", Map("count" -> 10, "mean" -> 5.02, "std" -> 0.152, "min" -> 4.52, "max" -> 5.52).toString(), "basic_statistics")
+  val company1_site1_station2_test2_summary = Array("Company-1", "Site-1", "1000", "Station-2", testStartTime, testStopTime, "100001", "Test-2",
+    "Meas-1", "meas_statistics", Map("count" -> 10, "mean" -> 100.2, "std" -> 3.02, "min" -> 90.2, "max" -> 110.2).toString(), "basic_statistics")
+
+  val company1_site2_station1_test1_summary = Array("Company-1", "Site-2", "1000", "Station-1", testStartTime, testStopTime, "100001", "Test-1",
+    "Meas-1", "meas_statistics", Map("count" -> 10, "mean" -> 5.03, "std" -> 0.153, "min" -> 4.53, "max" -> 5.53).toString(), "basic_statistics")
+  val company1_site2_station1_test2_summary = Array("Company-1", "Site-2", "1000", "Station-1", testStartTime, testStopTime, "100001", "Test-2",
+    "Meas-1", "meas_statistics", Map("count" -> 10, "mean" -> 100.3, "std" -> 3.03, "min" -> 90.3, "max" -> 110.3).toString(), "basic_statistics")
+
+  val company1_site2_station2_test1_summary = Array("Company-1", "Site-2", "1000", "Station-2", testStartTime, testStopTime, "100001", "Test-1",
+    "Meas-1", "meas_statistics", Map("count" -> 10, "mean" -> 5.04, "std" -> 0.154, "min" -> 4.54, "max" -> 5.54).toString(), "basic_statistics")
+  val company1_site2_station2_test2_summary = Array("Company-1", "Site-2", "1000", "Station-2", testStartTime, testStopTime, "100001", "Test-2",
+    "Meas-1", "meas_statistics", Map("count" -> 10, "mean" -> 100.4, "std" -> 3.04, "min" -> 90.4, "max" -> 110.4).toString(), "basic_statistics")
+
+  val company2_site1_station1_test1_summary = Array("Company-2", "Site-1", "1000", "Station-1", testStartTime, testStopTime, "100001", "Test-1",
+    "Meas-1", "meas_statistics", Map("count" -> 10, "mean" -> 5.05, "std" -> 0.155, "min" -> 4.55, "max" -> 5.55).toString(), "basic_statistics")
+  val company2_site1_station1_test2_summary = Array("Company-2", "Site-1", "1000", "Station-1", testStartTime, testStopTime, "100001", "Test-2",
+    "Meas-1", "meas_statistics", Map("count" -> 10, "mean" -> 100.5, "std" -> 3.05, "min" -> 90.5, "max" -> 110.5).toString(), "basic_statistics")
+
+  val company2_site1_station2_test1_summary = Array("Company-2", "Site-1", "1000", "Station-2", testStartTime, testStopTime, "100001", "Test-1",
+    "Meas-1", "meas_statistics", Map("count" -> 10, "mean" -> 5.06, "std" -> 0.156, "min" -> 4.56, "max" -> 5.56).toString(), "basic_statistics")
+  val company2_site1_station2_test2_summary = Array("Company-2", "Site-1", "1000", "Station-2", testStartTime, testStopTime, "100001", "Test-2",
+    "Meas-1", "meas_statistics", Map("count" -> 10, "mean" -> 100.6, "std" -> 3.06, "min" -> 90.6, "max" -> 110.6).toString(), "basic_statistics")
+
+  val company2_site2_station1_test1_summary = Array("Company-2", "Site-2", "1000", "Station-1", testStartTime, testStopTime, "100001", "Test-1",
+    "Meas-1", "meas_statistics", Map("count" -> 10, "mean" -> 5.07, "std" -> 0.157, "min" -> 4.57, "max" -> 5.57).toString(), "basic_statistics")
+  val company2_site2_station1_test2_summary = Array("Company-2", "Site-2", "1000", "Station-1", testStartTime, testStopTime, "100001", "Test-2",
+    "Meas-1", "meas_statistics", Map("count" -> 10, "mean" -> 100.7, "std" -> 3.07, "min" -> 90.7, "max" -> 110.7).toString(), "basic_statistics")
+
+  val company2_site2_station2_test1_summary = Array("Company-2", "Site-2", "1000", "Station-2", testStartTime, testStopTime, "100001", "Test-1",
+    "Meas-1", "meas_statistics", Map("count" -> 10, "mean" -> 5.08, "std" -> 0.158, "min" -> 4.58, "max" -> 5.58).toString(), "basic_statistics")
+  val company2_site2_station2_test2_summary = Array("Company-2", "Site-2", "1000", "Station-2", testStartTime, testStopTime, "100001", "Test-2",
+    "Meas-1", "meas_statistics", Map("count" -> 10, "mean" -> 100.8, "std" -> 3.08, "min" -> 90.8, "max" -> 110.8).toString(), "basic_statistics")
+
+  val columns_summary = Array("customer", "customer_site",
+    "collection", "dataset", "start_time", "stop_time", "key1", "key2", "key3", "meas_summary_name", "meas_summary_value", "meas_summary_description")
+  val insert_q_summary =
+    s"""#INSERT OR REPLACE INTO ${com.epidata.lib.models.MeasurementSummary.DBTableName} (
+      #customer,
+      #customer_site,
+      #collection,
+      #dataset,
+      #start_time,
+      #stop_time,
+      #key1,
+      #key2,
+      #key3,
+      #meas_summary_name,
+      #meas_summary_value,
+      #meas_summary_description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#')
+  //println(s"prebinding: ${insert_q_summary.toString}")
+
+  // Company-1 Test Data
+  val prepare_insert_summary = con.prepareStatement(insert_q_summary.toString)
+  prepare_insert_summary.setString(1, company1_site1_station1_test1_summary(0).asInstanceOf[String])
+  prepare_insert_summary.setString(2, company1_site1_station1_test1_summary(1).asInstanceOf[String])
+  prepare_insert_summary.setString(3, company1_site1_station1_test1_summary(2).asInstanceOf[String])
+  prepare_insert_summary.setString(4, company1_site1_station1_test1_summary(3).asInstanceOf[String])
+  prepare_insert_summary.setTimestamp(5, testStartTime)
+  prepare_insert_summary.setTimestamp(6, testStopTime)
+  prepare_insert_summary.setString(7, company1_site1_station1_test1_summary(6).asInstanceOf[String])
+  prepare_insert_summary.setString(8, company1_site1_station1_test1_summary(7).asInstanceOf[String])
+  prepare_insert_summary.setString(9, company1_site1_station1_test1_summary(8).asInstanceOf[String])
+  prepare_insert_summary.setString(10, company1_site1_station1_test1_summary(9).asInstanceOf[String])
+  prepare_insert_summary.setString(11, company1_site1_station1_test1_summary(10).asInstanceOf[String])
+  prepare_insert_summary.setString(12, company1_site1_station1_test1_summary(11).asInstanceOf[String])
+  prepare_insert_summary.executeUpdate()
+
+  prepare_insert_summary.setString(1, company1_site1_station1_test2_summary(0).asInstanceOf[String])
+  prepare_insert_summary.setString(2, company1_site1_station1_test2_summary(1).asInstanceOf[String])
+  prepare_insert_summary.setString(3, company1_site1_station1_test2_summary(2).asInstanceOf[String])
+  prepare_insert_summary.setString(4, company1_site1_station1_test2_summary(3).asInstanceOf[String])
+  prepare_insert_summary.setTimestamp(5, testStartTime)
+  prepare_insert_summary.setTimestamp(6, testStopTime)
+  prepare_insert_summary.setString(7, company1_site1_station1_test2_summary(6).asInstanceOf[String])
+  prepare_insert_summary.setString(8, company1_site1_station1_test2_summary(7).asInstanceOf[String])
+  prepare_insert_summary.setString(9, company1_site1_station1_test2_summary(8).asInstanceOf[String])
+  prepare_insert_summary.setString(10, company1_site1_station1_test2_summary(9).asInstanceOf[String])
+  prepare_insert_summary.setString(11, company1_site1_station1_test2_summary(10).asInstanceOf[String])
+  prepare_insert_summary.setString(12, company1_site1_station1_test2_summary(11).asInstanceOf[String])
+  prepare_insert_summary.executeUpdate()
+
+  prepare_insert_summary.setString(1, company1_site1_station2_test1_summary(0).asInstanceOf[String])
+  prepare_insert_summary.setString(2, company1_site1_station2_test1_summary(1).asInstanceOf[String])
+  prepare_insert_summary.setString(3, company1_site1_station2_test1_summary(2).asInstanceOf[String])
+  prepare_insert_summary.setString(4, company1_site1_station2_test1_summary(3).asInstanceOf[String])
+  prepare_insert_summary.setTimestamp(5, testStartTime)
+  prepare_insert_summary.setTimestamp(6, testStopTime)
+  prepare_insert_summary.setString(7, company1_site1_station2_test1_summary(6).asInstanceOf[String])
+  prepare_insert_summary.setString(8, company1_site1_station2_test1_summary(7).asInstanceOf[String])
+  prepare_insert_summary.setString(9, company1_site1_station2_test1_summary(8).asInstanceOf[String])
+  prepare_insert_summary.setString(10, company1_site1_station2_test1_summary(9).asInstanceOf[String])
+  prepare_insert_summary.setString(11, company1_site1_station2_test1_summary(10).asInstanceOf[String])
+  prepare_insert_summary.setString(12, company1_site1_station2_test1_summary(11).asInstanceOf[String])
+  prepare_insert_summary.executeUpdate()
+
+  prepare_insert_summary.setString(1, company1_site1_station2_test2_summary(0).asInstanceOf[String])
+  prepare_insert_summary.setString(2, company1_site1_station2_test2_summary(1).asInstanceOf[String])
+  prepare_insert_summary.setString(3, company1_site1_station2_test2_summary(2).asInstanceOf[String])
+  prepare_insert_summary.setString(4, company1_site1_station2_test2_summary(3).asInstanceOf[String])
+  prepare_insert_summary.setTimestamp(5, testStartTime)
+  prepare_insert_summary.setTimestamp(6, testStopTime)
+  prepare_insert_summary.setString(7, company1_site1_station2_test2_summary(6).asInstanceOf[String])
+  prepare_insert_summary.setString(8, company1_site1_station2_test2_summary(7).asInstanceOf[String])
+  prepare_insert_summary.setString(9, company1_site1_station2_test2_summary(8).asInstanceOf[String])
+  prepare_insert_summary.setString(10, company1_site1_station2_test2_summary(9).asInstanceOf[String])
+  prepare_insert_summary.setString(11, company1_site1_station2_test2_summary(10).asInstanceOf[String])
+  prepare_insert_summary.setString(12, company1_site1_station2_test2_summary(11).asInstanceOf[String])
+  prepare_insert_summary.executeUpdate()
+
+  prepare_insert_summary.setString(1, company1_site2_station1_test1_summary(0).asInstanceOf[String])
+  prepare_insert_summary.setString(2, company1_site2_station1_test1_summary(1).asInstanceOf[String])
+  prepare_insert_summary.setString(3, company1_site2_station1_test1_summary(2).asInstanceOf[String])
+  prepare_insert_summary.setString(4, company1_site2_station1_test1_summary(3).asInstanceOf[String])
+  prepare_insert_summary.setTimestamp(5, testStartTime)
+  prepare_insert_summary.setTimestamp(6, testStopTime)
+  prepare_insert_summary.setString(7, company1_site2_station1_test1_summary(6).asInstanceOf[String])
+  prepare_insert_summary.setString(8, company1_site2_station1_test1_summary(7).asInstanceOf[String])
+  prepare_insert_summary.setString(9, company1_site2_station1_test1_summary(8).asInstanceOf[String])
+  prepare_insert_summary.setString(10, company1_site2_station1_test1_summary(9).asInstanceOf[String])
+  prepare_insert_summary.setString(11, company1_site2_station1_test1_summary(10).asInstanceOf[String])
+  prepare_insert_summary.setString(12, company1_site2_station1_test1_summary(11).asInstanceOf[String])
+  prepare_insert_summary.executeUpdate()
+
+  prepare_insert_summary.setString(1, company1_site2_station1_test2_summary(0).asInstanceOf[String])
+  prepare_insert_summary.setString(2, company1_site2_station1_test2_summary(1).asInstanceOf[String])
+  prepare_insert_summary.setString(3, company1_site2_station1_test2_summary(2).asInstanceOf[String])
+  prepare_insert_summary.setString(4, company1_site2_station1_test2_summary(3).asInstanceOf[String])
+  prepare_insert_summary.setTimestamp(5, testStartTime)
+  prepare_insert_summary.setTimestamp(6, testStopTime)
+  prepare_insert_summary.setString(7, company1_site2_station1_test2_summary(6).asInstanceOf[String])
+  prepare_insert_summary.setString(8, company1_site2_station1_test2_summary(7).asInstanceOf[String])
+  prepare_insert_summary.setString(9, company1_site2_station1_test2_summary(8).asInstanceOf[String])
+  prepare_insert_summary.setString(10, company1_site2_station1_test2_summary(9).asInstanceOf[String])
+  prepare_insert_summary.setString(11, company1_site2_station1_test2_summary(10).asInstanceOf[String])
+  prepare_insert_summary.setString(12, company1_site2_station1_test2_summary(11).asInstanceOf[String])
+  prepare_insert_summary.executeUpdate()
+
+  prepare_insert_summary.setString(1, company1_site2_station2_test1_summary(0).asInstanceOf[String])
+  prepare_insert_summary.setString(2, company1_site2_station2_test1_summary(1).asInstanceOf[String])
+  prepare_insert_summary.setString(3, company1_site2_station2_test1_summary(2).asInstanceOf[String])
+  prepare_insert_summary.setString(4, company1_site2_station2_test1_summary(3).asInstanceOf[String])
+  prepare_insert_summary.setTimestamp(5, testStartTime)
+  prepare_insert_summary.setTimestamp(6, testStopTime)
+  prepare_insert_summary.setString(7, company1_site2_station2_test1_summary(6).asInstanceOf[String])
+  prepare_insert_summary.setString(8, company1_site2_station2_test1_summary(7).asInstanceOf[String])
+  prepare_insert_summary.setString(9, company1_site2_station2_test1_summary(8).asInstanceOf[String])
+  prepare_insert_summary.setString(10, company1_site2_station2_test1_summary(9).asInstanceOf[String])
+  prepare_insert_summary.setString(11, company1_site2_station2_test1_summary(10).asInstanceOf[String])
+  prepare_insert_summary.setString(12, company1_site2_station2_test1_summary(11).asInstanceOf[String])
+  prepare_insert_summary.executeUpdate()
+
+  prepare_insert_summary.setString(1, company1_site2_station2_test2_summary(0).asInstanceOf[String])
+  prepare_insert_summary.setString(2, company1_site2_station2_test2_summary(1).asInstanceOf[String])
+  prepare_insert_summary.setString(3, company1_site2_station2_test2_summary(2).asInstanceOf[String])
+  prepare_insert_summary.setString(4, company1_site2_station2_test2_summary(3).asInstanceOf[String])
+  prepare_insert_summary.setTimestamp(5, testStartTime)
+  prepare_insert_summary.setTimestamp(6, testStopTime)
+  prepare_insert_summary.setString(7, company1_site2_station2_test2_summary(6).asInstanceOf[String])
+  prepare_insert_summary.setString(8, company1_site2_station2_test2_summary(7).asInstanceOf[String])
+  prepare_insert_summary.setString(9, company1_site2_station2_test2_summary(8).asInstanceOf[String])
+  prepare_insert_summary.setString(10, company1_site2_station2_test2_summary(9).asInstanceOf[String])
+  prepare_insert_summary.setString(11, company1_site2_station2_test2_summary(10).asInstanceOf[String])
+  prepare_insert_summary.setString(12, company1_site2_station2_test2_summary(11).asInstanceOf[String])
+  prepare_insert_summary.executeUpdate()
+
+  // Company-2 Test Data
+  prepare_insert_summary.setString(1, company2_site1_station1_test1_summary(0).asInstanceOf[String])
+  prepare_insert_summary.setString(2, company2_site1_station1_test1_summary(1).asInstanceOf[String])
+  prepare_insert_summary.setString(3, company2_site1_station1_test1_summary(2).asInstanceOf[String])
+  prepare_insert_summary.setString(4, company2_site1_station1_test1_summary(3).asInstanceOf[String])
+  prepare_insert_summary.setTimestamp(5, testStartTime)
+  prepare_insert_summary.setTimestamp(6, testStopTime)
+  prepare_insert_summary.setString(7, company2_site1_station1_test1_summary(6).asInstanceOf[String])
+  prepare_insert_summary.setString(8, company2_site1_station1_test1_summary(7).asInstanceOf[String])
+  prepare_insert_summary.setString(9, company2_site1_station1_test1_summary(8).asInstanceOf[String])
+  prepare_insert_summary.setString(10, company2_site1_station1_test1_summary(9).asInstanceOf[String])
+  prepare_insert_summary.setString(11, company2_site1_station1_test1_summary(10).asInstanceOf[String])
+  prepare_insert_summary.setString(12, company2_site1_station1_test1_summary(11).asInstanceOf[String])
+  prepare_insert_summary.executeUpdate()
+
+  prepare_insert_summary.setString(1, company2_site1_station1_test2_summary(0).asInstanceOf[String])
+  prepare_insert_summary.setString(2, company2_site1_station1_test2_summary(1).asInstanceOf[String])
+  prepare_insert_summary.setString(3, company2_site1_station1_test2_summary(2).asInstanceOf[String])
+  prepare_insert_summary.setString(4, company2_site1_station1_test2_summary(3).asInstanceOf[String])
+  prepare_insert_summary.setTimestamp(5, testStartTime)
+  prepare_insert_summary.setTimestamp(6, testStopTime)
+  prepare_insert_summary.setString(7, company2_site1_station1_test2_summary(6).asInstanceOf[String])
+  prepare_insert_summary.setString(8, company2_site1_station1_test2_summary(7).asInstanceOf[String])
+  prepare_insert_summary.setString(9, company2_site1_station1_test2_summary(8).asInstanceOf[String])
+  prepare_insert_summary.setString(10, company2_site1_station1_test2_summary(9).asInstanceOf[String])
+  prepare_insert_summary.setString(11, company2_site1_station1_test2_summary(10).asInstanceOf[String])
+  prepare_insert_summary.setString(12, company2_site1_station1_test2_summary(11).asInstanceOf[String])
+  prepare_insert_summary.executeUpdate()
+
+  prepare_insert_summary.setString(1, company2_site1_station2_test1_summary(0).asInstanceOf[String])
+  prepare_insert_summary.setString(2, company2_site1_station2_test1_summary(1).asInstanceOf[String])
+  prepare_insert_summary.setString(3, company2_site1_station2_test1_summary(2).asInstanceOf[String])
+  prepare_insert_summary.setString(4, company2_site1_station2_test1_summary(3).asInstanceOf[String])
+  prepare_insert_summary.setTimestamp(5, testStartTime)
+  prepare_insert_summary.setTimestamp(6, testStopTime)
+  prepare_insert_summary.setString(7, company2_site1_station2_test1_summary(6).asInstanceOf[String])
+  prepare_insert_summary.setString(8, company2_site1_station2_test1_summary(7).asInstanceOf[String])
+  prepare_insert_summary.setString(9, company2_site1_station2_test1_summary(8).asInstanceOf[String])
+  prepare_insert_summary.setString(10, company2_site1_station2_test1_summary(9).asInstanceOf[String])
+  prepare_insert_summary.setString(11, company2_site1_station2_test1_summary(10).asInstanceOf[String])
+  prepare_insert_summary.setString(12, company2_site1_station2_test1_summary(11).asInstanceOf[String])
+  prepare_insert_summary.executeUpdate()
+
+  prepare_insert_summary.setString(1, company2_site1_station2_test2_summary(0).asInstanceOf[String])
+  prepare_insert_summary.setString(2, company2_site1_station2_test2_summary(1).asInstanceOf[String])
+  prepare_insert_summary.setString(3, company2_site1_station2_test2_summary(2).asInstanceOf[String])
+  prepare_insert_summary.setString(4, company2_site1_station2_test2_summary(3).asInstanceOf[String])
+  prepare_insert_summary.setTimestamp(5, testStartTime)
+  prepare_insert_summary.setTimestamp(6, testStopTime)
+  prepare_insert_summary.setString(7, company2_site1_station2_test2_summary(6).asInstanceOf[String])
+  prepare_insert_summary.setString(8, company2_site1_station2_test2_summary(7).asInstanceOf[String])
+  prepare_insert_summary.setString(9, company2_site1_station2_test2_summary(8).asInstanceOf[String])
+  prepare_insert_summary.setString(10, company2_site1_station2_test2_summary(9).asInstanceOf[String])
+  prepare_insert_summary.setString(11, company2_site1_station2_test2_summary(10).asInstanceOf[String])
+  prepare_insert_summary.setString(12, company2_site1_station2_test2_summary(11).asInstanceOf[String])
+  prepare_insert_summary.executeUpdate()
+
+  prepare_insert_summary.setString(1, company2_site2_station1_test1_summary(0).asInstanceOf[String])
+  prepare_insert_summary.setString(2, company2_site2_station1_test1_summary(1).asInstanceOf[String])
+  prepare_insert_summary.setString(3, company2_site2_station1_test1_summary(2).asInstanceOf[String])
+  prepare_insert_summary.setString(4, company2_site2_station1_test1_summary(3).asInstanceOf[String])
+  prepare_insert_summary.setTimestamp(5, testStartTime)
+  prepare_insert_summary.setTimestamp(6, testStopTime)
+  prepare_insert_summary.setString(7, company2_site2_station1_test1_summary(6).asInstanceOf[String])
+  prepare_insert_summary.setString(8, company2_site2_station1_test1_summary(7).asInstanceOf[String])
+  prepare_insert_summary.setString(9, company2_site2_station1_test1_summary(8).asInstanceOf[String])
+  prepare_insert_summary.setString(10, company2_site2_station1_test1_summary(9).asInstanceOf[String])
+  prepare_insert_summary.setString(11, company2_site2_station1_test1_summary(10).asInstanceOf[String])
+  prepare_insert_summary.setString(12, company2_site2_station1_test1_summary(11).asInstanceOf[String])
+  prepare_insert_summary.executeUpdate()
+
+  prepare_insert_summary.setString(1, company2_site2_station1_test2_summary(0).asInstanceOf[String])
+  prepare_insert_summary.setString(2, company2_site2_station1_test2_summary(1).asInstanceOf[String])
+  prepare_insert_summary.setString(3, company2_site2_station1_test2_summary(2).asInstanceOf[String])
+  prepare_insert_summary.setString(4, company2_site2_station1_test2_summary(3).asInstanceOf[String])
+  prepare_insert_summary.setTimestamp(5, testStartTime)
+  prepare_insert_summary.setTimestamp(6, testStopTime)
+  prepare_insert_summary.setString(7, company2_site2_station1_test2_summary(6).asInstanceOf[String])
+  prepare_insert_summary.setString(8, company2_site2_station1_test2_summary(7).asInstanceOf[String])
+  prepare_insert_summary.setString(9, company2_site2_station1_test2_summary(8).asInstanceOf[String])
+  prepare_insert_summary.setString(10, company2_site2_station1_test2_summary(9).asInstanceOf[String])
+  prepare_insert_summary.setString(11, company2_site2_station1_test2_summary(10).asInstanceOf[String])
+  prepare_insert_summary.setString(12, company2_site2_station1_test2_summary(11).asInstanceOf[String])
+  prepare_insert_summary.executeUpdate()
+
+  prepare_insert_summary.setString(1, company2_site2_station2_test1_summary(0).asInstanceOf[String])
+  prepare_insert_summary.setString(2, company2_site2_station2_test1_summary(1).asInstanceOf[String])
+  prepare_insert_summary.setString(3, company2_site2_station2_test1_summary(2).asInstanceOf[String])
+  prepare_insert_summary.setString(4, company2_site2_station2_test1_summary(3).asInstanceOf[String])
+  prepare_insert_summary.setTimestamp(5, testStartTime)
+  prepare_insert_summary.setTimestamp(6, testStopTime)
+  prepare_insert_summary.setString(7, company2_site2_station2_test1_summary(6).asInstanceOf[String])
+  prepare_insert_summary.setString(8, company2_site2_station2_test1_summary(7).asInstanceOf[String])
+  prepare_insert_summary.setString(9, company2_site2_station2_test1_summary(8).asInstanceOf[String])
+  prepare_insert_summary.setString(10, company2_site2_station2_test1_summary(9).asInstanceOf[String])
+  prepare_insert_summary.setString(11, company2_site2_station2_test1_summary(10).asInstanceOf[String])
+  prepare_insert_summary.setString(12, company2_site2_station2_test1_summary(11).asInstanceOf[String])
+  prepare_insert_summary.executeUpdate()
+
+  prepare_insert_summary.setString(1, company2_site2_station2_test2_summary(0).asInstanceOf[String])
+  prepare_insert_summary.setString(2, company2_site2_station2_test2_summary(1).asInstanceOf[String])
+  prepare_insert_summary.setString(3, company2_site2_station2_test2_summary(2).asInstanceOf[String])
+  prepare_insert_summary.setString(4, company2_site2_station2_test2_summary(3).asInstanceOf[String])
+  prepare_insert_summary.setTimestamp(5, testStartTime)
+  prepare_insert_summary.setTimestamp(6, testStopTime)
+  prepare_insert_summary.setString(7, company2_site2_station2_test2_summary(6).asInstanceOf[String])
+  prepare_insert_summary.setString(8, company2_site2_station2_test2_summary(7).asInstanceOf[String])
+  prepare_insert_summary.setString(9, company2_site2_station2_test2_summary(8).asInstanceOf[String])
+  prepare_insert_summary.setString(10, company2_site2_station2_test2_summary(9).asInstanceOf[String])
+  prepare_insert_summary.setString(11, company2_site2_station2_test2_summary(10).asInstanceOf[String])
+  prepare_insert_summary.setString(12, company2_site2_station2_test2_summary(11).asInstanceOf[String])
+  prepare_insert_summary.executeUpdate()
+
+  // Insert Check - Measurements Summary
+  val rsSummary = con.prepareStatement(s"SELECT * FROM ${com.epidata.lib.models.MeasurementSummary.DBTableName}").executeQuery()
+  while (rsSummary.next()) {
+    val t = com.epidata.lib.models.MeasurementSummary.rowToMeasurementSummary(rsSummary)
+    println(s"Insert Check: ${t.toString}")
+  }
+  //println()
+
+  val fieldQuerySummary = new JLinkedHashMap[String, JList[String]]()
+  fieldQuerySummary.put("company", JArrays.asList("Company-2", "Company-1"))
+  fieldQuerySummary.put("site", JArrays.asList("Site-1", "Site-2"))
+  fieldQuerySummary.put("device_group", JArrays.asList("1000"))
+  fieldQuerySummary.put("tester", JArrays.asList("Station-1", "Station-2"))
+  fieldQuerySummary.put("test_name", JArrays.asList("Test-1", "Test-2"))
+
+  val resultsSummary = ec.queryMeasurementSummary(
+    fieldQuerySummary,
+    beginTime,
+    endTime)
+  val measSummaryIter = resultsSummary.iterator()
+  while (measSummaryIter.hasNext()) {
+    println(s"meas_summary query row: ${measSummaryIter.next()}")
+  }
+
   // Measurement Keys
   //println("----------------------------------------------------")
   println("\n")
@@ -722,20 +1749,29 @@ object elcTest extends App {
     println(s"key query row: ${keysIter.next()}")
   }
   try { k_rs.close() } catch { case e: SQLException => println("Error closing ResultSet") }
-  try { rs.close() } catch { case e: SQLException => println("Error closing ResultSet") }
+  try { rsOriginal.close() } catch { case e: SQLException => println("Error closing Measurement Original ResultSet") }
+  try { rsCleansed.close() } catch { case e: SQLException => println("Error closing Measurement Cleansed ResultSet") }
+  try { rsSummary.close() } catch { case e: SQLException => println("Error closing Measurement Summary ResultSet") }
   try { keys_stmt.close() } catch { case e: SQLException => println("Error closing Statement") }
   try { prepare_insert.close() } catch { case e: SQLException => println("Error closing Statement") }
+  try { prepare_insert_cleansed.close() } catch { case e: SQLException => println("Error closing Statement") }
+  try { prepare_insert_summary.close() } catch { case e: SQLException => println("Error closing Statement") }
   try { stmt.close() } catch { case e: SQLException => println("Error closing Statement") }
   try { con.close() } catch { case e: SQLException => println("Error closing database connection") }
   println("\n EpiDataLite Batch Query Test completed")
   println("----------------------------------------------------")
-*/
 
   /*  ----- EpiDataLite Stream Test Started ----- */
   println("\n EpiDataLite Stream Test Started")
 
   val esc = new EpidataLiteStreamingContext()
   esc.init()
+
+  def addShutdownHook(esc: EpidataLiteStreamingContext): Unit = {
+    Runtime.getRuntime().addShutdownHook(new Thread { override def run() { esc.stopStream() } })
+  }
+
+  addShutdownHook(esc)
 
   //  println("Enter 'Q' to stop streaming DEBUGGING 0")
   //  while ((StdIn.readChar()).toLower.compare('q') != 0) {
@@ -749,17 +1785,22 @@ object elcTest extends App {
   val op2 = esc.createTransformations("FillMissingValue", List("Temperature"), Map("method" -> "rolling", "s" -> 3))
   println("transformation created: " + op2)
 
-  var list = new util.ArrayList[String]()
-  list.add("Meas-1")
-  val mutableMap = new util.HashMap[String, String]
+  var list = new JArrayList[String]()
+  list.add("Temperature")
+  list.add("Wind_Speed")
+  list.add("Relative_Humidity")
+  val mutableMap = new JHashMap[String, String]
   val op3 = esc.createTransformations("Identity", list, mutableMap)
   println("transformation created: " + op3)
 
-  val op4 = esc.createTransformations("FillMissingValue", List("Temperature"), Map[String, String]())
+  val op4 = esc.createTransformations("Identity", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
   println("transformation created: " + op4)
 
   val op5 = esc.createTransformations("Identity", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
   println("transformation created: " + op5)
+
+  val op6 = esc.createTransformations("MeasStatistics", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map("method" -> "standard"))
+  println("transformation created: " + op6)
 
   // Create Streams
   /*
@@ -784,38 +1825,40 @@ object elcTest extends App {
     play datasink
    */
 
-  esc.createStream("measurements_original", "measurements_cleansed", op2)
-
   //op1
-  //esc.createStream("measurements_original", "measurements_intermediate", op1)
+  esc.createStream("measurements_original", "measurements_intermediate_1", op1)
   println("STREAM 1 created: " + op1)
 
   //op2
-  //esc.createStream("measurements_intermediate", "measurements_intermediate_1", op2)
+  esc.createStream("measurements_intermediate_1", "measurements_intermediate_2", op2)
   println("STREAM 2 created: " + op2)
 
   //op3
-  //esc.createStream("measurements_intermediate", "measurements_intermediate_2", op3)
+  esc.createStream("measurements_intermediate_1", "measurements_intermediate_3", op3)
   println("STREAM 3 created: " + op3)
 
   //op4
   val op4topics = ListBuffer[String]()
-  op4topics += "measurements_intermediate_1"
   op4topics += "measurements_intermediate_2"
+  op4topics += "measurements_intermediate_3"
   val op4buffers = ListBuffer[Integer]()
   op4buffers += 5
-  op4buffers += 5
-  //esc.createStream(op4topics, op4buffers, "measurements_intermediate_3", op4)
+  op4buffers += 12
+  println(op4buffers)
+  esc.createStream(op4topics, op4buffers, "measurements_intermediate_4", op4)
   println("STREAM 4 created: " + op4 + "\n")
 
-  //op5
+  //op5 - measurements_cleansed
   val op5topics = ListBuffer[String]()
-  op5topics += "measurements_intermediate_1"
-  op5topics += "measurements_intermediate_3"
-  //esc.createStream(op5topics, "measurements_cleansed", op5)
+  op5topics += "measurements_intermediate_2"
+  op5topics += "measurements_intermediate_4"
+  esc.createStream(op5topics, "measurements_cleansed", op5)
   println("STREAM 5 created: " + "\n")
 
-  //esc.createStream("measurements_intermediate", "measurements_intermediate_6", op3)
+  //op6 - measurements_summary
+  //esc.createStream("measurements_original", "measurements_intermediate_6", op6)
+  esc.createStream("measurements_original", "measurements_summary", op6)
+  println("STREAM 6 created: " + "\n")
 
   esc.testUnit()
   println(esc.printSomething(""))

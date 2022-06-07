@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2021 EpiData, Inc.
+ * Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 package com.epidata.spark
@@ -67,6 +67,7 @@ class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
     // Find the equality queries for the partition key fields.
     val FieldsQuery = genericPartitionFields
       .map(partitionFieldsMap).map(fieldQuery)
+    // println("fieldsquery: " + FieldsQuery)
 
     val orderedEpochs = Measurement.epochForTs(beginTime) to Measurement.epochForTs(endTime)
     val epoch = orderedEpochs.toArray
@@ -89,7 +90,8 @@ class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
       val datasetCount = parameter(3).asInstanceOf[List[String]].length
       val datasetStr = List.fill(datasetCount)("?").mkString(", ")
 
-      val query = getSelectStatmentString(tableName, customerStr, siteStr, collectionStr, datasetStr, epoch_str)
+      val query = getSelectStatementString(tableName, customerStr, siteStr, collectionStr, datasetStr, epoch_str)
+      // println("query: " + query)
       val stmt = con.prepareStatement(query)
 
       for (i <- 1 to customerCount) {
@@ -104,11 +106,17 @@ class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
       for (i <- 1 to datasetCount) {
         stmt.setString((i + customerCount + siteCount + collectionCount), parameter(3).asInstanceOf[List[String]](i - 1))
       }
-      for (i <- 1 to epoch.length) {
-        stmt.setInt((i + customerCount + siteCount + collectionCount + datasetCount), epoch(i - 1))
+      tableName match {
+        case BaseMeasurementSummary.DBTableName =>
+          stmt.setTimestamp((customerCount + siteCount + collectionCount + datasetCount) + 1, beginTime)
+          stmt.setTimestamp((customerCount + siteCount + collectionCount + datasetCount) + 2, endTime)
+        case _ =>
+          for (i <- 1 to epoch.length) {
+            stmt.setInt((i + customerCount + siteCount + collectionCount + datasetCount), epoch(i - 1))
+          }
+          stmt.setTimestamp((customerCount + siteCount + collectionCount + datasetCount + epoch.length) + 1, beginTime)
+          stmt.setTimestamp((customerCount + siteCount + collectionCount + datasetCount + epoch.length) + 2, endTime)
       }
-      stmt.setTimestamp((customerCount + siteCount + collectionCount + datasetCount + epoch.length) + 1, beginTime)
-      stmt.setTimestamp((customerCount + siteCount + collectionCount + datasetCount + epoch.length) + 2, endTime)
 
       val rs = stmt.executeQuery()
 
@@ -149,11 +157,11 @@ class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
         measurementClass match {
           case BaseAutomatedTest.NAME =>
             while (rs.next()) {
-              maps.add(BaseMeasurement.rowToJLinkedHashMap(rs, tableName, measurementClass))
+              maps.add(BaseMeasurementCleansed.rowToJLinkedHashMap(rs, tableName, measurementClass))
             }
           case BaseSensorMeasurement.NAME =>
             while (rs.next()) {
-              maps.add(BaseMeasurement.rowToJLinkedHashMap(rs, tableName, measurementClass))
+              maps.add(BaseMeasurementCleansed.rowToJLinkedHashMap(rs, tableName, measurementClass))
             }
         }
 
@@ -161,11 +169,11 @@ class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
         measurementClass match {
           case BaseAutomatedTest.NAME =>
             while (rs.next()) {
-              maps.add(BaseMeasurement.rowToJLinkedHashMap(rs, tableName, measurementClass))
+              maps.add(BaseMeasurementSummary.rowToJLinkedHashMap(rs, tableName, measurementClass))
             }
           case BaseSensorMeasurement.NAME =>
             while (rs.next()) {
-              maps.add(BaseMeasurement.rowToJLinkedHashMap(rs, tableName, measurementClass))
+              maps.add(BaseMeasurementSummary.rowToJLinkedHashMap(rs, tableName, measurementClass))
             }
         }
     }
@@ -210,6 +218,7 @@ class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
           case BaseAutomatedTest.NAME => BaseAutomatedTestCleansed.getColumns
           case BaseSensorMeasurement.NAME => BaseSensorMeasurementCleansed.getColumns
         }
+
       case BaseMeasurementSummary.DBTableName =>
         measurementClass match {
           case BaseAutomatedTest.NAME => BaseAutomatedTestSummary.getColumns
@@ -217,11 +226,14 @@ class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
         }
     }
 
+    // println("model columns: " + modelColumns)
+
     if (!fieldQuery.keySet.subsetOf(modelColumns)) {
       throw new IllegalArgumentException("Unexpected field in fieldQuery.")
     }
 
     val map = getDataFrame(fieldQuery, beginTime, endTime, tableName)
+    // println("map: " + map)
 
     // Find the equality queries for the non partition key fields.
     val nonpartitionFields = fieldQuery.keySet.diff(genericPartitionFields.map(partitionFieldsMap).toSet)
@@ -315,9 +327,15 @@ class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
       "Invalid spark.epidata.measurementClass configuration.")
   }
 
-  private def getSelectStatmentString(tableName: String, customerStr: String, siteStr: String, collectionStr: String, datasetStr: String, epoch: String): String = {
-    val query = s"SELECT * FROM ${tableName} WHERE customer IN (" + customerStr + ") AND customer_site IN (" + siteStr + ") AND collection IN (" + collectionStr + ") AND dataset IN (" + datasetStr + ") AND epoch IN (" + epoch + ") AND ts>=? AND ts<?"
-    query
+  private def getSelectStatementString(tableName: String, customerStr: String, siteStr: String, collectionStr: String, datasetStr: String, epoch: String): String = {
+    tableName match {
+      case BaseMeasurementSummary.DBTableName =>
+        val query = s"SELECT * FROM ${tableName} WHERE customer IN (" + customerStr + ") AND customer_site IN (" + siteStr + ") AND collection IN (" + collectionStr + ") AND dataset IN (" + datasetStr + ") AND start_time>=? AND stop_time<?"
+        query
+      case _ =>
+        val query = s"SELECT * FROM ${tableName} WHERE customer IN (" + customerStr + ") AND customer_site IN (" + siteStr + ") AND collection IN (" + collectionStr + ") AND dataset IN (" + datasetStr + ") AND epoch IN (" + epoch + ") AND ts>=? AND ts<?"
+        query
+    }
   }
 
   private def getKeysStatementString(tableName: String): String = {
