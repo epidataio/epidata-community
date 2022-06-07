@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2015-2017 EpiData, Inc.
+* Copyright (c) 2015-2022 EpiData, Inc.
 */
 package ipython
 //import java.nio.file.{Files, Paths, StandardCopyOption}
@@ -20,13 +20,13 @@ import com.typesafe.config.ConfigFactory
 
 import scala.io.Source
 
-class IPythonSpec extends AnyFlatSpec with BeforeAndAfter with Matchers {
+class IPythonLiteSpec extends AnyFlatSpec with BeforeAndAfter with Matchers {
   private val PROCESS_SUCCESS = 0
 
   //  try { // create a database connection
 
   val conf = ConfigFactory.parseResources("sqlite-defaults.conf")
-  val con = DriverManager.getConnection("jdbc:sqlite:data/epidata_development.db")
+  val con = DriverManager.getConnection("jdbc:sqlite:data/epidata_test.db")
   val session = con.createStatement()
   val ts = (0 to 5).map(x => new Timestamp(1428004316123L + x * 1000))
   val epoch = ts.map(Measurement.epochForTs(_))
@@ -141,7 +141,7 @@ class IPythonSpec extends AnyFlatSpec with BeforeAndAfter with Matchers {
 
   // A binary array measurement. 7
   // using bytes array instead of bytes buffer in sqlite
-  //ToDo:  Data type mismatch between iPythonSpecLite binary array and Scala Bytebuffer
+  //ToDo:  Data type mismatch between iPythonLiteSpec binary array and Scala Bytebuffer
   //
   //    val array = new Array[Byte](1 + 4 * 8)
   //    val buffer = ByteBuffer.wrap(array)
@@ -174,7 +174,7 @@ class IPythonSpec extends AnyFlatSpec with BeforeAndAfter with Matchers {
 
   session.execute(s"INSERT OR IGNORE INTO ${com.epidata.lib.models.MeasurementsKeys.DBTableName} (customer, customer_site, collection, dataset) " +
     "VALUES ('Company-1', 'Site-1', '1000', 'Station-1')")
-  //    //ToDo:  Data type mismatch between iPythonSpecLite binary array and Scala Bytebuffer
+  //    //ToDo:  Data type mismatch between iPythonLiteSpec binary array and Scala Bytebuffer
   //    // A binary waveform measurement. 8
   //    // using bytes array instead of bytes buffer in sqlite
   //    val waveform = new Array[Byte](1 + 8 + 8 + 3 * 8)

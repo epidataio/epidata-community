@@ -1,4 +1,7 @@
 #!/usr/bin/env python2.7
+/*
+ * Copyright (c) 2015-2022 EpiData, Inc.
+*/
 import time
 
 from epidata.EpidataLiteStreamingContext import EpidataLiteStreamingContext
@@ -9,10 +12,6 @@ import sqlite3
 from sqlite3 import Error
 
 import unittest
-
-ec = EpidataLiteStreamingContext()
-
-database = "/Users/lujiajun/Documents/epidata-intern/data/epidata_development.db"
 
 
 def create_connection(db_file):
@@ -25,11 +24,23 @@ def create_connection(db_file):
     return conn
 
 
-con = create_connection(database)
+con = create_connection(db_url)
 
 def main():
-    print("Hello World!")
-    ec.printSomething('god')
+    ec = EpidataLiteContext()
+
+    print("EpiData Lite - Batch Test Started")
+
+#    config_file = open("../resources/sqlite_defaults.conf")
+    db_url = "../../data/data/epidata_development.db"
+
+    ### To Be Completed
+    print("EpiData Lite - Batch Test")
+
+
+
+    elc = EpidataLiteStreamingContext()
+    ec.printSomething('something')
     trans = ec.create_transformations("Identity", ["Meas-1"], {})
     trans2 = ec.create_transformations("Identity", ["Meas-1"], {})
     print(trans)
