@@ -1,15 +1,20 @@
 /*
-* Copyright (c) 2015-2017 EpiData, Inc.
+* Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 package com.epidata.lib.models
 
-import java.util.Date
-
 import com.datastax.driver.core.Row
 import java.sql.ResultSet
+
+import java.nio.ByteBuffer
+import java.lang.{ Double => JDouble, Long => JLong }
+import java.util.{ Date, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList, List => JList }
 import com.epidata.lib.models.util.TypeUtils
-import java.sql.ResultSet
+import com.epidata.lib.models.util.Binary
+
+import scala.collection.mutable
+//import scala.collection.mutable.Set
 
 case class MeasurementCleansed(
     customer: String,
@@ -70,8 +75,7 @@ object MeasurementCleansed {
       "val1",
       "val2")
 
-  implicit def rowToMeasurementCleansed(row: Row): MeasurementCleansed = {
-    val m = Measurement.rowToMeasurement(row)
+  implicit def measurementToMeasurementCleansed(m: Measurement, measFlag: Option[String], measMethod: Option[String]): MeasurementCleansed = {
     MeasurementCleansed(
       m.customer,
       m.customer_site,
@@ -85,38 +89,69 @@ object MeasurementCleansed {
       m.meas_value,
       m.meas_unit,
       m.meas_status,
-      TypeUtils.stringToOption(row.getString("meas_flag")),
-      TypeUtils.stringToOption(row.getString("meas_method")),
+      measFlag,
+      measMethod,
       m.meas_lower_limit,
       m.meas_upper_limit,
       m.meas_description,
       m.val1,
       m.val2)
+  }
 
+  implicit def rowToMeasurementCleansed(row: Row): MeasurementCleansed = {
+    val m = Measurement.rowToMeasurement(row)
+    measurementToMeasurementCleansed(
+      m,
+      TypeUtils.stringToOption(row.getString("meas_flag")),
+      TypeUtils.stringToOption(row.getString("meas_method")))
   }
 
   implicit def rowToMeasurementCleansed(row: ResultSet): MeasurementCleansed = {
     val m = Measurement.rowToMeasurement(row)
-    MeasurementCleansed(
-      m.customer,
-      m.customer_site,
-      m.collection,
-      m.dataset,
-      m.ts,
-      m.key1,
-      m.key2,
-      m.key3,
-      m.meas_datatype,
-      m.meas_value,
-      m.meas_unit,
-      m.meas_status,
+    measurementToMeasurementCleansed(
+      m,
       TypeUtils.stringToOption(row.getString("meas_flag")),
-      TypeUtils.stringToOption(row.getString("meas_method")),
-      m.meas_lower_limit,
-      m.meas_upper_limit,
-      m.meas_description,
-      m.val1,
-      m.val2)
-
+      TypeUtils.stringToOption(row.getString("meas_method")))
   }
+
+  def rowToJLinkedHashMap(row: Row, tableName: String, modelName: String): JLinkedHashMap[String, Object] = {
+    modelName match {
+      case SensorMeasurement.NAME => SensorMeasurementCleansed.rowToJLinkedHashMap(row, tableName)
+      case AutomatedTest.NAME => AutomatedTestCleansed.rowToJLinkedHashMap(row, tableName)
+      case _ => new JLinkedHashMap[String, Object]()
+    }
+  }
+
+  def rowToJLinkedHashMap(row: ResultSet, tableName: String, modelName: String): JLinkedHashMap[String, Object] = {
+    modelName match {
+      case SensorMeasurement.NAME => SensorMeasurementCleansed.rowToJLinkedHashMap(row, tableName)
+      case AutomatedTest.NAME => AutomatedTestCleansed.rowToJLinkedHashMap(row, tableName)
+      case _ => new JLinkedHashMap[String, Object]()
+    }
+  }
+
+  def getColumns: Set[String] = {
+    val col_set = Set(
+      "customer",
+      "customer_site",
+      "collection",
+      "dataset",
+      "ts",
+      "key1",
+      "key2",
+      "key3",
+      "meas_datatype",
+      "meas_value",
+      "meas_unit",
+      "meas_status",
+      "meas_flag",
+      "meas_method",
+      "meas_lower_limit",
+      "meas_upper_limit",
+      "meas_description",
+      "val1",
+      "val2")
+    col_set
+  }
+
 }

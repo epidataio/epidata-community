@@ -5,13 +5,14 @@
 package com.epidata.lib.models
 
 import java.sql.Timestamp
-import java.util.{ Date, Map => JMap, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList }
+import java.util.{ Date, Map => JMap, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList, List => JList }
 import java.lang.{ Long => JLong, Double => JDouble }
 
 import com.datastax.driver.core.Row
 import com.epidata.lib.models.util.{ Binary, Datatype, TypeUtils, JsonHelpers }
 import org.json.simple.{ JSONArray, JSONObject }
 import java.sql.ResultSet
+import java.security.MessageDigest
 
 /**
  * Specialization of Measurement representing sensor data.
@@ -95,6 +96,7 @@ object SensorMeasurement {
     tableName match {
       case com.epidata.lib.models.Measurement.DBTableName =>
         val m = rowToSensorMeasurement(row)
+        // println("m: " + m)
         toJLinkedHashMap(m)
     }
   }
@@ -117,7 +119,7 @@ object SensorMeasurement {
 
   def toJson(sensorMeasurements: List[SensorMeasurement]): String = {
     import scala.collection.JavaConverters._
-    val arr = new JLinkedList[JLinkedHashMap[String, Object]]()
+    val arr: JList[JLinkedHashMap[String, Object]] = new JLinkedList[JLinkedHashMap[String, Object]]()
     arr.addAll(
       sensorMeasurements
         .map(m => toJLinkedHashMap(m))
@@ -136,17 +138,70 @@ object SensorMeasurement {
       putToMap(map, "ts", convertToJLong(m.ts.getTime))
     putToMap(map, "event", m.event)
     putToMap(map, "meas_name", m.meas_name)
-    putOptionToMap(map, "meas_unit", m.meas_unit)
-    putOptionToMap(map, "meas_status", m.meas_status)
-    putOptionToMap(map, "meas_description", m.meas_description)
-
     putOptionToMap(map, "meas_datatype", m.meas_datatype)
+
     if (m.meas_value != null)
       putAnyToMap(map, "meas_value", m.meas_value)
+    //    else
+    //      putAnyToMap(map, "meas_value", null)
+
+    putOptionToMap(map, "meas_unit", m.meas_unit)
+    putOptionToMap(map, "meas_status", m.meas_status)
     putOptionAnyValToMap(map, "meas_lower_limit", m.meas_lower_limit)
     putOptionAnyValToMap(map, "meas_upper_limit", m.meas_upper_limit)
+    putOptionToMap(map, "meas_description", m.meas_description)
 
     map
+  }
+
+  def fromJLinkedHashMap(map: JLinkedHashMap[String, Object]): SensorMeasurement = {
+    val company: String = map.get("company").asInstanceOf[String]
+    val site: String = map.get("site").asInstanceOf[String]
+    val station: String = map.get("station").asInstanceOf[String]
+    val sensor: String = map.get("sensor").asInstanceOf[String]
+    val ts: Date = new Date(map.get("ts").asInstanceOf[Long])
+    val event: String = map.get("event").asInstanceOf[String]
+    val meas_name: String = map.get("meas_name").asInstanceOf[String]
+
+    val meas_unit: Option[String] = TypeUtils.blankToNone(map.get("meas_unit").asInstanceOf[String])
+    val meas_status: Option[String] = TypeUtils.blankToNone(map.get("meas_status").asInstanceOf[String])
+    val meas_description: Option[String] = TypeUtils.blankToNone(map.get("meas_description").asInstanceOf[String])
+
+    val meas_value_map = map.get("meas_value")
+    val meas_lower_limit_map = map.get("meas_lower_limit")
+    val meas_upper_limit_map = map.get("meas_upper_limit")
+
+    val datatype_str = map.get("meas_datatype") match {
+      case x: String if (x != null) => Some(x)
+      case _ => None
+    }
+
+    val datatype = datatype_str match {
+      case Some(x) if Datatype.isValidName(x) => Datatype.byName(x)
+      case _ => null
+    }
+
+    val (meas_value, meas_lower_limit, meas_upper_limit, isInvalid) = TypeUtils.getMeasValues(datatype, meas_value_map, meas_lower_limit_map, meas_upper_limit_map)
+
+    if (isInvalid)
+      throw new Exception("invalid map format!")
+
+    SensorMeasurement(
+      company,
+      site,
+      station,
+      sensor,
+      ts,
+      event,
+      meas_name,
+      datatype_str,
+      meas_value,
+      meas_unit,
+      meas_status,
+      meas_lower_limit,
+      meas_upper_limit,
+      meas_description)
+
   }
 
   def jsonToSensorMeasurement(str: String): Option[SensorMeasurement] = {
@@ -170,6 +225,7 @@ object SensorMeasurement {
   }
 
   def jsonToSensorMeasurement(jSONObject: JSONObject): SensorMeasurement = {
+
     val company: String = jSONObject.get("company").asInstanceOf[String]
     val site: String = jSONObject.get("site").asInstanceOf[String]
     val station: String = jSONObject.get("station").asInstanceOf[String]
@@ -216,6 +272,30 @@ object SensorMeasurement {
       meas_lower_limit,
       meas_upper_limit,
       meas_description)
+  }
+
+  def jsonToJLinkedHashMap(str: String): JLinkedHashMap[String, Object] = {
+    val m = jsonToSensorMeasurement(str).get
+    toJLinkedHashMap(m)
+  }
+
+  def getColumns: Set[String] = {
+    val col_set = Set(
+      "company",
+      "site",
+      "station",
+      "sensor",
+      "ts",
+      "event",
+      "meas_name",
+      "datatype_str",
+      "meas_value",
+      "meas_unit",
+      "meas_status",
+      "meas_lower_limit",
+      "meas_upper_limit",
+      "meas_description")
+    col_set
   }
 
 }

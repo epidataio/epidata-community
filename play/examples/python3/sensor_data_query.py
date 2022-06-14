@@ -5,7 +5,7 @@
 import argparse
 import base64
 from datetime import datetime, timedelta
-import httplib
+import http.client
 import json
 import numpy as np
 from pytz import UTC, timezone
@@ -14,7 +14,7 @@ from decimal import Decimal
 import struct
 import time
 from time import sleep
-import urllib, urllib2
+import urllib.request, urllib.parse, urllib.error
 import requests
 
 
@@ -36,11 +36,11 @@ QUERY_MEASUREMENTS_SUMMARY_URL = 'https://' + HOST + '/measurements_summary?'
 
 def get_time(time_string):
     date_object = datetime.strptime(time_string, '%m/%d/%Y %H:%M:%S.%f')
-    return long(time.mktime(date_object.timetuple()) * 1e3 + date_object.microsecond / 1e3)
+    return int(time.mktime(date_object.timetuple()) * 1e3 + date_object.microsecond / 1e3)
 
 def add_time(time_string, delta):
     date_object = datetime.strptime(time_string, '%m/%d/%Y %H:%M:%S.%f') + timedelta(seconds=delta)
-    return long(time.mktime(date_object.timetuple()) * 1e3 + date_object.microsecond / 1e3)
+    return int(time.mktime(date_object.timetuple()) * 1e3 + date_object.microsecond / 1e3)
 
 current_time_string = datetime.now().strftime("%m/%d/%Y %H:%M:%S.%f")
 current_time = get_time(current_time_string)
@@ -102,28 +102,30 @@ assert resp.status_code == 200
 
 # Parse the JSON response.
 response_json = json.loads(resp.content)
-# print "response - ", response_json
+# print("response - ", response_json)
 
 
 ###########################################
 # Query Data from EpiData in a While Loop #
 ###########################################
 
-print "Sending Query Request to EpiData ..."
+print("Sending Query Request to EpiData ...")
 iteration = 0
 
 while (True):
 
     try:
         # Specify measurement query parameters
-        begin_time = get_time("2/01/2021 00:00:00.000")
-        end_time = get_time("3/31/2021 00:00:00.000")
+        begin_time = get_time("6/01/2021 00:00:00.000")
+        #end_time = get_time("4/21/2021 00:00:00.000") #for empty data
+        end_time = get_time("7/31/2021 00:00:00.000") #for non-empty data
+
 
         parameters = {'company': COMPANY, 'site': SITE, 'station': STATION, 'sensor': SENSOR, 'beginTime': begin_time, 'endTime': end_time}
 
         # Construct url with parameters
-        url = QUERY_MEASUREMENTS_ORIGINAL_URL+urllib.urlencode(parameters)
-        # print url
+        url = QUERY_MEASUREMENTS_ORIGINAL_URL+urllib.parse.urlencode(parameters)
+        # print(url)
         # json_header = {'Cookie': session_cookie, 'Accept': 'text/plain'}
         json_header = {
                 'Content-type': 'application/json'
@@ -132,13 +134,13 @@ while (True):
         # Send the GET request and receive the HTTP response.
         req = requests.Request('GET', url, data="", headers=json_header)
         prepped = session.prepare_request(req)
-        # print "prepared statement header: \n", prepped.headers
+        # print("prepared statement header: \n", prepped.headers)
         resp = session.send(prepped, stream=None, verify=None, proxies=None, cert=None, timeout=None)
 
         # Check that the response's HTTP response code is 200 (OK) and read the response.
         response_json = json.loads(resp.content)
-        print "Measurement Query Results:"
-        print response_json
+        print("Measurement Query Results:")
+        print(response_json)
         assert resp.status_code == 200
 
         # increment iteration and current time
@@ -149,7 +151,7 @@ while (True):
 
     # Handle keyboard interrupt
     except (KeyboardInterrupt, SystemExit):
-        print '\n...Program Stopped Manually!'
+        print("\n...Program Stopped Manually!")
         raise
 
     break

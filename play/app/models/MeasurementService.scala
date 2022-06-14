@@ -5,7 +5,7 @@
 package models
 
 import java.util
-import java.util.{ Date, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList }
+import java.util.{ Date, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList, List => JList }
 import java.nio.ByteBuffer
 import cassandra.DB
 import service.Configs
@@ -112,6 +112,7 @@ object MeasurementService {
     endTime: Date,
     ordering: Ordering.Value = Ordering.Unspecified,
     tableName: String = com.epidata.lib.models.Measurement.DBTableName): List[Model] = {
+
     import WrapAsScala.iterableAsScalaIterable
 
     // Find the epochs from which measurements are required, in timestamp
@@ -170,7 +171,7 @@ object MeasurementService {
 
     // only return the available ones by not fetching.
     val rows = 1.to(rs.getAvailableWithoutFetching()).map(_ => rs.one())
-    val records = new JLinkedList[JLinkedHashMap[String, Object]]()
+    val records: JList[JLinkedHashMap[String, Object]] = new JLinkedList[JLinkedHashMap[String, Object]]()
 
     rows
       .map(Model.rowToJLinkedHashMap(_, tableName, modelName))

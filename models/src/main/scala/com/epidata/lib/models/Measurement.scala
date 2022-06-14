@@ -12,11 +12,11 @@ import com.epidata.lib.models.util.Binary
 import java.nio.ByteBuffer
 import java.util.Date
 import java.lang.{ Double => JDouble, Long => JLong }
-import java.util.{ Date, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList }
+import java.util.{ Date, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList, List => JList }
 import com.epidata.lib.models.util.TypeUtils._
 
 import scala.collection.mutable
-import scala.collection.mutable.Set
+//import scala.collection.mutable.Set
 
 /**
  * Model representing a customer measurement stored in the database. Optional
@@ -62,7 +62,7 @@ object Measurement {
 
   val DBTableName: String = "measurements_original"
   val KafkaTopic: String = "measurements"
-  val zmqTopic: String = DBTableName
+  val zmqTopic: String = "measurements_original"
 
   /** Map a cassandra Row to a Measurement of the proper type. */
   implicit def rowToMeasurement(row: Row): Measurement = {
@@ -254,8 +254,8 @@ object Measurement {
     }
   }
 
-  def getColumns: mutable.Set[String] = {
-    val col_set = mutable.Set(
+  def getColumns: Set[String] = {
+    val col_set = Set(
       "customer",
       "customer_site",
       "collection",

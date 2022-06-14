@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2015-2017 EpiData, Inc.
+# Copyright (c) 2015-2022 EpiData, Inc.
 #
 
 from setuptools import setup
@@ -9,7 +9,7 @@ setup(
     version='1.0-SNAPSHOT',
     description='Epidata query and analytics library',
     author='Epidata',
-    url='http://epidata.co',
+    url='https://epidata.io',
     packages=['epidata', 'epidata._private'],
     long_description="""\
       Epidata query and analytics library

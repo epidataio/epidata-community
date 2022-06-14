@@ -9,7 +9,7 @@ import java.sql.Timestamp
 import com.datastax.driver.core.Row
 import java.sql.ResultSet
 import com.epidata.lib.models.util.{ Datatype, TypeUtils, JsonHelpers, Binary }
-import java.util.{ Date, Map => JMap, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList }
+import java.util.{ Date, Map => JMap, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList, List => JList }
 import java.util.Date
 
 import org.json.simple.{ JSONArray, JSONObject }
@@ -46,12 +46,8 @@ object AutomatedTest {
   val NAME: String = "automated_test"
 
   def rowToAutomatedTest(row: Row): AutomatedTest = Measurement.rowToMeasurement(row)
-  def rowToAutomatedTestCleansed(row: Row): AutomatedTestCleansed = MeasurementCleansed.rowToMeasurementCleansed(row)
-  def rowToAutomatedTestSummary(row: Row): AutomatedTestSummary = MeasurementSummary.rowToMeasurementSummary(row)
 
   def rowToAutomatedTest(row: ResultSet): AutomatedTest = Measurement.rowToMeasurement(row)
-  def rowToAutomatedTestCleansed(row: ResultSet): AutomatedTestCleansed = MeasurementCleansed.rowToMeasurementCleansed(row)
-  def rowToAutomatedTestSummary(row: ResultSet): AutomatedTestSummary = MeasurementSummary.rowToMeasurementSummary(row)
 
   implicit def measurementToAutomatedTest(measurement: Measurement): AutomatedTest =
     AutomatedTest(
@@ -93,6 +89,12 @@ object AutomatedTest {
       automatedTest.device_status,
       automatedTest.test_status)
 
+  implicit def automatedTestToMeasurement(automatedTests: List[AutomatedTest]): List[Measurement] =
+    automatedTests.map(automatedTest => automatedTestToMeasurement(automatedTest))
+
+  implicit def measurementToAutomatedTest(measurements: List[Measurement]): List[AutomatedTest] =
+    measurements.map(measurement => measurementToAutomatedTest(measurement))
+
   // JSON Helpers
   def rowToJLinkedHashMap(row: Row, tableName: String): JLinkedHashMap[String, Object] = {
     tableName match {
@@ -107,11 +109,27 @@ object AutomatedTest {
     tableName match {
       case com.epidata.lib.models.Measurement.DBTableName =>
         val m = rowToAutomatedTest(row)
+        // println("m meas_value: " + m.meas_value + ", type: " + m.meas_value.getClass)
         toJLinkedHashMap(m)
     }
   }
 
   import com.epidata.lib.models.util.JsonHelpers._
+
+  def toJson(m: AutomatedTest): String = {
+    val map = toJLinkedHashMap(m)
+    JSONObject.toJSONString(map)
+  }
+
+  def toJson(list: List[AutomatedTest]): String = {
+    import scala.collection.JavaConverters._
+    val arr: JList[JLinkedHashMap[String, Object]] = new JLinkedList[JLinkedHashMap[String, Object]]()
+    arr.addAll(
+      list
+        .map(m => toJLinkedHashMap(m))
+        .asJavaCollection)
+    JSONArray.toJSONString(arr)
+  }
 
   def toJLinkedHashMap(m: AutomatedTest): JLinkedHashMap[String, Object] = {
     val map = new JLinkedHashMap[String, Object]()
@@ -129,6 +147,8 @@ object AutomatedTest {
 
     if (m.meas_value != null)
       putAnyToMap(map, "meas_value", m.meas_value)
+    //    else
+    //      putAnyToMap(map, "meas_value", null)
 
     putOptionToMap(map, "meas_unit", m.meas_unit)
     putOptionToMap(map, "meas_status", m.meas_status)
@@ -140,6 +160,61 @@ object AutomatedTest {
     putOptionToMap(map, "test_status", m.test_status)
 
     map
+  }
+
+  def fromJLinkedHashMap(map: JLinkedHashMap[String, Object]): AutomatedTest = {
+    val company: String = map.get("company").asInstanceOf[String]
+    val site: String = map.get("site").asInstanceOf[String]
+    val device_group: String = map.get("device_group").asInstanceOf[String]
+    val tester: String = map.get("tester").asInstanceOf[String]
+    val ts: Date = new Date(map.get("ts").asInstanceOf[Long])
+    val device_name: String = map.get("device_name").asInstanceOf[String]
+    val test_name: String = map.get("test_name").asInstanceOf[String]
+    val meas_name: String = map.get("meas_name").asInstanceOf[String]
+
+    val meas_unit: Option[String] = TypeUtils.blankToNone(map.get("meas_unit").asInstanceOf[String])
+    val meas_status: Option[String] = TypeUtils.blankToNone(map.get("meas_status").asInstanceOf[String])
+    val meas_description: Option[String] = TypeUtils.blankToNone(map.get("meas_description").asInstanceOf[String])
+    val device_status: Option[String] = TypeUtils.blankToNone(map.get("device_status").asInstanceOf[String])
+    val test_status: Option[String] = TypeUtils.blankToNone(map.get("test_status").asInstanceOf[String])
+
+    val meas_value_map = map.get("meas_value")
+    val meas_lower_limit_map = map.get("meas_lower_limit")
+    val meas_upper_limit_map = map.get("meas_upper_limit")
+
+    val datatype_str = map.get("meas_datatype") match {
+      case x: String if (x != null) => Some(x)
+      case _ => None
+    }
+
+    val datatype = datatype_str match {
+      case Some(x) if Datatype.isValidName(x) => Datatype.byName(x)
+      case _ => null
+    }
+
+    val (meas_value, meas_lower_limit, meas_upper_limit, isInvalid) = TypeUtils.getMeasValues(datatype, meas_value_map, meas_lower_limit_map, meas_upper_limit_map)
+
+    if (isInvalid)
+      throw new Exception("invalid json format!")
+
+    AutomatedTest(
+      company,
+      site,
+      device_group,
+      tester,
+      ts,
+      device_name,
+      test_name,
+      meas_name,
+      datatype_str,
+      meas_value,
+      meas_unit,
+      meas_status,
+      meas_lower_limit,
+      meas_upper_limit,
+      meas_description,
+      device_status,
+      test_status)
   }
 
   def jsonToAutomatedTest(str: String): Option[AutomatedTest] = {
@@ -160,21 +235,6 @@ object AutomatedTest {
           })
       case _ => List.empty
     }
-  }
-
-  def toJson(m: AutomatedTest): String = {
-    val map = toJLinkedHashMap(m)
-    JSONObject.toJSONString(map)
-  }
-
-  def toJson(list: List[AutomatedTest]): String = {
-    import scala.collection.JavaConverters._
-    val arr = new JLinkedList[JLinkedHashMap[String, Object]]()
-    arr.addAll(
-      list
-        .map(m => toJLinkedHashMap(m))
-        .asJavaCollection)
-    JSONArray.toJSONString(arr)
   }
 
   def jsonToAutomatedTest(jSONObject: JSONObject): AutomatedTest = {
@@ -231,6 +291,34 @@ object AutomatedTest {
       meas_description,
       device_status,
       test_status)
+  }
+
+  def jsonToJLinkedHashMap(str: String): JLinkedHashMap[String, Object] = {
+    val m = jsonToAutomatedTest(str).get
+    toJLinkedHashMap(m)
+  }
+
+  def getColumns: Set[String] = {
+    val col_set = Set(
+      "company",
+      "site",
+      "device_group",
+      "tester",
+      "ts",
+      "device_name",
+      "test_name",
+      "meas_name",
+      "datatype_str",
+      "meas_value",
+      "meas_unit",
+      "meas_status",
+      "meas_lower_limit",
+      "meas_upper_limit",
+      "meas_description",
+      "device_status",
+      "test_status")
+
+    col_set
   }
 
 }

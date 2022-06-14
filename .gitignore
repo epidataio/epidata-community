@@ -20,3 +20,10 @@ jupyterhub/jupyterhub.sqlite
 jupyterhub/jupyterhub_cookie_secret
 ipython/epidata.egg-info/
 ipython/build/
+.metals
+.vscode
+ipython/lib
+spark/lib
+data/*.db
+spark/.DS_Store
+.DS_Store

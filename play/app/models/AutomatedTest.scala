@@ -8,8 +8,8 @@ import java.util.Date
 
 import com.epidata.lib.models.{ Measurement, MeasurementCleansed, MeasurementSummary, AutomatedTest => BaseAutomatedTest, AutomatedTestCleansed => BaseAutomatedTestCleansed, AutomatedTestSummary => BaseAutomatedTestSummary }
 import _root_.util.Ordering
-import models.SensorMeasurement.{ insert, logger }
 import play.api.Logger
+import models.AutomatedTest.keyForMeasurementTopic
 import service.{ Configs, DataService, KafkaService, ZMQProducer, ZMQInit }
 
 object AutomatedTest {
@@ -19,6 +19,8 @@ object AutomatedTest {
   import com.epidata.lib.models.AutomatedTestSummary._
 
   val logger: Logger = Logger(this.getClass())
+
+  val name: String = "AutomatedTest"
 
   private def keyForMeasurementTopic(measurement: BaseAutomatedTest): String = {
     val key =
@@ -84,7 +86,7 @@ object AutomatedTest {
 
   /**
    * Insert an automated test measurement summary into the database.
-   * @param automatedTestSummary The AutomatedTest measurement summary to insert.
+   * @param automatedTestSummary The AutomatedTestSummary data to insert.
    */
   def insertSummary(automatedTestSummary: BaseAutomatedTestSummary, sqliteEnable: Boolean): Unit = {
     if (sqliteEnable) {
@@ -96,8 +98,8 @@ object AutomatedTest {
   }
 
   /**
-   * Insert multiple automated test measurement summaries into the database.
-   * @param automatedTestsSummary Multiple AutomatedTest measurement summaries to insert.
+   * Insert multiple automated test measurement summary data into the database.
+   * @param automatedTestsSummary Multiple AutomatedTestSummary data to insert.
    */
   def insertSummary(automatedTestsSummary: List[BaseAutomatedTestSummary], sqliteEnable: Boolean): Unit = {
     if (sqliteEnable) {
@@ -136,10 +138,33 @@ object AutomatedTest {
     }
   }
 
-  def insertToKafka(list: List[BaseAutomatedTest]): Unit = {
-    list.foreach(m => insertToKafka(m))
-    if (Configs.twoWaysIngestion) {
-      models.AutomatedTest.insert(list, Configs.measDBLite)
+  def insertDynamicRecordFromZMQ(str: String): Unit = {
+    try {
+      BaseAutomatedTestCleansed.jsonToAutomatedTestCleansed(str) match {
+        case Some(mc: BaseAutomatedTestCleansed) => {
+          // println("inserting dynamic record as measurements cleansed record.\n")
+          insertCleansed(mc, Configs.measDBLite)
+          return
+        }
+        case _ => throw new Exception("Dynamic data is not of type MeasurementCleansed.")
+      }
+    } catch {
+      case _: Throwable => {
+        try {
+          BaseAutomatedTestSummary.jsonToAutomatedTestSummary(str) match {
+            case Some(ms: BaseAutomatedTestSummary) => {
+              // println("inserting dynamic record as measurements summary record.\n")
+              insertSummary(ms, Configs.measDBLite)
+              return
+            }
+            case _ => throw new Exception("Dynamic data is not of type MeasurementSummary.")
+          }
+        } catch {
+          case _: Throwable => {
+            logger.error("Bad json format!")
+          }
+        }
+      }
     }
   }
 
@@ -149,8 +174,8 @@ object AutomatedTest {
     KafkaService.sendMessage(Measurement.KafkaTopic, key, value)
   }
 
-  def insertToZMQ(list: List[BaseAutomatedTest]): Unit = {
-    list.foreach(m => insertToZMQ(m))
+  def insertToKafka(list: List[BaseAutomatedTest]): Unit = {
+    list.foreach(m => insertToKafka(m))
     if (Configs.twoWaysIngestion) {
       models.AutomatedTest.insert(list, Configs.measDBLite)
     }
@@ -160,9 +185,17 @@ object AutomatedTest {
     val key = keyForMeasurementTopic(m)
     val value = BaseAutomatedTest.toJson(m)
     ZMQInit._ZMQProducer.push(key, value)
-    ZMQInit._ZMQProducer.pub(key, value)
+    ZMQInit._ZMQProducer.pub(Measurement.zmqTopic, key, value)
   }
 
+  def insertToZMQ(list: List[BaseAutomatedTest]): Unit = {
+    list.foreach(m => insertToZMQ(m))
+    if (Configs.twoWaysIngestion) {
+      models.AutomatedTest.insert(list, Configs.measDBLite)
+    }
+  }
+
+  /** Convert a list of AutomatedTest measurements to a json representation. */
   def toJson(automatedTests: List[BaseAutomatedTest]) = BaseAutomatedTest.toJson(automatedTests)
 
   /**
@@ -185,6 +218,6 @@ object AutomatedTest {
     endTime: Date,
     ordering: Ordering.Value): List[BaseAutomatedTest] =
     MeasurementService.find(company, site, device_group, tester, beginTime, endTime, ordering)
-      .map(measurementToAutomatedTest)
+      .map(BaseAutomatedTest.measurementToAutomatedTest)
 
 }

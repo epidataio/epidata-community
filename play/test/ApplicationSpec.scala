@@ -8,6 +8,7 @@ import org.junit.runner._
 import play.api.test._
 import play.api.test.Helpers._
 import securesocialtest.WithLoggedUser
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class ApplicationSpec extends Specification {

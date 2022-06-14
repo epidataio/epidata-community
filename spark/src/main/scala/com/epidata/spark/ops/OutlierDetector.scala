@@ -33,5 +33,6 @@ class OutlierDetector(
     }
   }
 
+  override val name: String = "OutlierDetector"
   override def destination: String = "measurements_cleansed"
 }

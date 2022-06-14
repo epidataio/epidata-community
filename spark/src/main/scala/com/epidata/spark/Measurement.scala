@@ -62,6 +62,7 @@ object Measurement {
 
   implicit def rowToMeasurement(row: CassandraRow): Measurement =
     baseMeasurementToMeasurement(row)
+
 }
 
 /**
@@ -129,4 +130,28 @@ object MeasurementCleansed {
 
   implicit def rowToMeasurementCleansed(row: CassandraRow): MeasurementCleansed =
     baseMeasurementCleansedToMeasurementCleansed(row)
+
+  implicit def measurementToMeasurementCleansed(m: Measurement, measFlag: Option[String], measMethod: Option[String]): MeasurementCleansed = {
+    MeasurementCleansed(
+      m.customer,
+      m.customer_site,
+      m.collection,
+      m.dataset,
+      m.ts,
+      m.key1,
+      m.key2,
+      m.key3,
+      m.meas_datatype,
+      m.meas_value,
+      m.meas_unit,
+      m.meas_status,
+      measFlag,
+      measMethod,
+      m.meas_lower_limit,
+      m.meas_upper_limit,
+      m.meas_description,
+      m.val1,
+      m.val2)
+  }
+
 }

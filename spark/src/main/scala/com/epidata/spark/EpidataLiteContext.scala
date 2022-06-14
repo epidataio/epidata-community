@@ -1,45 +1,60 @@
 /*
- * Copyright (c) 2015-2021 EpiData, Inc.
+ * Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 package com.epidata.spark
 
 import java.sql.{ Connection, DriverManager, ResultSet, SQLException, Statement, Timestamp }
-import com.epidata.lib.models.{ Measurement => BaseMeasurement, MeasurementCleansed => BaseMeasurementCleansed, MeasurementsKeys => BaseMeasurementsKeys }
-import com.epidata.lib.models.{ MeasurementSummary, AutomatedTest => BaseAutomatedTest, SensorMeasurement => BaseSensorMeasurement }
-import java.util.{ Date, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList }
-import com.typesafe.config.ConfigFactory
+import com.epidata.lib.models.{ Measurement => BaseMeasurement, MeasurementCleansed => BaseMeasurementCleansed, MeasurementSummary => BaseMeasurementSummary, MeasurementsKeys => BaseMeasurementsKeys }
+import com.epidata.lib.models.{ AutomatedTest => BaseAutomatedTest, AutomatedTestCleansed => BaseAutomatedTestCleansed, AutomatedTestSummary => BaseAutomatedTestSummary }
+import com.epidata.lib.models.{ SensorMeasurement => BaseSensorMeasurement, SensorMeasurementCleansed => BaseSensorMeasurementCleansed, SensorMeasurementSummary => BaseSensorMeasurementSummary }
+import java.util.{ Date, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList, List => JList }
+import com.typesafe.config.{ Config, ConfigFactory }
+import scala.util.Properties
 import scala.collection.JavaConversions._
+import scala.collection.JavaConversions
 import java.io.File
 
 /**
  * The context of an Epidata connection to SQLite.
  */
-class EpidataLiteContext() {
-  private val conf = ConfigFactory.parseResources("sqlite-defaults.conf")
-  private lazy val SQLiteDBName = conf.getString("spark.epidata.SQLiteDBName")
-  private lazy val measurementClass = conf.getString("spark.epidata.measurementClass")
+class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
+
+  // Auxiliary constructor for Java and Python
+  def this() = {
+    this(EpiDataConf("", ""))
+  }
+
+  //  private val conf = ConfigFactory.parseResources("sqlite-defaults.conf").resolve()
+  private val conf = ConfigFactory.load("sqlite-defaults.conf").resolve()
+
+  private lazy val sqliteDBName = conf.getString("spark.epidata.SQLite.dbFileName")
+
+  private val measurementClass = epidataConf.model match {
+    case m if m.trim.isEmpty => Properties.envOrElse("EPIDATA_MEASUREMENT_MODEL", conf.getString("spark.epidata.measurementClass"))
+    case m: String => m
+  }
+  // println("measurement class: " + measurementClass)
+
   private lazy val streamingBatchDuration = conf.getInt("spark.epidata.streamingBatchDuration")
+  private val basePath = new java.io.File(".").getAbsoluteFile().getParent()
+
+  //  private val sqliteDBUrl = "jdbc:sqlite:" + basePath + "/data/" + sqliteDBName
+  private val sqliteDBUrl = epidataConf.dbUrl match {
+    case s if s.trim.isEmpty => "jdbc:sqlite:" + basePath + "/data/" + sqliteDBName
+    case s => s
+  }
+
+  // println("sqlite db url: " + sqliteDBUrl)
 
   // Connect to SQLite database
-  var con: Connection = DriverManager.getConnection(conf.getString("spark.epidata.SQLite.url"))
-
-  //  def open() = {
-  //    con = DriverManager.getConnection(conf.getString("spark.epidata.SQLite.url"))
-  //  }
-
-  //  def close() = {
-  //    try {
-  //      con.close()
-  //    } catch {
-  //      case e: SQLException => println("Error closing Statement")
-  //    }
-  //  }
+  Class.forName("org.sqlite.JDBC")
+  private val con: Connection = DriverManager.getConnection(sqliteDBUrl)
 
   def query(
     fieldQuery: Map[String, List[String]],
     beginTime: Timestamp,
-    endTime: Timestamp): JLinkedList[JLinkedHashMap[String, Object]] = {
+    endTime: Timestamp): JList[JLinkedHashMap[String, Object]] = {
     query(fieldQuery, beginTime, endTime, com.epidata.lib.models.Measurement.DBTableName)
   }
 
@@ -47,17 +62,16 @@ class EpidataLiteContext() {
     fieldQuery: Map[String, List[String]],
     beginTime: Timestamp,
     endTime: Timestamp,
-    tableName: String): JLinkedList[JLinkedHashMap[String, Object]] = {
+    tableName: String): JList[JLinkedHashMap[String, Object]] = {
 
     // Find the equality queries for the partition key fields.
     val FieldsQuery = genericPartitionFields
-      .map(partitionFieldsMap).flatMap(fieldQuery)
-
-    // Add config file for SQLite in folder?
-    //val con = DriverManager.getConnection(conf.getString("spark.epidata.SQLite.url"))
+      .map(partitionFieldsMap).map(fieldQuery)
+    // println("fieldsquery: " + FieldsQuery)
 
     val orderedEpochs = Measurement.epochForTs(beginTime) to Measurement.epochForTs(endTime)
     val epoch = orderedEpochs.toArray
+
     // Calculating # of bindmarkers
     var epoch_str = ""
     for (i <- 1 to epoch.length) {
@@ -67,44 +81,75 @@ class EpidataLiteContext() {
 
     // Create a ResultSet for a specified epoch
     def rsQuery(parameter: List[AnyRef]): ResultSet = {
-      val query = getSelectStatmentString(tableName, epoch_str)
+      val customerCount = parameter.head.asInstanceOf[List[String]].length
+      val customerStr = List.fill(customerCount)("?").mkString(", ")
+      val siteCount = parameter(1).asInstanceOf[List[String]].length
+      val siteStr = List.fill(siteCount)("?").mkString(", ")
+      val collectionCount = parameter(2).asInstanceOf[List[String]].length
+      val collectionStr = List.fill(collectionCount)("?").mkString(", ")
+      val datasetCount = parameter(3).asInstanceOf[List[String]].length
+      val datasetStr = List.fill(datasetCount)("?").mkString(", ")
+
+      val query = getSelectStatementString(tableName, customerStr, siteStr, collectionStr, datasetStr, epoch_str)
+      // println("query: " + query)
       val stmt = con.prepareStatement(query)
-      stmt.setString(1, parameter.head.asInstanceOf[String])
-      stmt.setString(2, parameter(1).asInstanceOf[String])
-      stmt.setString(3, parameter(2).asInstanceOf[String])
-      stmt.setString(4, parameter(3).asInstanceOf[String])
-      for (i <- 1 to epoch.length) {
-        stmt.setInt(4 + i, epoch(i - 1))
+
+      for (i <- 1 to customerCount) {
+        stmt.setString(i, parameter(0).asInstanceOf[List[String]](i - 1))
       }
-      stmt.setTimestamp(4 + epoch.length + 1, beginTime)
-      stmt.setTimestamp(4 + epoch.length + 2, endTime)
+      for (i <- 1 to siteCount) {
+        stmt.setString((i + customerCount), parameter(1).asInstanceOf[List[String]](i - 1))
+      }
+      for (i <- 1 to collectionCount) {
+        stmt.setString((i + customerCount + siteCount), parameter(2).asInstanceOf[List[String]](i - 1))
+      }
+      for (i <- 1 to datasetCount) {
+        stmt.setString((i + customerCount + siteCount + collectionCount), parameter(3).asInstanceOf[List[String]](i - 1))
+      }
+      tableName match {
+        case BaseMeasurementSummary.DBTableName =>
+          stmt.setTimestamp((customerCount + siteCount + collectionCount + datasetCount) + 1, beginTime)
+          stmt.setTimestamp((customerCount + siteCount + collectionCount + datasetCount) + 2, endTime)
+        case _ =>
+          for (i <- 1 to epoch.length) {
+            stmt.setInt((i + customerCount + siteCount + collectionCount + datasetCount), epoch(i - 1))
+          }
+          stmt.setTimestamp((customerCount + siteCount + collectionCount + datasetCount + epoch.length) + 1, beginTime)
+          stmt.setTimestamp((customerCount + siteCount + collectionCount + datasetCount + epoch.length) + 2, endTime)
+      }
+
       val rs = stmt.executeQuery()
-      stmt.close()
+
       rs
     }
 
     // Transform ResultSet to corresponding objects
     val select_rs = rsQuery(FieldsQuery)
-    val rs = transformResultSet(select_rs, tableName)
+    val maps = transformResultSet(select_rs, tableName)
 
-    select_rs.close()
+    try {
+      select_rs.close()
+    } catch {
+      case e: SQLException => println("Error closing ResultSet")
+    }
 
-    //    con.close()
-    rs
+    maps
   }
 
-  private def transformResultSet(rs: ResultSet, tableName: String): JLinkedList[JLinkedHashMap[String, Object]] = {
-    var maps = new JLinkedList[JLinkedHashMap[String, Object]]()
+  private def transformResultSet(rs: ResultSet, tableName: String): JList[JLinkedHashMap[String, Object]] = {
+    var maps: JList[JLinkedHashMap[String, Object]] = new JLinkedList[JLinkedHashMap[String, Object]]()
     tableName match {
       case BaseMeasurement.DBTableName =>
         measurementClass match {
           case BaseAutomatedTest.NAME =>
             while (rs.next()) {
               maps.add(BaseMeasurement.rowToJLinkedHashMap(rs, tableName, measurementClass))
+              // println("ATE maps meas_value: " + maps(0).get("meas_value") + ", class: " + maps(0).get("meas_value").getClass)
             }
           case BaseSensorMeasurement.NAME =>
             while (rs.next()) {
               maps.add(BaseMeasurement.rowToJLinkedHashMap(rs, tableName, measurementClass))
+              // println("PAC maps: " + maps)
             }
         }
 
@@ -112,26 +157,27 @@ class EpidataLiteContext() {
         measurementClass match {
           case BaseAutomatedTest.NAME =>
             while (rs.next()) {
-              maps.add(BaseMeasurement.rowToJLinkedHashMap(rs, tableName, measurementClass))
+              maps.add(BaseMeasurementCleansed.rowToJLinkedHashMap(rs, tableName, measurementClass))
             }
           case BaseSensorMeasurement.NAME =>
             while (rs.next()) {
-              maps.add(BaseMeasurement.rowToJLinkedHashMap(rs, tableName, measurementClass))
+              maps.add(BaseMeasurementCleansed.rowToJLinkedHashMap(rs, tableName, measurementClass))
             }
         }
 
-      case MeasurementSummary.DBTableName =>
+      case BaseMeasurementSummary.DBTableName =>
         measurementClass match {
           case BaseAutomatedTest.NAME =>
             while (rs.next()) {
-              maps.add(BaseMeasurement.rowToJLinkedHashMap(rs, tableName, measurementClass))
+              maps.add(BaseMeasurementSummary.rowToJLinkedHashMap(rs, tableName, measurementClass))
             }
           case BaseSensorMeasurement.NAME =>
             while (rs.next()) {
-              maps.add(BaseMeasurement.rowToJLinkedHashMap(rs, tableName, measurementClass))
+              maps.add(BaseMeasurementSummary.rowToJLinkedHashMap(rs, tableName, measurementClass))
             }
         }
     }
+
     maps
   }
 
@@ -144,7 +190,7 @@ class EpidataLiteContext() {
     fieldQuery: Map[String, List[String]],
     beginTime: Timestamp,
     endTime: Timestamp,
-    tableName: String): JLinkedList[JLinkedHashMap[String, Object]] = {
+    tableName: String): JList[JLinkedHashMap[String, Object]] = {
 
     if (beginTime.getTime > endTime.getTime) {
       throw new IllegalArgumentException("beginTime must not be after endTime. ")
@@ -160,28 +206,51 @@ class EpidataLiteContext() {
         "All fieldQuery entries must have at least one match value.")
     }
 
+    val modelColumns = tableName match {
+      case BaseMeasurement.DBTableName =>
+        measurementClass match {
+          case BaseAutomatedTest.NAME => BaseAutomatedTest.getColumns
+          case BaseSensorMeasurement.NAME => BaseSensorMeasurement.getColumns
+        }
+
+      case BaseMeasurementCleansed.DBTableName =>
+        measurementClass match {
+          case BaseAutomatedTest.NAME => BaseAutomatedTestCleansed.getColumns
+          case BaseSensorMeasurement.NAME => BaseSensorMeasurementCleansed.getColumns
+        }
+
+      case BaseMeasurementSummary.DBTableName =>
+        measurementClass match {
+          case BaseAutomatedTest.NAME => BaseAutomatedTestSummary.getColumns
+          case BaseSensorMeasurement.NAME => BaseSensorMeasurementSummary.getColumns
+        }
+    }
+
+    // println("model columns: " + modelColumns)
+
+    if (!fieldQuery.keySet.subsetOf(modelColumns)) {
+      throw new IllegalArgumentException("Unexpected field in fieldQuery.")
+    }
+
     val map = getDataFrame(fieldQuery, beginTime, endTime, tableName)
-    //    if (!fieldQuery.keySet.subsetOf(BaseMeasurement.getColumns())) {
-    //      throw new IllegalArgumentException("Unexpected field in fieldQuery.")
-    //    }
+    // println("map: " + map)
 
     // Find the equality queries for the non partition key fields.
-    //    val nonpartitionFields = fieldQuery.keySet.diff(genericPartitionFields.map(partitionFieldsMap).toSet)
-    //    val nonpartitionFieldsQuery = fieldQuery.filterKeys(nonpartitionFields)
-    //
-    //    // Filter by any applicable non partition key fields.
-    //    val filtered = nonpartitionFieldsQuery.foldLeft(dataFrame)((df, filter) =>
-    //      df.filter(df.col(filter._1).isin(filter._2.map(lit(_)): _*)))
+    val nonpartitionFields = fieldQuery.keySet.diff(genericPartitionFields.map(partitionFieldsMap).toSet)
+    val nonpartitionFieldsQuery = fieldQuery.filterKeys(nonpartitionFields)
 
-    //    filtered
-    map
+    var filtered = nonpartitionFieldsQuery.foldLeft(map)((mp, x) => {
+      mp.filter(m => x._2.contains(m.get(x._1)))
+    })
+
+    filtered
   }
 
   /** Query interface for Java and Python. */
   def query(
     fieldQuery: java.util.Map[String, java.util.List[String]],
     beginTime: Timestamp,
-    endTime: Timestamp): JLinkedList[JLinkedHashMap[String, Object]] = {
+    endTime: Timestamp): JList[JLinkedHashMap[String, Object]] = {
     import scala.collection.JavaConversions._
     query(fieldQuery.toMap.mapValues(_.toList), beginTime, endTime, BaseMeasurement.DBTableName)
   }
@@ -190,7 +259,7 @@ class EpidataLiteContext() {
   def queryMeasurementCleansed(
     fieldQuery: java.util.Map[String, java.util.List[String]],
     beginTime: Timestamp,
-    endTime: Timestamp): JLinkedList[JLinkedHashMap[String, Object]] = {
+    endTime: Timestamp): JList[JLinkedHashMap[String, Object]] = {
     import scala.collection.JavaConversions._
     query(fieldQuery.toMap.mapValues(_.toList), beginTime, endTime, BaseMeasurementCleansed.DBTableName)
   }
@@ -199,17 +268,17 @@ class EpidataLiteContext() {
   def queryMeasurementSummary(
     fieldQuery: java.util.Map[String, java.util.List[String]],
     beginTime: Timestamp,
-    endTime: Timestamp): JLinkedList[JLinkedHashMap[String, Object]] = {
+    endTime: Timestamp): JList[JLinkedHashMap[String, Object]] = {
     import scala.collection.JavaConversions._
-    query(fieldQuery.toMap.mapValues(_.toList), beginTime, endTime, MeasurementSummary.DBTableName)
+    query(fieldQuery.toMap.mapValues(_.toList), beginTime, endTime, BaseMeasurementSummary.DBTableName)
   }
 
   /** List the values of the currently saved partition key fields. */
-  def listKeys(): JLinkedList[JLinkedHashMap[String, Object]] = {
-    //    val con = DriverManager.getConnection(conf.getString("spark.epidata.SQLite.url"))
+  def listKeys(): JList[JLinkedHashMap[String, Object]] = {
     val query = getKeysStatementString(BaseMeasurementsKeys.DBTableName)
-    val rs = con.prepareStatement(query).executeQuery()
-    var keys = new JLinkedList[JLinkedHashMap[String, Object]]()
+    val stmt = con.prepareStatement(query)
+    val rs = stmt.executeQuery()
+    var keys: JList[JLinkedHashMap[String, Object]] = new JLinkedList[JLinkedHashMap[String, Object]]()
     measurementClass match {
       case BaseAutomatedTest.NAME =>
         while (rs.next()) {
@@ -232,29 +301,14 @@ class EpidataLiteContext() {
         }
     }
 
-    rs.close()
-    //    con.close()
+    try {
+      rs.close()
+    } catch {
+      case e: SQLException => println("Error closing ResultSet")
+    }
+
     keys
   }
-
-  // TODO:
-  //  @deprecated
-  //  def createStream(op: String, meas_names: List[String], params: java.util.Map[String, String]): EpidataStreamingContext = {
-  //    val esc = new EpidataStreamingContext(
-  //      this,
-  //      Seconds(streamingBatchDuration),
-  //      com.epidata.lib.models.Measurement.KafkaTopic)
-  //
-  //    op match {
-  //      case "Identity" => esc.saveToCassandra(new Identity())
-  //      case "FillMissingValue" => esc.saveToCassandra(new FillMissingValue(meas_names, "rolling", 3))
-  //      case "OutlierDetector" => esc.saveToCassandra(new OutlierDetector("meas_value", "quartile"))
-  //      case "MeasStatistics" => esc.saveToCassandra(new MeasStatistics(meas_names, "standard"))
-  //    }
-  //
-  //    esc
-  //
-  //  }
 
   private val genericPartitionFields = List("customer", "customer_site", "collection", "dataset")
 
@@ -273,13 +327,22 @@ class EpidataLiteContext() {
       "Invalid spark.epidata.measurementClass configuration.")
   }
 
-  private def getSelectStatmentString(tableName: String, epoch: String): String = {
-    val query = s"SELECT * FROM ${tableName} WHERE customer=? AND customer_site=? AND collection=? AND dataset=? AND epoch IN (" + epoch + ") AND ts>=? AND ts<?"
-    query
+  private def getSelectStatementString(tableName: String, customerStr: String, siteStr: String, collectionStr: String, datasetStr: String, epoch: String): String = {
+    tableName match {
+      case BaseMeasurementSummary.DBTableName =>
+        val query = s"SELECT * FROM ${tableName} WHERE customer IN (" + customerStr + ") AND customer_site IN (" + siteStr + ") AND collection IN (" + collectionStr + ") AND dataset IN (" + datasetStr + ") AND start_time>=? AND stop_time<?"
+        query
+      case _ =>
+        val query = s"SELECT * FROM ${tableName} WHERE customer IN (" + customerStr + ") AND customer_site IN (" + siteStr + ") AND collection IN (" + collectionStr + ") AND dataset IN (" + datasetStr + ") AND epoch IN (" + epoch + ") AND ts>=? AND ts<?"
+        query
+    }
   }
 
   private def getKeysStatementString(tableName: String): String = {
     val query = s"SELECT * FROM ${tableName}"
     query
   }
+
 }
+
+case class EpiDataConf(model: String, dbUrl: String)

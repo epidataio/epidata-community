@@ -1,0 +1,7 @@
+[0m2021.04.12 12:48:35 INFO  Started: Metals version 0.10.1 in workspace '/Users/lujiajun/Documents/epidata-intern' for client vscode 1.54.1.[0m
+[0m2021.04.12 12:48:36 INFO  time: initialize in 1.52s[0m
+[0m2021.04.12 12:48:38 WARN  Build server is not auto-connectable.[0m
+[0m2021.04.12 12:48:39 WARN  no build target for: /Users/lujiajun/Documents/epidata-intern/ipython/src/test/scala/IPythonSpecLite.scala[0m
+[0m2021.04.12 12:48:47 INFO  no build target: using presentation compiler with only scala-library: 2.12.13[0m
+[0m2021.04.12 12:48:58 INFO  time: code lens generation in 18s[0m
+[0m2021.04.12 12:50:24 INFO  shutting down Metals[0m

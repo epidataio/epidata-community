@@ -5,7 +5,7 @@
 import argparse
 import base64
 from datetime import datetime, timedelta
-import httplib
+import http.client
 import json
 import numpy as np
 import random
@@ -13,7 +13,7 @@ from decimal import Decimal
 import struct
 import time
 from time import sleep
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import requests
 
 
@@ -23,6 +23,7 @@ import requests
 
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument('--host')
+arg_parser.add_argument('--access_token')
 args = arg_parser.parse_args()
 
 HOST = args.host or '127.0.0.1:9443'
@@ -40,13 +41,13 @@ else:
 
 def get_time(time_string):
     date_object = datetime.strptime(time_string, '%m/%d/%Y %H:%M:%S.%f')
-    return long(time.mktime(date_object.timetuple())
+    return int(time.mktime(date_object.timetuple())
                 * 1e3 + date_object.microsecond / 1e3)
 
 def add_time(time_string, delta):
     date_object = datetime.strptime(
         time_string, '%m/%d/%Y %H:%M:%S.%f') + timedelta(seconds=delta)
-    return long(time.mktime(date_object.timetuple())
+    return int(time.mktime(date_object.timetuple())
                 * 1e3 + date_object.microsecond / 1e3)
 
 current_time_string = datetime.now().strftime("%m/%d/%Y %H:%M:%S.%f")
@@ -58,7 +59,7 @@ current_time = get_time(current_time_string)
 #####################
 
 # Replace quoted string with API Token or GitHub Personal Access Token (REQUIRED)
-ACCESS_TOKEN = 'epidata123'
+ACCESS_TOKEN = args.access_token or 'epidata123'
 
 # Modify default values (OPTIONAL)
 COMPANY = 'EpiData'
@@ -74,10 +75,12 @@ import ssl
 try:
     _create_unverified_https_context = ssl._create_unverified_context
 except AttributeError:
+    print("exception raised")
     # Legacy Python that doesn't verify HTTPS certificates by default
     pass
 else:
     # Handle target environment that doesn't support HTTPS verification
+    print("exception raised - else")
     ssl._create_default_https_context = _create_unverified_https_context
 
 
@@ -90,7 +93,7 @@ session = requests.Session()
 
 # Authentication is achieved by posting to the AUTHENTICATION_URL.
 url = AUTHENTICATION_URL
-print url
+print(url)
 
 # An HTTP POST with JSON content requires the HTTP Content-type header.
 json_header = {'Content-type': 'application/json', 'Set-Cookie': "epidata"}
@@ -108,14 +111,14 @@ assert resp.status_code == 200
 
 # Parse the JSON response.
 post_response = json.loads(resp.content)
-print "response - ", post_response
+print("response - ", post_response)
 
 
 ############################################
 # Generate and Ingest Data in a While Loop #
 ############################################
 
-print "Generating Sample Sensor Data..."
+print("Generating Sample Sensor Data...")
 while (True):
 
     try:
@@ -124,7 +127,7 @@ while (True):
         meas_last_windspeed_value = 8
         meas_last_rh_value = 60
 
-        for data_iteration in range(1, 2):
+        for data_iteration in range(1, 5):
 
             # Construct an empty list of measurement objects
             measurement_list = []
@@ -282,12 +285,12 @@ while (True):
             resp = session.send(prepped, stream=None, verify=None, proxies=None, cert=None, timeout=None)
 
             # Check that the response's HTTP response code is 201 (CREATED).
-            print resp.content
+            print(resp.content)
             assert resp.status_code == 201
 
             # Print measurement details
-            print "iteration: ", data_iteration
-            print json_body + "\n"
+            print("iteration: ", data_iteration)
+            print(json_body + "\n")
 
             #break
 
@@ -295,7 +298,7 @@ while (True):
 
     # Handle keyboard interrupt
     except (KeyboardInterrupt, SystemExit):
-        print '\n...Program Stopped Manually!'
+        print("\n...Program Stopped Manually!")
         raise
 
 

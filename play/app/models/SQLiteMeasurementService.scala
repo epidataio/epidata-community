@@ -5,7 +5,7 @@
 package models
 
 import java.util
-import java.util.{ Date, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList }
+import java.util.{ Date, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList, List => JList }
 import java.nio.ByteBuffer
 import SQLite.DB
 import service.Configs
@@ -107,7 +107,6 @@ object SQLiteMeasurementService {
     // Prepares the statement and executes it
     val statementInsertSummary = getInsertSummaryStatements(measurementSummary)
     DB.executeUpdate(statementInsertSummary)
-
   }
 
   /**
@@ -120,7 +119,6 @@ object SQLiteMeasurementService {
     val t0 = EpidataMetrics.getCurrentTime
     measurementsSummary.foreach(modelSummary => insertSummary(modelSummary))
     EpidataMetrics.increment("DB.batchExecute", t0)
-
   }
 
   def getInsertStatements(measurement: Model): PreparedStatement = {
@@ -191,7 +189,7 @@ object SQLiteMeasurementService {
 
     // Get the data from SQLite
     val rs: ResultSet = SQLiteMeasurementService.query(company, site, station, sensor, beginTime, endTime, ordering, tableName, size, batch)
-    val records = new JLinkedList[JLinkedHashMap[String, Object]]()
+    val records: JList[JLinkedHashMap[String, Object]] = new JLinkedList[JLinkedHashMap[String, Object]]()
     while (rs.next() != false) {
       records.add(Model.rowToJLinkedHashMap(rs, tableName, modelName))
     }

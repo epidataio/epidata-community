@@ -186,7 +186,7 @@ class EpidataContext:
             return
         try:
             spark_ip = re.match(
-                'spark://(.*):\d+',
+                'spark://(.*):\\d+',
                 os.environ['SPARK_MASTER']).group(1)
             clusterStatus = json.loads(
                 urllib.urlopen(
@@ -224,6 +224,6 @@ class EpidataContext:
         return self._sc._jvm.java.sql.Timestamp(ts)
 
 
-if os.environ.get('SPARK_MASTER'):
+if os.environ.get('SPARK_MASTER') and (os.environ.get('EPIDATA_MODE') == r'BIG_DATA'):
     # The global EpidataContext.
     ec = EpidataContext()

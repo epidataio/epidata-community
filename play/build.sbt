@@ -15,7 +15,7 @@ routesGenerator := InjectedRoutesGenerator
 libraryDependencies ++= Seq(
   guice,
   ehcache,
-  "org.xerial" % "sqlite-jdbc" % "3.34.0",
+  "org.xerial" % "sqlite-jdbc" % "3.32.3.3",
   "com.datastax.cassandra" % "cassandra-driver-core" % "3.9.0",
   "de.kaufhof" %% "pillar" % "4.1.2",
   "com.typesafe.play" %% "play-mailer" % "6.0.1",

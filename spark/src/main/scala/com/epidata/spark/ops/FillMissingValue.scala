@@ -5,17 +5,61 @@
 package com.epidata.spark.ops
 
 import com.epidata.spark.utils.{ ConvertUtils, DataFrameUtils }
+import com.epidata.lib.models.{ Measurement => BaseMeasurement }
+import com.epidata.spark.{ Measurement, MeasurementCleansed }
 import org.apache.spark.sql.{ SQLContext, Row, DataFrame }
 import org.apache.spark.sql.functions._
+import scala.collection.mutable.{ Map => MutableMap, ListBuffer }
+import java.util.{ Date, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList, List => JList }
 
 class FillMissingValue(
     val meas_names: List[String],
     val method: String = "rolling",
     val s: Int = 3) extends Transformation {
+
+  override def apply(measurements: ListBuffer[JLinkedHashMap[String, Object]]): ListBuffer[JLinkedHashMap[String, Object]] = {
+
+    val field = "meas_value"
+
+    //convert to an odd number so there are even number of measuremnts on either side
+    val size = if (s % 2 == 0) s + 1 else s
+
+    method match {
+      case "rolling" =>
+        val filteredMeas = measurements
+          .filter(m => meas_names.contains(m.get("meas_name").asInstanceOf[String]))
+
+        for (index <- filteredMeas.indices) {
+          // If value is null, then substitute it!
+          if (filteredMeas(index).get("meas_value") == null) { //TODO: it should not need for 0 here!
+            var sum: Double = 0
+            var count = 0
+
+            for (i <- index - (size - 1) / 2 to index + (size + 1) / 2) {
+              if (i >= 0 && i < filteredMeas.size && filteredMeas(i).get("meas_value") != null) {
+                sum = sum + filteredMeas(i).get("meas_value").asInstanceOf[Double]
+                count = count + 1
+              }
+            }
+
+            if (count > 0) {
+              val measValue = (sum / count).asInstanceOf[Object]
+              filteredMeas(index).put("meas_value", measValue)
+              filteredMeas(index).put("meas_flag", "substituted")
+              filteredMeas(index).put("meas_method", method)
+            }
+          }
+        }
+
+        filteredMeas
+    }
+  }
+
   override def apply(dataFrame: DataFrame, sqlContext: SQLContext): DataFrame = {
 
     val field = "meas_value"
 
+    //convert to an odd number so theres even number of measuremnts on either side
     val size = if (s % 2 == 0) s + 1 else s
 
     method match {
@@ -77,6 +121,7 @@ class FillMissingValue(
 
   }
 
+  override val name: String = "FillMissingValue"
+
   override def destination: String = "measurements_cleansed"
 }
-
