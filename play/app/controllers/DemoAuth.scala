@@ -24,6 +24,7 @@ import securesocial.core.authenticator.{ AuthenticatorBuilder, CookieAuthenticat
 import securesocial.core.services.SaveMode
 import securesocial.core.services.{ CacheService, RoutesService }
 import javax.inject._
+import models.Device
 
 import scala.collection.immutable.ListMap
 import scala.concurrent.Future

@@ -9,7 +9,7 @@ import java.util.Date
 
 import com.epidata.lib.models.util.JsonHelpers
 import com.epidata.lib.models.MeasurementCleansed
-import models.{ MeasurementService, SQLiteMeasurementService, SensorMeasurement }
+import models.{ MeasurementService, SQLiteMeasurementService, SensorMeasurement, Device }
 import util.{ EpidataMetrics, Ordering }
 import play.api.libs.json.Json
 import play.api.mvc._
@@ -18,6 +18,7 @@ import play.api.{ Configuration, Environment, Logger }
 import service.{ AppEnvironment, Configs }
 import securesocial.core.{ IdentityProvider, RuntimeEnvironment, SecureSocial }
 import service.Configs
+import service._
 
 /** Controller for sensor measurement data. */
 @Singleton

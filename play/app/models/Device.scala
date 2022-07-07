@@ -6,7 +6,8 @@ package models
 
 import cassandra.DB
 import SQLite.{ DB => DBLite }
-import service.Configs
+import java.util.Date
+import service._
 import com.datastax.driver.core.querybuilder.QueryBuilder
 import com.datastax.driver.core.Row
 import securesocial.core.AuthenticationMethod
@@ -15,31 +16,29 @@ import securesocial.core.services
 import scala.concurrent.Future
 import securesocial.core.{ PasswordInfo, BasicProfile }
 import java.sql.ResultSet
+import java.time
 
 object Device {
 
-  def createToken(): Any = {
+  def createToken(): String = {
 
+    val returnval = "a"
+
+    returnval
   }
 
-  def authenticate(device_id: String, device_token: String): Any = {
+  def authenticate(device_id: String, device_token: String): String = {
+    val devicemap = DeviceService.queryDevice(device_id)
+    val retrieved_token = devicemap.get("device_token")
+    if (retrieved_token == device_token) {
+      val jwttoken = createToken()
+      val authenticated_at = time.LocalDateTime.now()
+      DeviceService.updateDevice(device_token, jwttoken, authenticated_at)
+      jwttoken
+    } else {
+      ""
+    }
 
   }
-
-  private lazy val sqlInsertStatement =
-    """#INSERT OR REPLACE INTO iot_device (
-      #iot_device_id,
-      #iot_device_token,
-      #connection_timeout,
-      #authenticated_at,
-      #json_wet_token) VALUES (?, ?, ?, ?, ?)""".stripMargin('#')
-
-  private lazy val cqlInsertStatement =
-    """#INSERT INTO users (
-      #iot_device_id,
-      #iot_device_token,
-      #connection_timeout,
-      #authenticated_at,
-      #json_wet_token) VALUES (?, ?, ?, ?, ?)""".stripMargin('#')
-
 }
+
