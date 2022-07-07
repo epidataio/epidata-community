@@ -16,15 +16,23 @@ import securesocial.core.services
 import scala.concurrent.Future
 import securesocial.core.{ PasswordInfo, BasicProfile }
 import java.sql.ResultSet
-import java.time
+import java.sql.Timestamp
+import java.text.SimpleDateFormat
 
 object Device {
 
   def createToken(): String = {
-
     val returnval = "a"
 
     returnval
+  }
+
+  def getCurrentdateTimeStamp: Timestamp = {
+    val today = java.util.Calendar.getInstance.getTime
+    val timeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+    val now: String = timeFormat.format(today)
+    val currTime = java.sql.Timestamp.valueOf(now)
+    currTime
   }
 
   def authenticate(device_id: String, device_token: String): String = {
@@ -32,11 +40,12 @@ object Device {
     val retrieved_token = devicemap.get("device_token")
     if (retrieved_token == device_token) {
       val jwttoken = createToken()
-      val authenticated_at = time.LocalDateTime.now()
+      val authenticated_at = getCurrentdateTimeStamp
       DeviceService.updateDevice(device_token, jwttoken, authenticated_at)
       jwttoken
     } else {
-      ""
+      throw new Exception("Device Token does not match")
+
     }
 
   }

@@ -16,7 +16,7 @@ import java.nio.ByteBuffer
 import com.epidata.lib.models.{ MeasurementSummary, MeasurementsKeys, Measurement => Model }
 import com.epidata.lib.models.util.{ Binary, JsonHelpers }
 import scala.collection.mutable.{ Map => MutableMap }
-
+import java.sql.Timestamp
 import java.sql.PreparedStatement
 
 object DeviceService {
@@ -28,7 +28,7 @@ object DeviceService {
     DB.executeUpdate(stm)
   }
 
-  def updateDevice(device_id: String, jwt_token: String, expiry_time: time.LocalDateTime): Unit = {
+  def updateDevice(device_id: String, jwt_token: String, expiry_time: Timestamp): Unit = {
     val updateStatements = updateDevicestring()
     val stm = DB.prepare(updateStatements)
     DB.binds(stm, jwt_token, expiry_time, device_id)
