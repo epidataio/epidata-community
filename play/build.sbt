@@ -10,6 +10,7 @@ resolvers ++= Seq(
   Resolver.jcenterRepo
 )
 
+
 routesGenerator := InjectedRoutesGenerator
 
 libraryDependencies ++= Seq(
@@ -29,14 +30,16 @@ libraryDependencies ++= Seq(
   "org.mockito" % "mockito-core" % "3.3.3" % Test,
   "org.apache.kafka" %% "kafka" % "2.4.1",
   "org.apache.kafka" % "kafka-streams" % "2.4.1",
-  "org.apache.kafka" % "kafka-clients" % "2.4.1"
+  "org.apache.kafka" % "kafka-clients" % "2.4.1",
+  "com.jason-goodwin" %% "authentikat-jwt" % "0.4.5"
+
 )
 
 scalacOptions in Test ++= Seq("-Yrangepos")
 
 routesImport ++= List("java.util.Date",
-                      "util.Ordering",
-                      "util.QueryStringBinders._")
+  "util.Ordering",
+  "util.QueryStringBinders._")
 
 lazy val autopep8 = taskKey[Unit]("autopep8")
 
