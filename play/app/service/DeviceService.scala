@@ -28,7 +28,7 @@ object DeviceService {
     DB.executeUpdate(stm)
   }
 
-  def updateDevice(deviceID: String, issueTime: Timestamp): Unit = {
+  def updateDevice(deviceID: String, issueTime: Long): Unit = {
     val updateStatements = updateDevicestring()
     val stm = DB.prepare(updateStatements)
     DB.binds(stm, issueTime, deviceID)

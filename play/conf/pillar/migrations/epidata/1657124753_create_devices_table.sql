@@ -10,7 +10,7 @@ CREATE TABLE devices (
   iot_device_id TEXT,
   iot_device_token TEXT,
   connection_timeout long,
-  authenticated_at time,
+  authenticated_at long,
   PRIMARY KEY (iot_device_id)
 )
 
