@@ -1,22 +1,33 @@
-//import play.api.mvc._
-//class DeviceRequest[A](val jwt_token: String, request: Request[A]) extends WrappedRequest[A](request)
-//class UserAction @Inject() (val parser: BodyParsers.Default)(implicit val executionContext: ExecutionContext)
-//  extends ActionBuilder[DeviceRequest, AnyContent]
-//  with ActionTransformer[Request, DeviceRequest] {
-//  def transform[A](request: Request[A]) = Future.successful {
-//    new DeviceRequest(request.session.get("jwt_token"), request)
-//  }
-//}
-//class ValidAction(implicit val conf: Configuration) {
-//  def validate(implicit ec: ExecutionContext) = new ActionFilter[DeviceRequest] {
-//    def executionContext = ec
-//    def filter[A](input: DeviceRequest[A]) = Future.successful {
-//      //app.conf JwtSecretKey
-//      val JwtSecretKey = conf.get[String]("application.secret")
-//      if (!JsonWebToken.validate(input.jwt_token, JwtSecretKey))
-//        Some(Forbidden)
-//      else
-//        DeviceService.updateDevice(DeviceService.queryToken(input.jwt_token), input.jwt_token, 0 /*time*/ )
-//    }
-//  }
-//}
+package actions
+
+import play.api.mvc._
+import scala.concurrent._
+import play.api.Logger
+import play.api.libs.json.{ JsValue, Json }
+import play.api.mvc._
+import play.api.{ Environment, Configuration }
+import play.api.i18n.{ I18nSupport, MessagesApi, Messages }
+import play.api.libs.ws.WSResponse
+import scala.collection.immutable.ListMap
+import scala.util.{ Success, Failure }
+import play.api.mvc.Results._
+import models._
+import javax.inject._
+import service.{ DBUserService, AppEnvironment, DataService }
+
+@Singleton
+case class ValidAction @Inject() (override val parser: BodyParsers.Default)(implicit ec: ExecutionContext)
+  extends ActionBuilderImpl(parser) {
+
+  override def invokeBlock[A](request: Request[A], block: (Request[A]) => Future[Result]) = Future[Result] {
+    val deviceJWT = request.getQueryString("jwt_token")
+    try {
+      val newDeviceJWT = Device.validate(deviceJWT.get)
+      Ok(Json.obj("jwt_token" -> deviceJWT.get))
+    } catch {
+      case _: Throwable => BadRequest(Json.toJson("Unauthorized"))
+    }
+  }
+
+}
+// If timeout, reauthenticate. Always update jwt_token and extending the time

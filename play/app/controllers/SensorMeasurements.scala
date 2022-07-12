@@ -11,7 +11,7 @@ import com.epidata.lib.models.util.JsonHelpers
 import com.epidata.lib.models.MeasurementCleansed
 import models.{ MeasurementService, SQLiteMeasurementService, SensorMeasurement, Device }
 import util.{ EpidataMetrics, Ordering }
-import play.api.libs.json.Json
+import play.api.libs.json._
 import play.api.mvc._
 import play.api.i18n.{ I18nSupport, Messages }
 import play.api.{ Configuration, Environment, Logger }
@@ -19,10 +19,11 @@ import service.{ AppEnvironment, Configs }
 import securesocial.core.{ IdentityProvider, RuntimeEnvironment, SecureSocial }
 import service.Configs
 import service._
+import actions.ValidAction
 
 /** Controller for sensor measurement data. */
 @Singleton
-class SensorMeasurements @Inject() (val cc: ControllerComponents)(
+class SensorMeasurements @Inject() (val cc: ControllerComponents, validAction: ValidAction)(
   override implicit val env: RuntimeEnvironment) extends AbstractController(cc)
   with SecureSocial {
 
@@ -30,7 +31,7 @@ class SensorMeasurements @Inject() (val cc: ControllerComponents)(
 
   val logger: Logger = Logger(this.getClass())
 
-  def create = SecuredAction(parse.json) { implicit request =>
+  def create = validAction(parse.json) { implicit request: Request[JsValue] =>
     val sensorMeasurements = com.epidata.lib.models.SensorMeasurement.jsonToSensorMeasurements(request.body.toString)
     SensorMeasurement.insert(sensorMeasurements.flatMap(x => x), Configs.measDBLite)
 

@@ -29,3 +29,6 @@ GET     /unauthorized               @controllers.Unauthorized.show()
 
 # Get Metric
 GET     /metrics                    @controllers.MetricController.getMetric()
+
+# Device Authentication
+GET     /authenticate/device        @controllers.DeviceAuth.authenticate
