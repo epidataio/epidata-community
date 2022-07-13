@@ -36,5 +36,15 @@ class ApplicationSpec extends Specification {
       status(notebook) must equalTo(SEE_OTHER)
     }
 
+    "fail to retrieve the device route without authentication" in new WithApplication {
+      val device = route(FakeRequest(GET, "/authenticate/device")).get
+      status(device) must equalTo(SEE_OTHER)
+    }
+
+    "retrieve the device route" in new WithLoggedUser(minimalApp) {
+      val device = route(FakeRequest(GET, "/authenticate/device").withCookies(cookie)).get
+      status(device) must equalTo(OK)
+    }
+
   }
 }
