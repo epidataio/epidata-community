@@ -22,15 +22,17 @@ libraryDependencies ++= Seq(
   "com.typesafe.play" %% "twirl-api" % "1.5.0",
   "com.typesafe.play" %% "filters-helpers" % "2.6.25",
   "org.scalacheck" %% "scalacheck" % "1.14.3" % Test,
-  "org.scalactic" %% "scalactic" % "3.2.5",
-  "org.scalatest" %% "scalatest" % "3.2.5" % "test",
-  "org.scalatestplus" %% "scalacheck-1-14" % "3.2.0.0" % "test",
-  "org.specs2" %% "specs2-core" % "3.9.5" % "test",
-  "org.mockito" % "mockito-core" % "3.3.3" % Test,
+  "org.scalactic" %% "scalactic" % "3.0.0",
+  "org.scalatest" %% "scalatest" % "3.0.4" % "test",
+  "org.scalatestplus" %% "junit-4-12" % "3.2.0.0",
+  "org.mockito" % "mockito-core" % "3.11.2" % Test,
+  "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.3" % Test,
   "org.apache.kafka" %% "kafka" % "2.4.1",
   "org.apache.kafka" % "kafka-streams" % "2.4.1",
   "org.apache.kafka" % "kafka-clients" % "2.4.1"
 )
+
+libraryDependencies += specs2 % Test
 
 scalacOptions in Test ++= Seq("-Yrangepos")
 

@@ -23,45 +23,25 @@ import scala.collection.JavaConverters._
 class AppModule extends Module {
   def bindings(env: Environment, conf: Configuration) = Seq(
     (bind[RuntimeEnvironment].to[AppEnvironment]).eagerly(),
-    (bind[ApplicationStart].toSelf).eagerly(),
-    (bind[ApplicationStop].toSelf).eagerly())
+    (bind[ApplicationDBStart].toSelf).eagerly(),
+    (bind[ApplicationStreamStart].toSelf).eagerly(),
+    (bind[ApplicationDBStop].toSelf).eagerly(),
+    (bind[ApplicationStreamStop].toSelf).eagerly())
 }
 
-// `ApplicationStop` object with shut-down hook
+// `ApplicationDBStart` object for application database start-up
 @Singleton
-class ApplicationStop @Inject() (lifecycle: ApplicationLifecycle) {
-  if ((Configs.measDB == "sqlite") && (Configs.userDB == "sqlite")) {
-    lifecycle.addStopHook { () =>
-      Future.successful(DBLite.close)
-    }
-  } else if ((Configs.measDB == "cassandra") && (Configs.userDB == "cassandra")) {
-    lifecycle.addStopHook { () =>
-      Future.successful(DB.close)
-    }
-  } else {
-    lifecycle.addStopHook { () =>
-      Future.successful(DBLite.close)
-      Future.successful(DB.close)
-    }
-  }
-
-  if (Configs.queueService.equalsIgnoreCase("ZMQ")) {
-    lifecycle.addStopHook { () =>
-      Future.successful(ZMQInit.clear())
-    }
-  }
-
-}
-
-// `ApplicationStart` object for application start-up
-@Singleton
-class ApplicationStart @Inject() (env: Environment, conf: Configuration) {
+class ApplicationDBStart @Inject() (env: Environment, conf: Configuration) {
   Configs.init(conf)
 
   // Connect to the SQLite database.
   if ((Configs.measDB == "sqlite") || (Configs.userDB == "sqlite")) {
     try {
-      DBLite.connect(conf.getOptional[String]("sqlite.url").get)
+      val dbURL: String = conf.getOptional[Configuration]("lite.db.epidata").get
+        .getOptional[Configuration](env.mode.toString.toLowerCase).get
+        .getOptional[String]("sqlite.url").get
+      DBLite.connect(dbURL, env.getFile("conf/schema"))
+      println("DB connection successful")
     } catch {
       case e: SQLException =>
         throw new SQLException(s"Unable to connect to SQLite database: ${e}")
@@ -85,12 +65,17 @@ class ApplicationStart @Inject() (env: Environment, conf: Configuration) {
         conf.getOptional[String]("cassandra.username").get,
         conf.getOptional[String]("cassandra.password").get,
         env.getFile("conf/pillar/migrations/epidata"))
+      println("DB connection successful")
     } catch {
       case e: NoHostAvailableException =>
         throw new IllegalStateException(s"Unable to connect to cassandra server: ${e}")
     }
   }
+}
 
+// `ApplicationStreamStart` object for application stream start-up
+@Singleton
+class ApplicationStreamStart @Inject() (env: Environment, conf: Configuration) {
   if (conf.getOptional[String]("queue.service").get.equalsIgnoreCase("Kafka")) {
     KafkaService.init("127.0.0.1:" + conf.getOptional[Int]("queue.servers").get)
   } else if (conf.getOptional[String]("queue.service").get.equalsIgnoreCase("ZMQ")) {
@@ -110,5 +95,33 @@ class ApplicationStart @Inject() (env: Environment, conf: Configuration) {
       kafkaConsumer.run()
     }
   }
+}
 
+// `ApplicationDBStop` object with shut-down hook
+@Singleton
+class ApplicationDBStop @Inject() (lifecycle: ApplicationLifecycle) {
+  if ((Configs.measDB == "sqlite") && (Configs.userDB == "sqlite")) {
+    lifecycle.addStopHook { () =>
+      Future.successful(DBLite.close)
+    }
+  } else if ((Configs.measDB == "cassandra") && (Configs.userDB == "cassandra")) {
+    lifecycle.addStopHook { () =>
+      Future.successful(DB.close)
+    }
+  } else {
+    lifecycle.addStopHook { () =>
+      Future.successful(DBLite.close)
+      Future.successful(DB.close)
+    }
+  }
+}
+
+// `ApplicationStreamStop` object with shut-down hook
+@Singleton
+class ApplicationStreamStop @Inject() (lifecycle: ApplicationLifecycle) {
+  if (Configs.queueService.equalsIgnoreCase("ZMQ")) {
+    lifecycle.addStopHook { () =>
+      Future.successful(ZMQInit.clear())
+    }
+  }
 }

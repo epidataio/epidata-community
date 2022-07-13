@@ -2,6 +2,7 @@
  * Copyright (c) 2015-2017 EpiData, Inc.
 */
 
+/****
 import cassandra.DB
 import com.epidata.lib.models.{ SensorMeasurement => Model }
 import com.epidata.lib.models.util.Binary
@@ -18,8 +19,16 @@ import play.api.libs.json.JsArray
 import play.api.libs.json.Json
 import play.api.mvc.Handler
 import play.api.mvc.RequestHeader
+
+import org.scalatest._
+import org.scalatestplus.play._
+
 import play.api.test._
-import play.api.test.Helpers._
+import play.api.test.Helpers.{ GET => GET_REQUEST, _ }
+
+// import play.api.test._
+// import play.api.test.Helpers._
+
 import securesocialtest.WithLoggedUser
 import util.Ordering
 import org.scalatestplus.junit.JUnitRunner
@@ -679,3 +688,5 @@ class SensorMeasurementsSpec extends Specification {
 
   }
 }
+
+****/

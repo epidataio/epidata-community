@@ -1,5 +1,6 @@
 // Based on https://github.com/jaliss/securesocial/commit/77ce2f94d6a0e1f0fb032dbdec344c953dea7771
 
+/****
 package securesocialtest
 
 import play.api.Application
@@ -19,3 +20,4 @@ class FakeAuthenticatorStore(app: Application) extends AuthenticatorStore(app) {
     Right()
   }
 }
+****/
