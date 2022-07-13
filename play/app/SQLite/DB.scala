@@ -61,38 +61,30 @@ object DB {
 }
 
 private class ConnectionLite(url: String, schemaPath: java.io.File) {
-
-  var base: File = new File(".")
-  println("base path: " + base)
-  val PATH = getClass.getResource("").getPath
-  println("Path: " + PATH + " ")
-
-  println("url: " + url)
   Class.forName("org.sqlite.JDBC");
   val session = DriverManager.getConnection(url)
   println("session: " + session)
 
-  //  val original = "play/conf/schema/measurements_original"
   val original = schemaPath + "/measurements_original"
-  //  val cleansed = "play/conf/schema//measurements_cleansed"
   val cleansed = schemaPath + "/measurements_cleansed"
-  //  val summary = "play/conf/schema/measurements_summary"
   val summary = schemaPath + "/measurements_summary"
-  //  val keys = "play/conf/schema/measurements_keys"
   val keys = schemaPath + "/measurements_keys"
-  //  val users = "play/conf/schema/users"
   val users = schemaPath + "/users"
+  val devices = schemaPath + "/iot_devices"
 
   val sql1 = Source.fromFile(original).getLines.mkString
   val sql2 = Source.fromFile(cleansed).getLines.mkString
   val sql3 = Source.fromFile(summary).getLines.mkString
   val sql4 = Source.fromFile(keys).getLines.mkString
   val sql5 = Source.fromFile(users).getLines.mkString
+  val sql6 = Source.fromFile(devices).getLines.mkString
+
   session.createStatement().executeUpdate(sql1)
   session.createStatement().executeUpdate(sql2)
   session.createStatement().executeUpdate(sql3)
   session.createStatement().executeUpdate(sql4)
   session.createStatement().executeUpdate(sql5)
+  session.createStatement().executeUpdate(sql6)
 
   def prepare(statement: String): PreparedStatement = session.prepareStatement(statement)
 
