@@ -13,7 +13,7 @@ import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class DeviceSpec extends Specification {
-  
+
   object Fixtures {
     val truncateSQL = s"TRUNCATE iot_devices"
     def truncate = DB.sql(truncateSQL)
@@ -104,5 +104,5 @@ class DeviceSpec extends Specification {
   }
 
   DB.close
-  
+
 }

@@ -14,7 +14,7 @@ import org.zeromq.ZMQ
 object ZMQInit {
   var _ZMQProducer: ZMQProducer.type = _
   var _ZMQService: ZMQService.type = _
-  val context = ZMQ.context(1)
+  var context: ZMQ.Context = _
 
   def init(config: Configuration) = {
     /**
@@ -25,6 +25,8 @@ object ZMQInit {
      * ZMQDynamicDataSink: dynamicSubPort: 5554
      * ZMQService executes ZMQStream and ZMQDataSink as threads
      */
+
+    this.context = ZMQ.context(1)
 
     _ZMQService = ZMQService.init(
       context,

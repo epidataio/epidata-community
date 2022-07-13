@@ -34,6 +34,7 @@ class SensorMeasurements @Inject() (val cc: ControllerComponents, validAction: V
   def create = validAction(parse.json) { implicit request: Request[JsValue] =>
     val sensorMeasurements = com.epidata.lib.models.SensorMeasurement.jsonToSensorMeasurements(request.body.toString)
     SensorMeasurement.insert(sensorMeasurements.flatMap(x => x), Configs.measDBLite)
+    println("aaa");
 
     val failedIndexes = sensorMeasurements.zipWithIndex.filter(_._1 == None).map(_._2)
     if (failedIndexes.isEmpty)
