@@ -26,7 +26,7 @@ class DeviceAuth @Inject() (val cc: ControllerComponents)(
       val deviceJWT = Device.authenticate(deviceID.get, deviceToken.get)
       Future.successful(Ok(Json.obj("device_jwt" -> deviceJWT)))
     } catch {
-      case _: Throwable => Future.successful(Redirect(routes.DeviceAuth.authenticate).flashing("error" -> "Access Denied"))
+      case _: Throwable => Future.successful(Redirect("/authenticate/device").flashing("error" -> "Access Denied"))
     }
   }
 }

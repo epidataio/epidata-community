@@ -16,7 +16,7 @@ import javax.inject._
 import service.{ DBUserService, AppEnvironment, DataService }
 
 @Singleton
-case class ValidAction @Inject() (override val parser: BodyParsers.Default)(implicit ec: ExecutionContext)
+class ValidAction @Inject() (override val parser: BodyParsers.Default)(implicit ec: ExecutionContext)
   extends ActionBuilderImpl(parser) {
 
   override def invokeBlock[A](request: Request[A], block: (Request[A]) => Future[Result]) = Future[Result] {

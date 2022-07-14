@@ -10,21 +10,25 @@ import org.junit.runner._
 import play.api.test._
 import play.api.test.Helpers._
 import org.scalatestplus.junit.JUnitRunner
+import play.api.libs.json._
+import play.core.SourceMapper
+import java.io.File
+import play.api._
 
 @RunWith(classOf[JUnitRunner])
 class DeviceSpec extends Specification {
 
   object Fixtures {
     val truncateSQL = s"TRUNCATE iot_devices"
-    def truncate = DB.sql(truncateSQL)
+    def truncate = DB.executeUpdate(DB.prepare(truncateSQL))
     def cleanUp = {
       truncate
     }
 
     def install = {
       cleanUp
-      DB.sql("INSERT OR REPLACE INTO iot_devices (iot_device_id, iot_device_token) VALUES(\"device_1\", \"epidata123\");")
-      DB.sql("INSERT OR REPLACE INTO iot_devices (iot_device_id, iot_device_token) VALUES(\"device_2\", \"NonDefaultToken\");")
+      DB.executeUpdate(DB.prepare("INSERT OR REPLACE INTO iot_devices (iot_device_id, iot_device_token) VALUES(\"device_1\", \"epidata123\");"))
+      DB.executeUpdate(DB.prepare("INSERT OR REPLACE INTO iot_devices (iot_device_id, iot_device_token) VALUES(\"device_2\", \"NonDefaultToken\");"))
     }
   }
 
@@ -39,13 +43,9 @@ class DeviceSpec extends Specification {
         override def onStop(app: Application) = Global.onStop(app)
       }))
 
-  import WithLoggedUser._
-
   object FakeApp {
     def apply() = new FakeApp()
   }
-
-  DB.connect("jdbc:sqlite:data/epidata_test.db")
 
   "Device" should {
 
@@ -102,7 +102,5 @@ class DeviceSpec extends Specification {
     }
 
   }
-
-  DB.close
 
 }
