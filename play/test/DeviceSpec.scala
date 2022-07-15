@@ -34,8 +34,8 @@ class DeviceSpec extends Specification {
 
     def install = {
       cleanUp
-      DB.executeUpdate(DB.prepare("INSERT OR REPLACE INTO iot_devices (iot_device_id, iot_device_token) VALUES(\"device_1\", \"epidata123\");"))
-      DB.executeUpdate(DB.prepare("INSERT OR REPLACE INTO iot_devices (iot_device_id, iot_device_token) VALUES(\"device_2\", \"NonDefaultToken\");"))
+      DB.executeUpdate(DB.prepare("INSERT OR REPLACE INTO iot_devices (iot_device_id, iot_device_token) VALUES(\"iot_device_1\", \"epidata_123\");"))
+      DB.executeUpdate(DB.prepare("INSERT OR REPLACE INTO iot_devices (iot_device_id, iot_device_token) VALUES(\"iot_device_2\", \"epidata_456\");"))
     }
   }
 
@@ -45,7 +45,9 @@ class DeviceSpec extends Specification {
 
     "DeviceAuth authenticate test" in new WithServer(app = application, port = 9443) {
       // The test payment gateway requires a callback to this server before it returns a result...
-      var device_id = "device_1"
+      Fixtures.install
+
+      var device_id = "iot_device_1"
       var device_token = "NonExistentToken"
 
       val ws = app.injector.instanceOf[WSClient]
@@ -55,7 +57,7 @@ class DeviceSpec extends Specification {
       response.status must equalTo(BAD_REQUEST)
 
       device_id = "NonExistentDevice"
-      device_token = "epidata123"
+      device_token = "epidata_123"
 
       response = Await.result(ws.url("http://localhost:9443/authenticate/device").withQueryString("device_id" -> device_id, "device_token" -> device_token).get(), 1000 millis)
 
@@ -68,8 +70,8 @@ class DeviceSpec extends Specification {
 
       response.status must equalTo(BAD_REQUEST)
 
-      device_id = "device_1"
-      device_token = "epidata123"
+      device_id = "iot_device_1"
+      device_token = "epidata_123"
 
       response = Await.result(ws.url("http://localhost:9443/authenticate/device").withQueryString("device_id" -> device_id, "device_token" -> device_token).get(), 1000 millis)
 
