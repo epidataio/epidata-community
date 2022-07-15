@@ -37,6 +37,10 @@ libraryDependencies ++= Seq(
 
 libraryDependencies += specs2 % Test
 
+libraryDependencies += ws
+
+libraryDependencies += ehcache
+
 scalacOptions in Test ++= Seq("-Yrangepos")
 
 routesImport ++= List("java.util.Date",
