@@ -1,0 +1,46 @@
+@import controllers._
+@(deviceForm: Form[controllers.DeviceRequestInfo], errorMsg: Option[String] = None)(implicit request: RequestHeader, assets: AssetsFinder, conf: play.api.Configuration)
+
+@import helper._
+
+@import play.api._
+
+@headline = { <span>EpiData</span> }
+@styles = { <link rel="stylesheet" href="@assets.path("stylesheets/login.min.css")"> }
+
+@main(("securesocial.login.title"), headline = headline, styles = styles) {
+    @errorMsg.map { msg =>
+        <div class="alert alert-error">
+            @(msg)
+        </div>
+    }
+
+    @request.flash.get("success").map { msg =>
+        <div class="alert alert-info">
+            @msg
+        </div>
+    }
+
+    @request.flash.get("error").map { msg =>
+        <div class="alert alert-error">
+            @msg
+        </div>
+    }
+
+  
+    <div class="main-box">
+
+        <form action="/authenticate/device">
+            Enter your device id and token:<br><br>
+            <input type="text" name="device_id" value="">
+            <input type="password" name="device_token" value="">
+            <input type="submit" value="authenticate">
+        </form>
+
+    </div>
+          
+      
+  
+
+
+}

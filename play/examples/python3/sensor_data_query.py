@@ -27,8 +27,10 @@ arg_parser.add_argument('--host')
 args = arg_parser.parse_args()
 
 HOST = args.host or '127.0.0.1:9443'
-AUTHENTICATION_URL = 'https://' + HOST + '/authenticate/app'
-AUTHENTICATION_ROUTE = '/authenticate/app'
+# AUTHENTICATION_URL = 'https://' + HOST + '/authenticate/app'
+# AUTHENTICATION_ROUTE = '/authenticate/app'
+AUTHENTICATION_URL = 'https://' + HOST + '/login/device'
+AUTHENTICATION_ROUTE = '/login/device'
 QUERY_MEASUREMENTS_ORIGINAL_URL = 'https://' + HOST + '/measurements_original?'
 QUERY_MEASUREMENTS_CLEANSED_URL = 'https://' + HOST + '/measurements_cleansed?'
 QUERY_MEASUREMENTS_SUMMARY_URL = 'https://' + HOST + '/measurements_summary?'
@@ -51,7 +53,9 @@ current_time = get_time(current_time_string)
 #####################
 
 # Replace quoted string with API Token or GitHub Personal Access Token (REQUIRED)
-ACCESS_TOKEN = 'epidata123'
+# ACCESS_TOKEN = 'epidata123'
+DEVICE_ID = args.device_id or 'iot_device_1'
+DEVICE_TOKEN = args.device_token or 'epidata_123'
 
 # Modify default values (OPTIONAL)
 COMPANY ='EpiData'
@@ -90,7 +94,8 @@ url = AUTHENTICATION_URL
 json_header = {'Content-type': 'application/json'}
 
 # The access token is povided via JSON.
-json_body = json.dumps({'accessToken': ACCESS_TOKEN})
+json_body = json.dumps({'device_id': DEVICE_ID,
+                        'device_token': DEVICE_TOKEN})
 
 # Send the POST request and receive the HTTP response.
 req = requests.Request('POST', AUTHENTICATION_URL, data=json_body, headers=json_header)
@@ -98,9 +103,11 @@ prepped = session.prepare_request(req)
 resp = session.send(prepped, stream=None, verify=None, proxies=None, cert=None, timeout=None)
 
 # Check that the response's HTTP response code is 200 (OK).
+
 assert resp.status_code == 200
 
 # Parse the JSON response.
+json_web_token = json.loads(resp.json())['device_jwt']
 response_json = json.loads(resp.content)
 # print("response - ", response_json)
 
@@ -121,7 +128,7 @@ while (True):
         end_time = get_time("7/31/2021 00:00:00.000") #for non-empty data
 
 
-        parameters = {'company': COMPANY, 'site': SITE, 'station': STATION, 'sensor': SENSOR, 'beginTime': begin_time, 'endTime': end_time}
+        parameters = {'company': COMPANY, 'site': SITE, 'station': STATION, 'sensor': SENSOR, 'beginTime': begin_time, 'endTime': end_time, 'json_web_token': json_web_token}
 
         # Construct url with parameters
         url = QUERY_MEASUREMENTS_ORIGINAL_URL+urllib.parse.urlencode(parameters)

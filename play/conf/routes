@@ -9,8 +9,8 @@
 
 # Login/logout pages.
 GET     /                           securesocial.controllers.LoginPage.login
-GET     /login                      securesocial.controllers.LoginPage.login
-GET     /logout                     securesocial.controllers.LoginPage.logout
+GET     /login/user                      securesocial.controllers.LoginPage.login
+GET     /logout/user                     securesocial.controllers.LoginPage.logout
 
 # Interactive notebook session.
 GET     /notebook                   @controllers.Notebook.show()
@@ -32,3 +32,5 @@ GET     /metrics                    @controllers.MetricController.getMetric()
 
 # Device Authentication
 GET     /authenticate/device        @controllers.DeviceAuth.authenticate
+
+GET     /login/device                 @controllers.Devices.show()
