@@ -21,7 +21,7 @@ class DeviceAuth @Inject() (val cc: ControllerComponents)(
   def authenticate = Action.async { implicit request =>
     val deviceID = request.getQueryString("device_id").get
     val deviceToken = request.getQueryString("device_token").get
-//    println("DeviceAuth: ", deviceID, deviceToken)
+    //    println("DeviceAuth: ", deviceID, deviceToken)
     try {
       val deviceJWT = Device.authenticate(deviceID, deviceToken)
       Future.successful(Ok(Json.obj("device_jwt" -> deviceJWT)))
