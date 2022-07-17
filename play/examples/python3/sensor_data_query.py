@@ -128,14 +128,15 @@ while (True):
         end_time = get_time("7/31/2021 00:00:00.000") #for non-empty data
 
 
-        parameters = {'company': COMPANY, 'site': SITE, 'station': STATION, 'sensor': SENSOR, 'beginTime': begin_time, 'endTime': end_time, 'json_web_token': json_web_token}
+        parameters = {'company': COMPANY, 'site': SITE, 'station': STATION, 'sensor': SENSOR, 'beginTime': begin_time, 'endTime': end_time}
 
         # Construct url with parameters
         url = QUERY_MEASUREMENTS_ORIGINAL_URL+urllib.parse.urlencode(parameters)
         # print(url)
         # json_header = {'Cookie': session_cookie, 'Accept': 'text/plain'}
         json_header = {
-                'Content-type': 'application/json'
+                'Content-type': 'application/json',
+                'json_web_token': json_web_token
         }
 
         # Send the GET request and receive the HTTP response.
