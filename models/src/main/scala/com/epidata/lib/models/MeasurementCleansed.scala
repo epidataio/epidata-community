@@ -106,8 +106,8 @@ object MeasurementCleansed {
       TypeUtils.stringToOption(row.getString("meas_method")))
   }
 
-  implicit def rowToMeasurementCleansed(row: ResultSet): MeasurementCleansed = {
-    val m = Measurement.rowToMeasurement(row)
+  implicit def resultSetToMeasurementCleansed(row: ResultSet): MeasurementCleansed = {
+    val m = Measurement.resultSetToMeasurement(row)
     measurementToMeasurementCleansed(
       m,
       TypeUtils.stringToOption(row.getString("meas_flag")),
@@ -122,10 +122,10 @@ object MeasurementCleansed {
     }
   }
 
-  def rowToJLinkedHashMap(row: ResultSet, tableName: String, modelName: String): JLinkedHashMap[String, Object] = {
+  def resultSetToJLinkedHashMap(row: ResultSet, tableName: String, modelName: String): JLinkedHashMap[String, Object] = {
     modelName match {
-      case SensorMeasurement.NAME => SensorMeasurementCleansed.rowToJLinkedHashMap(row, tableName)
-      case AutomatedTest.NAME => AutomatedTestCleansed.rowToJLinkedHashMap(row, tableName)
+      case SensorMeasurement.NAME => SensorMeasurementCleansed.resultSetToJLinkedHashMap(row, tableName)
+      case AutomatedTest.NAME => AutomatedTestCleansed.resultSetToJLinkedHashMap(row, tableName)
       case _ => new JLinkedHashMap[String, Object]()
     }
   }

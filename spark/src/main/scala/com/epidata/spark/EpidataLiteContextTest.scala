@@ -687,7 +687,7 @@ object elcTest extends App {
   // Insert Check - Measurements Original
   val rsOriginal = con.prepareStatement(s"SELECT * FROM ${com.epidata.lib.models.Measurement.DBTableName}").executeQuery()
   while (rsOriginal.next()) {
-    val t = com.epidata.lib.models.Measurement.rowToMeasurement(rsOriginal)
+    val t = com.epidata.lib.models.Measurement.resultSetToMeasurement(rsOriginal)
     println(s"Insert Check: ${t.toString}")
   }
   //println()
@@ -1382,7 +1382,7 @@ object elcTest extends App {
   // Insert Check - Measurements Cleansed
   val rsCleansed = con.prepareStatement(s"SELECT * FROM ${com.epidata.lib.models.MeasurementCleansed.DBTableName}").executeQuery()
   while (rsCleansed.next()) {
-    val t = com.epidata.lib.models.MeasurementCleansed.rowToMeasurementCleansed(rsCleansed)
+    val t = com.epidata.lib.models.MeasurementCleansed.resultSetToMeasurementCleansed(rsCleansed)
     println(s"Insert Check: ${t.toString}")
   }
   //println()
@@ -1695,7 +1695,7 @@ object elcTest extends App {
   // Insert Check - Measurements Summary
   val rsSummary = con.prepareStatement(s"SELECT * FROM ${com.epidata.lib.models.MeasurementSummary.DBTableName}").executeQuery()
   while (rsSummary.next()) {
-    val t = com.epidata.lib.models.MeasurementSummary.rowToMeasurementSummary(rsSummary)
+    val t = com.epidata.lib.models.MeasurementSummary.resultSetToMeasurementSummary(rsSummary)
     println(s"Insert Check: ${t.toString}")
   }
   //println()

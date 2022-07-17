@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 EpiData, Inc.
+ * Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 package com.epidata.lib.models
@@ -47,7 +47,7 @@ object AutomatedTest {
 
   def rowToAutomatedTest(row: Row): AutomatedTest = Measurement.rowToMeasurement(row)
 
-  def rowToAutomatedTest(row: ResultSet): AutomatedTest = Measurement.rowToMeasurement(row)
+  def resultSetToAutomatedTest(row: ResultSet): AutomatedTest = Measurement.resultSetToMeasurement(row)
 
   implicit def measurementToAutomatedTest(measurement: Measurement): AutomatedTest =
     AutomatedTest(
@@ -105,11 +105,10 @@ object AutomatedTest {
   }
 
   // JSON Helpers
-  def rowToJLinkedHashMap(row: ResultSet, tableName: String): JLinkedHashMap[String, Object] = {
+  def resultSetToJLinkedHashMap(row: ResultSet, tableName: String): JLinkedHashMap[String, Object] = {
     tableName match {
       case com.epidata.lib.models.Measurement.DBTableName =>
-        val m = rowToAutomatedTest(row)
-        // println("m meas_value: " + m.meas_value + ", type: " + m.meas_value.getClass)
+        val m = resultSetToAutomatedTest(row)
         toJLinkedHashMap(m)
     }
   }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 EpiData, Inc.
+ * Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 package com.epidata.lib.models
@@ -46,7 +46,7 @@ object SensorMeasurement {
   def rowToSensorMeasurement(row: Row): SensorMeasurement = Measurement.rowToMeasurement(row)
 
   // Model Conversions for SQLite
-  def rowToSensorMeasurement(row: ResultSet): SensorMeasurement = Measurement.rowToMeasurement(row)
+  def resultSetToSensorMeasurement(row: ResultSet): SensorMeasurement = Measurement.resultSetToMeasurement(row)
 
   implicit def measurementToSensorMeasurement(measurement: Measurement): SensorMeasurement =
     SensorMeasurement(
@@ -96,16 +96,15 @@ object SensorMeasurement {
     tableName match {
       case com.epidata.lib.models.Measurement.DBTableName =>
         val m = rowToSensorMeasurement(row)
-        // println("m: " + m)
         toJLinkedHashMap(m)
     }
   }
 
   // JSON Helpers for SQLite
-  def rowToJLinkedHashMap(row: ResultSet, tableName: String): JLinkedHashMap[String, Object] = {
+  def resultSetToJLinkedHashMap(row: ResultSet, tableName: String): JLinkedHashMap[String, Object] = {
     tableName match {
       case com.epidata.lib.models.Measurement.DBTableName =>
-        val m = rowToSensorMeasurement(row)
+        val m = resultSetToSensorMeasurement(row)
         toJLinkedHashMap(m)
     }
   }

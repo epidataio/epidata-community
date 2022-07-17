@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 EpiData, Inc.
+ * Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 package com.epidata.lib.models
@@ -42,7 +42,7 @@ object AutomatedTestSummary {
 
   def rowToAutomatedTestSummary(row: Row): AutomatedTestSummary = MeasurementSummary.rowToMeasurementSummary(row)
 
-  def rowToAutomatedTestSummary(row: ResultSet): AutomatedTestSummary = MeasurementSummary.rowToMeasurementSummary(row)
+  def resultSetToAutomatedTestSummary(row: ResultSet): AutomatedTestSummary = MeasurementSummary.resultSetToMeasurementSummary(row)
 
   implicit def measurementSummaryToAutomatedTestSummary(ms: MeasurementSummary): AutomatedTestSummary =
     AutomatedTestSummary(
@@ -90,10 +90,10 @@ object AutomatedTestSummary {
   }
 
   // JSON Helpers
-  def rowToJLinkedHashMap(rowSummary: ResultSet, tableName: String): JLinkedHashMap[String, Object] = {
+  def resultSetToJLinkedHashMap(rowSummary: ResultSet, tableName: String): JLinkedHashMap[String, Object] = {
     tableName match {
       case MeasurementSummary.DBTableName =>
-        val ms = rowToAutomatedTestSummary(rowSummary)
+        val ms = resultSetToAutomatedTestSummary(rowSummary)
         toJLinkedHashMap(ms)
     }
   }
@@ -134,7 +134,7 @@ object AutomatedTestSummary {
     putToMap(map, "meas_name", m.meas_name)
     putToMap(map, "meas_summary_name", m.meas_summary_name)
     putToMap(map, "meas_summary_value", m.meas_summary_value)
-    putToMap(map, "meas_summary_description", m.meas_summary_description)
+    putOptionToMap(map, "meas_summary_description", m.meas_summary_description)
 
     map
   }
@@ -171,6 +171,7 @@ object AutomatedTestSummary {
   }
 
   def jsonToAutomatedTestSummary(str: String): Option[AutomatedTestSummary] = {
+    println("json record: " + str)
     fromJson(str) match {
       case Some(jSONObject) => Some(jsonToAutomatedTestSummary(jSONObject))
       case _ => None
@@ -178,6 +179,7 @@ object AutomatedTestSummary {
   }
 
   def jsonToAutomatedTestsSummary(str: String): List[Option[AutomatedTestSummary]] = {
+    println("multiple json records: " + str)
     fromJsonArray(str) match {
       case Some(jSONArray) => jSONArray.toArray.toList.map(
         x =>
@@ -191,6 +193,7 @@ object AutomatedTestSummary {
   }
 
   def jsonToAutomatedTestSummary(jSONObject: JSONObject): AutomatedTestSummary = {
+    println("json object: " + jSONObject)
     val company: String = jSONObject.get("company").asInstanceOf[String]
     val site: String = jSONObject.get("site").asInstanceOf[String]
     val device_group: String = jSONObject.get("device_group").asInstanceOf[String]

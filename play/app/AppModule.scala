@@ -41,7 +41,7 @@ class ApplicationDBStart @Inject() (env: Environment, conf: Configuration) {
         .getOptional[Configuration](env.mode.toString.toLowerCase).get
         .getOptional[String]("sqlite.url").get
       DBLite.connect(dbURL, env.getFile("conf/schema"))
-      println("DB connection successful")
+      // println("DB connection successful")
     } catch {
       case e: SQLException =>
         throw new SQLException(s"Unable to connect to SQLite database: ${e}")
@@ -65,7 +65,7 @@ class ApplicationDBStart @Inject() (env: Environment, conf: Configuration) {
         conf.getOptional[String]("cassandra.username").get,
         conf.getOptional[String]("cassandra.password").get,
         env.getFile("conf/pillar/migrations/epidata"))
-      println("DB connection successful")
+      // println("DB connection successful")
     } catch {
       case e: NoHostAvailableException =>
         throw new IllegalStateException(s"Unable to connect to cassandra server: ${e}")

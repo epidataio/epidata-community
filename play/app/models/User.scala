@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2015-2017 EpiData, Inc.
+* Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 package models
@@ -83,7 +83,7 @@ object User {
       val rs: ResultSet = DBLite.execute(DBLite.prepare(query.toString()))
       rs.next() match {
         case false => Option(null)
-        case true => Option(rowToUser(rs))
+        case true => Option(resultSetToUser(rs))
       }
     } else {
       Option(DB.execute(query).one).map(rowToUser)
@@ -151,7 +151,7 @@ object User {
     user
   }
 
-  private implicit def rowToUser(row: ResultSet): U = {
+  private implicit def resultSetToUser(row: ResultSet): U = {
     def blankToNone(string: String): Option[String] = string match {
       case "" => None
       case string => Some(string)

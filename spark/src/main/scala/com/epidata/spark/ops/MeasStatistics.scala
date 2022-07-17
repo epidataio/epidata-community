@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2015-2017 EpiData, Inc.
+* Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 package com.epidata.spark.ops
@@ -16,6 +16,8 @@ class MeasStatistics(
     val method: String) extends Transformation {
 
   override def apply(measurements: ListBuffer[JLinkedHashMap[String, Object]]): ListBuffer[JLinkedHashMap[String, Object]] = {
+    // println("\n input measurements: " + measurements + "\n")
+
     var measStatistics = ListBuffer[JLinkedHashMap[String, Object]]()
 
     method match {
@@ -80,6 +82,7 @@ class MeasStatistics(
           measStatistics.append(map)
         }
 
+        // println("\n measurement statistics: " + measStatistics + "\n")
         measStatistics
 
       case _ => throw new Exception("Unsupported statistics method: " + method)

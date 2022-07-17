@@ -27,8 +27,6 @@ arg_parser.add_argument('--access_token')
 args = arg_parser.parse_args()
 
 HOST = args.host or '127.0.0.1:9443'
-ACCESS_TOKEN = args.access_token or 'epidata123'
-
 AUTHENTICATION_URL = 'https://' + HOST + '/authenticate/app'
 AUTHENTICATION_ROUTE = '/authenticate/app'
 EPI_STREAM = True
@@ -54,6 +52,13 @@ def add_time(time_string, delta):
 
 current_time_string = datetime.now().strftime("%m/%d/%Y %H:%M:%S.%f")
 current_time = get_time(current_time_string)
+
+#####################
+# EDIT THIS SECTION #
+#####################
+
+# Replace quoted string with API Token or GitHub Personal Access Token (REQUIRED)
+ACCESS_TOKEN = args.access_token or 'epidata123'
 
 
 #########################
@@ -129,7 +134,7 @@ json_body = json.dumps([{
 
     # The meas_value field can contain a number or a text string, depending on
     # the measurement data type.
-    'meas_value': 45.7,
+    'meas_value': float(round(random.normalvariate(65, 1.5), 2)),
 
     # The meas_datatype field represents the type of the meas_value provided (in
     # this case the type is double precision floating point).

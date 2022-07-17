@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2015-2020 EpiData, Inc.
+* Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 package SQLite
@@ -29,9 +29,7 @@ object DB {
    */
   @Inject()
   def connect(url: String, schemaPath: java.io.File) = {
-    println("url: " + url + " ")
     connection = Some(new ConnectionLite(url, schemaPath))
-    println("connection: " + connection + " ")
   }
 
   /** Generate a prepared statement. */
@@ -49,7 +47,7 @@ object DB {
   /** Execute a SQL statement by binding ordered attributes. */
   def cql(statement: String, args: Any*): ResultSet = connection.get.cql(statement, args)
 
-  /** Execute a CQL statement by binding named attributes. */
+  /** Execute a SQL statement by binding named attributes. */
   def cql(statement: String, args: Map[String, Any]): ResultSet = connection.get.cql(statement, args)
 
   /** Closes a Cassandra connection. */
@@ -63,7 +61,6 @@ object DB {
 private class ConnectionLite(url: String, schemaPath: java.io.File) {
   Class.forName("org.sqlite.JDBC");
   val session = DriverManager.getConnection(url)
-  println("session: " + session)
 
   val original = schemaPath + "/measurements_original"
   val cleansed = schemaPath + "/measurements_cleansed"

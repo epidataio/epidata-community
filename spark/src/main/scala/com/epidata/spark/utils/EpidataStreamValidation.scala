@@ -1,3 +1,7 @@
+/*
+* Copyright (c) 2015-2022 EpiData, Inc.
+*/
+
 package com.epidata.spark
 
 import com.epidata.spark.ops.Transformation
@@ -266,4 +270,3 @@ class EpidataStreamValidation {
     newNodes
   }
 }
-

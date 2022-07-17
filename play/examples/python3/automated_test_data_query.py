@@ -55,10 +55,10 @@ current_time = get_time(current_time_string)
 ACCESS_TOKEN = args.access_token or 'epidata123'
 
 # Modify default values (OPTIONAL)
-COMPANY ='EpiData'
-SITE = 'San_Francisco'
-STATION = 'WSN-1'
-SENSOR = "Temperature_Probe"
+COMPANY ='Company-1'
+SITE = 'Site-1'
+DEVICE_GROUP = '1000'
+TESTER = 'Station-1'
 
 
 #########################
@@ -117,13 +117,13 @@ iteration = 0
 while (True):
 
     try:
-        # Specify measurement query parameters
+        # Specify automated tests query parameters
         begin_time = get_time("1/01/2022 00:00:00.000")
         #end_time = get_time("4/21/2021 00:00:00.000") #for empty data
         end_time = get_time("1/01/2023 00:00:00.000") #for non-empty data
 
 
-        parameters = {'company': COMPANY, 'site': SITE, 'station': STATION, 'sensor': SENSOR, 'beginTime': begin_time, 'endTime': end_time}
+        parameters = {'company': COMPANY, 'site': SITE, 'device_group': DEVICE_GROUP, 'tester': TESTER, 'beginTime': begin_time, 'endTime': end_time}
 
         # Construct url with parameters
         url = QUERY_MEASUREMENTS_ORIGINAL_URL+urllib.parse.urlencode(parameters)
@@ -142,7 +142,7 @@ while (True):
         # Check that the response's HTTP response code is 200 (OK) and read the response.
         # print("response content: ", resp.content)
         response_json = json.loads(resp.content)
-        print("Measurement Query Results - Original Data:")
+        print("Automated Test Query Results - Original Data:")
         print(response_json)
         assert resp.status_code == 200
 
@@ -169,13 +169,12 @@ iteration = 0
 while (True):
 
     try:
-        # Specify measurement query parameters
+        # Specify automated tests query parameters
         begin_time = get_time("1/01/2022 00:00:00.000")
         #end_time = get_time("4/21/2021 00:00:00.000") #for empty data
         end_time = get_time("1/01/2023 00:00:00.000") #for non-empty data
 
-
-        parameters = {'company': COMPANY, 'site': SITE, 'station': STATION, 'sensor': SENSOR, 'beginTime': begin_time, 'endTime': end_time}
+        parameters = {'company': COMPANY, 'site': SITE, 'device_group': DEVICE_GROUP, 'tester': TESTER, 'beginTime': begin_time, 'endTime': end_time}
 
         # Construct url with parameters
         url = QUERY_MEASUREMENTS_CLEANSED_URL+urllib.parse.urlencode(parameters)
@@ -194,7 +193,7 @@ while (True):
         # Check that the response's HTTP response code is 200 (OK) and read the response.
         # print("response content: ", resp.content)
         response_json = json.loads(resp.content)
-        print("Measurement Query Results - Cleansed Data:")
+        print("Automated Test Query Results - Cleansed Data:")
         print(response_json)
         assert resp.status_code == 200
 
@@ -222,13 +221,12 @@ iteration = 0
 while (True):
 
     try:
-        # Specify measurement query parameters
+        # Specify automated tests query parameters
         begin_time = get_time("1/01/2022 00:00:00.000")
         #end_time = get_time("4/21/2021 00:00:00.000") #for empty data
         end_time = get_time("1/01/2023 00:00:00.000") #for non-empty data
 
-
-        parameters = {'company': COMPANY, 'site': SITE, 'station': STATION, 'sensor': SENSOR, 'beginTime': begin_time, 'endTime': end_time}
+        parameters = {'company': COMPANY, 'site': SITE, 'device_group': DEVICE_GROUP, 'tester': TESTER, 'beginTime': begin_time, 'endTime': end_time}
 
         # Construct url with parameters
         url = QUERY_MEASUREMENTS_SUMMARY_URL+urllib.parse.urlencode(parameters)
@@ -247,7 +245,7 @@ while (True):
         # Check that the response's HTTP response code is 200 (OK) and read the response.
         # print("response content: ", resp.content)
         response_json = json.loads(resp.content)
-        print("Measurement Query Results - Summary Data:")
+        print("Automated Test Query Results - Summary Data:")
         print(response_json)
         assert resp.status_code == 200
 

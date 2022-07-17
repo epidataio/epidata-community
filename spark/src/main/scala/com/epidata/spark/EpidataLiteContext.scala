@@ -143,12 +143,12 @@ class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
         measurementClass match {
           case BaseAutomatedTest.NAME =>
             while (rs.next()) {
-              maps.add(BaseMeasurement.rowToJLinkedHashMap(rs, tableName, measurementClass))
+              maps.add(BaseMeasurement.resultSetToJLinkedHashMap(rs, tableName, measurementClass))
               // println("ATE maps meas_value: " + maps(0).get("meas_value") + ", class: " + maps(0).get("meas_value").getClass)
             }
           case BaseSensorMeasurement.NAME =>
             while (rs.next()) {
-              maps.add(BaseMeasurement.rowToJLinkedHashMap(rs, tableName, measurementClass))
+              maps.add(BaseMeasurement.resultSetToJLinkedHashMap(rs, tableName, measurementClass))
               // println("PAC maps: " + maps)
             }
         }
@@ -157,11 +157,11 @@ class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
         measurementClass match {
           case BaseAutomatedTest.NAME =>
             while (rs.next()) {
-              maps.add(BaseMeasurementCleansed.rowToJLinkedHashMap(rs, tableName, measurementClass))
+              maps.add(BaseMeasurementCleansed.resultSetToJLinkedHashMap(rs, tableName, measurementClass))
             }
           case BaseSensorMeasurement.NAME =>
             while (rs.next()) {
-              maps.add(BaseMeasurementCleansed.rowToJLinkedHashMap(rs, tableName, measurementClass))
+              maps.add(BaseMeasurementCleansed.resultSetToJLinkedHashMap(rs, tableName, measurementClass))
             }
         }
 
@@ -169,11 +169,11 @@ class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
         measurementClass match {
           case BaseAutomatedTest.NAME =>
             while (rs.next()) {
-              maps.add(BaseMeasurementSummary.rowToJLinkedHashMap(rs, tableName, measurementClass))
+              maps.add(BaseMeasurementSummary.resultSetToJLinkedHashMap(rs, tableName, measurementClass))
             }
           case BaseSensorMeasurement.NAME =>
             while (rs.next()) {
-              maps.add(BaseMeasurementSummary.rowToJLinkedHashMap(rs, tableName, measurementClass))
+              maps.add(BaseMeasurementSummary.resultSetToJLinkedHashMap(rs, tableName, measurementClass))
             }
         }
     }

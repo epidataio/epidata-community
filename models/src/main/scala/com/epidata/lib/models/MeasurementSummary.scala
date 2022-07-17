@@ -73,7 +73,7 @@ object MeasurementSummary {
 
   }
 
-  implicit def rowToMeasurementSummary(row: ResultSet): MeasurementSummary = {
+  implicit def resultSetToMeasurementSummary(row: ResultSet): MeasurementSummary = {
     val customer = row.getString("customer")
     val customer_site = row.getString("customer_site")
     val collection = row.getString("collection")
@@ -120,10 +120,10 @@ object MeasurementSummary {
     }
   }
 
-  def rowToJLinkedHashMap(row: ResultSet, tableName: String, modelName: String): JLinkedHashMap[String, Object] = {
+  def resultSetToJLinkedHashMap(row: ResultSet, tableName: String, modelName: String): JLinkedHashMap[String, Object] = {
     modelName match {
-      case SensorMeasurement.NAME => SensorMeasurementSummary.rowToJLinkedHashMap(row, tableName)
-      case AutomatedTest.NAME => AutomatedTestSummary.rowToJLinkedHashMap(row, tableName)
+      case SensorMeasurement.NAME => SensorMeasurementSummary.resultSetToJLinkedHashMap(row, tableName)
+      case AutomatedTest.NAME => AutomatedTestSummary.resultSetToJLinkedHashMap(row, tableName)
       case _ => new JLinkedHashMap[String, Object]()
     }
   }

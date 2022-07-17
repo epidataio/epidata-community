@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 EpiData, Inc.
+ * Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 package models
@@ -9,7 +9,7 @@ import java.util.{ Date, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedL
 import java.nio.ByteBuffer
 import cassandra.DB
 import service.Configs
-import com.epidata.lib.models.{ Measurement => Model, MeasurementsKeys, MeasurementSummary }
+import com.epidata.lib.models.{ Measurement => Model, MeasurementsKeys, MeasurementCleansed => ModelCleansed, MeasurementSummary => ModelSummary }
 import com.epidata.lib.models.util.{ JsonHelpers, Binary }
 import _root_.util.{ EpidataMetrics, Ordering }
 import com.datastax.driver.core.querybuilder.{ Clause, QueryBuilder }
@@ -149,21 +149,31 @@ object MeasurementService {
       .toList
   }
 
+  /**
+   * Find measurements in the database matching the specified parameters.
+   * @param customer
+   * @param customer_site
+   * @param collection
+   * @param dataset
+   * @param beginTime Beginning of query time interval, inclusive
+   * @param endTime End of query time interval, exclusive
+   * @param size Maximum number of records to retrieve in batches
+   * @param batch Batch number of current retrieval
+   * @param ordering Timestamp ordering of results, if specified.
+   */
   def query(
-    company: String,
-    site: String,
-    station: String,
-    sensor: String,
+    customer: String,
+    customer_site: String,
+    collection: String,
+    dataset: String,
     beginTime: Date,
     endTime: Date,
     size: Int,
     batch: String,
-    ordering: Ordering.Value,
-    tableName: String,
-    modelName: String): String = {
+    ordering: Ordering.Value): List[Model] = {
 
     // Get the data from Cassandra
-    val rs: ResultSet = MeasurementService.query(company, site, station, sensor, beginTime, endTime, ordering, tableName, size, batch)
+    val rs: ResultSet = MeasurementService.query(customer, customer_site, collection, dataset, beginTime, endTime, size, batch, ordering, Model.DBTableName)
 
     // Get the next page info
     val nextPage = rs.getExecutionInfo().getPagingState()
@@ -171,14 +181,86 @@ object MeasurementService {
 
     // only return the available ones by not fetching.
     val rows = 1.to(rs.getAvailableWithoutFetching()).map(_ => rs.one())
-    val records: JList[JLinkedHashMap[String, Object]] = new JLinkedList[JLinkedHashMap[String, Object]]()
+    //    val records: JList[JLinkedHashMap[String, Object]] = new JLinkedList[JLinkedHashMap[String, Object]]()
 
-    rows
-      .map(Model.rowToJLinkedHashMap(_, tableName, modelName))
-      .foreach(m => records.add(m))
+    //    rows
+    //      .map(Model.rowToJLinkedHashMap(_, tableName, modelName))
+    //      .foreach(m => records.add(m))
 
     // Return the json object
-    JsonHelpers.toJson(records, nextBatch)
+    //    JsonHelpers.toJson(records, nextBatch)
+
+    rows
+      .map(rowToMeasurement)
+      .toList
+  }
+
+  def queryCleansed(
+    customer: String,
+    customer_site: String,
+    collection: String,
+    dataset: String,
+    beginTime: Date,
+    endTime: Date,
+    size: Int,
+    batch: String,
+    ordering: Ordering.Value): List[ModelCleansed] = {
+
+    // Get the data from Cassandra
+    val rs: ResultSet = MeasurementService.query(customer, customer_site, collection, dataset, beginTime, endTime, size, batch, ordering, ModelCleansed.DBTableName)
+
+    // Get the next page info
+    val nextPage = rs.getExecutionInfo().getPagingState()
+    val nextBatch = if (nextPage == null) "" else nextPage.toString
+
+    // only return the available ones by not fetching.
+    val rows = 1.to(rs.getAvailableWithoutFetching()).map(_ => rs.one())
+    //    val records: JList[JLinkedHashMap[String, Object]] = new JLinkedList[JLinkedHashMap[String, Object]]()
+
+    //    rows
+    //      .map(Model.rowToJLinkedHashMap(_, tableName, modelName))
+    //      .foreach(m => records.add(m))
+
+    // Return the json object
+    //    JsonHelpers.toJson(records, nextBatch)
+
+    rows
+      .map(ModelCleansed.rowToMeasurementCleansed)
+      .toList
+  }
+
+  def querySummary(
+    customer: String,
+    customer_site: String,
+    collection: String,
+    dataset: String,
+    beginTime: Date,
+    endTime: Date,
+    size: Int,
+    batch: String,
+    ordering: Ordering.Value): List[ModelSummary] = {
+
+    // Get the data from Cassandra
+    val rs: ResultSet = MeasurementService.query(customer, customer_site, collection, dataset, beginTime, endTime, size, batch, ordering, ModelSummary.DBTableName)
+
+    // Get the next page info
+    val nextPage = rs.getExecutionInfo().getPagingState()
+    val nextBatch = if (nextPage == null) "" else nextPage.toString
+
+    // only return the available ones by not fetching.
+    val rows = 1.to(rs.getAvailableWithoutFetching()).map(_ => rs.one())
+    //    val records: JList[JLinkedHashMap[String, Object]] = new JLinkedList[JLinkedHashMap[String, Object]]()
+
+    //    rows
+    //      .map(Model.rowToJLinkedHashMap(_, tableName, modelName))
+    //      .foreach(m => records.add(m))
+
+    // Return the json object
+    //    JsonHelpers.toJson(records, nextBatch)
+
+    rows
+      .map(ModelSummary.rowToMeasurementSummary)
+      .toList
   }
 
   def query(
@@ -188,10 +270,10 @@ object MeasurementService {
     dataset: String,
     beginTime: Date,
     endTime: Date,
-    ordering: Ordering.Value = Ordering.Unspecified,
-    tableName: String = com.epidata.lib.models.Measurement.DBTableName,
     size: Int = 10000,
-    batch: String = ""): ResultSet = {
+    batch: String = "",
+    ordering: Ordering.Value = Ordering.Unspecified,
+    tableName: String = com.epidata.lib.models.Measurement.DBTableName): ResultSet = {
 
     // Define the database query to execute for a single epoch.
     def queryForEpoch = {
@@ -259,7 +341,7 @@ object MeasurementService {
 
     // Execute the query
     tableName match {
-      case MeasurementSummary.DBTableName => DB.execute(queryForMeasurementSummary)
+      case ModelSummary.DBTableName => DB.execute(queryForMeasurementSummary)
       case _ => DB.execute(queryForEpoch)
     }
 

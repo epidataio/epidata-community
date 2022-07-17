@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 EpiData, Inc.
+ * Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 package com.epidata.lib.models
@@ -42,7 +42,7 @@ object SensorMeasurementSummary {
   def rowToSensorMeasurementSummary(row: Row): SensorMeasurementSummary = MeasurementSummary.rowToMeasurementSummary(row)
 
   // Model Conversions for SQLite
-  def rowToSensorMeasurementSummary(row: ResultSet): SensorMeasurementSummary = MeasurementSummary.rowToMeasurementSummary(row)
+  def resultSetToSensorMeasurementSummary(row: ResultSet): SensorMeasurementSummary = MeasurementSummary.resultSetToMeasurementSummary(row)
 
   implicit def measurementSummaryToSensorMeasurementSummary(ms: MeasurementSummary): SensorMeasurementSummary =
     SensorMeasurementSummary(
@@ -89,10 +89,10 @@ object SensorMeasurementSummary {
   }
 
   // JSON Helpers for SQLite
-  def rowToJLinkedHashMap(rowSummary: ResultSet, tableName: String): JLinkedHashMap[String, Object] = {
+  def resultSetToJLinkedHashMap(rowSummary: ResultSet, tableName: String): JLinkedHashMap[String, Object] = {
     tableName match {
       case MeasurementSummary.DBTableName =>
-        val ms = rowToSensorMeasurementSummary(rowSummary)
+        val ms = resultSetToSensorMeasurementSummary(rowSummary)
         toJLinkedHashMap(ms)
     }
   }
@@ -132,7 +132,7 @@ object SensorMeasurementSummary {
     putToMap(map, "meas_name", m.meas_name)
     putToMap(map, "meas_summary_name", m.meas_summary_name)
     putToMap(map, "meas_summary_value", m.meas_summary_value)
-    putToMap(map, "meas_summary_description", m.meas_summary_description)
+    putOptionToMap(map, "meas_summary_description", m.meas_summary_description)
 
     map
   }

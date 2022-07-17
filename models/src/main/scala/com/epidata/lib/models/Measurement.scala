@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 EpiData, Inc.
+ * Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 package com.epidata.lib.models
@@ -151,8 +151,8 @@ object Measurement {
 
   }
 
-  /** Map a SQLite Row to a Measurement of the proper type. */
-  implicit def rowToMeasurement(row: ResultSet): Measurement = {
+  /** Map a SQLite ResultSet to a Measurement of the proper type. */
+  implicit def resultSetToMeasurement(row: ResultSet): Measurement = {
 
     // First get the fields that are common across all measurement types.
     val customer = Option(row.getString("customer")).get
@@ -246,10 +246,10 @@ object Measurement {
     }
   }
 
-  def rowToJLinkedHashMap(row: ResultSet, tableName: String, modelName: String): JLinkedHashMap[String, Object] = {
+  def resultSetToJLinkedHashMap(row: ResultSet, tableName: String, modelName: String): JLinkedHashMap[String, Object] = {
     modelName match {
-      case SensorMeasurement.NAME => SensorMeasurement.rowToJLinkedHashMap(row, tableName)
-      case AutomatedTest.NAME => AutomatedTest.rowToJLinkedHashMap(row, tableName)
+      case SensorMeasurement.NAME => SensorMeasurement.resultSetToJLinkedHashMap(row, tableName)
+      case AutomatedTest.NAME => AutomatedTest.resultSetToJLinkedHashMap(row, tableName)
       case _ => new JLinkedHashMap[String, Object]()
     }
   }

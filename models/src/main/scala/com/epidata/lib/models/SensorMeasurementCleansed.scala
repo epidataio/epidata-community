@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 EpiData, Inc.
+ * Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 package com.epidata.lib.models
@@ -47,7 +47,7 @@ object SensorMeasurementCleansed {
   def rowToSensorMeasurementCleansed(row: Row): SensorMeasurementCleansed = MeasurementCleansed.rowToMeasurementCleansed(row)
 
   // Model Conversions for SQLite
-  def rowToSensorMeasurementCleansed(row: ResultSet): SensorMeasurementCleansed = MeasurementCleansed.rowToMeasurementCleansed(row)
+  def resultSetToSensorMeasurementCleansed(row: ResultSet): SensorMeasurementCleansed = MeasurementCleansed.resultSetToMeasurementCleansed(row)
 
   implicit def measurementCleansedToSensorMeasurementCleansed(measurementCleansed: MeasurementCleansed): SensorMeasurementCleansed =
     SensorMeasurementCleansed(
@@ -106,10 +106,10 @@ object SensorMeasurementCleansed {
   }
 
   // JSON Helpers for SQLite
-  def rowToJLinkedHashMap(rowCleansed: ResultSet, tableName: String): JLinkedHashMap[String, Object] = {
+  def resultSetToJLinkedHashMap(rowCleansed: ResultSet, tableName: String): JLinkedHashMap[String, Object] = {
     tableName match {
       case com.epidata.lib.models.MeasurementCleansed.DBTableName =>
-        val mc = rowToSensorMeasurementCleansed(rowCleansed)
+        val mc = resultSetToSensorMeasurementCleansed(rowCleansed)
         toJLinkedHashMap(mc)
     }
   }
