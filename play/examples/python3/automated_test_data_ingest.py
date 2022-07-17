@@ -27,10 +27,14 @@ arg_parser.add_argument('--access_token')
 args = arg_parser.parse_args()
 
 HOST = args.host or '127.0.0.1:9443'
-ACCESS_TOKEN = args.access_token or 'epidata123'
+# ACCESS_TOKEN = args.access_token or 'epidata123'
+DEVICE_ID = args.device_id or 'iot_device_1'
+DEVICE_TOKEN = args.device_token or 'epidata_123'
 
-AUTHENTICATION_URL = 'https://' + HOST + '/authenticate/app'
-AUTHENTICATION_ROUTE = '/authenticate/app'
+# AUTHENTICATION_URL = 'https://' + HOST + '/authenticate/app'
+# AUTHENTICATION_ROUTE = '/authenticate/app'
+AUTHENTICATION_URL = 'https://' + HOST + '/login/device'
+AUTHENTICATION_ROUTE = '/login/device'
 EPI_STREAM = True
 LOG_ITERATION = 1
 
@@ -86,13 +90,14 @@ print(url)
 json_header = {'Content-type': 'application/json', 'Set-Cookie': "epidata"}
 
 # The access token is povided via JSON.
-json_body = json.dumps({'accessToken': ACCESS_TOKEN})
+json_body = json.dumps({'device_id': DEVICE_ID,
+                        'device_token': DEVICE_TOKEN})
 
 # Send the POST request and receive the HTTP response.
 req = requests.Request('POST', AUTHENTICATION_URL, data=json_body, headers=json_header)
 prepped = session.prepare_request(req)
 resp = session.send(prepped, stream=None, verify=None, proxies=None, cert=None, timeout=None)
-
+json_web_token = json.loads(resp.json())['device_jwt']
 # Check that the response's HTTP response code is 200 (OK).
 assert resp.status_code == 200
 
@@ -111,6 +116,7 @@ url = CREATE_MEASUREMENT_URL
 # Request headers add parameters to the request.
 headers = {
     'Content-type': 'application/json',
+    'json_web_token': json_web_token
 }
 
 # The measurement data is assembled in a python dictionary and converted
