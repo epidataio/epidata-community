@@ -41,10 +41,10 @@ object DeviceService {
     DB.binds(stm, deviceID)
 
     val rs = DB.execute(stm)
-    val mmap = MutableMap[String, String]()
+    var mmap = MutableMap[String, String]()
 
     while (rs.next()) {
-      val mmap = MutableMap("device_token" -> rs.getString(1), "json_wet_token" -> rs.getString(2), "authenticated_at" -> rs.getString(3), "connection_timeout" -> rs.getString(4))
+      mmap = MutableMap("device_token" -> rs.getString(1), "authenticated_at" -> rs.getString(2), "connection_timeout" -> rs.getString(3))
     }
     mmap
   }
@@ -61,10 +61,10 @@ object DeviceService {
                                          #iot_device_token) VALUES (?, ?)""".stripMargin('#')
 
   private def updateDevicestring() = s"""#UPDATE iot_devices
-SET connection_timeout = ?
+SET authenticated_at = ?
 WHERE iot_device_id = ?""".stripMargin('#')
 
-  private def preparequertyDevice() = s"""#SELECT iot_device_token, json_wet_token, authenticated_at,connection_timeout FROM iot_devices WHERE iot_device_id = ?""".stripMargin('#')
+  private def preparequertyDevice() = s"""#SELECT iot_device_token, authenticated_at,connection_timeout FROM iot_devices WHERE iot_device_id = ?""".stripMargin('#')
 
   private def preparedeleteDevice() = s"""#DELETE FROM iot_devices WHERE iot_device_id = ?""".stripMargin('#')
 

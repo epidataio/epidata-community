@@ -4,8 +4,8 @@
 
 package models
 
-import cassandra.DB
-import SQLite.{ DB => DBLite }
+import SQLite.DB
+//import SQLite.{ DB => DBLite }
 import java.util.Date
 import service._
 import com.datastax.driver.core.querybuilder.QueryBuilder
@@ -24,6 +24,7 @@ import play.api.Play
 import scala.util.parsing.json._
 import org.json4s.JsonDSL._
 import org.json4s.JValue
+import scala.collection.mutable.{ Map => MutableMap }
 
 object Device {
 
@@ -56,11 +57,19 @@ object Device {
   def authenticate(deviceID: String, deviceToken: String): String = {
 
     val deviceMap = DeviceService.queryDevice(deviceID)
+
     val retrievedToken = deviceMap.get("device_token")
-    if (retrievedToken.equals(deviceToken)) {
+
+    val deviceTokenString: String = retrievedToken match {
+      case None => "" //Or handle the lack of a value another way: throw an error, etc.
+      case Some(s: String) => s //return the string to set your value
+    }
+
+    if (deviceTokenString.equals(deviceToken)) {
       val jwttoken = createToken(deviceID)
       val authenticatedAt = System.currentTimeMillis / 1000
-      DeviceService.updateDevice(deviceToken, authenticatedAt)
+      DeviceService.updateDevice(deviceID, authenticatedAt)
+
       jwttoken
     } else {
       throw new Exception("Device Token does not match")
@@ -80,11 +89,16 @@ object Device {
       }
       val deviceID = payload.getOrElse(Map.empty[String, String]).get("dev")
 
+      val deviceIDString: String = deviceID match {
+        case None => "" //Or handle the lack of a value another way: throw an error, etc.
+        case Some(s: String) => s //return the string to set your value
+      }
+
       val newIssueTime: Long = System.currentTimeMillis / 1000
       val connectionTimeOut = Play.current.configuration.getString("device.timeout").get.toInt
       val expTimeStamp: Long = (newIssueTime + connectionTimeOut)
 
-      val newPayload = Map("ss" -> "epidata.io", "dev" -> deviceID, "access" -> "ingestion", "iat" -> newIssueTime, "exp" -> expTimeStamp, "timeout" -> connectionTimeOut)
+      val newPayload = Map("ss" -> "epidata.io", "dev" -> deviceIDString, "access" -> "ingestion", "iat" -> newIssueTime, "exp" -> expTimeStamp, "timeout" -> connectionTimeOut)
       val newtoken = generateToken(newPayload)
 
       newtoken
