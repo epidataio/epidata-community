@@ -29,8 +29,11 @@ args = arg_parser.parse_args()
 HOST = args.host or '127.0.0.1:9443'
 # AUTHENTICATION_URL = 'https://' + HOST + '/authenticate/app'
 # AUTHENTICATION_ROUTE = '/authenticate/app'
-AUTHENTICATION_URL = 'https://' + HOST + '/login/device'
-AUTHENTICATION_ROUTE = '/login/device'
+# AUTHENTICATION_URL = 'https://' + HOST + '/login/device'
+# AUTHENTICATION_ROUTE = '/login/device'
+
+AUTHENTICATION_URL = 'https://' + HOST + '/authenticate/device'
+AUTHENTICATION_ROUTE = '/authenticate/device'
 
 EPI_STREAM = True
 LOG_ITERATION = 1
