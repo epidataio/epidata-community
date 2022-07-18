@@ -1804,25 +1804,26 @@ object elcTest extends App {
 
   // Create Streams
   /*
-     play producer
-           |
-           ↓
-          op1 -------
-        /     \     |
-       ↓       ↓    |
-      op2     op3   |
-       | \     /    |
-       |  ↓   ↓     |
-       |   op4      |
-       |   |        |
-       \   |        |
-        \  |        |
-         \ |        ↓
-          ↓        op6
-         op5
-          |
-          ↓
-    play datasink
+       play producer
+             |
+             ↓
+            op1 --------
+           /     \      |
+          ↓       ↓     |
+     --- op2     op3    |
+    |     | \     /     |
+    |     |  ↓   ↓      |
+    |     |   op4       |
+    |     |   |         |
+    |     \   |         |
+    |      \  |         |
+    |       \ |         |
+    |        ↓          ↓
+    |        op5       op6
+     \        |        /
+       \      |      /
+         \    ↓    /
+      play datasink
    */
 
   //op1
@@ -1830,12 +1831,12 @@ object elcTest extends App {
   println("STREAM 1 created: " + op1)
 
   //op2
-  esc.createStream("measurements_intermediate_1", "measurements_intermediate_2", op2)
-  println("STREAM 2 created: " + op2)
+  //  esc.createStream("measurements_intermediate_1", "measurements_intermediate_2", op2)
+  //  println("STREAM 2 created: " + op2)
 
   //op3
-  esc.createStream("measurements_intermediate_1", "measurements_intermediate_3", op3)
-  println("STREAM 3 created: " + op3)
+  //  esc.createStream("measurements_intermediate_1", "measurements_intermediate_3", op3)
+  //  println("STREAM 3 created: " + op3)
 
   //op4
   val op4topics = ListBuffer[String]()
@@ -1845,20 +1846,24 @@ object elcTest extends App {
   op4buffers += 5
   op4buffers += 12
   println(op4buffers)
-  esc.createStream(op4topics, op4buffers, "measurements_intermediate_4", op4)
-  println("STREAM 4 created: " + op4 + "\n")
+  //  esc.createStream(op4topics, op4buffers, "measurements_intermediate_4", op4)
+  //  println("STREAM 4 created: " + op4 + "\n")
 
   //op5 - measurements_cleansed
   val op5topics = ListBuffer[String]()
   op5topics += "measurements_intermediate_2"
   op5topics += "measurements_intermediate_4"
-  esc.createStream(op5topics, "measurements_cleansed", op5)
-  println("STREAM 5 created: " + "\n")
+  //  esc.createStream(op5topics, "measurements_cleansed", op5)
+  //  println("STREAM 5 created: " + "\n")
 
   //op6 - measurements_summary
   //esc.createStream("measurements_original", "measurements_intermediate_6", op6)
   esc.createStream("measurements_original", "measurements_summary", op6)
   println("STREAM 6 created: " + "\n")
+
+  //op2 - measurements_cleansed
+  esc.createStream("measurements_original", "measurements_cleansed", op2)
+  println("STREAM 7 created: " + "\n")
 
   esc.testUnit()
   println(esc.printSomething(""))

@@ -16,7 +16,7 @@ class MeasStatistics(
     val method: String) extends Transformation {
 
   override def apply(measurements: ListBuffer[JLinkedHashMap[String, Object]]): ListBuffer[JLinkedHashMap[String, Object]] = {
-    // println("\n input measurements: " + measurements + "\n")
+    println("\n input measurements - meas statistics: " + measurements + "\n")
 
     var measStatistics = ListBuffer[JLinkedHashMap[String, Object]]()
 
@@ -27,17 +27,18 @@ class MeasStatistics(
 
         val filteredMeas = measurements
           .filter(m => meas_names.contains(m.get("meas_name").asInstanceOf[String]))
-          .groupBy(record => (record.get("company"), record.get("site"), record.get("station"), record.get("sensor"), record.get("event"), record.get("meas_name")))
+          .groupBy(record => (record.get("customer"), record.get("customer_site"), record.get("collection"), record.get("dataset"), record.get("key1"), record.get("meas_name")))
+        //          .groupBy(record => (record.get("company"), record.get("site"), record.get("station"), record.get("sensor"), record.get("event"), record.get("meas_name")))
 
         for (k <- filteredMeas.keySet.toSeq) {
           var values = filteredMeas.get(k).get
 
           var map = new JLinkedHashMap[String, Object]()
-          map.put("company", k._1)
-          map.put("site", k._2)
-          map.put("station", k._3)
-          map.put("sensor", k._4)
-          map.put("event", k._5)
+          map.put("customer", k._1)
+          map.put("customer_site", k._2)
+          map.put("collection", k._3)
+          map.put("dataset", k._4)
+          map.put("key1", k._5)
           map.put("meas_name", k._6)
 
           map.put("start_time", values(1).get("ts"))
@@ -82,7 +83,8 @@ class MeasStatistics(
           measStatistics.append(map)
         }
 
-        // println("\n measurement statistics: " + measStatistics + "\n")
+        println("\n output - measurement statistics: " + measStatistics + "\n")
+
         measStatistics
 
       case _ => throw new Exception("Unsupported statistics method: " + method)
@@ -90,6 +92,7 @@ class MeasStatistics(
   }
 
   override def apply(dataFrame: DataFrame, sqlContext: SQLContext): DataFrame = {
+    println("\n input measurements - meas statistics: " + dataFrame + "\n")
 
     method match {
       case "standard" =>
@@ -120,6 +123,8 @@ class MeasStatistics(
           .withColumn("meas_summary_name", lit("statistics"))
           .withColumn("meas_summary_value", describeUDF(col("min"), col("max"), col("mean"), col("count"), col("std")))
           .drop(operations: _*)
+
+        println("\n output - measurement statistics: " + df + "\n")
 
         df
 

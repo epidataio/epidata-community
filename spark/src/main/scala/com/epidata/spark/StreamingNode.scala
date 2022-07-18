@@ -135,6 +135,7 @@ class StreamingNode {
           printf("\n\n DEQUEUING WHEN (" + index + ") BUFFER SIZE IS: " + streamBuffers(index).size + "\n\n")
           val list = streamBuffers(index).toList //if desired buffer size is achieved -> convert Queued measurements to list
           streamBuffers(index).clear() //clear buffer
+
           transform(list)
         }
       }
@@ -158,12 +159,12 @@ class StreamingNode {
     for (json <- list) {
       measList += jsonToMap(json)
     }
-    println("measurement list: " + measList + "\n")
-
+    println("input measurement list: " + measList + "\n")
     println("transformation type: " + transformation + "\n")
 
     val resultsList = transformation.apply(measList)
-    println("result List: " + resultsList + "\n")
+
+    println("output measurement list (result): " + resultsList + "\n")
 
     for (result <- resultsList) {
       val key = keyForSensorMeasurement(result)
@@ -178,11 +179,11 @@ class StreamingNode {
   def publish( /*processedMapList: ListBuffer[JLinkedHashMap[String, String]]*/ ): Unit = {
     //val processedMessage: Message = epidataLiteStreamingContext(ZMQInit.streamQueue.dequeue)
     //println("Streamingnode publish method called")
-    println("\n\nPublishing---------------------------------------------- $$$ " + !outputBuffer.isEmpty)
+    println("\n\nPublishing---------------------------------------------- $$$ " + !outputBuffer.isEmpty + "\n")
 
     while (!outputBuffer.isEmpty) {
       val msg = outputBuffer.dequeue()
-      println("published message: " + msg + "\n")
+      println("publised topic: " + this.publishTopic + ", published message: " + msg + "\n")
       publishSocket.sendMore(this.publishTopic)
       publishSocket.send(msg.getBytes(), 0)
     }
