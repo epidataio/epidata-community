@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2015-2022 EpiData, Inc.
+*/
+
 package controllers
 
 import javax.inject._
@@ -19,9 +23,9 @@ class DeviceAuth @Inject() (val cc: ControllerComponents)(
   implicit val conf: Configuration) extends AbstractController(cc) {
 
   def authenticate = Action.async { implicit request =>
-    val deviceID = request.getQueryString("device_id").get
-    val deviceToken = request.getQueryString("device_token").get
-    //    println("DeviceAuth: ", deviceID, deviceToken)
+    println("DeviceAuth: " + request.queryString)
+    val deviceID = request.headers.get("device_id").get
+    val deviceToken = request.headers.get("device_token").get
     try {
       val deviceJWT = Device.authenticate(deviceID, deviceToken)
       Future.successful(Ok(Json.obj("device_jwt" -> deviceJWT)))

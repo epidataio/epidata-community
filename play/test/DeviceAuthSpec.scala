@@ -19,7 +19,7 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.Action
 import scala.concurrent.duration._
 import scala.concurrent._
-import play.mvc._
+import play.api.mvc._
 
 @RunWith(classOf[JUnitRunner])
 class DeviceAuthSpec extends Specification {
@@ -45,9 +45,10 @@ class DeviceAuthSpec extends Specification {
       Fixtures.install
 
       val controller = app.injector.instanceOf[controllers.DeviceAuth]
-      val result = controller.authenticate()(FakeRequest(
+      val request = FakeRequest(
         GET,
-        "/authenticate/device?device_id=iot_device_1&device_token=NonExistentToken"))
+        "/authenticate/device").withHeaders("device_id" -> "iot_device_1", "device_token" -> "NonExistentToken")
+      val result = controller.authenticate()(request)
 
       status(result) must equalTo(BAD_REQUEST)
 
@@ -58,9 +59,10 @@ class DeviceAuthSpec extends Specification {
       Fixtures.install
 
       val controller = app.injector.instanceOf[controllers.DeviceAuth]
-      val result = controller.authenticate()(FakeRequest(
+      val request = FakeRequest(
         GET,
-        "/authenticate/device?device_id=NonExistentDevice&device_token=epidata_123"))
+        "/authenticate/device").withHeaders("device_id" -> "NonExistentDevice", "device_token" -> "epidata_123")
+      val result = controller.authenticate()(request)
 
       status(result) must equalTo(BAD_REQUEST)
 
@@ -71,9 +73,10 @@ class DeviceAuthSpec extends Specification {
       Fixtures.install
 
       val controller = app.injector.instanceOf[controllers.DeviceAuth]
-      val result = controller.authenticate()(FakeRequest(
+      val request = FakeRequest(
         GET,
-        "/authenticate/device?device_id=NonExistentDevice&device_token=NonExistentToken"))
+        "/authenticate/device").withHeaders("device_id" -> "NonExistentDevice", "device_token" -> "NonExistentToken")
+      val result = controller.authenticate()(request)
 
       status(result) must equalTo(BAD_REQUEST)
 
@@ -84,9 +87,10 @@ class DeviceAuthSpec extends Specification {
       Fixtures.install
 
       val controller = app.injector.instanceOf[controllers.DeviceAuth]
-      val result = controller.authenticate()(FakeRequest(
+      val request = FakeRequest(
         GET,
-        "/authenticate/device?device_id=iot_device_1&device_token=epidata_123"))
+        "/authenticate/device").withHeaders("device_id" -> "iot_device_1", "device_token" -> "epidata_123")
+      val result = controller.authenticate()(request)
 
       status(result) must equalTo(OK)
 
