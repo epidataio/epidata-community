@@ -22,7 +22,7 @@ import org.scalatest.Assertions._
 import scala.collection.mutable.{ Map => MutableMap }
 
 @RunWith(classOf[JUnitRunner])
-class DeviceModelSpec extends Specification {
+class DeviceSpec extends Specification {
 
   object Fixtures {
     val truncateSQL = s"DELETE FROM iot_devices"
@@ -41,7 +41,7 @@ class DeviceModelSpec extends Specification {
 
   "Device" should {
 
-    "create a jwt token with given device ID" in new WithApplication() {
+    "createToken function: create a jwt token with given device ID" in new WithApplication() {
       Fixtures.install
       val deviceID1 = "DeviceToken1"
       val deviceToken1 = Device.createToken(deviceID1)
@@ -65,14 +65,28 @@ class DeviceModelSpec extends Specification {
       }
     }
 
+    "createToken function: create a jwt token with empty device ID" in new WithApplication() {
+      Fixtures.install
+      try {
+        val deviceID1 = ""
+        val deviceToken1 = Device.createToken(deviceID1)
+        fail()
+      } catch {
+        case _: Exception => // Expected, so continue
+      }
+
+    }
+
     //authenticated Time
-    "create a jwt token with given device ID" in new WithApplication() {
+    "createToken function: checking authenticated time when creating a jwt token with given device ID" in new WithApplication() {
       Fixtures.install
       val deviceID1 = "DeviceToken1"
 
-      val authenticatedAt = System.currentTimeMillis / 1000
+      val authenticatedAt1 = System.currentTimeMillis / 1000
 
       val deviceToken1 = Device.createToken(deviceID1)
+
+      val authenticatedAt2 = System.currentTimeMillis / 1000
 
       val secretKey = Play.current.configuration.getString("application.secret").get
       if (!JsonWebToken.validate(deviceToken1, secretKey))
@@ -89,22 +103,27 @@ class DeviceModelSpec extends Specification {
           case None => "" //Or handle the lack of a value another way: throw an error, etc.
           case Some(s: String) => s //return the string to set your value
         }
-        val number: AnyVal = 5
-        val timeRange: Long = number.asInstanceOf[Number].longValue
-        issueTimeInt.toLong - authenticatedAt must be < timeRange
+
+        issueTimeInt.toLong must be <= authenticatedAt2
+        issueTimeInt.toLong must be >= authenticatedAt1
+        //        issueTimeInt.toLong - authenticatedAt must be < timeRange
       }
     }
 
     //expire Time
-    "create a jwt token with given device ID" in new WithApplication() {
+    "createToken function: checking expire time when creating a jwt token with given device ID" in new WithApplication() {
       Fixtures.install
       val deviceID1 = "DeviceToken1"
 
-      val authenticatedAt = System.currentTimeMillis / 1000
       val connectionTimeOut = Play.current.configuration.getString("device.timeout").get.toInt
-      val expTimeStamp: Long = (authenticatedAt + connectionTimeOut)
+
+      val authenticatedAt1 = System.currentTimeMillis / 1000
+      val expTimeStamp1: Long = (authenticatedAt1 + connectionTimeOut)
 
       val deviceToken1 = Device.createToken(deviceID1)
+
+      val authenticatedAt2 = System.currentTimeMillis / 1000
+      val expTimeStamp2: Long = (authenticatedAt2 + connectionTimeOut)
 
       val secretKey = Play.current.configuration.getString("application.secret").get
       if (!JsonWebToken.validate(deviceToken1, secretKey))
@@ -121,10 +140,37 @@ class DeviceModelSpec extends Specification {
           case None => "" //Or handle the lack of a value another way: throw an error, etc.
           case Some(s: String) => s //return the string to set your value
         }
-        val number: AnyVal = 5
-        val timeRange: Long = number.asInstanceOf[Number].longValue
 
-        expireTimeInt.toLong - expTimeStamp must be < timeRange
+        expireTimeInt.toLong >= expTimeStamp1
+        expireTimeInt.toLong <= expTimeStamp2
+      }
+    }
+
+    //authenticate funtion: if the given token is different with the one in db
+    "authenticate funtion: if the ID is empty" in new WithApplication() {
+      Fixtures.install
+      val deviceID1 = ""
+      val deviceToken1 = "epidata123"
+
+      try {
+        val auth = Device.authenticate(deviceID1, deviceToken1)
+        fail()
+      } catch {
+        case _: Exception => // Expected, so continue
+      }
+    }
+
+    //authenticate funtion: if the given token is different with the one in db
+    "authenticate funtion: if the token is empty" in new WithApplication() {
+      Fixtures.install
+      val deviceID1 = "device_1"
+      val deviceToken1 = ""
+
+      try {
+        val auth = Device.authenticate(deviceID1, deviceToken1)
+        fail()
+      } catch {
+        case _: Exception => // Expected, so continue
       }
     }
 
@@ -138,7 +184,6 @@ class DeviceModelSpec extends Specification {
         val auth = Device.authenticate(deviceID1, deviceToken1)
         fail()
       } catch {
-
         case _: Exception => // Expected, so continue
       }
     }
@@ -159,34 +204,74 @@ class DeviceModelSpec extends Specification {
         mmap = MutableMap("device_token" -> rs.getString(1), "authenticated_at" -> rs.getString(2), "connection_timeout" -> rs.getString(3))
       }
 
+      val deviceTokenInDB = mmap.get("device_token")
+      val deviceTokenInDBString: String = deviceTokenInDB match {
+        case None => "" //Or handle the lack of a value another way: throw an error, etc.
+        case Some(s: String) => s //return the string to set your value
+      }
+      deviceToken1 must equalTo(deviceTokenInDBString)
+    }
+
+    //authenticate funtion: if the authnticated_at is in between the two timestamps
+    "authenticate funtion: if the authnticated_at is in between the two timestamps" in new WithApplication() {
+      Fixtures.install
+      val deviceID1 = "device_1"
+      val deviceToken1 = "epidata123"
+
+      val authenticatedAt1 = System.currentTimeMillis / 1000
+      val newJWTToken = Device.authenticate(deviceID1, deviceToken1)
+      val rs = DB.execute(DB.binds(DB.prepare(s"SELECT iot_device_token, authenticated_at,connection_timeout FROM iot_devices WHERE iot_device_id = ?"), deviceID1))
+
+      val authenticatedAt2 = System.currentTimeMillis / 1000
+      var mmap = MutableMap[String, String]()
+
+      while (rs.next()) {
+        mmap = MutableMap("device_token" -> rs.getString(1), "authenticated_at" -> rs.getString(2), "connection_timeout" -> rs.getString(3))
+      }
+
       val updatedAuthenTime = mmap.get("authenticated_at")
       val updatedAuthenTimeString: String = updatedAuthenTime match {
         case None => "" //Or handle the lack of a value another way: throw an error, etc.
         case Some(s: String) => s //return the string to set your value
       }
 
-      val number: AnyVal = 5
-      val timeRange: Long = number.asInstanceOf[Number].longValue
+      updatedAuthenTimeString.toLong >= authenticatedAt1
+      updatedAuthenTimeString.toLong <= authenticatedAt2
+    }
 
-      authenticatedAt - updatedAuthenTimeString.toLong must be < timeRange
+    //validate funtion:
+    "validate funtion: if Device Token is empty" in new WithApplication() {
+      Fixtures.install
+      //create deviceToken
+      val deviceToken = ""
+
+      try {
+        //validate device
+        val updatedToken = Device.validate(deviceToken)
+        fail()
+      } catch {
+        case _: Exception => // Expected, so continue
+      }
 
     }
 
     //validate funtion:
-    "check if authenticated time are within a same range before and after validate" in new WithApplication() {
+    "validate funtion: check if authenticated time are within a same range before and after validate" in new WithApplication() {
       Fixtures.install
       val deviceID1 = "device_1"
       val deviceToken1 = "epidata123"
 
       //current time
       val secretKey = Play.current.configuration.getString("application.secret").get
-      val authenticatedAtBefore = System.currentTimeMillis / 1000
+      val timestampBefore = System.currentTimeMillis / 1000
 
       //create deviceToken
       val deviceToken = Device.createToken(deviceID1)
 
       //validate device
       val updatedToken = Device.validate(deviceToken)
+
+      val timestampAfter = System.currentTimeMillis / 1000
 
       //decode the updated token
       if (!JsonWebToken.validate(updatedToken, secretKey))
@@ -203,29 +288,33 @@ class DeviceModelSpec extends Specification {
           case None => "" //Or handle the lack of a value another way: throw an error, etc.
           case Some(s: String) => s //return the string to set your value
         }
-        val number: AnyVal = 5
-        val timeRange: Long = number.asInstanceOf[Number].longValue
-        authenticatedAtBefore - authenticatedAtAfterInt.toLong must be < timeRange
+
+        authenticatedAtAfterInt.toLong >= timestampBefore
+        authenticatedAtAfterInt.toLong <= timestampAfter
       }
     }
 
     //validate funtion:
-    "check if expire time are within a same range before and after validate" in new WithApplication() {
+    "validate funtion: check if expire time are within a same range before and after validate" in new WithApplication() {
       Fixtures.install
       val deviceID1 = "device_1"
       val deviceToken1 = "epidata123"
 
       //current time
       val secretKey = Play.current.configuration.getString("application.secret").get
-      val authenticatedAt = System.currentTimeMillis / 1000
       val connectionTimeOut = Play.current.configuration.getString("device.timeout").get.toInt
-      val expTimeStampBefore: Long = (authenticatedAt + connectionTimeOut)
+
+      val authenticatedAt1 = System.currentTimeMillis / 1000
+      val expTimeStampBefore: Long = (authenticatedAt1 + connectionTimeOut)
 
       //create deviceToken
       val deviceToken = Device.createToken(deviceID1)
 
       //validate device
       val updatedToken = Device.validate(deviceToken)
+
+      val authenticatedAt2 = System.currentTimeMillis / 1000
+      val expTimeStampAfter: Long = (authenticatedAt2 + connectionTimeOut)
 
       //decode the updated token
       if (!JsonWebToken.validate(updatedToken, secretKey))
@@ -237,14 +326,14 @@ class DeviceModelSpec extends Specification {
           case x =>
             None
         }
-        val expTimeStampAfter = payload.getOrElse(Map.empty[String, String]).get("exp")
-        val expTimeStampAfterInt: String = expTimeStampAfter match {
+        val expTimeStamp = payload.getOrElse(Map.empty[String, String]).get("exp")
+        val expTimeStampInt: String = expTimeStamp match {
           case None => "" //Or handle the lack of a value another way: throw an error, etc.
           case Some(s: String) => s //return the string to set your value
         }
-        val number: AnyVal = 5
-        val timeRange: Long = number.asInstanceOf[Number].longValue
-        expTimeStampBefore - expTimeStampAfterInt.toLong must be < timeRange
+
+        expTimeStampInt.toLong >= expTimeStampBefore
+        expTimeStampInt.toLong <= expTimeStampAfter
       }
     }
   }

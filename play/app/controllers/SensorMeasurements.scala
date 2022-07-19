@@ -57,7 +57,7 @@ class SensorMeasurements @Inject() (val cc: ControllerComponents, validAction: V
   //    }
   //  }
 
-  def insertQueue = SecuredAction(parse.json) { implicit request =>
+  def insertQueue = validAction(parse.json) { implicit request =>
     val sensorMeasurements = com.epidata.lib.models.SensorMeasurement.jsonToSensorMeasurements(request.body.toString)
     if (Configs.queueService.equalsIgnoreCase("Kafka")) {
       models.SensorMeasurement.insertToKafka(sensorMeasurements.flatMap(x => x))

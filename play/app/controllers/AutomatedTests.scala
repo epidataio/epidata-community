@@ -20,10 +20,11 @@ import javax.inject._
 import play.api.i18n.{ I18nSupport, Messages, Lang }
 import securesocial.core.{ IdentityProvider, RuntimeEnvironment, SecureSocial }
 import service.Configs
+import actions._
 
 /** Controller for automated test data. */
 @Singleton
-class AutomatedTests @Inject() (val cc: ControllerComponents)(
+class AutomatedTests @Inject() (val cc: ControllerComponents, validAction: ValidAction)(
   override implicit val env: RuntimeEnvironment) extends AbstractController(cc)
   with SecureSocial {
 
@@ -31,7 +32,7 @@ class AutomatedTests @Inject() (val cc: ControllerComponents)(
 
   val logger: Logger = Logger(this.getClass())
 
-  def create = SecuredAction(parse.json) { implicit request =>
+  def create = validAction(parse.json) { implicit request =>
     val automatedTests = com.epidata.lib.models.AutomatedTest.jsonToAutomatedTests(request.body.toString)
     AutomatedTest.insert(automatedTests.flatMap(x => x), Configs.measDBLite)
 
@@ -57,7 +58,7 @@ class AutomatedTests @Inject() (val cc: ControllerComponents)(
   //    }
   //  }
 
-  def insertQueue = SecuredAction(parse.json) { implicit request =>
+  def insertQueue = validAction(parse.json) { implicit request =>
     val automatedTests = com.epidata.lib.models.AutomatedTest.jsonToAutomatedTests(request.body.toString)
     if (Configs.queueService.equalsIgnoreCase("Kafka")) {
       models.AutomatedTest.insertToKafka(automatedTests.flatMap(x => x))
