@@ -29,6 +29,10 @@ import scala.collection.mutable.{ Map => MutableMap }
 object Device {
 
   def createToken(deviceID: String): String = {
+    if (deviceID == null || deviceID.trim.isEmpty) {
+      throw new Exception("Device ID is empty")
+    }
+
     //get time stamp
     val currTimeStamp: Long = System.currentTimeMillis / 1000
     val connectionTimeOut = Play.current.configuration.getString("device.timeout").get.toInt
@@ -55,6 +59,12 @@ object Device {
   }
 
   def authenticate(deviceID: String, deviceToken: String): String = {
+    if (deviceID == null || deviceID.trim.isEmpty) {
+      throw new Exception("Device ID is empty")
+    }
+    if (deviceToken == null || deviceToken.trim.isEmpty) {
+      throw new Exception("Device Token is empty")
+    }
 
     val deviceMap = DeviceService.queryDevice(deviceID)
 
@@ -77,6 +87,9 @@ object Device {
   }
 
   def validate(deviceJWT: String): String = {
+    if (deviceJWT == null || deviceJWT.trim.isEmpty) {
+      throw new Exception("Device JWT Token is empty")
+    }
     val secretKey = Play.current.configuration.getString("application.secret").get
     if (!JsonWebToken.validate(deviceJWT, secretKey))
       throw new Exception("Json Web Token is not valid")
