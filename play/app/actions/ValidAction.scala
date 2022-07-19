@@ -20,7 +20,7 @@ class ValidAction @Inject() (override val parser: BodyParsers.Default)(implicit 
   extends ActionBuilderImpl(parser) {
 
   override def invokeBlock[A](request: Request[A], block: (Request[A]) => Future[Result]) = Future[Result] {
-    val deviceJWT = request.getQueryString("jwt_token")
+    val deviceJWT = request.headers.get("jwt_token")
     try {
       val newDeviceJWT = Device.validate(deviceJWT.get)
       Ok(Json.obj("jwt_token" -> deviceJWT.get))
