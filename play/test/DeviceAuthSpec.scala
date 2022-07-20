@@ -95,5 +95,33 @@ class DeviceAuthSpec extends Specification {
       status(result) must equalTo(OK)
 
     }
+
+    "throw an exception with empty string id and token" in new WithApplication {
+
+      Fixtures.install
+
+      val controller = app.injector.instanceOf[controllers.DeviceAuth]
+      val request = FakeRequest(
+        GET,
+        "/authenticate/device").withHeaders("device_id" -> "", "device_token" -> "")
+      val result = controller.authenticate()(request)
+
+      status(result) must equalTo(BAD_REQUEST)
+
+    }
+
+    "throw an exception with no id and token" in new WithApplication {
+
+      Fixtures.install
+
+      val controller = app.injector.instanceOf[controllers.DeviceAuth]
+      val request = FakeRequest(
+        GET,
+        "/authenticate/device")
+      val result = controller.authenticate()(request)
+
+      status(result) must equalTo(BAD_REQUEST)
+
+    }
   }
 }
