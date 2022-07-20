@@ -41,6 +41,28 @@ class DeviceSpec extends Specification {
 
   "Device" should {
 
+    "createToken function: create a jwt token with empty device ID" in new WithApplication() {
+      Fixtures.install
+      try {
+        val deviceID1 = ""
+        val deviceToken1 = Device.createToken(deviceID1)
+        fail()
+      } catch {
+        case _: Exception =>
+      }
+    }
+
+    "createToken function: create a jwt token with null device ID" in new WithApplication() {
+      Fixtures.install
+      try {
+        val deviceID1 = null
+        val deviceToken1 = Device.createToken(deviceID1)
+        fail()
+      } catch {
+        case _: Exception =>
+      }
+    }
+
     "createToken function: create a jwt token with given device ID" in new WithApplication() {
       Fixtures.install
       val deviceID1 = "DeviceToken1"
@@ -63,18 +85,6 @@ class DeviceSpec extends Specification {
         }
         deviceID must equalTo(deviceID1)
       }
-    }
-
-    "createToken function: create a jwt token with empty device ID" in new WithApplication() {
-      Fixtures.install
-      try {
-        val deviceID1 = ""
-        val deviceToken1 = Device.createToken(deviceID1)
-        fail()
-      } catch {
-        case _: Exception => // Expected, so continue
-      }
-
     }
 
     //authenticated Time
@@ -146,7 +156,7 @@ class DeviceSpec extends Specification {
       }
     }
 
-    //authenticate funtion: if the given token is different with the one in db
+    //authenticate funtion: if the ID is empty
     "authenticate funtion: if the ID is empty" in new WithApplication() {
       Fixtures.install
       val deviceID1 = ""
@@ -160,11 +170,39 @@ class DeviceSpec extends Specification {
       }
     }
 
-    //authenticate funtion: if the given token is different with the one in db
+    //authenticate funtion: if the ID is null
+    "authenticate funtion: if the ID is null" in new WithApplication() {
+      Fixtures.install
+      val deviceID1 = null
+      val deviceToken1 = "epidata123"
+
+      try {
+        val auth = Device.authenticate(deviceID1, deviceToken1)
+        fail()
+      } catch {
+        case _: Exception => // Expected, so continue
+      }
+    }
+
+    //authenticate funtion: if the token is empty
     "authenticate funtion: if the token is empty" in new WithApplication() {
       Fixtures.install
       val deviceID1 = "device_1"
       val deviceToken1 = ""
+
+      try {
+        val auth = Device.authenticate(deviceID1, deviceToken1)
+        fail()
+      } catch {
+        case _: Exception => // Expected, so continue
+      }
+    }
+
+    //authenticate funtion: if the token is null
+    "authenticate funtion: if the token is null" in new WithApplication() {
+      Fixtures.install
+      val deviceID1 = "device_1"
+      val deviceToken1 = null
 
       try {
         val auth = Device.authenticate(deviceID1, deviceToken1)
@@ -252,7 +290,21 @@ class DeviceSpec extends Specification {
       } catch {
         case _: Exception => // Expected, so continue
       }
+    }
 
+    //validate funtion:
+    "validate funtion: if Device Token is null" in new WithApplication() {
+      Fixtures.install
+      //create deviceToken
+      val deviceToken = null
+
+      try {
+        //validate device
+        val updatedToken = Device.validate(deviceToken)
+        fail()
+      } catch {
+        case _: Exception => // Expected, so continue
+      }
     }
 
     //validate funtion:
