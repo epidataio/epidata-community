@@ -31,8 +31,11 @@ HOST = args.host or '127.0.0.1:9443'
 
 # AUTHENTICATION_URL = 'https://' + HOST + '/authenticate/app'
 # AUTHENTICATION_ROUTE = '/authenticate/app'
-AUTHENTICATION_URL = 'https://' + HOST + '/login/device'
-AUTHENTICATION_ROUTE = '/login/device'
+# AUTHENTICATION_URL = 'https://' + HOST + '/login/device'
+# AUTHENTICATION_ROUTE = '/login/device'
+
+AUTHENTICATION_URL = 'https://' + HOST + '/authenticate/device'
+AUTHENTICATION_ROUTE = '/authenticate/device'
 
 QUERY_MEASUREMENTS_ORIGINAL_URL = 'https://' + HOST + '/measurements_original?'
 QUERY_MEASUREMENTS_CLEANSED_URL = 'https://' + HOST + '/measurements_cleansed?'

@@ -34,8 +34,10 @@ DEVICE_TOKEN = args.device_token or 'epidata_123'
 
 # AUTHENTICATION_URL = 'https://' + HOST + '/authenticate/app'
 # AUTHENTICATION_ROUTE = '/authenticate/app'
-AUTHENTICATION_URL = 'https://' + HOST + '/login/device'
-AUTHENTICATION_ROUTE = '/login/device'
+# AUTHENTICATION_URL = 'https://' + HOST + '/login/device'
+# AUTHENTICATION_ROUTE = '/login/device'
+AUTHENTICATION_URL = 'https://' + HOST + '/authenticate/device'
+AUTHENTICATION_ROUTE = '/authenticate/device'
 EPI_STREAM = True
 LOG_ITERATION = 1
 
