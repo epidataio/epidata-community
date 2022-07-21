@@ -49,7 +49,7 @@ class ApplicationDBStart @Inject() (env: Environment, conf: Configuration) {
   }
 
   // Connect to the Cassandra database.
-  if ((Configs.measDB == "cassandra") || (Configs.userDB == "cassandra")) {
+  if ((Configs.measDB == "cassandra") || (Configs.userDB == "cassandra") || (Configs.deviceDB == "cassandra")) {
     try {
       DB.connect(
         conf.getOptional[String]("cassandra.node").get,
@@ -76,9 +76,12 @@ class ApplicationDBStart @Inject() (env: Environment, conf: Configuration) {
 // `ApplicationStreamStart` object for application stream start-up
 @Singleton
 class ApplicationStreamStart @Inject() (env: Environment, conf: Configuration) {
+
   if (conf.getOptional[String]("queue.service").get.equalsIgnoreCase("Kafka")) {
+
     KafkaService.init("127.0.0.1:" + conf.getOptional[Int]("queue.servers").get)
   } else if (conf.getOptional[String]("queue.service").get.equalsIgnoreCase("ZMQ")) {
+
     // Initiating object that will initiate 3 instances of ZMQProducer/DataSink to be used across the application
     ZMQInit.init(conf)
   } else {
@@ -104,7 +107,7 @@ class ApplicationDBStop @Inject() (lifecycle: ApplicationLifecycle) {
     lifecycle.addStopHook { () =>
       Future.successful(DBLite.close)
     }
-  } else if ((Configs.measDB == "cassandra") && (Configs.userDB == "cassandra")) {
+  } else if (((Configs.measDB == "cassandra") && (Configs.userDB == "cassandra")) || (Configs.deviceDB == "cassandra")) {
     lifecycle.addStopHook { () =>
       Future.successful(DB.close)
     }

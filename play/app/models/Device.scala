@@ -4,8 +4,6 @@
 
 package models
 
-import SQLite.DB
-//import SQLite.{ DB => DBLite }
 import java.util.Date
 import service._
 import com.datastax.driver.core.querybuilder.QueryBuilder
@@ -66,7 +64,13 @@ object Device {
       throw new Exception("Device Token is empty")
     }
 
-    val deviceMap = DeviceService.queryDevice(deviceID)
+    var deviceMap = MutableMap[String, String]()
+    if (Configs.deviceDB.equals("cassandra")) {
+      deviceMap = NoSQLDeviceService.queryDevice(deviceID)
+    } else {
+      deviceMap = SQLiteDeviceService.queryDevice(deviceID)
+
+    }
 
     val retrievedToken = deviceMap.get("device_token")
 
@@ -78,7 +82,12 @@ object Device {
     if (deviceTokenString.equals(deviceToken)) {
       val jwttoken = createToken(deviceID)
       val authenticatedAt = System.currentTimeMillis / 1000
-      DeviceService.updateDevice(deviceID, authenticatedAt)
+
+      if (Configs.deviceDB.equals("cassandra")) {
+        NoSQLDeviceService.updateDevice(deviceID, authenticatedAt)
+      } else {
+        SQLiteDeviceService.updateDevice(deviceID, authenticatedAt)
+      }
 
       jwttoken
     } else {

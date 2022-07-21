@@ -2,7 +2,7 @@
  * Copyright (c) 2015-2017 EpiData, Inc.
 */
 
-import SQLite.DB
+import cassandra.DB
 import com.datastax.driver.core.exceptions.InvalidQueryException
 import org.specs2.mutable._
 import org.specs2.runner._
@@ -22,19 +22,19 @@ import org.scalatest.Assertions._
 import scala.collection.mutable.{ Map => MutableMap }
 
 @RunWith(classOf[JUnitRunner])
-class DeviceSpec extends Specification {
+class DeviceSpecCassandra extends Specification {
 
   object Fixtures {
-    val truncateSQL = s"DELETE FROM iot_devices"
-    def truncate = DB.executeUpdate(DB.prepare(truncateSQL))
+    val truncateSQL = s"TRUNCATE iot_devices"
+    //    def truncate = DB.cql(truncateSQL)
     def cleanUp = {
-      truncate
+      DB.cql(truncateSQL)
     }
 
     def install = {
       cleanUp
-      DB.executeUpdate(DB.prepare("INSERT OR REPLACE INTO iot_devices (iot_device_id, iot_device_token) VALUES(\"device_1\", \"epidata123\");"))
-      DB.executeUpdate(DB.prepare("INSERT OR REPLACE INTO iot_devices (iot_device_id, iot_device_token) VALUES(\"device_2\", \"NonDefaultToken\");"))
+      DB.cql("INSERT OR REPLACE INTO iot_devices (iot_device_id, iot_device_token) VALUES(\"device_1\", \"epidata123\");")
+      DB.cql("INSERT OR REPLACE INTO iot_devices (iot_device_id, iot_device_token) VALUES(\"device_2\", \"NonDefaultToken\");")
 
     }
   }
@@ -42,7 +42,6 @@ class DeviceSpec extends Specification {
   "Device" should {
 
     "createToken function: create a jwt token with empty device ID" in new WithApplication() {
-      Fixtures.install
       try {
         val deviceID1 = ""
         val deviceToken1 = Device.createToken(deviceID1)
@@ -53,7 +52,6 @@ class DeviceSpec extends Specification {
     }
 
     "createToken function: create a jwt token with null device ID" in new WithApplication() {
-      Fixtures.install
       try {
         val deviceID1 = null
         val deviceToken1 = Device.createToken(deviceID1)
@@ -64,7 +62,6 @@ class DeviceSpec extends Specification {
     }
 
     "createToken function: create a jwt token with given device ID" in new WithApplication() {
-      Fixtures.install
       val deviceID1 = "DeviceToken1"
       val deviceToken1 = Device.createToken(deviceID1)
 
@@ -89,7 +86,7 @@ class DeviceSpec extends Specification {
 
     //authenticated Time
     "createToken function: checking authenticated time when creating a jwt token with given device ID" in new WithApplication() {
-      Fixtures.install
+
       val deviceID1 = "DeviceToken1"
 
       val authenticatedAt1 = System.currentTimeMillis / 1000
@@ -122,7 +119,6 @@ class DeviceSpec extends Specification {
 
     //expire Time
     "createToken function: checking expire time when creating a jwt token with given device ID" in new WithApplication() {
-      Fixtures.install
       val deviceID1 = "DeviceToken1"
 
       val connectionTimeOut = Play.current.configuration.getString("device.timeout").get.toInt
@@ -158,7 +154,7 @@ class DeviceSpec extends Specification {
 
     //authenticate funtion: if the ID is empty
     "authenticate funtion: if the ID is empty" in new WithApplication() {
-      Fixtures.install
+
       val deviceID1 = ""
       val deviceToken1 = "epidata123"
 
@@ -172,7 +168,7 @@ class DeviceSpec extends Specification {
 
     //authenticate funtion: if the ID is null
     "authenticate funtion: if the ID is null" in new WithApplication() {
-      Fixtures.install
+
       val deviceID1 = null
       val deviceToken1 = "epidata123"
 
@@ -186,7 +182,7 @@ class DeviceSpec extends Specification {
 
     //authenticate funtion: if the token is empty
     "authenticate funtion: if the token is empty" in new WithApplication() {
-      Fixtures.install
+
       val deviceID1 = "device_1"
       val deviceToken1 = ""
 
@@ -200,7 +196,7 @@ class DeviceSpec extends Specification {
 
     //authenticate funtion: if the token is null
     "authenticate funtion: if the token is null" in new WithApplication() {
-      Fixtures.install
+
       val deviceID1 = "device_1"
       val deviceToken1 = null
 
@@ -234,11 +230,11 @@ class DeviceSpec extends Specification {
 
       val authenticatedAt = System.currentTimeMillis / 1000
       val newJWTToken = Device.authenticate(deviceID1, deviceToken1)
-      val rs = DB.execute(DB.binds(DB.prepare(s"SELECT iot_device_token, authenticated_at,connection_timeout FROM iot_devices WHERE iot_device_id = ?"), deviceID1))
+      val rs = DB.cql(s"SELECT iot_device_token, authenticated_at,connection_timeout FROM iot_devices WHERE iot_device_id = ${deviceID1}").one()
 
       var mmap = MutableMap[String, String]()
 
-      while (rs.next()) {
+      while (rs != null) {
         mmap = MutableMap("device_token" -> rs.getString(1), "authenticated_at" -> rs.getString(2), "connection_timeout" -> rs.getString(3))
       }
 
@@ -258,12 +254,12 @@ class DeviceSpec extends Specification {
 
       val authenticatedAt1 = System.currentTimeMillis / 1000
       val newJWTToken = Device.authenticate(deviceID1, deviceToken1)
-      val rs = DB.execute(DB.binds(DB.prepare(s"SELECT iot_device_token, authenticated_at,connection_timeout FROM iot_devices WHERE iot_device_id = ?"), deviceID1))
+      val rs = DB.cql(s"SELECT iot_device_token, authenticated_at,connection_timeout FROM iot_devices WHERE iot_device_id = ${deviceID1}").one()
 
       val authenticatedAt2 = System.currentTimeMillis / 1000
       var mmap = MutableMap[String, String]()
 
-      while (rs.next()) {
+      while (rs != null) {
         mmap = MutableMap("device_token" -> rs.getString(1), "authenticated_at" -> rs.getString(2), "connection_timeout" -> rs.getString(3))
       }
 
@@ -279,7 +275,7 @@ class DeviceSpec extends Specification {
 
     //validate funtion:
     "validate funtion: if Device Token is empty" in new WithApplication() {
-      Fixtures.install
+
       //create deviceToken
       val deviceToken = ""
 
@@ -294,7 +290,7 @@ class DeviceSpec extends Specification {
 
     //validate funtion:
     "validate funtion: if Device Token is null" in new WithApplication() {
-      Fixtures.install
+
       //create deviceToken
       val deviceToken = null
 
@@ -309,7 +305,7 @@ class DeviceSpec extends Specification {
 
     //validate funtion:
     "validate funtion: check if authenticated time are within a same range before and after validate" in new WithApplication() {
-      Fixtures.install
+
       val deviceID1 = "device_1"
       val deviceToken1 = "epidata123"
 
@@ -348,7 +344,7 @@ class DeviceSpec extends Specification {
 
     //validate funtion:
     "validate funtion: check if expire time are within a same range before and after validate" in new WithApplication() {
-      Fixtures.install
+
       val deviceID1 = "device_1"
       val deviceToken1 = "epidata123"
 

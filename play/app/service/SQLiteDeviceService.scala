@@ -19,7 +19,7 @@ import scala.collection.mutable.{ Map => MutableMap }
 import java.sql.Timestamp
 import java.sql.PreparedStatement
 
-object DeviceService {
+object SQLiteDeviceService {
 
   def insertDevice(deviceID: String, deviceToken: String): Unit = {
     val insertStatements = InsertsDevicestring()
@@ -36,8 +36,8 @@ object DeviceService {
   }
 
   def queryDevice(deviceID: String): MutableMap[String, String] = {
-    val quertyDeviceStatements = preparequertyDevice()
-    val stm = DB.prepare(quertyDeviceStatements)
+    val queryDeviceStatements = preparequeryDevice()
+    val stm = DB.prepare(queryDeviceStatements)
     DB.binds(stm, deviceID)
 
     val rs = DB.execute(stm)
@@ -64,7 +64,7 @@ object DeviceService {
 SET authenticated_at = ?
 WHERE iot_device_id = ?""".stripMargin('#')
 
-  private def preparequertyDevice() = s"""#SELECT iot_device_token, authenticated_at,connection_timeout FROM iot_devices WHERE iot_device_id = ?""".stripMargin('#')
+  private def preparequeryDevice() = s"""#SELECT iot_device_token, authenticated_at,connection_timeout FROM iot_devices WHERE iot_device_id = ?""".stripMargin('#')
 
   private def preparedeleteDevice() = s"""#DELETE FROM iot_devices WHERE iot_device_id = ?""".stripMargin('#')
 

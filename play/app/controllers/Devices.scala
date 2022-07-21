@@ -27,12 +27,12 @@ class Devices @Inject() (val cc: ControllerComponents)(implicit assets: AssetsFi
       "device_token" -> text)(DeviceRequestInfo.apply)(DeviceRequestInfo.unapply))
   override def messagesApi: MessagesApi = super.messagesApi
 
-  val msg: Option[String] = None
+  // val msg: Option[String] = None
   // form: Form[(String, String)],
   // msg: Option[String] = None)(implicit request: RequestHeader): Html = {
 
   def show = Action { implicit request =>
-    Ok(views.html.Device.auth(deviceForm, msg))
+    Ok(views.html.Device.auth(deviceForm))
   }
 
 }
