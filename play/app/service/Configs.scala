@@ -13,6 +13,7 @@ object Configs {
     _userDB = config.getOptional[String]("user.database").get
     _queueService = config.getOptional[String]("queue.service").get
     _queueSocket = config.getOptional[Int]("queue.servers").get
+    _deviceDB = config.getOptional[String]("device.database").get
   }
 
   private var _keyCreation: Boolean = _
@@ -23,6 +24,7 @@ object Configs {
   private var _userDB: String = _
   private var _queueService: String = _
   private var _queueSocket: Int = _
+  private var _deviceDB: String = _
 
   def ingestionKeyCreation = _keyCreation
   def metricEnabled = _keyCreation
@@ -30,11 +32,16 @@ object Configs {
   def twoWaysIngestion = _twoWaysIngestion
   def measDB = _measDB
   def userDB = _userDB
+  def deviceDB = _deviceDB
   def measDBLite: Boolean = _measDB match {
     case "sqlite" => true
     case "cassandra" => false
   }
   def userDBLite: Boolean = _userDB match {
+    case "sqlite" => true
+    case "cassandra" => false
+  }
+  def deviceDBLite: Boolean = _deviceDB match {
     case "sqlite" => true
     case "cassandra" => false
   }

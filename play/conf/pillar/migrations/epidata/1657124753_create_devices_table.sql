@@ -6,13 +6,14 @@
 -- up:
 
 
-CREATE TABLE devices (
+CREATE TABLE iot_devices (
   iot_device_id TEXT,
   iot_device_token TEXT,
-  connection_timeout long,
-  authenticated_at long,
+  connection_timeout INT,
+  authenticated_at BIGINT,
   PRIMARY KEY (iot_device_id)
 )
+
 
 -- down:
 
