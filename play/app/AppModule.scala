@@ -35,7 +35,7 @@ class ApplicationDBStart @Inject() (env: Environment, conf: Configuration) {
   Configs.init(conf)
 
   // Connect to the SQLite database.
-  if ((Configs.measDB == "sqlite") || (Configs.userDB == "sqlite")) {
+  if ((Configs.measDB == "sqlite") || (Configs.userDB == "sqlite") || (Configs.deviceDB == "sqlite")) {
     try {
       val dbURL: String = conf.getOptional[Configuration]("lite.db.epidata").get
         .getOptional[Configuration](env.mode.toString.toLowerCase).get
@@ -103,11 +103,11 @@ class ApplicationStreamStart @Inject() (env: Environment, conf: Configuration) {
 // `ApplicationDBStop` object with shut-down hook
 @Singleton
 class ApplicationDBStop @Inject() (lifecycle: ApplicationLifecycle) {
-  if ((Configs.measDB == "sqlite") && (Configs.userDB == "sqlite")) {
+  if ((Configs.measDB == "sqlite") && (Configs.userDB == "sqlite") && (Configs.deviceDB == "sqlite")) {
     lifecycle.addStopHook { () =>
       Future.successful(DBLite.close)
     }
-  } else if (((Configs.measDB == "cassandra") && (Configs.userDB == "cassandra")) || (Configs.deviceDB == "cassandra")) {
+  } else if (((Configs.measDB == "cassandra") && (Configs.userDB == "cassandra")) && (Configs.deviceDB == "cassandra")) {
     lifecycle.addStopHook { () =>
       Future.successful(DB.close)
     }
