@@ -87,7 +87,7 @@ class AutomatedTests @Inject() (val cc: ControllerComponents, validAction: Valid
     size: Int = 10000,
     batch: String = "",
     ordering: Ordering.Value = Ordering.Unspecified,
-    table: String = Measurement.DBTableName) = SecuredAction {
+    table: String = Measurement.DBTableName) = validAction(parse.json) {
     table match {
       case MeasurementCleansed.DBTableName =>
         Ok(com.epidata.lib.models.AutomatedTestCleansed.toJson(AutomatedTest.queryCleansed(

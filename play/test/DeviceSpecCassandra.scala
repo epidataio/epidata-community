@@ -25,7 +25,7 @@ import scala.collection.mutable.{ Map => MutableMap }
 class DeviceSpecCassandra extends Specification {
 
   object Fixtures {
-    val truncateSQL = s"TRUNCATE iot_devices"
+    val truncateSQL = s"TRUNCATE epidata_test.iot_devices"
     //    def truncate = DB.cql(truncateSQL)
     def cleanUp = {
       DB.cql(truncateSQL)
@@ -33,8 +33,8 @@ class DeviceSpecCassandra extends Specification {
 
     def install = {
       cleanUp
-      DB.cql("INSERT OR REPLACE INTO iot_devices (iot_device_id, iot_device_token) VALUES(\"device_1\", \"epidata123\");")
-      DB.cql("INSERT OR REPLACE INTO iot_devices (iot_device_id, iot_device_token) VALUES(\"device_2\", \"NonDefaultToken\");")
+      DB.cql("INSERT INTO epidata_test.iot_devices (iot_device_id, iot_device_token) VALUES(\'device_1\',\'epidata123\');")
+      DB.cql("INSERT INTO epidata_test.iot_devices (iot_device_id, iot_device_token) VALUES(\'device_2\', \'NonDefaultToken\');")
 
     }
   }
@@ -230,12 +230,12 @@ class DeviceSpecCassandra extends Specification {
 
       val authenticatedAt = System.currentTimeMillis / 1000
       val newJWTToken = Device.authenticate(deviceID1, deviceToken1)
-      val rs = DB.cql(s"SELECT iot_device_token, authenticated_at,connection_timeout FROM iot_devices WHERE iot_device_id = ${deviceID1}").one()
+      val rs = DB.cql(s"SELECT iot_device_token, authenticated_at,connection_timeout FROM iot_devices WHERE iot_device_id = \'device_1\'").one()
 
       var mmap = MutableMap[String, String]()
 
-      while (rs != null) {
-        mmap = MutableMap("device_token" -> rs.getString(1), "authenticated_at" -> rs.getString(2), "connection_timeout" -> rs.getString(3))
+      if (rs != null) {
+        mmap = MutableMap("device_token" -> rs.getString(0), "authenticated_at" -> rs.getLong(1).toString, "connection_timeout" -> rs.getInt(2).toString)
       }
 
       val deviceTokenInDB = mmap.get("device_token")
@@ -254,13 +254,13 @@ class DeviceSpecCassandra extends Specification {
 
       val authenticatedAt1 = System.currentTimeMillis / 1000
       val newJWTToken = Device.authenticate(deviceID1, deviceToken1)
-      val rs = DB.cql(s"SELECT iot_device_token, authenticated_at,connection_timeout FROM iot_devices WHERE iot_device_id = ${deviceID1}").one()
+      val rs = DB.cql(s"SELECT iot_device_token, authenticated_at,connection_timeout FROM iot_devices WHERE iot_device_id = \'device_1\'").one()
 
       val authenticatedAt2 = System.currentTimeMillis / 1000
       var mmap = MutableMap[String, String]()
 
-      while (rs != null) {
-        mmap = MutableMap("device_token" -> rs.getString(1), "authenticated_at" -> rs.getString(2), "connection_timeout" -> rs.getString(3))
+      if (rs != null) {
+        mmap = MutableMap("device_token" -> rs.getString(0), "authenticated_at" -> rs.getLong(1).toString, "connection_timeout" -> rs.getInt(2).toString)
       }
 
       val updatedAuthenTime = mmap.get("authenticated_at")
@@ -384,6 +384,7 @@ class DeviceSpecCassandra extends Specification {
         expTimeStampInt.toLong <= expTimeStampAfter
       }
     }
+
   }
 
 }

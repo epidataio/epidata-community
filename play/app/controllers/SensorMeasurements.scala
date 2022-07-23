@@ -105,7 +105,7 @@ class SensorMeasurements @Inject() (val cc: ControllerComponents, validAction: V
     size: Int = 1000,
     batch: String = "",
     ordering: Ordering.Value = Ordering.Unspecified,
-    table: String = MeasurementCleansed.DBTableName) = Action {
+    table: String = MeasurementCleansed.DBTableName) = validAction(parse.json) {
     table match {
       case MeasurementCleansed.DBTableName =>
         Ok(com.epidata.lib.models.SensorMeasurementCleansed.toJson(SensorMeasurement.queryCleansed(

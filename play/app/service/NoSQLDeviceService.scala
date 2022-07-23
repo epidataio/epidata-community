@@ -22,38 +22,36 @@ import java.sql.PreparedStatement
 object NoSQLDeviceService {
 
   def insertDevice(deviceID: String, deviceToken: String): Unit = {
-    val insertStatements = s"""#INSERT OR REPLACE INTO iot_devices (
-                                         #iot_device_id,
-                                         #iot_device_token) VALUES (${deviceID}, ${deviceToken})"""
+    val insertStatements = s"""INSERT INTO iot_devices (iot_device_id,iot_device_token) VALUES (${deviceID}, ${deviceToken})"""
     DB.cql(insertStatements)
   }
 
   def updateDevice(deviceID: String, issueTime: Long): Unit = {
-    val updateStatements = s"""#UPDATE iot_devices
-SET authenticated_at = ${deviceID}
-WHERE iot_device_id = ${issueTime}"""
+    val updateStatements = s"UPDATE iot_devices SET authenticated_at = ${issueTime} WHERE iot_device_id =\'" + deviceID + "\'"
     DB.cql(updateStatements)
   }
 
   def queryDevice(deviceID: String): MutableMap[String, String] = {
-    val quertyDeviceStatements = s"""#SELECT iot_device_token, authenticated_at,connection_timeout FROM iot_devices WHERE iot_device_id = ${deviceID}"""
+    val quertyDeviceStatements = s"SELECT iot_device_token, authenticated_at,connection_timeout FROM iot_devices WHERE iot_device_id = \'" + deviceID + "\'"
 
     val rs = DB.cql(quertyDeviceStatements).one()
     var mmap = MutableMap[String, String]()
 
-    while (rs != null) {
-      mmap = MutableMap("device_token" -> rs.getString(1), "authenticated_at" -> rs.getString(2), "connection_timeout" -> rs.getString(3))
+    println("QUERY TEST : " + rs.toString)
+
+    if (rs != null) {
+      mmap = MutableMap("device_token" -> rs.getString(0), "authenticated_at" -> rs.getLong(1).toString, "connection_timeout" -> rs.getInt(2).toString)
     }
     mmap
   }
 
   def deleteDevice(deviceID: String): Unit = {
-    val deleteDeviceStatements = s"""#DELETE FROM iot_devices WHERE iot_device_id = ${deviceID}"""
+    val deleteDeviceStatements = s"""DELETE FROM iot_devices WHERE iot_device_id = ${deviceID}"""
     //    val stm = DB.prepare(deleteDeviceStatements)
     DB.cql(deleteDeviceStatements)
   }
 
-  private def InsertsDevicestring() = s"""#INSERT OR REPLACE INTO iot_devices (
+  private def InsertsDevicestring() = s"""#INSERT INTO iot_devices (
                                          #iot_device_id,
                                          #iot_device_token) VALUES (?, ?)""".stripMargin('#')
 
