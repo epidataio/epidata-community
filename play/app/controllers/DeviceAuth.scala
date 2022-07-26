@@ -23,12 +23,13 @@ class DeviceAuth @Inject() (val cc: ControllerComponents)(
   implicit val conf: Configuration) extends AbstractController(cc) {
 
   def authenticate = Action.async { implicit request =>
-    println("DeviceAuth: " + request.queryString)
     var deviceID = ""
     var deviceToken = ""
+    println("DeviceAuth: " + request.headers)
     try {
       deviceID = request.headers.get("device_id").get
       deviceToken = request.headers.get("device_token").get
+      println("DeviceAuthAfter: " + deviceID, deviceToken)
       try {
         val deviceJWT = Device.authenticate(deviceID, deviceToken)
         Future.successful(Ok(Json.obj("device_jwt" -> deviceJWT)))

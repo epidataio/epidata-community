@@ -33,4 +33,5 @@ GET     /metrics                    @controllers.MetricController.getMetric()
 # Device Authentication
 GET     /authenticate/device        @controllers.DeviceAuth.authenticate
 
-GET     /login/device                 @controllers.Devices.show()
+GET     /login/device               @controllers.Devices.show()
+POST    /login/device               @controllers.Devices.devicePost
