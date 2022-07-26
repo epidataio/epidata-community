@@ -19,6 +19,7 @@ import securesocial.core.RuntimeEnvironment
 import service.ZMQInit
 
 import scala.collection.JavaConverters._
+import play.api.libs.json._
 
 class AppModule extends Module {
   def bindings(env: Environment, conf: Configuration) = Seq(
@@ -46,6 +47,31 @@ class ApplicationDBStart @Inject() (env: Environment, conf: Configuration) {
       case e: SQLException =>
         throw new SQLException(s"Unable to connect to SQLite database: ${e}")
     }
+
+    case class DeviceConfig(id: String, token: String)
+
+    val mylist = conf.getOptional[Configuration]("device.list").get
+      .getObject(env.mode.toString.toLowerCase).get.entrySet().asScala.map(_.getValue).toList
+
+    var providerlist = new java.util.ArrayList[DeviceConfig]
+
+    for (element <- mylist) {
+      var device: String = element.unwrapped().toString().substring(1, element.unwrapped().toString().length - 1);
+
+      val devicePair = device.split("\\=")
+
+      var deviceID = devicePair(0)
+      var deviceToken = devicePair(1)
+
+      def InsertsDevicestring() = s"""#INSERT OR REPLACE INTO iot_devices (
+                                             #iot_device_id,
+                                             #iot_device_token) VALUES (?, ?)""".stripMargin('#')
+
+      val insertStatements = InsertsDevicestring()
+      val stm = DBLite.prepare(insertStatements)
+      DBLite.binds(stm, deviceID, deviceToken)
+      DBLite.executeUpdate(stm)
+    }
   }
 
   // Connect to the Cassandra database.
@@ -70,6 +96,21 @@ class ApplicationDBStart @Inject() (env: Environment, conf: Configuration) {
       case e: NoHostAvailableException =>
         throw new IllegalStateException(s"Unable to connect to cassandra server: ${e}")
     }
+
+    val mylist = conf.getOptional[Configuration]("device.list").get
+      .getObject(env.mode.toString.toLowerCase).get.entrySet().asScala.map(_.getValue).toList
+
+    for (element <- mylist) {
+      var device: String = element.unwrapped().toString().substring(1, element.unwrapped().toString().length - 1);
+
+      val devicePair = device.split("\\=")
+
+      var deviceID = devicePair(0)
+      var deviceToken = devicePair(1)
+
+      DB.cql(s"INSERT INTO epidata_test.iot_devices (iot_device_id, iot_device_token) VALUES(\'${deviceID}\',\'${deviceToken}\');")
+    }
+
   }
 }
 

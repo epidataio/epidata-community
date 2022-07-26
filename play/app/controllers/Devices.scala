@@ -55,8 +55,9 @@ class Devices @Inject() (val cc: ControllerComponents, ws: WSClient)(implicit as
         val status = response.status
         if (status == OK) {
           Ok(views.html.Device.authorized())
+        } else {
+          Ok(views.html.unauthorized.unauthorized())
         }
-        Ok(views.html.unauthorized.unauthorized())
 
       })
   }
