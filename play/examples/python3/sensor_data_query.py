@@ -25,6 +25,8 @@ import requests
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument('--host')
 arg_parser.add_argument('--access_token')
+arg_parser.add_argument('--device_id')
+arg_parser.add_argument('--device_token')
 args = arg_parser.parse_args()
 
 HOST = args.host or '127.0.0.1:9443'
@@ -96,14 +98,15 @@ session = requests.Session()
 url = AUTHENTICATION_URL
 
 # An HTTP POST with JSON content requires the HTTP Content-type header.
-json_header = {'Content-type': 'application/json', 'Set-Cookie': "epidata"}
+json_header = {'Content-type': 'application/json', 'Set-Cookie': "epidata", 'device_id': DEVICE_ID,
+               'device_token': DEVICE_TOKEN}
 
 # The access token is povided via JSON.
 json_body = json.dumps({'device_id': DEVICE_ID,
                         'device_token': DEVICE_TOKEN})
 
 # Send the POST request and receive the HTTP response.
-req = requests.Request('POST', AUTHENTICATION_URL, data=json_body, headers=json_header)
+req = requests.Request('GET', AUTHENTICATION_URL, headers=json_header)
 prepped = session.prepare_request(req)
 resp = session.send(prepped, stream=None, verify=None, proxies=None, cert=None, timeout=None)
 
@@ -112,7 +115,7 @@ resp = session.send(prepped, stream=None, verify=None, proxies=None, cert=None, 
 assert resp.status_code == 200
 
 # Parse the JSON response.
-json_web_token = json.loads(resp.json())['device_jwt']
+json_web_token = resp.headers.get('device_jwt')
 response_json = json.loads(resp.content)
 # print("response - ", response_json)
 
@@ -151,10 +154,10 @@ while (True):
         resp = session.send(prepped, stream=None, verify=None, proxies=None, cert=None, timeout=None)
 
         # Check that the response's HTTP response code is 200 (OK) and read the response.
-        # print("response content: ", resp.content)
-        response_json = json.loads(resp.content)
+        print("response content: ", resp.content.decode("utf-8"))
+        # response_json = json.loads(resp.content)
         print("Measurement Query Results - Original Data:")
-        print(response_json)
+        # print(response_json)
         assert resp.status_code == 200
 
         # increment iteration and current time
