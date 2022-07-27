@@ -32,7 +32,7 @@ class DeviceAuth @Inject() (val cc: ControllerComponents)(
       println("DeviceAuthAfter: " + deviceID, deviceToken)
       try {
         val deviceJWT = Device.authenticate(deviceID, deviceToken)
-        Future.successful(Ok(Json.obj("device_jwt" -> deviceJWT)))
+        Future.successful(Ok(Json.obj("device_jwt" -> deviceJWT)).withHeaders("device_jwt" -> deviceJWT))
       } catch {
         case _: Throwable => Future.successful(BadRequest(Json.obj("status" -> "ERROR", "message" -> "incorrect id or token")))
       }

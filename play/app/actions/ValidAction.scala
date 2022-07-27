@@ -19,7 +19,7 @@ import service.{ DBUserService, AppEnvironment, DataService }
 class ValidAction @Inject() (override val parser: BodyParsers.Default)(implicit ec: ExecutionContext)
   extends ActionBuilderImpl(parser) {
 
-  override def invokeBlock[A](request: Request[A], block: (Request[A]) => Future[Result]) = Future[Result] {
+  def filter[A](request: Request[A], block: (Request[A]) => Future[Result]) = Future[Result] {
     val deviceJWT = request.headers.get("jwt_token")
     try {
       val newDeviceJWT = Device.validate(deviceJWT.get)
