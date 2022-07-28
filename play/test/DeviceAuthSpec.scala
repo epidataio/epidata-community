@@ -46,8 +46,8 @@ class DeviceAuthSpec extends Specification {
 
       val controller = app.injector.instanceOf[controllers.DeviceAuth]
       val request = FakeRequest(
-        GET,
-        "/authenticate/device").withHeaders("device_id" -> "iot_device_1", "device_token" -> "NonExistentToken")
+        POST,
+        "/authenticate/device").withTextBody("{\"device_id\": \"iot_device_1\", \"device_token\": \"NonExistentToken\"}")
       val result = controller.authenticate()(request)
 
       status(result) must equalTo(BAD_REQUEST)
@@ -60,8 +60,8 @@ class DeviceAuthSpec extends Specification {
 
       val controller = app.injector.instanceOf[controllers.DeviceAuth]
       val request = FakeRequest(
-        GET,
-        "/authenticate/device").withHeaders("device_id" -> "NonExistentDevice", "device_token" -> "epidata_123")
+        POST,
+        "/authenticate/device").withTextBody("{\"device_id\": \"NonExistentDevice\", \"device_token\": \"epidata_123\"}")
       val result = controller.authenticate()(request)
 
       status(result) must equalTo(BAD_REQUEST)
@@ -74,8 +74,8 @@ class DeviceAuthSpec extends Specification {
 
       val controller = app.injector.instanceOf[controllers.DeviceAuth]
       val request = FakeRequest(
-        GET,
-        "/authenticate/device").withHeaders("device_id" -> "NonExistentDevice", "device_token" -> "NonExistentToken")
+        POST,
+        "/authenticate/device").withTextBody("{\"device_id\": \"NonExistentDevice\", \"device_token\": \"NonExistentToken\"}")
       val result = controller.authenticate()(request)
 
       status(result) must equalTo(BAD_REQUEST)
@@ -88,8 +88,8 @@ class DeviceAuthSpec extends Specification {
 
       val controller = app.injector.instanceOf[controllers.DeviceAuth]
       val request = FakeRequest(
-        GET,
-        "/authenticate/device").withHeaders("device_id" -> "iot_device_1", "device_token" -> "epidata_123")
+        POST,
+        "/authenticate/device").withTextBody("{\"device_id\": \"iot_device_1\", \"device_token\": \"epidata_123\"}")
       val result = controller.authenticate()(request)
 
       status(result) must equalTo(OK)
@@ -102,8 +102,8 @@ class DeviceAuthSpec extends Specification {
 
       val controller = app.injector.instanceOf[controllers.DeviceAuth]
       val request = FakeRequest(
-        GET,
-        "/authenticate/device").withHeaders("device_id" -> "", "device_token" -> "")
+        POST,
+        "/authenticate/device").withTextBody("{\"device_id\": \"\", \"device_token\": \"\"}")
       val result = controller.authenticate()(request)
 
       status(result) must equalTo(BAD_REQUEST)
@@ -116,7 +116,7 @@ class DeviceAuthSpec extends Specification {
 
       val controller = app.injector.instanceOf[controllers.DeviceAuth]
       val request = FakeRequest(
-        GET,
+        POST,
         "/authenticate/device")
       val result = controller.authenticate()(request)
 
