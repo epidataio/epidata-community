@@ -58,7 +58,6 @@ class Devices @Inject() (val cc: ControllerComponents, ws: WSClient)(implicit as
         } else {
           Ok(views.html.unauthorized.unauthorized())
         }
-
       })
   }
 

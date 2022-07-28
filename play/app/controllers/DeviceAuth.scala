@@ -25,11 +25,17 @@ class DeviceAuth @Inject() (val cc: ControllerComponents)(
   def authenticate = Action.async { implicit request =>
     var deviceID = ""
     var deviceToken = ""
-    println("DeviceAuth: " + request.headers)
+    var content: AnyContent = request.body
+
+    val deviceString: String = content.asText match {
+      case None => "" //Or handle the lack of a value another way: throw an error, etc.
+      case Some(s: String) => s //return the string to set your value
+    }
+
+    val res: JsValue = Json.parse(deviceString)
     try {
-      deviceID = request.headers.get("device_id").get
-      deviceToken = request.headers.get("device_token").get
-      println("DeviceAuthAfter: " + deviceID, deviceToken)
+      deviceID = (res \ "device_id").as[String]
+      deviceToken = (res \ "device_token").as[String]
       try {
         val deviceJWT = Device.authenticate(deviceID, deviceToken)
         Future.successful(Ok(Json.obj("device_jwt" -> deviceJWT)).withHeaders("device_jwt" -> deviceJWT))

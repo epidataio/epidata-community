@@ -78,7 +78,6 @@ object Device {
       case None => "" //Or handle the lack of a value another way: throw an error, etc.
       case Some(s: String) => s //return the string to set your value
     }
-
     if (deviceTokenString.equals(deviceToken)) {
       val jwttoken = createToken(deviceID)
       val authenticatedAt = System.currentTimeMillis / 1000
@@ -88,9 +87,9 @@ object Device {
       } else {
         SQLiteDeviceService.updateDevice(deviceID, authenticatedAt)
       }
-
       jwttoken
     } else {
+
       throw new Exception("Device Token does not match")
     }
   }

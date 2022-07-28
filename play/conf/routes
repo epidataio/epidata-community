@@ -31,7 +31,9 @@ GET     /unauthorized               @controllers.Unauthorized.show()
 GET     /metrics                    @controllers.MetricController.getMetric()
 
 # Device Authentication
-GET     /authenticate/device        @controllers.DeviceAuth.authenticate
+POST     /authenticate/device        @controllers.DeviceAuth.authenticate
 
 GET     /login/device               @controllers.Devices.show()
 POST    /login/device               @controllers.Devices.devicePost
+
+GET  /assets/*file        controllers.Assets.at(path="/public", file)
