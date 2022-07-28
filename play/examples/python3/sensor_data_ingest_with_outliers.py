@@ -34,8 +34,8 @@ HOST = args.host or '127.0.0.1:9443'
 # AUTHENTICATION_URL = 'https://' + HOST + '/login/device'
 # AUTHENTICATION_ROUTE = '/login/device'
 
-AUTHENTICATION_URL = 'https://' + HOST + '/authenticate/device'
-AUTHENTICATION_ROUTE = '/authenticate/device'
+AUTHENTICATION_URL = 'https://' + HOST + '/authenticate/deviceApp'
+AUTHENTICATION_ROUTE = '/authenticate/deviceApp'
 
 EPI_STREAM = True
 LOG_ITERATION = 1
@@ -114,7 +114,7 @@ json_body = json.dumps({'device_id': DEVICE_ID,
                         'device_token': DEVICE_TOKEN})
 
 # Send the POST request and receive the HTTP response.
-req = requests.Request('GET', AUTHENTICATION_URL, headers=json_header)
+req = requests.Request('POST', AUTHENTICATION_URL, headers=json_header)
 prepped = session.prepare_request(req)
 resp = session.send(prepped, stream=None, verify=None, proxies=None, cert=None, timeout=None)
 json_web_token = resp.headers.get('device_jwt')

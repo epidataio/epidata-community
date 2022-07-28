@@ -24,6 +24,25 @@ class DeviceAuth @Inject() (val cc: ControllerComponents)(
 
   //authenticateApp=>header authenticateWeb=>body
 
+  def authenticateApp = Action.async { implicit request =>
+    var deviceID = ""
+    var deviceToken = ""
+    println("DeviceAuth: " + request.headers)
+    try {
+      deviceID = request.headers.get("device_id").get
+      deviceToken = request.headers.get("device_token").get
+      println("DeviceAuthAfter: " + deviceID, deviceToken)
+      try {
+        val deviceJWT = Device.authenticate(deviceID, deviceToken)
+        Future.successful(Ok(Json.obj("device_jwt" -> deviceJWT)).withHeaders("device_jwt" -> deviceJWT))
+      } catch {
+        case _: Throwable => Future.successful(BadRequest(Json.obj("status" -> "ERROR", "message" -> "incorrect id or token")))
+      }
+    } catch {
+      case _: Throwable => Future.successful(BadRequest(Json.obj("status" -> "Internal Server Error", "message" -> "empty id or token")))
+    }
+  }
+
   def authenticateWeb = Action.async { implicit request =>
     var deviceID = ""
     var deviceToken = ""

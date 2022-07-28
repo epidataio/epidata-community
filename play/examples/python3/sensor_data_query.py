@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 import http.client
 import json
 import numpy as np
-from pytz import UTC, timezone
+# from pytz import UTC, timezone
 import random
 from decimal import Decimal
 import struct
@@ -36,8 +36,8 @@ HOST = args.host or '127.0.0.1:9443'
 # AUTHENTICATION_URL = 'https://' + HOST + '/login/device'
 # AUTHENTICATION_ROUTE = '/login/device'
 
-AUTHENTICATION_URL = 'https://' + HOST + '/authenticate/device'
-AUTHENTICATION_ROUTE = '/authenticate/device'
+AUTHENTICATION_URL = 'https://' + HOST + '/authenticate/deviceApp'
+AUTHENTICATION_ROUTE = '/authenticate/deviceApp'
 
 QUERY_MEASUREMENTS_ORIGINAL_URL = 'https://' + HOST + '/measurements_original?'
 QUERY_MEASUREMENTS_CLEANSED_URL = 'https://' + HOST + '/measurements_cleansed?'
@@ -106,7 +106,7 @@ json_body = json.dumps({'device_id': DEVICE_ID,
                         'device_token': DEVICE_TOKEN})
 
 # Send the POST request and receive the HTTP response.
-req = requests.Request('GET', AUTHENTICATION_URL, headers=json_header)
+req = requests.Request('POST', AUTHENTICATION_URL, headers=json_header)
 prepped = session.prepare_request(req)
 resp = session.send(prepped, stream=None, verify=None, proxies=None, cert=None, timeout=None)
 
