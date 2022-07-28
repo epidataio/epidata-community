@@ -39,6 +39,7 @@ class Devices @Inject() (val cc: ControllerComponents, ws: WSClient)(implicit as
     Ok(views.html.Device.auth(deviceForm))
   }
 
+/*
   def devicePost() = Action { implicit request =>
     deviceForm.bindFromRequest.fold(
       formWithErrors => {
@@ -60,5 +61,6 @@ class Devices @Inject() (val cc: ControllerComponents, ws: WSClient)(implicit as
         }
       })
   }
+  */
 
 }
