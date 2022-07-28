@@ -22,7 +22,9 @@ class DeviceAuth @Inject() (val cc: ControllerComponents)(
   val env: AppEnvironment,
   implicit val conf: Configuration) extends AbstractController(cc) {
 
-  def authenticate = Action.async { implicit request =>
+  //authenticateApp=>header authenticateWeb=>body
+
+  def authenticateWeb = Action.async { implicit request =>
     var deviceID = ""
     var deviceToken = ""
     var content: AnyContent = request.body
