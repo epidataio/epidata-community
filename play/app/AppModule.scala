@@ -48,14 +48,12 @@ class ApplicationDBStart @Inject() (env: Environment, conf: Configuration) {
         throw new SQLException(s"Unable to connect to SQLite database: ${e}")
     }
 
-    case class DeviceConfig(id: String, token: String)
-
-    val mylist = conf.getOptional[Configuration]("device.list").get
+    //get the list of device
+    val deviceList = conf.getOptional[Configuration]("device.list").get
       .getObject(env.mode.toString.toLowerCase).get.entrySet().asScala.map(_.getValue).toList
 
-    var providerlist = new java.util.ArrayList[DeviceConfig]
-
-    for (element <- mylist) {
+    //for each device
+    for (element <- deviceList) {
       var device: String = element.unwrapped().toString().substring(1, element.unwrapped().toString().length - 1);
 
       val devicePair = device.split("\\=")
@@ -63,11 +61,11 @@ class ApplicationDBStart @Inject() (env: Environment, conf: Configuration) {
       var deviceID = devicePair(0)
       var deviceToken = devicePair(1)
 
-      def InsertsDevicestring() = s"""#INSERT OR REPLACE INTO iot_devices (
+      def InsertsDeviceString() = s"""#INSERT OR REPLACE INTO iot_devices (
                                              #iot_device_id,
                                              #iot_device_token) VALUES (?, ?)""".stripMargin('#')
 
-      val insertStatements = InsertsDevicestring()
+      val insertStatements = InsertsDeviceString()
       val stm = DBLite.prepare(insertStatements)
       DBLite.binds(stm, deviceID, deviceToken)
       DBLite.executeUpdate(stm)
@@ -97,18 +95,19 @@ class ApplicationDBStart @Inject() (env: Environment, conf: Configuration) {
         throw new IllegalStateException(s"Unable to connect to cassandra server: ${e}")
     }
 
-    val mylist = conf.getOptional[Configuration]("device.list").get
+    //get the list of device
+    val deviceList = conf.getOptional[Configuration]("device.list").get
       .getObject(env.mode.toString.toLowerCase).get.entrySet().asScala.map(_.getValue).toList
 
-    for (element <- mylist) {
+    //for each device
+    for (element <- deviceList) {
       var device: String = element.unwrapped().toString().substring(1, element.unwrapped().toString().length - 1);
 
       val devicePair = device.split("\\=")
-
       var deviceID = devicePair(0)
       var deviceToken = devicePair(1)
 
-      DB.cql(s"INSERT INTO epidata_test.iot_devices (iot_device_id, iot_device_token) VALUES(\'${deviceID}\',\'${deviceToken}\');")
+      DB.cql(s"INSERT INTO epidata_development.iot_devices (iot_device_id, iot_device_token) VALUES(\'${deviceID}\',\'${deviceToken}\');")
     }
 
   }

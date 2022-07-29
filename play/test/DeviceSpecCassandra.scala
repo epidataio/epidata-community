@@ -41,6 +41,8 @@ class DeviceSpecCassandra extends Specification {
 
   "Device" should {
 
+
+    //create a JWT Token with empty device ID
     "createToken function: create a jwt token with empty device ID" in new WithApplication() {
       try {
         val deviceID1 = ""
@@ -51,6 +53,7 @@ class DeviceSpecCassandra extends Specification {
       }
     }
 
+    //create a JWT Token with null device ID
     "createToken function: create a jwt token with null device ID" in new WithApplication() {
       try {
         val deviceID1 = null
@@ -61,6 +64,7 @@ class DeviceSpecCassandra extends Specification {
       }
     }
 
+    //create a JWT Token with given device ID
     "createToken function: create a jwt token with given device ID" in new WithApplication() {
       val deviceID1 = "DeviceToken1"
       val deviceToken1 = Device.createToken(deviceID1)
@@ -273,7 +277,7 @@ class DeviceSpecCassandra extends Specification {
       updatedAuthenTimeString.toLong <= authenticatedAt2
     }
 
-    //validate funtion:
+    //validate funtion: if Device Token is empty
     "validate funtion: if Device Token is empty" in new WithApplication() {
 
       //create deviceToken
@@ -288,7 +292,7 @@ class DeviceSpecCassandra extends Specification {
       }
     }
 
-    //validate funtion:
+    //validate funtion: if Device Token is null
     "validate funtion: if Device Token is null" in new WithApplication() {
 
       //create deviceToken
@@ -303,7 +307,7 @@ class DeviceSpecCassandra extends Specification {
       }
     }
 
-    //validate funtion:
+    //validate funtion:authenticated time
     "validate funtion: check if authenticated time are within a same range before and after validate" in new WithApplication() {
 
       val deviceID1 = "device_1"
@@ -342,7 +346,7 @@ class DeviceSpecCassandra extends Specification {
       }
     }
 
-    //validate funtion:
+    //validate funtion: expire time
     "validate funtion: check if expire time are within a same range before and after validate" in new WithApplication() {
 
       val deviceID1 = "device_1"
