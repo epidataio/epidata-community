@@ -26,11 +26,13 @@ class DeviceAuthSpec extends Specification {
 
   object Fixtures {
     val truncateSQL = s"DELETE FROM iot_devices"
+    // truncate and cleanUp removes all contents from iot_devices
     def truncate = DB.executeUpdate(DB.prepare(truncateSQL))
     def cleanUp = {
       truncate
     }
 
+    // inserts default values into iot_devices
     def install = {
       cleanUp
       DB.executeUpdate(DB.prepare("INSERT OR REPLACE INTO iot_devices (iot_device_id, iot_device_token) VALUES(\"iot_device_1\", \"epidata_123\");"))
@@ -39,171 +41,219 @@ class DeviceAuthSpec extends Specification {
   }
 
   "Device" should {
-
+    
+    // throw an exception with non-existing device_token for json body
     "throw an exception with non-existing device_token for json body" in new WithApplication {
 
+      // resets and inserts default values into database
       Fixtures.install
 
       val controller = app.injector.instanceOf[controllers.DeviceAuth]
+      // creates request with proper body
       val request = FakeRequest(
         POST,
         "/authenticate/deviceWeb").withTextBody("{\"device_id\": \"iot_device_1\", \"device_token\": \"NonExistentToken\"}")
       val result = controller.authenticateWeb()(request)
 
+      // checks status of the result
       status(result) must equalTo(BAD_REQUEST)
 
     }
 
+    // throw an exception with non-existing device_id for json body
     "throw an exception with non-existing device_id for json body" in new WithApplication {
 
+      // resets and inserts default values into database
       Fixtures.install
 
       val controller = app.injector.instanceOf[controllers.DeviceAuth]
+      // creates request with proper body
       val request = FakeRequest(
         POST,
         "/authenticate/deviceWeb").withTextBody("{\"device_id\": \"NonExistentDevice\", \"device_token\": \"epidata_123\"}")
       val result = controller.authenticateWeb()(request)
 
+      // checks status of the result
       status(result) must equalTo(BAD_REQUEST)
 
     }
 
+    // throw an exception with non-existing device_id and token for json body
     "throw an exception with non-existing device_id and token for json body" in new WithApplication {
 
+      // resets and inserts default values into database
       Fixtures.install
 
       val controller = app.injector.instanceOf[controllers.DeviceAuth]
+      // creates request with proper body
       val request = FakeRequest(
         POST,
         "/authenticate/deviceWeb").withTextBody("{\"device_id\": \"NonExistentDevice\", \"device_token\": \"NonExistentToken\"}")
       val result = controller.authenticateWeb()(request)
 
+      // checks status of the result
       status(result) must equalTo(BAD_REQUEST)
 
     }
 
+    // create new jwt_token with proper device_id and token pair for json body
     "create new jwt_token with proper device_id and token pair for json body" in new WithApplication {
 
+      // resets and inserts default values into database
       Fixtures.install
 
       val controller = app.injector.instanceOf[controllers.DeviceAuth]
+      // creates request with proper body
       val request = FakeRequest(
         POST,
         "/authenticate/deviceWeb").withTextBody("{\"device_id\": \"iot_device_1\", \"device_token\": \"epidata_123\"}")
       val result = controller.authenticateWeb()(request)
 
+      // checks status of the result
       status(result) must equalTo(OK)
 
     }
 
+    // throw an exception with empty string id and token for json body
     "throw an exception with empty string id and token for json body" in new WithApplication {
 
+      // resets and inserts default values into database
       Fixtures.install
 
       val controller = app.injector.instanceOf[controllers.DeviceAuth]
+      // creates request with proper body
       val request = FakeRequest(
         POST,
         "/authenticate/deviceWeb").withTextBody("{\"device_id\": \"\", \"device_token\": \"\"}")
       val result = controller.authenticateWeb()(request)
 
+      // checks status of the result
       status(result) must equalTo(BAD_REQUEST)
 
     }
 
+    // throw an exception with no id and token for json body
     "throw an exception with no id and token for json body" in new WithApplication {
 
+      // resets and inserts default values into database
       Fixtures.install
 
       val controller = app.injector.instanceOf[controllers.DeviceAuth]
+      // creates request with proper body
       val request = FakeRequest(
         POST,
         "/authenticate/deviceWeb")
       val result = controller.authenticateWeb()(request)
 
+      // checks status of the result
       status(result) must equalTo(BAD_REQUEST)
 
     }
 
+    // throw an exception with non-existing device_token for header
     "throw an exception with non-existing device_token for header" in new WithApplication {
 
+      // resets and inserts default values into database
       Fixtures.install
 
       val controller = app.injector.instanceOf[controllers.DeviceAuth]
+      // creates request with proper header
       val request = FakeRequest(
         GET,
         "/authenticate/deviceApp").withHeaders("device_id" -> "iot_device_1", "device_token" -> "NonExistentToken")
       val result = controller.authenticateApp()(request)
 
+      // checks status of the result
       status(result) must equalTo(BAD_REQUEST)
 
     }
 
+    // throw an exception with non-existing device_id for header
     "throw an exception with non-existing device_id for header" in new WithApplication {
 
+      // resets and inserts default values into database
       Fixtures.install
 
       val controller = app.injector.instanceOf[controllers.DeviceAuth]
+      // creates request with proper header
       val request = FakeRequest(
         GET,
         "/authenticate/deviceApp").withHeaders("device_id" -> "NonExistentDevice", "device_token" -> "epidata_123")
       val result = controller.authenticateApp()(request)
 
+      // checks status of the result
       status(result) must equalTo(BAD_REQUEST)
 
     }
 
+    // throw an exception with non-existing device_id and token for header
     "throw an exception with non-existing device_id and token for header" in new WithApplication {
 
+      // resets and inserts default values into database
       Fixtures.install
 
       val controller = app.injector.instanceOf[controllers.DeviceAuth]
+      // creates request with proper header
       val request = FakeRequest(
         GET,
         "/authenticate/deviceApp").withHeaders("device_id" -> "NonExistentDevice", "device_token" -> "NonExistentToken")
       val result = controller.authenticateApp()(request)
 
+      // checks status of the result
       status(result) must equalTo(BAD_REQUEST)
 
     }
 
+    // create new jwt_token with proper device_id and token pair for header
     "create new jwt_token with proper device_id and token pair for header" in new WithApplication {
 
+      // resets and inserts default values into database
       Fixtures.install
 
       val controller = app.injector.instanceOf[controllers.DeviceAuth]
+      // creates request with proper header
       val request = FakeRequest(
         GET,
         "/authenticate/deviceApp").withHeaders("device_id" -> "iot_device_1", "device_token" -> "epidata_123")
       val result = controller.authenticateApp()(request)
 
+      // checks status of the result
       status(result) must equalTo(OK)
 
     }
 
+    // throw an exception with empty string id and token for header
     "throw an exception with empty string id and token for header" in new WithApplication {
 
+      // resets and inserts default values into database
       Fixtures.install
 
       val controller = app.injector.instanceOf[controllers.DeviceAuth]
+      // creates request with proper header
       val request = FakeRequest(
         GET,
         "/authenticate/deviceApp").withHeaders("device_id" -> "", "device_token" -> "")
       val result = controller.authenticateApp()(request)
 
+      // checks status of the result
       status(result) must equalTo(BAD_REQUEST)
 
     }
 
+    // throw an exception with no id and token for header
     "throw an exception with no id and token for header" in new WithApplication {
 
+      // resets and inserts default values into database
       Fixtures.install
 
       val controller = app.injector.instanceOf[controllers.DeviceAuth]
+      // creates request with proper header
       val request = FakeRequest(
         GET,
         "/authenticate/deviceApp")
       val result = controller.authenticateApp()(request)
 
+      // checks status of the result
       status(result) must equalTo(BAD_REQUEST)
 
     }

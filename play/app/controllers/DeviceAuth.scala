@@ -19,53 +19,59 @@ import models._
 @Singleton
 class DeviceAuth @Inject() (val cc: ControllerComponents)(
   implicit
-  val env: AppEnvironment,
-  implicit val conf: Configuration) extends AbstractController(cc) {
+  val env: AppEnvironment) extends AbstractController(cc) {
 
-  //authenticateApp=>header authenticateWeb=>body
-
+  // authentication for app/command line that utilizes headers
   def authenticateApp = Action.async { implicit request =>
     var deviceID = ""
     var deviceToken = ""
-    println("DeviceAuth: " + request.headers)
     try {
+      // retrieves id and token from header
       deviceID = request.headers.get("device_id").get
       deviceToken = request.headers.get("device_token").get
-      println("DeviceAuthAfter: " + deviceID, deviceToken)
       try {
+        // authenticates and returns jwt in header
         val deviceJWT = Device.authenticate(deviceID, deviceToken)
         Future.successful(Ok(Json.obj("device_jwt" -> deviceJWT)).withHeaders("device_jwt" -> deviceJWT))
       } catch {
+        // gives this status if invalid token/id pair is given
         case _: Throwable => Future.successful(BadRequest(Json.obj("status" -> "ERROR", "message" -> "incorrect id or token")))
       }
+      // only catches when id or token are None
     } catch {
       case _: Throwable => Future.successful(BadRequest(Json.obj("status" -> "Internal Server Error", "message" -> "empty id or token")))
     }
   }
 
+  // authentication for web interface that utilizes body
   def authenticateWeb = Action.async { implicit request =>
     var deviceID = ""
     var deviceToken = ""
     var content: AnyContent = request.body
-    println("DeviceAuth: " + content, content.asText)
+    // converst the body to a string
     val deviceString: String = content.asText match {
-      case None => "" //Or handle the lack of a value another way: throw an error, etc.
-      case Some(s: String) => s //return the string to set your value
+      case None => ""
+      case Some(s: String) => s
     }
+    // gives error if body is empty
     if (deviceString == "") {
       Future.successful(BadRequest(Json.obj("status" -> "Internal Server Error", "message" -> "empty id or token")))
     } else {
-      println("String: " + deviceString)
+      // turns the body into a JSValue object
       val res: JsValue = Json.parse(deviceString)
       try {
+        // retrieves id and token from body
         deviceID = (res \ "device_id").as[String]
         deviceToken = (res \ "device_token").as[String]
         try {
+          // authenticates and returns jwt in header
           val deviceJWT = Device.authenticate(deviceID, deviceToken)
           Future.successful(Ok(Json.obj("device_jwt" -> deviceJWT)).withHeaders("device_jwt" -> deviceJWT))
         } catch {
+          // gives this status if invalid token/id pair is given
           case _: Throwable => Future.successful(BadRequest(Json.obj("status" -> "ERROR", "message" -> "incorrect id or token")))
         }
+        // only catches when id or token are None
       } catch {
         case _: Throwable => Future.successful(BadRequest(Json.obj("status" -> "Internal Server Error", "message" -> "empty id or token")))
       }

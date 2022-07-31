@@ -19,20 +19,24 @@ import service.{ DBUserService, AppEnvironment, DataService }
 class ValidAction @Inject() (override val parser: BodyParsers.Default)(implicit ec: ExecutionContext)
   extends ActionBuilderImpl(parser) {
 
+  // always runs when ValidAction is used to check if JWT token is valid
   override def invokeBlock[A](request: Request[A], block: (Request[A]) => Future[Result]): Future[Result] = {
     var deviceJwt = ""
+    // checks if there is a token in the header
     try {
       deviceJwt = request.headers.get("device_jwt").get
     } catch {
-      case _: Throwable => Future.successful(BadRequest(Json.toJson("Unauthorized123")))
+      case _: Throwable => Future.successful(BadRequest(Json.toJson("Unauthorized")))
     }
     try {
+      // creates a new request with Device.validate and sends it to the block
       val newDeviceJWT = Device.validate(deviceJwt)
       val header = Headers(("device_jwt", newDeviceJWT))
       val newRequest = request.withHeaders(header)
       block(newRequest)
     } catch {
-      case _: Throwable => Future.successful(BadRequest(Json.toJson("Unauthorized456")))
+      // only runs if token is not validated
+      case _: Throwable => Future.successful(BadRequest(Json.toJson("Unauthorized")))
     }
   }
 
