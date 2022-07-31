@@ -144,7 +144,7 @@ while (True):
         # json_header = {'Cookie': session_cookie, 'Accept': 'text/plain'}
         json_header = {
                 'Content-type': 'application/json',
-                'json_web_token': json_web_token
+                'device_jwt': json_web_token
         }
 
         # Send the GET request and receive the HTTP response.
@@ -152,7 +152,6 @@ while (True):
         prepped = session.prepare_request(req)
         # print("prepared statement header: \n", prepped.headers)
         resp = session.send(prepped, stream=None, verify=None, proxies=None, cert=None, timeout=None)
-
         # Check that the response's HTTP response code is 200 (OK) and read the response.
         print("response content: ", resp.content.decode("utf-8"))
         # response_json = json.loads(resp.content)
@@ -196,7 +195,8 @@ while (True):
         # print(url)
         # json_header = {'Cookie': session_cookie, 'Accept': 'text/plain'}
         json_header = {
-                'Content-type': 'application/json'
+                'Content-type': 'application/json',
+                'device_jwt': json_web_token
         }
 
         # Send the GET request and receive the HTTP response.
@@ -249,7 +249,8 @@ while (True):
         # print(url)
         # json_header = {'Cookie': session_cookie, 'Accept': 'text/plain'}
         json_header = {
-                'Content-type': 'application/json'
+                'Content-type': 'application/json',
+                'device_jwt': json_web_token
         }
 
         # Send the GET request and receive the HTTP response.

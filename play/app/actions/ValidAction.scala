@@ -19,15 +19,21 @@ import service.{ DBUserService, AppEnvironment, DataService }
 class ValidAction @Inject() (override val parser: BodyParsers.Default)(implicit ec: ExecutionContext)
   extends ActionBuilderImpl(parser) {
 
-  def filter[A](request: Request[A], block: (Request[A]) => Future[Result]) = Future[Result] {
-    val deviceJWT = request.headers.get("jwt_token")
+  override def invokeBlock[A](request: Request[A], block: (Request[A]) => Future[Result]): Future[Result] = {
+    var deviceJwt = ""
     try {
-      val newDeviceJWT = Device.validate(deviceJWT.get)
-      Ok(Json.obj("jwt_token" -> deviceJWT.get))
+      deviceJwt = request.headers.get("device_jwt").get
     } catch {
-      case _: Throwable => BadRequest(Json.toJson("Unauthorized"))
+      case _: Throwable => Future.successful(BadRequest(Json.toJson("Unauthorized123")))
+    }
+    try {
+      val newDeviceJWT = Device.validate(deviceJwt)
+      val header = Headers(("device_jwt", newDeviceJWT))
+      val newRequest = request.withHeaders(header)
+      block(newRequest)
+    } catch {
+      case _: Throwable => Future.successful(BadRequest(Json.toJson("Unauthorized456")))
     }
   }
 
 }
-// If timeout, reauthenticate. Always update jwt_token and extending the time

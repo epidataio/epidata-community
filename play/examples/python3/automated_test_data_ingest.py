@@ -130,7 +130,7 @@ url = CREATE_MEASUREMENT_URL
 # Request headers add parameters to the request.
 headers = {
     'Content-type': 'application/json',
-    'json_web_token': json_web_token
+    'device_jwt': json_web_token
 }
 
 # The measurement data is assembled in a python dictionary and converted
@@ -165,7 +165,7 @@ json_body = json.dumps([{
 
 # Construct and send the POST request.
 #post_request = urllib2.Request(url, headers=headers, data=json_body)
-req = requests.Request('POST', CREATE_MEASUREMENT_URL, data=json_body, headers=json_header)
+req = requests.Request('POST', CREATE_MEASUREMENT_URL, data=json_body, headers=headers)
 prepped = session.prepare_request(req)
 resp = session.send(prepped, stream=None, verify=None, proxies=None, cert=None, timeout=None)
 
@@ -186,7 +186,10 @@ print(json_body + "\n")
 ##################################################
 
 url = CREATE_MEASUREMENT_URL
-headers = {'Content-type': 'application/json'}
+headers = {
+    'Content-type': 'application/json',
+    'device_jwt': json_web_token
+    }
 json_body = json.dumps([{
     'company': 'Company-2',
     'site': 'Site-2',
@@ -213,7 +216,7 @@ json_body = json.dumps([{
 #assert post_response.getcode() == 201
 
 # Construct and send the POST request.
-req = requests.Request('POST', CREATE_MEASUREMENT_URL, data=json_body, headers=json_header)
+req = requests.Request('POST', CREATE_MEASUREMENT_URL, data=json_body, headers=headers)
 prepped = session.prepare_request(req)
 resp = session.send(prepped, stream=None, verify=None, proxies=None, cert=None, timeout=None)
 

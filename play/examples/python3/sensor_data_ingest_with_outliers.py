@@ -286,7 +286,7 @@ while (True):
             # Request headers add parameters to the request.
             json_header = {
                 'Content-type': 'application/json',
-                'json_web_token': json_web_token
+                'device_jwt': json_web_token
                 }
 
             # Construct JSON body with data to be ingested.
