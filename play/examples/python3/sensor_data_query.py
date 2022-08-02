@@ -30,12 +30,6 @@ arg_parser.add_argument('--device_token')
 args = arg_parser.parse_args()
 
 HOST = args.host or '127.0.0.1:9443'
-
-# AUTHENTICATION_URL = 'https://' + HOST + '/authenticate/app'
-# AUTHENTICATION_ROUTE = '/authenticate/app'
-# AUTHENTICATION_URL = 'https://' + HOST + '/login/device'
-# AUTHENTICATION_ROUTE = '/login/device'
-
 AUTHENTICATION_URL = 'https://' + HOST + '/authenticate/deviceApp'
 AUTHENTICATION_ROUTE = '/authenticate/deviceApp'
 
@@ -98,12 +92,9 @@ session = requests.Session()
 url = AUTHENTICATION_URL
 
 # An HTTP POST with JSON content requires the HTTP Content-type header.
+# The access token is povided via JSON header.
 json_header = {'Content-type': 'application/json', 'Set-Cookie': "epidata", 'device_id': DEVICE_ID,
                'device_token': DEVICE_TOKEN}
-
-# The access token is povided via JSON.
-json_body = json.dumps({'device_id': DEVICE_ID,
-                        'device_token': DEVICE_TOKEN})
 
 # Send the POST request and receive the HTTP response.
 req = requests.Request('POST', AUTHENTICATION_URL, headers=json_header)
@@ -111,7 +102,6 @@ prepped = session.prepare_request(req)
 resp = session.send(prepped, stream=None, verify=None, proxies=None, cert=None, timeout=None)
 
 # Check that the response's HTTP response code is 200 (OK).
-
 assert resp.status_code == 200
 
 # Parse the JSON response.
@@ -132,16 +122,14 @@ while (True):
     try:
         # Specify measurement query parameters
         begin_time = get_time("1/01/2022 00:00:00.000")
-        #end_time = get_time("4/21/2021 00:00:00.000") #for empty data
-        end_time = get_time("1/01/2023 00:00:00.000") #for non-empty data
-
+        end_time = get_time("1/01/2023 00:00:00.000")
 
         parameters = {'company': COMPANY, 'site': SITE, 'station': STATION, 'sensor': SENSOR, 'beginTime': begin_time, 'endTime': end_time}
 
         # Construct url with parameters
         url = QUERY_MEASUREMENTS_ORIGINAL_URL+urllib.parse.urlencode(parameters)
         # print(url)
-        # json_header = {'Cookie': session_cookie, 'Accept': 'text/plain'}
+
         json_header = {
                 'Content-type': 'application/json',
                 'device_jwt': json_web_token
@@ -153,10 +141,9 @@ while (True):
         # print("prepared statement header: \n", prepped.headers)
         resp = session.send(prepped, stream=None, verify=None, proxies=None, cert=None, timeout=None)
         # Check that the response's HTTP response code is 200 (OK) and read the response.
-        print("response content: ", resp.content.decode("utf-8"))
-        # response_json = json.loads(resp.content)
+        response_json = json.loads(resp.content)
         print("Measurement Query Results - Original Data:")
-        # print(response_json)
+        print(response_json)
         assert resp.status_code == 200
 
         # increment iteration and current time
@@ -184,16 +171,13 @@ while (True):
     try:
         # Specify measurement query parameters
         begin_time = get_time("1/01/2022 00:00:00.000")
-        #end_time = get_time("4/21/2021 00:00:00.000") #for empty data
-        end_time = get_time("1/01/2023 00:00:00.000") #for non-empty data
-
+        end_time = get_time("1/01/2023 00:00:00.000")
 
         parameters = {'company': COMPANY, 'site': SITE, 'station': STATION, 'sensor': SENSOR, 'beginTime': begin_time, 'endTime': end_time}
 
         # Construct url with parameters
         url = QUERY_MEASUREMENTS_CLEANSED_URL+urllib.parse.urlencode(parameters)
         # print(url)
-        # json_header = {'Cookie': session_cookie, 'Accept': 'text/plain'}
         json_header = {
                 'Content-type': 'application/json',
                 'device_jwt': json_web_token
@@ -206,7 +190,6 @@ while (True):
         resp = session.send(prepped, stream=None, verify=None, proxies=None, cert=None, timeout=None)
 
         # Check that the response's HTTP response code is 200 (OK) and read the response.
-        # print("response content: ", resp.content)
         response_json = json.loads(resp.content)
         print("Measurement Query Results - Cleansed Data:")
         print(response_json)
@@ -238,8 +221,7 @@ while (True):
     try:
         # Specify measurement query parameters
         begin_time = get_time("1/01/2022 00:00:00.000")
-        #end_time = get_time("4/21/2021 00:00:00.000") #for empty data
-        end_time = get_time("1/01/2023 00:00:00.000") #for non-empty data
+        end_time = get_time("1/01/2023 00:00:00.000")
 
 
         parameters = {'company': COMPANY, 'site': SITE, 'station': STATION, 'sensor': SENSOR, 'beginTime': begin_time, 'endTime': end_time}
@@ -247,7 +229,6 @@ while (True):
         # Construct url with parameters
         url = QUERY_MEASUREMENTS_SUMMARY_URL+urllib.parse.urlencode(parameters)
         # print(url)
-        # json_header = {'Cookie': session_cookie, 'Accept': 'text/plain'}
         json_header = {
                 'Content-type': 'application/json',
                 'device_jwt': json_web_token
@@ -260,7 +241,6 @@ while (True):
         resp = session.send(prepped, stream=None, verify=None, proxies=None, cert=None, timeout=None)
 
         # Check that the response's HTTP response code is 200 (OK) and read the response.
-        # print("response content: ", resp.content)
         response_json = json.loads(resp.content)
         print("Measurement Query Results - Summary Data:")
         print(response_json)

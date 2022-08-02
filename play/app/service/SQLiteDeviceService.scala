@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2015-2017 EpiData, Inc.
+ * Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 package models
@@ -64,9 +64,7 @@ object SQLiteDeviceService {
                                          #iot_device_id,
                                          #iot_device_token) VALUES (?, ?)""".stripMargin('#')
 
-  private def updateDevicestring() = s"""#UPDATE iot_devices
-SET authenticated_at = ?
-WHERE iot_device_id = ?""".stripMargin('#')
+  private def updateDevicestring() = s"""#UPDATE iot_devices SET authenticated_at = ? WHERE iot_device_id = ?""".stripMargin('#')
 
   private def preparequeryDevice() = s"""#SELECT iot_device_token, authenticated_at,connection_timeout FROM iot_devices WHERE iot_device_id = ?""".stripMargin('#')
 

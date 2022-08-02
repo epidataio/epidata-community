@@ -14,6 +14,7 @@ POST    /measurements                      @controllers.SensorMeasurements.creat
 # POST    /kafka/measurements                @controllers.SensorMeasurements.insertKafka
 
 # ZMQ or Kafka insert
+# +nocsrf
 POST    /stream/measurements               @controllers.SensorMeasurements.insertQueue
 
 # Query Measurement

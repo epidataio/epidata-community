@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 EpiData, Inc.
+ * Copyright (c) 2022 EpiData, Inc.
 */
 
 import SQLite.DB
@@ -41,7 +41,7 @@ class DeviceAuthSpec extends Specification {
   }
 
   "Device" should {
-    
+
     // throw an exception with non-existing device_token for json body
     "throw an exception with non-existing device_token for json body" in new WithApplication {
 

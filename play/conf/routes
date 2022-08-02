@@ -7,10 +7,12 @@
 # Additional routes files are located in the conf directory.
 # ~~~~
 
-# Login/logout pages.
+# Home Page.
 GET     /                           securesocial.controllers.LoginPage.login
-GET     /login/user                      securesocial.controllers.LoginPage.login
-GET     /logout/user                     securesocial.controllers.LoginPage.logout
+
+# User Login/logout pages.
+GET     /login/user                 securesocial.controllers.LoginPage.login
+GET     /logout/user                securesocial.controllers.LoginPage.logout
 
 # Interactive notebook session.
 GET     /notebook                   @controllers.Notebook.show()
@@ -27,14 +29,14 @@ POST    /authenticate/app           @controllers.DemoAuth.authenticateByPost
 GET     /error                      @controllers.ErrorRedirect.show()
 GET     /unauthorized               @controllers.Unauthorized.show()
 
-# Get Metric
+# Get Metric.
 GET     /metrics                    @controllers.MetricController.getMetric()
 
-# Device Authentication
+# Device Authentication via IoT Device or Edge App.
 POST     /authenticate/deviceApp        @controllers.DeviceAuth.authenticateApp
 POST     /authenticate/deviceWeb        @controllers.DeviceAuth.authenticateWeb
 
-
+# Device Authentication via simple web page.
 GET     /login/device               @controllers.Devices.show()
 
 GET  /assets/*file        controllers.Assets.at(path="/public", file)

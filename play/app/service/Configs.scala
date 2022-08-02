@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2015-2022 EpiData, Inc.
+*/
+
 package service
 
 import play.api.Configuration

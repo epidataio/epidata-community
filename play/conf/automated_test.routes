@@ -13,6 +13,7 @@ POST    /measurements                   @controllers.AutomatedTests.create
 # POST    /kafka/measurements             @controllers.AutomatedTests.insertKafka
 
 # ZMQ or Kafka insert
+# +nocsrf
 POST    /stream/measurements            @controllers.AutomatedTests.insertQueue
 
 # Query Measurement

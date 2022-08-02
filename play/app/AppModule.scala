@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 EpiData, Inc.
+ * Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 import SQLite.{ DB => DBLite }
@@ -11,6 +11,7 @@ import play.api._
 import play.api.{ Configuration, Environment }
 import service.{ AppEnvironment, Configs, DataService, DataSinkService, KafkaService, ZMQProducer }
 import providers.DemoProvider
+import models.{ SQLiteDeviceService, NoSQLDeviceService }
 
 import scala.concurrent.Future
 import javax.inject._
@@ -48,7 +49,7 @@ class ApplicationDBStart @Inject() (env: Environment, conf: Configuration) {
         throw new SQLException(s"Unable to connect to SQLite database: ${e}")
     }
 
-    //get the list of device
+    //get the list of devices
     val deviceList = conf.getOptional[Configuration]("device.list").get
       .getObject(env.mode.toString.toLowerCase).get.entrySet().asScala.map(_.getValue).toList
 
@@ -57,18 +58,10 @@ class ApplicationDBStart @Inject() (env: Environment, conf: Configuration) {
       var device: String = element.unwrapped().toString().substring(1, element.unwrapped().toString().length - 1);
 
       val devicePair = device.split("\\=")
-
       var deviceID = devicePair(0)
       var deviceToken = devicePair(1)
 
-      def InsertsDeviceString() = s"""#INSERT OR REPLACE INTO iot_devices (
-                                             #iot_device_id,
-                                             #iot_device_token) VALUES (?, ?)""".stripMargin('#')
-
-      val insertStatements = InsertsDeviceString()
-      val stm = DBLite.prepare(insertStatements)
-      DBLite.binds(stm, deviceID, deviceToken)
-      DBLite.executeUpdate(stm)
+      SQLiteDeviceService.insertDevice(deviceID, deviceToken)
     }
   }
 
@@ -95,7 +88,7 @@ class ApplicationDBStart @Inject() (env: Environment, conf: Configuration) {
         throw new IllegalStateException(s"Unable to connect to cassandra server: ${e}")
     }
 
-    //get the list of device
+    //get the list of devices
     val deviceList = conf.getOptional[Configuration]("device.list").get
       .getObject(env.mode.toString.toLowerCase).get.entrySet().asScala.map(_.getValue).toList
 
@@ -107,9 +100,8 @@ class ApplicationDBStart @Inject() (env: Environment, conf: Configuration) {
       var deviceID = devicePair(0)
       var deviceToken = devicePair(1)
 
-      DB.cql(s"INSERT INTO epidata_development.iot_devices (iot_device_id, iot_device_token) VALUES(\'${deviceID}\',\'${deviceToken}\');")
+      NoSQLDeviceService.insertDevice(deviceID, deviceToken)
     }
-
   }
 }
 

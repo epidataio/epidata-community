@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 EpiData, Inc.
+ * Copyright (c) 2022 EpiData, Inc.
 */
 
 import cassandra.DB
@@ -40,7 +40,6 @@ class DeviceSpecCassandra extends Specification {
   }
 
   "Device" should {
-
 
     //create a JWT Token with empty device ID
     "createToken function: create a jwt token with empty device ID" in new WithApplication() {
