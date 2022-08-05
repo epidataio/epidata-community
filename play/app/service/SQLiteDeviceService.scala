@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2015-2017 EpiData, Inc.
+ * Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 package models
@@ -21,6 +21,7 @@ import java.sql.PreparedStatement
 
 object SQLiteDeviceService {
 
+  //insert deviceID and deviceToken to DB
   def insertDevice(deviceID: String, deviceToken: String): Unit = {
     val insertStatements = InsertsDevicestring()
     val stm = DB.prepare(insertStatements)
@@ -28,6 +29,7 @@ object SQLiteDeviceService {
     DB.executeUpdate(stm)
   }
 
+  //update issueTime using deviceId
   def updateDevice(deviceID: String, issueTime: Long): Unit = {
     val updateStatements = updateDevicestring()
     val stm = DB.prepare(updateStatements)
@@ -35,6 +37,7 @@ object SQLiteDeviceService {
     DB.executeUpdate(stm)
   }
 
+  //query the device using deviceID
   def queryDevice(deviceID: String): MutableMap[String, String] = {
     val queryDeviceStatements = preparequeryDevice()
     val stm = DB.prepare(queryDeviceStatements)
@@ -49,6 +52,7 @@ object SQLiteDeviceService {
     mmap
   }
 
+  //delete the device using deviceID
   def deleteDevice(deviceID: String): Unit = {
     val deleteDeviceStatements = preparedeleteDevice()
     val stm = DB.prepare(deleteDeviceStatements)
@@ -60,9 +64,7 @@ object SQLiteDeviceService {
                                          #iot_device_id,
                                          #iot_device_token) VALUES (?, ?)""".stripMargin('#')
 
-  private def updateDevicestring() = s"""#UPDATE iot_devices
-SET authenticated_at = ?
-WHERE iot_device_id = ?""".stripMargin('#')
+  private def updateDevicestring() = s"""#UPDATE iot_devices SET authenticated_at = ? WHERE iot_device_id = ?""".stripMargin('#')
 
   private def preparequeryDevice() = s"""#SELECT iot_device_token, authenticated_at,connection_timeout FROM iot_devices WHERE iot_device_id = ?""".stripMargin('#')
 

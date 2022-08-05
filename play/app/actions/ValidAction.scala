@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2022 EpiData, Inc.
+*/
+
 package actions
 
 import play.api.mvc._
@@ -19,15 +23,25 @@ import service.{ DBUserService, AppEnvironment, DataService }
 class ValidAction @Inject() (override val parser: BodyParsers.Default)(implicit ec: ExecutionContext)
   extends ActionBuilderImpl(parser) {
 
-  override def invokeBlock[A](request: Request[A], block: (Request[A]) => Future[Result]) = Future[Result] {
-    val deviceJWT = request.headers.get("jwt_token")
+  // always runs when ValidAction is used to check if JWT token is valid
+  override def invokeBlock[A](request: Request[A], block: (Request[A]) => Future[Result]): Future[Result] = {
+    var deviceJwt = ""
+    // checks if there is a token in the header
     try {
-      val newDeviceJWT = Device.validate(deviceJWT.get)
-      Ok(Json.obj("jwt_token" -> deviceJWT.get))
+      deviceJwt = request.headers.get("device_jwt").get
     } catch {
-      case _: Throwable => BadRequest(Json.toJson("Unauthorized"))
+      case _: Throwable => Future.successful(BadRequest(Json.toJson("Unauthorized")))
+    }
+    try {
+      // creates a new request with Device.validate and sends it to the block
+      val newDeviceJWT = Device.validate(deviceJwt)
+      val header = Headers(("device_jwt", newDeviceJWT))
+      val newRequest = request.withHeaders(header)
+      block(newRequest)
+    } catch {
+      // only runs if token is not validated
+      case _: Throwable => Future.successful(BadRequest(Json.toJson("Unauthorized")))
     }
   }
 
 }
-// If timeout, reauthenticate. Always update jwt_token and extending the time

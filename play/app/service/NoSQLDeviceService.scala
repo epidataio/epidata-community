@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2015-2017 EpiData, Inc.
+ * Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 package models
@@ -21,23 +21,24 @@ import java.sql.PreparedStatement
 
 object NoSQLDeviceService {
 
+  //insert deviceID and deviceToken to DB
   def insertDevice(deviceID: String, deviceToken: String): Unit = {
     val insertStatements = s"""INSERT INTO iot_devices (iot_device_id,iot_device_token) VALUES (${deviceID}, ${deviceToken})"""
     DB.cql(insertStatements)
   }
 
+  //update issueTime using deviceId
   def updateDevice(deviceID: String, issueTime: Long): Unit = {
     val updateStatements = s"UPDATE iot_devices SET authenticated_at = ${issueTime} WHERE iot_device_id =\'" + deviceID + "\'"
     DB.cql(updateStatements)
   }
 
+  //query the device using deviceID
   def queryDevice(deviceID: String): MutableMap[String, String] = {
     val quertyDeviceStatements = s"SELECT iot_device_token, authenticated_at,connection_timeout FROM iot_devices WHERE iot_device_id = \'" + deviceID + "\'"
 
     val rs = DB.cql(quertyDeviceStatements).one()
     var mmap = MutableMap[String, String]()
-
-    println("QUERY TEST : " + rs.toString)
 
     if (rs != null) {
       mmap = MutableMap("device_token" -> rs.getString(0), "authenticated_at" -> rs.getLong(1).toString, "connection_timeout" -> rs.getInt(2).toString)
@@ -45,22 +46,10 @@ object NoSQLDeviceService {
     mmap
   }
 
+  //delete the device using deviceID
   def deleteDevice(deviceID: String): Unit = {
     val deleteDeviceStatements = s"""DELETE FROM iot_devices WHERE iot_device_id = ${deviceID}"""
-    //    val stm = DB.prepare(deleteDeviceStatements)
     DB.cql(deleteDeviceStatements)
   }
-
-  private def InsertsDevicestring() = s"""#INSERT INTO iot_devices (
-                                         #iot_device_id,
-                                         #iot_device_token) VALUES (?, ?)""".stripMargin('#')
-
-  private def updateDevicestring() = s"""#UPDATE iot_devices
-SET authenticated_at = ?
-WHERE iot_device_id = ?""".stripMargin('#')
-
-  private def preparequertyDevice() = s"""#SELECT iot_device_token, authenticated_at,connection_timeout FROM iot_devices WHERE iot_device_id = ?""".stripMargin('#')
-
-  private def preparedeleteDevice() = s"""#DELETE FROM iot_devices WHERE iot_device_id = ?""".stripMargin('#')
 
 }

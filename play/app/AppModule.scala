@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 EpiData, Inc.
+ * Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 import SQLite.{ DB => DBLite }
@@ -11,6 +11,7 @@ import play.api._
 import play.api.{ Configuration, Environment }
 import service.{ AppEnvironment, Configs, DataService, DataSinkService, KafkaService, ZMQProducer }
 import providers.DemoProvider
+import models.{ SQLiteDeviceService, NoSQLDeviceService }
 
 import scala.concurrent.Future
 import javax.inject._
@@ -19,6 +20,7 @@ import securesocial.core.RuntimeEnvironment
 import service.ZMQInit
 
 import scala.collection.JavaConverters._
+import play.api.libs.json._
 
 class AppModule extends Module {
   def bindings(env: Environment, conf: Configuration) = Seq(
@@ -46,6 +48,21 @@ class ApplicationDBStart @Inject() (env: Environment, conf: Configuration) {
       case e: SQLException =>
         throw new SQLException(s"Unable to connect to SQLite database: ${e}")
     }
+
+    //get the list of devices
+    val deviceList = conf.getOptional[Configuration]("device.list").get
+      .getObject(env.mode.toString.toLowerCase).get.entrySet().asScala.map(_.getValue).toList
+
+    //for each device
+    for (element <- deviceList) {
+      var device: String = element.unwrapped().toString().substring(1, element.unwrapped().toString().length - 1);
+
+      val devicePair = device.split("\\=")
+      var deviceID = devicePair(0)
+      var deviceToken = devicePair(1)
+
+      SQLiteDeviceService.insertDevice(deviceID, deviceToken)
+    }
   }
 
   // Connect to the Cassandra database.
@@ -69,6 +86,21 @@ class ApplicationDBStart @Inject() (env: Environment, conf: Configuration) {
     } catch {
       case e: NoHostAvailableException =>
         throw new IllegalStateException(s"Unable to connect to cassandra server: ${e}")
+    }
+
+    //get the list of devices
+    val deviceList = conf.getOptional[Configuration]("device.list").get
+      .getObject(env.mode.toString.toLowerCase).get.entrySet().asScala.map(_.getValue).toList
+
+    //for each device
+    for (element <- deviceList) {
+      var device: String = element.unwrapped().toString().substring(1, element.unwrapped().toString().length - 1);
+
+      val devicePair = device.split("\\=")
+      var deviceID = devicePair(0)
+      var deviceToken = devicePair(1)
+
+      NoSQLDeviceService.insertDevice(deviceID, deviceToken)
     }
   }
 }

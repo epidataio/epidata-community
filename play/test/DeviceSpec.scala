@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 EpiData, Inc.
+ * Copyright (c) 2022 EpiData, Inc.
 */
 
 import SQLite.DB
@@ -41,7 +41,8 @@ class DeviceSpec extends Specification {
 
   "Device" should {
 
-    "createToken function: create a jwt token with empty device ID" in new WithApplication() {
+    //create a JWT Token with empty device ID
+    "createToken function: create a JWT Token with empty device ID" in new WithApplication() {
       Fixtures.install
       try {
         val deviceID1 = ""
@@ -52,7 +53,8 @@ class DeviceSpec extends Specification {
       }
     }
 
-    "createToken function: create a jwt token with null device ID" in new WithApplication() {
+    //create a JWT Token with null device ID
+    "createToken function: create a JWT Token with null device ID" in new WithApplication() {
       Fixtures.install
       try {
         val deviceID1 = null
@@ -63,7 +65,8 @@ class DeviceSpec extends Specification {
       }
     }
 
-    "createToken function: create a jwt token with given device ID" in new WithApplication() {
+    //create a JWT Token with given device ID
+    "createToken function: create a JWT Token with given device ID" in new WithApplication() {
       Fixtures.install
       val deviceID1 = "DeviceToken1"
       val deviceToken1 = Device.createToken(deviceID1)
@@ -88,7 +91,7 @@ class DeviceSpec extends Specification {
     }
 
     //authenticated Time
-    "createToken function: checking authenticated time when creating a jwt token with given device ID" in new WithApplication() {
+    "createToken function: checking authenticated time when creating a JWT Token with given device ID" in new WithApplication() {
       Fixtures.install
       val deviceID1 = "DeviceToken1"
 
@@ -121,7 +124,7 @@ class DeviceSpec extends Specification {
     }
 
     //expire Time
-    "createToken function: checking expire time when creating a jwt token with given device ID" in new WithApplication() {
+    "createToken function: checking expire time when creating a JWT Token with given device ID" in new WithApplication() {
       Fixtures.install
       val deviceID1 = "DeviceToken1"
 
@@ -277,7 +280,7 @@ class DeviceSpec extends Specification {
       updatedAuthenTimeString.toLong <= authenticatedAt2
     }
 
-    //validate funtion:
+    //validate funtion: if Device Token is empty
     "validate funtion: if Device Token is empty" in new WithApplication() {
       Fixtures.install
       //create deviceToken
@@ -292,7 +295,7 @@ class DeviceSpec extends Specification {
       }
     }
 
-    //validate funtion:
+    //validate funtion: if Device Token is null
     "validate funtion: if Device Token is null" in new WithApplication() {
       Fixtures.install
       //create deviceToken
@@ -307,7 +310,7 @@ class DeviceSpec extends Specification {
       }
     }
 
-    //validate funtion:
+    //validate funtion:authenticated time
     "validate funtion: check if authenticated time are within a same range before and after validate" in new WithApplication() {
       Fixtures.install
       val deviceID1 = "device_1"
@@ -346,7 +349,7 @@ class DeviceSpec extends Specification {
       }
     }
 
-    //validate funtion:
+    //validate funtion: expire time
     "validate funtion: check if expire time are within a same range before and after validate" in new WithApplication() {
       Fixtures.install
       val deviceID1 = "device_1"

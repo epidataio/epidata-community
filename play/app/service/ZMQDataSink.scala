@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2020 EpiData, Inc.
+ * Copyright (c) 2020-2022 EpiData, Inc.
 */
 
 package service

@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2015-2022 EpiData, Inc.
+ * Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 package models
@@ -26,6 +26,7 @@ import scala.collection.mutable.{ Map => MutableMap }
 
 object Device {
 
+  //create the JWT Token by taking in a deviceID
   def createToken(deviceID: String): String = {
     if (deviceID == null || deviceID.trim.isEmpty) {
       throw new Exception("Device ID is empty")
@@ -39,11 +40,12 @@ object Device {
     //create payload Map
     val payload = Map("ss" -> "epidata.io", "dev" -> deviceID, "access" -> "ingestion", "iat" -> currTimeStamp, "exp" -> expTimeStamp, "timeout" -> connectionTimeOut)
 
-    //generate jwt token
+    //generate JWT Token
     val token = generateToken(payload)
     token
   }
 
+  //a private helper function to generate JWT Token. Takes in a payload
   def generateToken(payload: Map[String, Any]): String = {
 
     val JwtSecretAlgo = "HS256"
@@ -53,9 +55,11 @@ object Device {
     val claimsSet = JwtClaimsSet(payload)
     val secretKey = Play.current.configuration.getString("application.secret")
 
+    //Create the token
     JsonWebToken(header, claimsSet, secretKey.get)
   }
 
+  //authenticate the device by checking if deviceToken is matched
   def authenticate(deviceID: String, deviceToken: String): String = {
     if (deviceID == null || deviceID.trim.isEmpty) {
       throw new Exception("Device ID is empty")
@@ -78,9 +82,8 @@ object Device {
       case None => "" //Or handle the lack of a value another way: throw an error, etc.
       case Some(s: String) => s //return the string to set your value
     }
-
     if (deviceTokenString.equals(deviceToken)) {
-      val jwttoken = createToken(deviceID)
+      val jwtToken = createToken(deviceID)
       val authenticatedAt = System.currentTimeMillis / 1000
 
       if (Configs.deviceDB.equals("cassandra")) {
@@ -88,13 +91,13 @@ object Device {
       } else {
         SQLiteDeviceService.updateDevice(deviceID, authenticatedAt)
       }
-
-      jwttoken
+      jwtToken
     } else {
       throw new Exception("Device Token does not match")
     }
   }
 
+  //validate deviceJWT using jwt library
   def validate(deviceJWT: String): String = {
     if (deviceJWT == null || deviceJWT.trim.isEmpty) {
       throw new Exception("Device JWT Token is empty")
