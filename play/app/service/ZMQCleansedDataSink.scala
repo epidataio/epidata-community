@@ -18,18 +18,12 @@ import org.zeromq.ZMQException
 import play.api.Logger
 
 class ZMQCleansedDataSink {
-  var context: ZMQ.Context = _
   var subSocket: ZMQ.Socket = _
   val subTopicCleansed: String = "measurements_cleansed"
 
   val logger: Logger = Logger(this.getClass())
 
   def init(context: ZMQ.Context, subPort: String): Unit = {
-    println("ZMQCleansedDataSink initialized")
-
-    //initializing ZMQ context which will be used for SUB
-    this.context = context
-
     //using context to create SUB model and binding it to socket
     subSocket = context.socket(ZMQ.SUB)
     subSocket.connect("tcp://127.0.0.1:" + subPort)
@@ -38,7 +32,6 @@ class ZMQCleansedDataSink {
   }
 
   def sub(): (String, Message) = {
-    // println("ZMQSummaryDataSink sub called.")
     try {
       val topic = subSocket.recvStr()
       // println("Sub topic: " + topic + "\n")
@@ -55,9 +48,9 @@ class ZMQCleansedDataSink {
     try {
       subSocket.unsubscribe(subTopicCleansed.getBytes(ZMQ.CHARSET))
       subSocket.setLinger(1)
-      subSocket.disconnect("tcp://127.0.0.1:" + subPort)
+      // subSocket.disconnect("tcp://127.0.0.1:" + subPort)
+      subSocket.disconnect(subSocket.getLastEndpoint())
       subSocket.close()
-      println("Cleansed DataSink service closed successfully")
     } catch {
       case e: Throwable => println("Exception while closing DataSink sub service", e.getMessage)
     }

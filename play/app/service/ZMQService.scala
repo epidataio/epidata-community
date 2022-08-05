@@ -28,7 +28,6 @@ object ZMQService {
   val logger: Logger = Logger(this.getClass())
 
   private val poolSize: Int = 4
-  //  private val executorService: ExecutorService = Executors.newFixedThreadPool(poolSize)
 
   def init(context: ZMQ.Context, pullPort: String, cleansedSubPort: String, summarySubPort: String, dynamicSubPort: String): ZMQService.type = {
     this.executorService = Executors.newFixedThreadPool(this.poolSize)
@@ -44,31 +43,26 @@ object ZMQService {
    * ZMQ DataSink as a thread
    */
   def start(): Unit = {
-    println("ZMQService started")
-
     try {
-
       // Pull Thread - Original Data
       executorService.submit(new Runnable {
         override def run(): Unit = {
-          val sink = new ZMQPullDataSink()
-          sink.init(context, pullPort)
-
-          //println("ZMQ DataSink pull running in a new thread.")
+          val originalDataSink = new ZMQPullDataSink()
+          originalDataSink.init(context, pullPort)
 
           breakable {
             while (!Thread.currentThread().isInterrupted()) {
               try {
-                val rawData: String = sink.pull().value
+                val rawData: String = originalDataSink.pull().value
 
                 Configs.measurementClass match {
                   case com.epidata.lib.models.AutomatedTest.NAME => {
                     models.AutomatedTest.insertRecordFromZMQ(rawData)
-                    //println("inserted AutomatedTest rawData: " + rawData + "\n")
+                    // println("inserted AutomatedTest rawData: " + rawData + "\n")
                   }
                   case com.epidata.lib.models.SensorMeasurement.NAME => {
                     models.SensorMeasurement.insertRecordFromZMQ(rawData)
-                    //println("inserted SensorMeasurement rawData: " + rawData + "\n")
+                    // println("inserted SensorMeasurement rawData: " + rawData + "\n")
                   }
                   case _ =>
                 }
@@ -77,31 +71,29 @@ object ZMQService {
                 case e: ZMQException if ZMQ.Error.ETERM.getCode == e.getErrorCode => {
                   break
                   // Thread.currentThread.interrupt()
-                  //println("DataSink pull service interrupted")
                 }
                 case e: ZMQException => println("DataSink pull service thread interrupted")
                 case _: Throwable => throw new Exception("Error while insert data to database from data sink service")
               }
             }
           }
-          //println("DataSink pull loop exited")
-          sink.clear(pullPort)
+          originalDataSink.clear(pullPort)
         }
       })
 
       // Subscribe Thread - Cleansed Data
       executorService.submit(new Runnable {
         override def run(): Unit = {
-          val sink = new ZMQCleansedDataSink()
-          sink.init(context, cleansedSubPort)
+          val cleansedDataSink = new ZMQCleansedDataSink()
+          cleansedDataSink.init(context, cleansedSubPort)
 
           breakable {
             while (!Thread.currentThread().isInterrupted()) {
               try {
-                val data: (String, Message) = sink.sub()
+                val data: (String, Message) = cleansedDataSink.sub()
                 val topic = data._1
                 val processedData: String = data._2.value
-                println("Sub topic: " + topic + ", Sub data: " + processedData + "\n")
+                // println("Sub topic: " + topic + ", Sub data: " + processedData + "\n")
 
                 Configs.measurementClass match {
                   case com.epidata.lib.models.AutomatedTest.NAME => {
@@ -127,37 +119,35 @@ object ZMQService {
                 case e: ZMQException if ZMQ.Error.ETERM.getCode == e.getErrorCode => {
                   break
                   // Thread.currentThread.interrupt()
-                  // println("DataSink sub service interrupted")
                 }
-                case e: ZMQException => println("DataSink sub service thread interrupted")
+                case e: ZMQException => println("DataSink sub service thread interrupted. " + e.getMessage)
                 case _: Throwable => throw new Exception("Error while insert data to database from data sink service")
               }
             }
           }
-          //println("DataSink Sub loop exited")
-          sink.clear(cleansedSubPort)
+          cleansedDataSink.clear(cleansedSubPort)
         }
       })
 
       // Subscribe Thread - Summary Data
       executorService.submit(new Runnable {
         override def run(): Unit = {
-          val sink = new ZMQSummaryDataSink()
-          sink.init(context, summarySubPort)
+          val summaryDataSink = new ZMQSummaryDataSink()
+          summaryDataSink.init(context, summarySubPort)
 
           breakable {
             while (!Thread.currentThread().isInterrupted()) {
               try {
-                val data: (String, Message) = sink.sub()
+                val data: (String, Message) = summaryDataSink.sub()
                 val topic = data._1
                 val processedData: String = data._2.value
-                println("Sub topic: " + topic + ", Sub data: " + processedData + "\n")
+                // println("Sub topic: " + topic + ", Sub data: " + processedData + "\n")
 
                 Configs.measurementClass match {
                   case com.epidata.lib.models.AutomatedTest.NAME => {
                     if (topic == "measurements_summary") {
                       models.AutomatedTest.insertSummaryRecordFromZMQ(processedData)
-                      //println("inserted AutomatedTest summary data: " + processedData + "\n")
+                      // println("inserted AutomatedTest summary data: " + processedData + "\n")
                     } else {
                       logger.error("unrecognized topic")
                     }
@@ -165,7 +155,7 @@ object ZMQService {
                   case com.epidata.lib.models.SensorMeasurement.NAME => {
                     if (topic == "measurements_summary") {
                       models.SensorMeasurement.insertSummaryRecordFromZMQ(processedData)
-                      //println("inserted SensorMeasurement summary data: " + processedData + "\n")
+                      // println("inserted SensorMeasurement summary data: " + processedData + "\n")
                     } else {
                       logger.error("unrecognized topic")
                     }
@@ -177,37 +167,35 @@ object ZMQService {
                 case e: ZMQException if ZMQ.Error.ETERM.getCode == e.getErrorCode => {
                   break
                   // Thread.currentThread.interrupt()
-                  // println("DataSink sub service interrupted")
                 }
-                case e: ZMQException => println("DataSink sub service thread interrupted")
+                case e: ZMQException => println("DataSink sub service thread interrupted. " + e.getMessage)
                 case _: Throwable => throw new Exception("Error while insert data to database from data sink service")
               }
             }
           }
-          //println("DataSink sub loop exited")
-          sink.clear(summarySubPort)
+          summaryDataSink.clear(summarySubPort)
         }
       })
 
       // Subscribe Thread - Dynamic (Cleansed and/or Summary) Data
       executorService.submit(new Runnable {
         override def run(): Unit = {
-          val sink = new ZMQDynamicDataSink()
-          sink.init(context, dynamicSubPort)
+          val dynamicDataSink = new ZMQDynamicDataSink()
+          dynamicDataSink.init(context, dynamicSubPort)
 
           breakable {
             while (!Thread.currentThread().isInterrupted()) {
               try {
-                val data: (String, Message) = sink.sub()
+                val data: (String, Message) = dynamicDataSink.sub()
                 val topic = data._1
                 val processedData: String = data._2.value
-                println("Sub topic: " + topic + ", Sub data: " + processedData + "\n")
+                // println("Sub topic: " + topic + ", Sub data: " + processedData + "\n")
 
                 Configs.measurementClass match {
                   case com.epidata.lib.models.AutomatedTest.NAME => {
                     if (topic == "measurements_dynamic") {
                       models.AutomatedTest.insertDynamicRecordFromZMQ(processedData)
-                      //println("inserted AutomatedTest dynamic data: " + processedData + "\n")
+                      // println("inserted AutomatedTest dynamic data: " + processedData + "\n")
                     } else {
                       logger.error("unrecognized topic")
                     }
@@ -215,7 +203,7 @@ object ZMQService {
                   case com.epidata.lib.models.SensorMeasurement.NAME => {
                     if (topic == "measurements_dynamic") {
                       models.SensorMeasurement.insertDynamicRecordFromZMQ(processedData)
-                      //println("inserted SensorMeasurement dynamic data: " + processedData + "\n")
+                      // println("inserted SensorMeasurement dynamic data: " + processedData + "\n")
                     } else {
                       logger.error("unrecognized topic")
                     }
@@ -227,15 +215,13 @@ object ZMQService {
                 case e: ZMQException if ZMQ.Error.ETERM.getCode == e.getErrorCode => {
                   break
                   // Thread.currentThread.interrupt()
-                  // println("DataSink sub service interrupted")
                 }
-                case e: ZMQException => println("DataSink sub service thread interrupted")
+                case e: ZMQException => println("DataSink sub service thread interrupted. " + e.getMessage)
                 case _: Throwable => throw new Exception("Error while insert data to database from data sink service")
               }
             }
           }
-          //println("DataSink sub loop exited")
-          sink.clear(dynamicSubPort)
+          dynamicDataSink.clear(dynamicSubPort)
         }
       })
 
@@ -246,18 +232,15 @@ object ZMQService {
   }
 
   def stop(): Unit = {
-    println("Stopping DataSink services ...")
     try {
       executorService.shutdown()
     } catch {
       case e: InterruptedException =>
-        println(e.getMessage)
-        logger.error("InterruptedException during DataSink shutdown", e)
+        logger.error("InterruptedException during DataSink shutdown. " + e.getMessage)
         executorService.shutdownNow()
         Thread.currentThread().interrupt();
       case e: Throwable =>
-        println(e.getMessage)
-        logger.error("Exception during DataSink shutdown", e)
+        logger.error("Exception during DataSink shutdown. " + e.getMessage)
     }
   }
 
