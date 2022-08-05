@@ -14,19 +14,31 @@ import scala.util.Properties
 import scala.collection.JavaConversions._
 import scala.collection.JavaConversions
 import java.io.File
+import java.util.logging._
 
 /**
- * The context of an Epidata connection to SQLite.
+ * The context of Epidata Lite.
  */
 class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
 
   // Auxiliary constructor for Java and Python
   def this() = {
     this(EpiDataConf("", ""))
+    this.logger.log(Level.INFO, "EpiData Lite object created with settings: " + epidataConf.model + ", " + epidataConf.dbUrl)
   }
 
-  //  private val conf = ConfigFactory.parseResources("sqlite-defaults.conf").resolve()
-  private val conf = ConfigFactory.load("sqlite-defaults.conf").resolve()
+  val logger = Logger.getLogger("EpiDataLiteContext Logger")
+  logger.setLevel(Level.ALL)
+  //  logger.addHandler(new ConsoleHandler)
+
+  private val conf = ConfigFactory.parseResources("sqlite-defaults.conf").resolve()
+  private val basePath = new java.io.File(".").getAbsoluteFile().getParent()
+
+  private val logFilePath = "/Users/srinibadri/Documents/Repos/epidata/epidata-community-interns/" + "log/" + conf.getString("spark.epidata.SQLite.logFileName")
+  //  private val logFilePath = basePath + "/log/" + conf.getString("spark.epidata.SQLite.logFileName")
+  val fileHandler = new FileHandler(logFilePath)
+  logger.addHandler(fileHandler)
+  //logger.log(Level.INFO, "File handler added")
 
   private lazy val sqliteDBName = conf.getString("spark.epidata.SQLite.dbFileName")
 
@@ -34,27 +46,28 @@ class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
     case m if m.trim.isEmpty => Properties.envOrElse("EPIDATA_MEASUREMENT_MODEL", conf.getString("spark.epidata.measurementClass"))
     case m: String => m
   }
-  // println("measurement class: " + measurementClass)
+  logger.log(Level.INFO, "measurement class: " + measurementClass)
 
   private lazy val streamingBatchDuration = conf.getInt("spark.epidata.streamingBatchDuration")
-  private val basePath = new java.io.File(".").getAbsoluteFile().getParent()
 
-  //  private val sqliteDBUrl = "jdbc:sqlite:" + basePath + "/data/" + sqliteDBName
   private val sqliteDBUrl = epidataConf.dbUrl match {
-    case s if s.trim.isEmpty => "jdbc:sqlite:" + basePath + "/data/" + sqliteDBName
+    case s if s.trim.isEmpty => "jdbc:sqlite:" + "/Users/srinibadri/Documents/Repos/epidata/epidata-community-interns/" + "data/" + sqliteDBName
+
+    //    case s if s.trim.isEmpty => "jdbc:sqlite:" + basePath + "/data/" + sqliteDBName
     case s => s
   }
-
-  // println("sqlite db url: " + sqliteDBUrl)
 
   // Connect to SQLite database
   Class.forName("org.sqlite.JDBC")
   private val con: Connection = DriverManager.getConnection(sqliteDBUrl)
 
+  logger.log(Level.INFO, "Database connection established. Connection object: " + con)
+
   def query(
     fieldQuery: Map[String, List[String]],
     beginTime: Timestamp,
     endTime: Timestamp): JList[JLinkedHashMap[String, Object]] = {
+    logger.log(Level.INFO, "query method invoked")
     query(fieldQuery, beginTime, endTime, com.epidata.lib.models.Measurement.DBTableName)
   }
 
@@ -67,7 +80,8 @@ class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
     // Find the equality queries for the partition key fields.
     val FieldsQuery = genericPartitionFields
       .map(partitionFieldsMap).map(fieldQuery)
-    // println("fieldsquery: " + FieldsQuery)
+
+    logger.log(Level.INFO, "getDataFrame method invoked with field query: " + FieldsQuery.toString())
 
     val orderedEpochs = Measurement.epochForTs(beginTime) to Measurement.epochForTs(endTime)
     val epoch = orderedEpochs.toArray
@@ -91,7 +105,8 @@ class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
       val datasetStr = List.fill(datasetCount)("?").mkString(", ")
 
       val query = getSelectStatementString(tableName, customerStr, siteStr, collectionStr, datasetStr, epoch_str)
-      // println("query: " + query)
+      logger.log(Level.INFO, "select statement query string: " + query)
+
       val stmt = con.prepareStatement(query)
 
       for (i <- 1 to customerCount) {
@@ -120,6 +135,8 @@ class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
 
       val rs = stmt.executeQuery()
 
+      logger.log(Level.INFO, "Result set object: " + rs.toString())
+
       rs
     }
 
@@ -127,10 +144,12 @@ class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
     val select_rs = rsQuery(FieldsQuery)
     val maps = transformResultSet(select_rs, tableName)
 
+    logger.log(Level.INFO, "Transformed result set: " + maps.toString())
+
     try {
       select_rs.close()
     } catch {
-      case e: SQLException => println("Error closing ResultSet")
+      case e: SQLException => logger.log(Level.WARNING, "Error closing ResultSet")
     }
 
     maps
@@ -192,16 +211,22 @@ class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
     endTime: Timestamp,
     tableName: String): JList[JLinkedHashMap[String, Object]] = {
 
+    logger.log(Level.INFO, "Query method invoked with field query: " + fieldQuery.toString())
+
     if (beginTime.getTime > endTime.getTime) {
+      logger.log(Level.WARNING, "beginTime must not be after endTime.")
       throw new IllegalArgumentException("beginTime must not be after endTime. ")
     }
 
     if (!partitionFieldsMap.values.toSet.subsetOf(fieldQuery.keySet)) {
+      logger.log(Level.WARNING, "Required field missing from fieldQuery. " +
+        s"Required fields: ${partitionFieldsMap.values.toList}")
       throw new IllegalArgumentException("Required field missing from fieldQuery. " +
         s"Required fields: ${partitionFieldsMap.values.toList}")
     }
 
     if (fieldQuery.filter(_._2.isEmpty).nonEmpty) {
+      logger.log(Level.WARNING, "All fieldQuery entries must have at least one match value.")
       throw new IllegalArgumentException(
         "All fieldQuery entries must have at least one match value.")
     }
@@ -226,14 +251,15 @@ class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
         }
     }
 
-    // println("model columns: " + modelColumns)
+    logger.log(Level.INFO, "Model columns: " + modelColumns.toString())
 
     if (!fieldQuery.keySet.subsetOf(modelColumns)) {
+      logger.log(Level.WARNING, "Unexpected field in fieldQuery.")
       throw new IllegalArgumentException("Unexpected field in fieldQuery.")
     }
 
     val map = getDataFrame(fieldQuery, beginTime, endTime, tableName)
-    // println("map: " + map)
+    logger.log(Level.INFO, "Map result: " + map)
 
     // Find the equality queries for the non partition key fields.
     val nonpartitionFields = fieldQuery.keySet.diff(genericPartitionFields.map(partitionFieldsMap).toSet)
@@ -242,6 +268,8 @@ class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
     var filtered = nonpartitionFieldsQuery.foldLeft(map)((mp, x) => {
       mp.filter(m => x._2.contains(m.get(x._1)))
     })
+
+    logger.log(Level.INFO, "Filtered result:" + filtered.toString())
 
     filtered
   }
@@ -260,6 +288,7 @@ class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
     fieldQuery: java.util.Map[String, java.util.List[String]],
     beginTime: Timestamp,
     endTime: Timestamp): JList[JLinkedHashMap[String, Object]] = {
+    logger.log(Level.INFO, "queryMeasurementCleansed method called.")
     import scala.collection.JavaConversions._
     query(fieldQuery.toMap.mapValues(_.toList), beginTime, endTime, BaseMeasurementCleansed.DBTableName)
   }
@@ -269,12 +298,15 @@ class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
     fieldQuery: java.util.Map[String, java.util.List[String]],
     beginTime: Timestamp,
     endTime: Timestamp): JList[JLinkedHashMap[String, Object]] = {
+    logger.log(Level.INFO, "queryMeasurementSummary method called.")
     import scala.collection.JavaConversions._
     query(fieldQuery.toMap.mapValues(_.toList), beginTime, endTime, BaseMeasurementSummary.DBTableName)
   }
 
   /** List the values of the currently saved partition key fields. */
   def listKeys(): JList[JLinkedHashMap[String, Object]] = {
+    logger.log(Level.INFO, "listKeys method called.")
+
     val query = getKeysStatementString(BaseMeasurementsKeys.DBTableName)
     val stmt = con.prepareStatement(query)
     val rs = stmt.executeQuery()

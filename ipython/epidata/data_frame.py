@@ -347,7 +347,7 @@ class DataFrame:
         n : int, default 20
             The number of rows to print.
         """
-        print self.limit(n).toPandas()
+        print(self.limit(n).toPandas())
 
     def toPandas(self):
         """

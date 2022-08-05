@@ -45,15 +45,15 @@ object EpidataLiteStreamingContextTest extends App {
 //  println("\n EpiDataLite Stream Test Started")
 //
 //  // Create Transformation
-//  val op1 = esc.createTransformations("Identity", List("Meas-1"), Map[String, String]())
+//  val op1 = esc.createTransformation("Identity", List("Meas-1"), Map[String, String]())
 //  println("transformation created: " + op1)
 //
-//  val op2 = esc.createTransformations("Identity", List("Meas-1"), Map[String, String]())
+//  val op2 = esc.createTransformation("Identity", List("Meas-1"), Map[String, String]())
 //  println("transformation created: " + op2)
 //  var list = new util.ArrayList[String]()
 //  list.add("Meas-1")
 //  val mutableMap = new util.HashMap[String, String]
-//  val op3 = esc.createTransformations("Identity", list, mutableMap)
+//  val op3 = esc.createTransformation("Identity", list, mutableMap)
 //  println("transformation created: " + op3)
 //
 //  // Create Stream

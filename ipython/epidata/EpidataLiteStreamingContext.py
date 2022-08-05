@@ -1,6 +1,7 @@
-/*
- * Copyright (c) 2015-2022 EpiData, Inc.
-*/
+#
+# Copyright (c) 2015-2022 EpiData, Inc.
+#
+
 #from streaming import EpidataStreamingContext
 from datetime import datetime
 import _private.py4j_additions
@@ -19,7 +20,6 @@ import py4j
 
 
 class EpidataLiteStreamingContext:
-
     '''
     Initializes the Java Gateway and creates an entry into the pre-compiled JAR file with
     EpidataLiteContext.scala
@@ -31,8 +31,10 @@ class EpidataLiteStreamingContext:
                 zmq_conf=None,
                 measurement_class=None
     ):
+        debug_classpath = "/Users/srinibadri/Documents/Repos/epidata/epidata-community-interns/spark/target/scala-2.12/epidata-spark-assembly-1.0-SNAPSHOT.jar"
         self._gateway = JavaGateway()
-        self._gg = self._gateway.launch_gateway(classpath = elc_classpath)
+#        self._gg = self._gateway.launch_gateway(classpath = elc_classpath)
+        self._gg = self._gateway.launch_gateway(classpath = debug_classpath)
         self._jelc = self._gg.jvm.com.epidata.spark.EpidataLiteStreamingContext()
         self._topics = topics
         self._sqlite_conf = sqlite_conf
@@ -50,7 +52,7 @@ class EpidataLiteStreamingContext:
         return pdf
 
     '''
-    CreateTransformations method for epidata streaming
+    CreateTransformation method for epidata streaming
 
     Parameters
     ----------
@@ -66,24 +68,24 @@ class EpidataLiteStreamingContext:
     A Pandas dataframe containing measurements matching the query
     '''
 
-    def create_transformations(self, opName, meas_names, params):
+    def create_transformation(self, opName, meas_names, params):
         java_meas_names = ListConverter().convert(meas_names, self._gg._gateway_client)
         # java_params = {k: self.to_java_list(v) for k, v in params.items()}
         java_params = MapConverter().convert(params, self._gg._gateway_client)
-        trans = self._jelc.createTransformations(opName, java_meas_names, java_params)
+        trans = self._jelc.createTransformation(opName, java_meas_names, java_params)
         return trans
 
     def create_stream(self, sourceTopic, destinationTopic, transformation):
         self._jelc.createStream(sourceTopic, destinationTopic, transformation)
         print("stream created")
 
-    def start_stream(self):
+    def start_streaming(self):
         self._jelc.startStream()
-        print("stream started")
+        print("streams started")
 
-    def stop_stream(self):
+    def stop_streaming(self):
         self._jelc.stopStream()
-        print("stream stopped")
+        print("streams stopped")
 
     def to_java_list(self, x):
         if isinstance(x, str): #or str

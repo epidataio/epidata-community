@@ -1,7 +1,7 @@
 #!/usr/bin/env python2.7
-/*
- * Copyright (c) 2015-2022 EpiData, Inc.
-*/
+#
+# Copyright (c) 2015-2022 EpiData, Inc.
+#
 import time
 
 from epidata.EpidataLiteStreamingContext import EpidataLiteStreamingContext

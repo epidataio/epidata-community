@@ -20,7 +20,7 @@ object elcTest extends App {
   val ec = new EpidataLiteContext()
 
   /*  ----- EpiDataLite Batch  Test ----- */
-
+  /*
   println("\n EpiDataLite Batch Test Started")
 
   Class.forName("org.sqlite.JDBC");
@@ -1760,7 +1760,7 @@ object elcTest extends App {
   try { con.close() } catch { case e: SQLException => println("Error closing database connection") }
   println("\n EpiDataLite Batch Query Test completed")
   println("----------------------------------------------------")
-
+*/
   /*  ----- EpiDataLite Stream Test Started ----- */
   println("\n EpiDataLite Stream Test Started")
 
@@ -1779,28 +1779,28 @@ object elcTest extends App {
   //  }
 
   // Create Transformation
-  val op1 = esc.createTransformations("Identity", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
+  val op1 = esc.createTransformation("Identity", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
   println("transformation created: " + op1)
 
-  val op2 = esc.createTransformations("FillMissingValue", List("Temperature"), Map("method" -> "rolling", "s" -> 3))
-  println("transformation created: " + op2)
+  //  val op2 = esc.createTransformation("FillMissingValue", List("Temperature"), Map("method" -> "rolling", "s" -> 3))
+  //  println("transformation created: " + op2)
 
   var list = new JArrayList[String]()
   list.add("Temperature")
   list.add("Wind_Speed")
   list.add("Relative_Humidity")
   val mutableMap = new JHashMap[String, String]
-  val op3 = esc.createTransformations("Identity", list, mutableMap)
-  println("transformation created: " + op3)
+  //  val op3 = esc.createTransformation("Identity", list, mutableMap)
+  //  println("transformation created: " + op3)
 
-  val op4 = esc.createTransformations("Identity", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
-  println("transformation created: " + op4)
+  //  val op4 = esc.createTransformation("Identity", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
+  //  println("transformation created: " + op4)
 
-  val op5 = esc.createTransformations("Identity", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
-  println("transformation created: " + op5)
+  //  val op5 = esc.createTransformation("Identity", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
+  //  println("transformation created: " + op5)
 
-  val op6 = esc.createTransformations("MeasStatistics", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map("method" -> "standard"))
-  println("transformation created: " + op6)
+  //  val op6 = esc.createTransformation("MeasStatistics", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map("method" -> "standard"))
+  //  println("transformation created: " + op6)
 
   // Create Streams
   /*
@@ -1827,7 +1827,7 @@ object elcTest extends App {
    */
 
   //op1
-  esc.createStream("measurements_original", "measurements_intermediate_1", op1)
+  esc.createStream("measurements_original", "measurements_cleansed", op1)
   println("STREAM 1 created: " + op1)
 
   //op2
@@ -1845,7 +1845,7 @@ object elcTest extends App {
   val op4buffers = ListBuffer[Integer]()
   op4buffers += 5
   op4buffers += 12
-  println(op4buffers)
+  //  println(op4buffers)
   //  esc.createStream(op4topics, op4buffers, "measurements_intermediate_4", op4)
   //  println("STREAM 4 created: " + op4 + "\n")
 
@@ -1858,15 +1858,15 @@ object elcTest extends App {
 
   //op6 - measurements_summary
   //esc.createStream("measurements_original", "measurements_intermediate_6", op6)
-  esc.createStream("measurements_original", "measurements_summary", op6)
-  println("STREAM 6 created: " + "\n")
+  //  esc.createStream("measurements_original", "measurements_summary", op6)
+  //  println("STREAM 6 created: " + "\n")
 
   //op2 - measurements_cleansed
-  esc.createStream("measurements_original", "measurements_cleansed", op2)
-  println("STREAM 7 created: " + "\n")
+  //  esc.createStream("measurements_original", "measurements_cleansed", op2)
+  //  println("STREAM 7 created: " + "\n")
 
-  esc.testUnit()
-  println(esc.printSomething(""))
+  //  esc.testUnit()
+  //  println(esc.printSomething(""))
 
   // Start Stream
   esc.startStream()
@@ -1874,15 +1874,21 @@ object elcTest extends App {
 
   // check stream data in SQLite database
 
-  println("Enter 'Q' to stop streaming")
-  while ((StdIn.readChar()).toLower.compare('q') != 0) {
-    println("Continuing streaming. Enter 'Q' to stop streaming.")
-  }
+  //  println("Enter 'Q' to stop streaming")
+  //  while ((StdIn.readChar()).toLower.compare('q') != 0) {
+  //    println("Continuing streaming. Enter 'Q' to stop streaming.")
+  //  }
+
+  Thread.sleep(10000)
 
   // Stop stream
-  esc.stopStream()
-
-  println("Stream processing stoppqed successfully.")
+  try {
+    println("Stream being stopped in Test code")
+    esc.stopStream()
+    println("Stream processing stopped successfully.")
+  } catch {
+    case e: Throwable => println("Exception while stopping stream")
+  }
 
   println("\n EpiDataLite Stream Test completed")
   println("----------------------------------------------------")

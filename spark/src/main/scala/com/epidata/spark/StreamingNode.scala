@@ -10,6 +10,7 @@ import java.util
 import org.json.simple.{ JSONArray, JSONObject }
 import org.json.simple.parser.JSONParser
 import org.zeromq.ZMQ
+import org.zeromq.ZMQException
 
 import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.Queue
@@ -21,8 +22,7 @@ import com.epidata.spark.ops.Transformation
 import com.epidata.lib.models.{ AutomatedTest => BaseAutomatedTest, AutomatedTestCleansed => BaseAutomatedTestCleansed, AutomatedTestSummary => BaseAutomatedTestSummary, Measurement => BaseMeasurement, MeasurementCleansed => BaseMeasurementCleansed, MeasurementSummary => BaseMeasurementSummary, SensorMeasurement => BaseSensorMeasurement, SensorMeasurementCleansed => BaseSensorMeasurementCleansed, SensorMeasurementSummary => BaseSensorMeasurementSummary }
 import com.typesafe.config.ConfigFactory
 import scala.io.StdIn
-
-import scala.io.StdIn
+import java.util.logging._
 
 class StreamingNode {
   var subSocket: ZMQ.Socket = _ //add as parameter
@@ -41,6 +41,8 @@ class StreamingNode {
 
   var outputBuffer: Queue[String] = _
 
+  var logger: Logger = _
+
   private val conf = ConfigFactory.parseResources("sqlite-defaults.conf")
   val measurementClass: String = conf.getString("spark.epidata.measurementClass")
 
@@ -54,18 +56,20 @@ class StreamingNode {
     sendPort: String,
     sendTopic: String,
     receiveTimeout: Integer,
-    transformation: Transformation): StreamingNode = {
+    transformation: Transformation,
+    logger: Logger): StreamingNode = {
+    this.logger = logger
     if (receivePorts.length > bufferSizes.length) { //more ports than buffer sizes make a pattern
       val pattern = new ListBuffer[Integer]()
       pattern.appendAll(bufferSizes)
       while (receivePorts.length > bufferSizes.length) {
-        bufferSizes.appendAll(pattern) //append pattern until buffersizes is same size or greater than recieve ports
+        bufferSizes.appendAll(pattern) //append pattern until buffersizes is same size or greater than receive ports
       }
     }
 
     if (receivePorts.length < bufferSizes.length) { //more buffer sizes than ports so some will be ignored
       val difference = bufferSizes.length - receivePorts.length
-      bufferSizes.remove((bufferSizes.length - difference), difference) //append pattern until buffersizes is same size or greater than recieve ports
+      bufferSizes.remove((bufferSizes.length - difference), difference) //append pattern until buffersizes is same size or greater than receive ports
     }
 
     //println("Sizes: " + receivePorts.length + ", " + bufferSizes.length)
@@ -76,16 +80,22 @@ class StreamingNode {
     publishPort = sendPort
     publishTopic = sendTopic
 
-    println("subscribePorts: ", subscribePorts, "subscribeTopics: ", subscribeTopics, "publishPort: ", publishPort, "publishTopic: ", publishTopic)
+    println("subscribePorts: " + subscribePorts + ", subscribeTopics: " + subscribeTopics + ", publishPort: " + publishPort + ", publishTopic: " + publishTopic)
 
     subSocket = context.socket(ZMQ.SUB)
+    subSocket.setLinger(10)
+    logger.log(Level.INFO, "subSocket created")
 
     for (port <- subscribePorts) { subSocket.connect("tcp://127.0.0.1:" + port) }
     for (topic <- subscribeTopics) { subSocket.subscribe(topic.getBytes(ZMQ.CHARSET)) }
 
     publishSocket = context.socket(ZMQ.PUB)
-    println("LINE 84: " + publishPort)
-    publishSocket.bind("tcp://127.0.0.1:" + publishPort)
+    publishSocket.setLinger(0)
+    logger.log(Level.INFO, "pubSocket created")
+
+    // println("LINE 84: " + publishPort)
+    publishSocket.bind("tcp://*:" + publishPort)
+    logger.log(Level.INFO, "pubSocket bound")
 
     this.transformation = transformation
 
@@ -97,7 +107,7 @@ class StreamingNode {
 
     this.bufferSizes = bufferSizes
 
-    println("\n\nStreamNode Configs----------------------------------------------")
+    println("\nStreamNode Configs----------------------------------------------")
     println("Sub Topic: " + subscribeTopics)
     println("Sub Port: " + subscribePorts)
     println("Pub Topic: " + publishTopic)
@@ -105,10 +115,101 @@ class StreamingNode {
     println("Stream Buffers: " + streamBuffers)
     println("Stream Buffer Sizes: " + bufferSizes)
     println("StreamNode Configs----------------------------------------------")
+
+    logger.log(Level.INFO, "node init completed")
+    this
+  }
+
+  def initSub(
+    context: ZMQ.Context,
+
+    receivePorts: ListBuffer[String], //allows Node to subscribe to various ports
+    receiveTopics: ListBuffer[String], //allows Node to listen on various topics
+    bufferSizes: ListBuffer[Integer],
+
+    receiveTimeout: Integer,
+    transformation: Transformation,
+    logger: Logger): StreamingNode = {
+    this.logger = logger
+    if (receivePorts.length > bufferSizes.length) { //more ports than buffer sizes make a pattern
+      val pattern = new ListBuffer[Integer]()
+      pattern.appendAll(bufferSizes)
+      while (receivePorts.length > bufferSizes.length) {
+        bufferSizes.appendAll(pattern) //append pattern until buffersizes is same size or greater than receive ports
+      }
+    }
+
+    if (receivePorts.length < bufferSizes.length) { //more buffer sizes than ports so some will be ignored
+      val difference = bufferSizes.length - receivePorts.length
+      bufferSizes.remove((bufferSizes.length - difference), difference) //append pattern until buffersizes is same size or greater than receive ports
+    }
+
+    //println("Sizes: " + receivePorts.length + ", " + bufferSizes.length)
+
+    subscribePorts = receivePorts
+    subscribeTopics = receiveTopics
+
+    println("subscribePorts: " + subscribePorts + ", subscribeTopics: " + subscribeTopics)
+
+    subSocket = context.socket(ZMQ.SUB)
+    subSocket.setLinger(1)
+    logger.log(Level.INFO, "subSocket created")
+
+    for (port <- subscribePorts) { subSocket.connect("tcp://127.0.0.1:" + port) }
+    for (topic <- subscribeTopics) { subSocket.subscribe(topic.getBytes(ZMQ.CHARSET)) }
+
+    this.transformation = transformation
+
+    streamBuffers = new Array[Queue[String]](bufferSizes.length)
+
+    for (i <- 0 until bufferSizes.length) { streamBuffers(i) = new Queue[String]() }
+
+    this.bufferSizes = bufferSizes
+
+    println("\nStreamNode Configs----------------------------------------------")
+    println("Sub Topic: " + subscribeTopics)
+    println("Sub Port: " + subscribePorts)
+    println("Stream Buffers: " + streamBuffers)
+    println("Stream Buffer Sizes: " + bufferSizes)
+    println("StreamNode Configs----------------------------------------------")
+
+    logger.log(Level.INFO, "node initSub completed")
+    this
+  }
+
+  def initPub(
+    context: ZMQ.Context,
+
+    sendPort: String,
+    sendTopic: String,
+    logger: Logger): StreamingNode = {
+    this.logger = logger
+
+    publishPort = sendPort
+    publishTopic = sendTopic
+    logger.log(Level.INFO, "publishPort: " + publishPort + ", publishTopic: " + publishTopic)
+
+    publishSocket = context.socket(ZMQ.PUB)
+    publishSocket.setLinger(0)
+    logger.log(Level.INFO, "pubSocket created")
+
+    // println("LINE 84: " + publishPort)
+    publishSocket.bind("tcp://*:" + publishPort)
+    logger.log(Level.INFO, "pubSocket bound")
+
+    outputBuffer = new Queue[String]
+
+    println("\nStreamNode Configs----------------------------------------------")
+    println("Pub Topic: " + publishTopic)
+    println("Pub Port: " + publishPort)
+    println("StreamNode Configs----------------------------------------------")
+
+    logger.log(Level.INFO, "node initPub completed")
     this
   }
 
   def receive() = {
+    logger.log(Level.INFO, "node receive called")
     println("\n\nReceiving----------------------------------------------")
     println("\nReceiving from--------------:")
     for (port <- subscribePorts) {
@@ -116,33 +217,70 @@ class StreamingNode {
     }
     println("-----------------------:")
 
-    val topic = subSocket.recvStr()
-    println("receive topic: " + topic + "----------------------------------------------------------------------------------")
+    var topic: String = ""
     val parser = new JSONParser()
-    val receivedString = subSocket.recvStr()
-    println("received message: " + receivedString + "\n")
+    var receivedString: String = ""
 
-    receivedString match {
-      case _: String => {
-        val measurement: String = jsonToMessage(receivedString).value
+    try {
+      //while (!Thread.currentThread().isInterrupted()) {
+      logger.log(Level.INFO, "node recvStr being called for topic")
+      topic = subSocket.recvStr(ZMQ.NOBLOCK)
+      logger.log(Level.INFO, "node recvStr called. topic received")
+      //Thread.sleep(1000)
+      logger.log(Level.INFO, "receive topic: " + topic)
+      //}
 
-        val index = subscribeTopics.indexOf(topic) //getting index of corresponding Buffer in streamBuffers
-        //println("index: " + index + " in range " + subscribeTopics.length)
-        //print("Obj or Null: " + streamBuffers(index))
-        streamBuffers(index).enqueue(measurement) //adding current message value to buffer
-
-        if (streamBuffers(index).size >= bufferSizes(index)) { //checking to see if size of Buffer reached max
-          printf("\n\n DEQUEUING WHEN (" + index + ") BUFFER SIZE IS: " + streamBuffers(index).size + "\n\n")
-          val list = streamBuffers(index).toList //if desired buffer size is achieved -> convert Queued measurements to list
-          streamBuffers(index).clear() //clear buffer
-
-          transform(list)
+      //while (!Thread.currentThread().isInterrupted()) {
+      try {
+        logger.log(Level.INFO, "node recvStr being called for message")
+        receivedString = subSocket.recvStr(ZMQ.NOBLOCK)
+        logger.log(Level.INFO, "message received: " + receivedString)
+        //Thread.sleep(1000)
+      } catch {
+        case e: ZMQException if ZMQ.Error.ETERM == e.getErrorCode() => {
+          logger.log(Level.INFO, "No message received so far.")
+        }
+        case e: Throwable => {
+          logger.log(Level.WARNING, "Exception on StreamingNode line 239: " + e.getMessage)
+          Thread.currentThread.interrupt()
         }
       }
-      case _ =>
-        throw new IllegalArgumentException("Message recieved is null. Expected String type")
-    }
+      //}
 
+      //      val receivedString = subSocket.recvStr(ZMQ.DONTBLOCK)
+      println("received message: " + receivedString + "\n")
+
+      receivedString match {
+        case _: String => {
+          val measurement: String = jsonToMessage(receivedString).value
+
+          val index = subscribeTopics.indexOf(topic) //getting index of corresponding Buffer in streamBuffers
+          //println("index: " + index + " in range " + subscribeTopics.length)
+          //print("Obj or Null: " + streamBuffers(index))
+          streamBuffers(index).enqueue(measurement) //adding current message value to buffer
+
+          if (streamBuffers(index).size >= bufferSizes(index)) { //checking to see if size of Buffer reached max
+            printf("\n\n DEQUEUING WHEN (" + index + ") BUFFER SIZE IS: " + streamBuffers(index).size + "\n\n")
+            val list = streamBuffers(index).toList //if desired buffer size is achieved -> convert Queued measurements to list
+            streamBuffers(index).clear() //clear buffer
+
+            transform(list)
+
+            publish()
+          }
+        }
+        case e =>
+          throw new IllegalArgumentException("Message received is null. Expected String type. " + e)
+      }
+    } catch {
+      case e: ZMQException if ZMQ.Error.ETERM == e.getErrorCode() => {
+        logger.log(Level.INFO, "No message received so far.")
+      }
+      case e: Throwable => {
+        logger.log(Level.WARNING, "Exception at StreamingNode line 276: " + e.getMessage)
+        throw e
+      }
+    }
   }
 
   def transform(list: List[String]): Unit = {
@@ -173,7 +311,6 @@ class StreamingNode {
       outputBuffer.enqueue(message)
     }
     // println("outputBuffer: " + outputBuffer + "\n")
-
   }
 
   def publish( /*processedMapList: ListBuffer[JLinkedHashMap[String, String]]*/ ): Unit = {
@@ -183,7 +320,7 @@ class StreamingNode {
 
     while (!outputBuffer.isEmpty) {
       val msg = outputBuffer.dequeue()
-      println("publised topic: " + this.publishTopic + ", published message: " + msg + "\n")
+      logger.log(Level.INFO, "publised topic: " + this.publishTopic + ", published message: " + msg + "\n")
       publishSocket.sendMore(this.publishTopic)
       publishSocket.send(msg.getBytes(), 0)
     }
@@ -194,24 +331,97 @@ class StreamingNode {
       for (topic <- subscribeTopics) {
         subSocket.unsubscribe(topic.getBytes(ZMQ.CHARSET))
       }
-      for (port <- subscribePorts) {
-        subSocket.unbind("tcp://127.0.0.1:" + port)
-      }
-      subSocket.close()
-      println("subSocket closed successfully")
     } catch {
-      case e: Throwable => println(e)
+      case e: Throwable => logger.log(Level.WARNING, "Exception during subscriber unsubscribe. " + e.toString())
+    }
+
+    try {
+      //      publishSocket.unbind("tcp://127.0.0.1:" + publishPort)
+      publishSocket.unbind(publishSocket.getLastEndpoint())
+    } catch {
+      case e: Throwable => logger.log(Level.WARNING, "Exception during publisher unbind. " + e.toString())
+    }
+
+    try {
+      for (port <- subscribePorts) {
+        //        subSocket.unbind("tcp://127.0.0.1:" + port)
+        subSocket.unbind(subSocket.getLastEndpoint())
+      }
+    } catch {
+      case e: Throwable => logger.log(Level.WARNING, "Exception during subscriber unbind. " + e.toString())
     }
 
     try {
       //      publishSocket.send(ZMQ.STOP_MESSAGE, 0)
-      publishSocket.unbind("tcp://127.0.0.1:" + publishPort)
       publishSocket.close()
-      println("publishSocket closed successfully")
+      println("publishSocket closed successfully: " + publishSocket)
     } catch {
-      case e: Throwable => println(e)
+      case e: Throwable => logger.log(Level.WARNING, "Exception during publisher close. " + e.toString())
     }
 
+    try {
+      subSocket.close()
+      logger.log(Level.INFO, "subSocket closed successfully: " + subSocket)
+    } catch {
+      case e: Throwable => logger.log(Level.WARNING, "Exception during subscriber close. " + e.toString())
+    }
+
+  }
+
+  def clearPub(): Unit = {
+    logger.log(Level.INFO, "node clearPub called")
+    try {
+      //publishSocket.send(ZMQ.STOP_MESSAGE, 0)
+      publishSocket.send("KILL", 0)
+      logger.log(Level.INFO, "publisher sent kill message")
+      Thread.sleep(10)
+    } catch {
+      case e: Throwable => logger.log(Level.WARNING, "Exception during publisher send")
+    }
+
+    try {
+      //      publishSocket.unbind("tcp://127.0.0.1:" + publishPort)
+      publishSocket.unbind(publishSocket.getLastEndpoint())
+      logger.log(Level.INFO, "publishSocket unbinded: " + publishSocket)
+    } catch {
+      case e: Throwable => logger.log(Level.WARNING, "Exception during publisher unbind. " + e.toString())
+    }
+
+    try {
+      publishSocket.close()
+      logger.log(Level.INFO, "publishSocket closed successfully: " + publishSocket)
+    } catch {
+      case e: Throwable => logger.log(Level.WARNING, "Exception during publisher close. " + e.toString())
+    }
+  }
+
+  def clearSub(): Unit = {
+    logger.log(Level.INFO, "node clearSub called")
+    try {
+      for (topic <- subscribeTopics) {
+        subSocket.unsubscribe(topic.getBytes(ZMQ.CHARSET))
+        logger.log(Level.INFO, "subSocket unsubscribed: " + subSocket)
+      }
+    } catch {
+      case e: Throwable => logger.log(Level.WARNING, "Exception during subscriber unsubscribe. " + e.toString())
+    }
+
+    try {
+      for (port <- subscribePorts) {
+        //        subSocket.unbind("tcp://127.0.0.1:" + port)
+        subSocket.unbind(subSocket.getLastEndpoint())
+        logger.log(Level.INFO, "subSocket unbound: " + subSocket)
+      }
+    } catch {
+      case e: Throwable => logger.log(Level.WARNING, "Exception during subscriber unbind. " + e.toString())
+    }
+
+    try {
+      subSocket.close()
+      logger.log(Level.INFO, "subSocket closed: " + subSocket)
+    } catch {
+      case e: Throwable => logger.log(Level.WARNING, "Exception during subscriber close. " + e.toString())
+    }
   }
 
   def getMd5(inputStr: String): String = {
