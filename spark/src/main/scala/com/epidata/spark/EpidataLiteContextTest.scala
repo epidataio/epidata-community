@@ -1874,12 +1874,12 @@ object elcTest extends App {
 
   // check stream data in SQLite database
 
-  //  println("Enter 'Q' to stop streaming")
-  //  while ((StdIn.readChar()).toLower.compare('q') != 0) {
-  //    println("Continuing streaming. Enter 'Q' to stop streaming.")
-  //  }
+  println("Enter 'Q' to stop streaming")
+  while ((StdIn.readChar()).toLower.compare('q') != 0) {
+    println("Continuing streaming. Enter 'Q' to stop streaming.")
+  }
 
-  Thread.sleep(10000)
+  //Thread.sleep(10000)
 
   // Stop stream
   try {

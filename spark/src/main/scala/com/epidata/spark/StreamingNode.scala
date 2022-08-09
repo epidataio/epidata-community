@@ -22,6 +22,7 @@ import com.epidata.spark.ops.Transformation
 import com.epidata.lib.models.{ AutomatedTest => BaseAutomatedTest, AutomatedTestCleansed => BaseAutomatedTestCleansed, AutomatedTestSummary => BaseAutomatedTestSummary, Measurement => BaseMeasurement, MeasurementCleansed => BaseMeasurementCleansed, MeasurementSummary => BaseMeasurementSummary, SensorMeasurement => BaseSensorMeasurement, SensorMeasurementCleansed => BaseSensorMeasurementCleansed, SensorMeasurementSummary => BaseSensorMeasurementSummary }
 import com.typesafe.config.ConfigFactory
 import scala.io.StdIn
+import scala.util.control.Breaks._
 import java.util.logging._
 
 class StreamingNode {
@@ -94,7 +95,7 @@ class StreamingNode {
     logger.log(Level.INFO, "pubSocket created")
 
     // println("LINE 84: " + publishPort)
-    publishSocket.bind("tcp://*:" + publishPort)
+    publishSocket.bind("tcp://127.0.0.1:" + publishPort)
     logger.log(Level.INFO, "pubSocket bound")
 
     this.transformation = transformation
@@ -194,7 +195,7 @@ class StreamingNode {
     logger.log(Level.INFO, "pubSocket created")
 
     // println("LINE 84: " + publishPort)
-    publishSocket.bind("tcp://*:" + publishPort)
+    publishSocket.bind("tcp://127.0.0.1:" + publishPort)
     logger.log(Level.INFO, "pubSocket bound")
 
     outputBuffer = new Queue[String]
@@ -222,30 +223,37 @@ class StreamingNode {
     var receivedString: String = ""
 
     try {
-      //while (!Thread.currentThread().isInterrupted()) {
-      logger.log(Level.INFO, "node recvStr being called for topic")
-      topic = subSocket.recvStr(ZMQ.NOBLOCK)
-      logger.log(Level.INFO, "node recvStr called. topic received")
-      //Thread.sleep(1000)
-      logger.log(Level.INFO, "receive topic: " + topic)
-      //}
-
-      //while (!Thread.currentThread().isInterrupted()) {
-      try {
-        logger.log(Level.INFO, "node recvStr being called for message")
-        receivedString = subSocket.recvStr(ZMQ.NOBLOCK)
-        logger.log(Level.INFO, "message received: " + receivedString)
-        //Thread.sleep(1000)
-      } catch {
-        case e: ZMQException if ZMQ.Error.ETERM == e.getErrorCode() => {
-          logger.log(Level.INFO, "No message received so far.")
-        }
-        case e: Throwable => {
-          logger.log(Level.WARNING, "Exception on StreamingNode line 239: " + e.getMessage)
-          Thread.currentThread.interrupt()
+      breakable {
+        while (!Thread.currentThread().isInterrupted()) {
+          logger.log(Level.INFO, "node recvStr being called for topic")
+          topic = subSocket.recvStr(ZMQ.NOBLOCK)
+          //Thread.sleep(1000)
+          if ((topic == "") || (topic == null)) {
+            logger.log(Level.INFO, "Node recvStr called. No topic received.")
+            Thread.sleep(5000)
+          } else {
+            logger.log(Level.INFO, "Node recvStr called. Topic received: " + topic)
+            break
+          }
         }
       }
-      //}
+
+      if (!Thread.currentThread().isInterrupted()) {
+        try {
+          logger.log(Level.INFO, "node recvStr being called for message")
+          receivedString = subSocket.recvStr(ZMQ.NOBLOCK)
+          logger.log(Level.INFO, "message received: " + receivedString)
+          //Thread.sleep(1000)
+        } catch {
+          case e: ZMQException if ZMQ.Error.ETERM == e.getErrorCode() => {
+            logger.log(Level.INFO, "No message received so far.")
+          }
+          case e: Throwable => {
+            logger.log(Level.WARNING, "Exception on StreamingNode line 239: " + e)
+            Thread.currentThread.interrupt()
+          }
+        }
+      }
 
       //      val receivedString = subSocket.recvStr(ZMQ.DONTBLOCK)
       println("received message: " + receivedString + "\n")
@@ -274,11 +282,16 @@ class StreamingNode {
       }
     } catch {
       case e: ZMQException if ZMQ.Error.ETERM == e.getErrorCode() => {
-        logger.log(Level.INFO, "No message received so far.")
+        logger.log(Level.WARNING, "Processors interrupted via ZMQException")
+        Thread.currentThread.interrupt()
+      }
+      case e: InterruptedException => {
+        logger.log(Level.INFO, "Processor service interrupted via InterruptedException")
+        Thread.currentThread.interrupt()
       }
       case e: Throwable => {
-        logger.log(Level.WARNING, "Exception at StreamingNode line 276: " + e.getMessage)
-        throw e
+        logger.log(Level.WARNING, "Exception at StreamingNode line 276: " + e)
+        Thread.currentThread.interrupt()
       }
     }
   }
@@ -370,14 +383,6 @@ class StreamingNode {
 
   def clearPub(): Unit = {
     logger.log(Level.INFO, "node clearPub called")
-    try {
-      //publishSocket.send(ZMQ.STOP_MESSAGE, 0)
-      publishSocket.send("KILL", 0)
-      logger.log(Level.INFO, "publisher sent kill message")
-      Thread.sleep(10)
-    } catch {
-      case e: Throwable => logger.log(Level.WARNING, "Exception during publisher send")
-    }
 
     try {
       //      publishSocket.unbind("tcp://127.0.0.1:" + publishPort)
@@ -409,7 +414,7 @@ class StreamingNode {
     try {
       for (port <- subscribePorts) {
         //        subSocket.unbind("tcp://127.0.0.1:" + port)
-        subSocket.unbind(subSocket.getLastEndpoint())
+        subSocket.disconnect(subSocket.getLastEndpoint())
         logger.log(Level.INFO, "subSocket unbound: " + subSocket)
       }
     } catch {

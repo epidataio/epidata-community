@@ -60,8 +60,13 @@ class EpidataLiteStreamingContext {
   private val conf = ConfigFactory.parseResources("sqlite-defaults.conf").resolve()
   private val basePath = new java.io.File(".").getAbsoluteFile().getParentFile().getParent()
 
-  private val logFilePath = "/Users/srinibadri/Documents/Repos/epidata/epidata-community-interns/" + "log/" + conf.getString("spark.epidata.SQLite.streamLogFileName")
-  //  private val logFilePath = basePath + "/log/" + conf.getString("spark.epidata.SQLite.streamLogFileName")
+  private var logFilePath = conf.getString("spark.epidata.logFilePath")
+  if ((logFilePath == "") || (logFilePath == null)) {
+    logFilePath = basePath + "/log/" + conf.getString("spark.epidata.streamLogFileName")
+  } else {
+    logFilePath = logFilePath + conf.getString("spark.epidata.streamLogFileName")
+  }
+  println("log file path: " + logFilePath)
   val fileHandler = new FileHandler(logFilePath)
   logger.addHandler(fileHandler)
   //logger.log(Level.INFO, "File handler added")
@@ -233,40 +238,6 @@ class EpidataLiteStreamingContext {
       }
     }
 
-    /*
-    for (processor <- processorConfigs) {
-      processor.get("transformation") match {
-        case Some(operation: Transformation) => {
-          processors += new StreamingNode().init(
-            context,
-            processor.get("receivePorts") match { case Some(list: ListBuffer[String]) => list },
-            processor.get("receiveTopics") match { case Some(list: ListBuffer[String]) => list },
-            processor.get("bufferSizes") match { case Some(list: ListBuffer[Integer]) => list },
-            processor.get("sendPort") match { case Some(list: String) => list },
-            processor.get("sendTopic") match { case Some(list: String) => list },
-            receiveTimeout,
-            operation,
-            logger)
-          logger.log(Level.INFO, "New streaming node initialized with a transformation object.")
-        }
-        case operation: Some[String] => {
-          processors += new StreamingNode().init(
-            context,
-            processor.get("receivePorts") match { case Some(list: ListBuffer[String]) => list },
-            processor.get("receiveTopics") match { case Some(list: ListBuffer[String]) => list },
-            processor.get("bufferSizes") match { case Some(list: ListBuffer[Integer]) => list },
-            processor.get("sendPort") match { case Some(list: String) => list },
-            processor.get("sendTopic") match { case Some(list: String) => list },
-            receiveTimeout,
-            createTransformation(operation.toString, List(), Map[String, String]()),
-            logger)
-          logger.log(Level.INFO, "New streaming node initialized with a transformation string.")
-        }
-      }
-    }
-    processors.reverse
-*/
-
     //    poolSize = processors.size
     poolSize = processorConfigs.size
     executorService = Executors.newFixedThreadPool(poolSize)
@@ -280,11 +251,6 @@ class EpidataLiteStreamingContext {
           val processor: StreamingNode = new StreamingNode()
           logger.log(Level.INFO, "processor created: " + processor)
           processors += processor
-          logger.log(Level.INFO, "processor added to list")
-
-          //          while (!initSubFlag) {
-          //            Thread.sleep(1000)
-          //          }
 
           logger.log(Level.INFO, "processor initSub being called")
           processorConfig.get("transformation") match {
@@ -319,10 +285,6 @@ class EpidataLiteStreamingContext {
             }
           }
 
-          //          while (!initPubFlag) {
-          //            Thread.sleep(1000)
-          //          }
-
           logger.log(Level.INFO, "processor initPub being called")
           processor.initPub(
             context,
@@ -332,48 +294,38 @@ class EpidataLiteStreamingContext {
           logger.log(Level.INFO, "processor initPub called successfully")
           logger.log(Level.INFO, "New streaming node " + processor.toString() + " initialized with transformation object")
 
-          //          while (!startNodesFlag) {
-          //            Thread.sleep(1000)
-          //          }
-
           logger.log(Level.INFO, "Steaming Node created: " + processor)
-
-          //          breakable {
-          while (!Thread.currentThread().isInterrupted()) {
-            if (stopStreamFlag) {
-              logger.log(Level.INFO, "stopStreamFlag is true. thread being interrupted")
-              Thread.currentThread.interrupt()
-            } else {
+          breakable {
+            while ((!Thread.currentThread().isInterrupted()) && (!stopStreamFlag)) {
               try {
                 processor.receive()
               } catch {
                 case e: ZMQException if ZMQ.Error.ETERM == e.getErrorCode() => {
                   //              case e: ZMQException if ZMQ.Error.ETERM.getCode == e.getErrorCode
                   logger.log(Level.WARNING, "Processors interrupted via ZMQException")
-                  //Thread.currentThread.interrupt()
-                  //break
+                  Thread.currentThread.interrupt()
+                  break
                 }
                 case e: InterruptedException => {
                   logger.log(Level.INFO, "Processor service interrupted via InterruptedException")
-                  //Thread.currentThread.interrupt()
-                  //break
+                  Thread.currentThread.interrupt()
+                  break
                 }
                 case e: JsonMappingException => {
                   logger.log(Level.WARNING, "JsonMappingException: " + e.getMessage)
-                  // throw new Exception(e.getMessage)
-                  // break
+                  throw new Exception(e.getMessage)
+                  break
                 }
                 case e: Throwable => {
                   logger.log(Level.WARNING, "Unexpected Exception. " + e.getMessage)
-                  // Thread.currentThread.interrupt()
-                  // break
+                  Thread.currentThread.interrupt()
+                  break
                 }
               }
+              logger.log(Level.INFO, "waiting for interrupt or stopStreamFlag")
+              logger.log(Level.INFO, "thread interrupt status: " + Thread.currentThread().isInterrupted())
             }
-            logger.log(Level.INFO, "waiting for interrupt or stopStreamFlag")
-            logger.log(Level.INFO, "thread interrupt status: " + Thread.currentThread().isInterrupted())
           }
-          //          }
 
           logger.log(Level.INFO, "processor clearSub being called")
           processor.clearSub()
@@ -389,12 +341,7 @@ class EpidataLiteStreamingContext {
       })
     }
 
-    //while (processors.size < processorConfigs.size) {
-    //  Thread.sleep(10)
-    //}
-
     logger.log(Level.INFO, "EpiData stream started successfully.")
-
   }
 
   def stopStream(): Unit = {
@@ -410,40 +357,19 @@ class EpidataLiteStreamingContext {
       context.term()
       logger.log(Level.INFO, "ZMQ context terminated successfully.")
     } catch {
-      case e: Throwable => logger.log(Level.WARNING, "Exception during ZMQ context termination Line 430." + e.getMessage)
-    }
-
-    /*
-    try {
-      executorService.shutdownNow()
-      Thread.sleep(5000)
-      //      Thread.currentThread().interrupt();
-      //      context.term()
-      logger.log(Level.INFO, "Streams stopped successfully.")
-    } catch {
       case e: InterruptedException =>
         logger.log(Level.WARNING, "InterruptedException during stream shutdown", e.getMessage)
         executorService.shutdownNow()
         Thread.currentThread().interrupt();
-        //        context.term()
+        context.term()
         logger.log(Level.INFO, "Streams stopped successfully.")
       case e: Throwable =>
-        logger.log(Level.WARNING, "Exception during stream shutdown", e.getMessage)
+        logger.log(Level.WARNING, "Exception during ZMQ context termination Line 430." + e.getMessage)
     }
-*/
   }
 
   def addShutdownHook(): Unit = {
     Runtime.getRuntime().addShutdownHook(new Thread { () => stopStream() })
   }
-
-  //  def printSomething(bar: String): String = {
-  //    val s = "py4j connection working fine "
-  //    s
-  //  }
-
-  //  def testUnit(): Unit = {
-  //    print("testing unit")
-  //  }
 
 }

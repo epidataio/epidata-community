@@ -25,23 +25,21 @@ class EpidataLiteContext:
     EpidataLiteContext.scala
     '''
     def __init__(self,
-            ec_classpath="spark/target/scala-2.12/epidata-spark-assembly-1.0-SNAPSHOT.jar",
+            ec_classpath=os.environ["EPIDATA_LITE_JAR"],
             sqlite_conf=None,
             measurement_class=None
     ):
         self._gateway = JavaGateway()
-        #print("gateway: ", self._gateway)
+        print("gateway: ", self._gateway)
 
         self._sqlite_conf = sqlite_conf
         self._measurement_class = measurement_class
 
         try:
-#            self._gg = self._gateway.launch_gateway(classpath=ec_classpath)
-            debug_classpath = "/Users/srinibadri/Documents/Repos/epidata/epidata-community-interns/spark/target/scala-2.12/epidata-spark-assembly-1.0-SNAPSHOT.jar"
-            self._gg = self._gateway.launch_gateway(classpath=debug_classpath)
-            #print("gg: ", self._gg)
+            self._gg = self._gateway.launch_gateway(classpath=ec_classpath)
+            print("gg: ", self._gg)
             self._jelc = self._gg.jvm.com.epidata.spark.EpidataLiteContext()
-            #print("jelc: ", self._jelc)
+            print("jelc: ", self._jelc)
         except Exception as e:
             print(str(e))
 

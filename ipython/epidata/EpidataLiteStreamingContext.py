@@ -25,23 +25,28 @@ class EpidataLiteStreamingContext:
     EpidataLiteContext.scala
     '''
     def __init__(self,
-                elc_classpath="spark/target/scala-2.12/epidata-spark-assembly-1.0-SNAPSHOT.jar",
+                esc_classpath=os.environ["EPIDATA_LITE_JAR"],
                 topics=None,
                 sqlite_conf=None,
                 zmq_conf=None,
                 measurement_class=None
     ):
-        debug_classpath = "/Users/srinibadri/Documents/Repos/epidata/epidata-community-interns/spark/target/scala-2.12/epidata-spark-assembly-1.0-SNAPSHOT.jar"
         self._gateway = JavaGateway()
-#        self._gg = self._gateway.launch_gateway(classpath = elc_classpath)
-        self._gg = self._gateway.launch_gateway(classpath = debug_classpath)
-        self._jelc = self._gg.jvm.com.epidata.spark.EpidataLiteStreamingContext()
+
+        try:
+            self._gg = self._gateway.launch_gateway(classpath=esc_classpath)
+            print("gg: ", self._gg)
+            self._jesc = self._gg.jvm.com.epidata.spark.EpidataLiteStreamingContext()
+            print("jesc: ", self._jesc)
+        except Exception as e:
+            print(str(e))
+
         self._topics = topics
         self._sqlite_conf = sqlite_conf
         self._zmq_conf = zmq_conf
         self._measurement_class = measurement_class
 
-        self._jelc.init()
+        self._jesc.init()
 
 
     '''
@@ -72,19 +77,19 @@ class EpidataLiteStreamingContext:
         java_meas_names = ListConverter().convert(meas_names, self._gg._gateway_client)
         # java_params = {k: self.to_java_list(v) for k, v in params.items()}
         java_params = MapConverter().convert(params, self._gg._gateway_client)
-        trans = self._jelc.createTransformation(opName, java_meas_names, java_params)
+        trans = self._jesc.createTransformation(opName, java_meas_names, java_params)
         return trans
 
     def create_stream(self, sourceTopic, destinationTopic, transformation):
-        self._jelc.createStream(sourceTopic, destinationTopic, transformation)
+        self._jesc.createStream(sourceTopic, destinationTopic, transformation)
         print("stream created")
 
     def start_streaming(self):
-        self._jelc.startStream()
+        self._jesc.startStream()
         print("streams started")
 
     def stop_streaming(self):
-        self._jelc.stopStream()
+        self._jesc.stopStream()
         print("streams stopped")
 
     def to_java_list(self, x):
@@ -93,7 +98,7 @@ class EpidataLiteStreamingContext:
         return ListConverter().convert(x, self._gg._gateway_client)
 
     def printSomething(self, something):
-        s = self._jelc.printSomething(something)
+        s = self._jesc.printSomething(something)
         print(s)
 
 

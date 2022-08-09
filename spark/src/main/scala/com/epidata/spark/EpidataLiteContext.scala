@@ -34,8 +34,13 @@ class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
   private val conf = ConfigFactory.parseResources("sqlite-defaults.conf").resolve()
   private val basePath = new java.io.File(".").getAbsoluteFile().getParent()
 
-  private val logFilePath = "/Users/srinibadri/Documents/Repos/epidata/epidata-community-interns/" + "log/" + conf.getString("spark.epidata.SQLite.logFileName")
-  //  private val logFilePath = basePath + "/log/" + conf.getString("spark.epidata.SQLite.logFileName")
+  private var logFilePath = conf.getString("spark.epidata.logFilePath")
+  if ((logFilePath == "") || (logFilePath == None)) {
+    logFilePath = basePath + "/log/" + conf.getString("spark.epidata.logFileName")
+  } else {
+    logFilePath = logFilePath + conf.getString("spark.epidata.logFileName")
+  }
+  println("log file path: " + logFilePath)
   val fileHandler = new FileHandler(logFilePath)
   logger.addHandler(fileHandler)
   //logger.log(Level.INFO, "File handler added")
