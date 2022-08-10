@@ -56,9 +56,12 @@ class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
   private lazy val streamingBatchDuration = conf.getInt("spark.epidata.streamingBatchDuration")
 
   private val sqliteDBUrl = epidataConf.dbUrl match {
-    case s if s.trim.isEmpty => "jdbc:sqlite:" + "/Users/srinibadri/Documents/Repos/epidata/epidata-community-interns/" + "data/" + sqliteDBName
-
-    //    case s if s.trim.isEmpty => "jdbc:sqlite:" + basePath + "/data/" + sqliteDBName
+    case s if s.trim.isEmpty => {
+      conf.getString("spark.epidata.SQLite.url") match {
+        case s if s.trim.isEmpty => "jdbc:sqlite:" + basePath + "/data/" + sqliteDBName
+        case s => conf.getString("spark.epidata.SQLite.url") + sqliteDBName
+      }
+    }
     case s => s
   }
 
