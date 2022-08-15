@@ -31,7 +31,7 @@ class EpidataLiteStreamingContext:
                 zmq_conf=None,
                 measurement_class=None
     ):
-        self._gateway = JavaGateway()
+        self._gateway = JavaGateway(start_callback_server=True)
 
         try:
             self._gg = self._gateway.launch_gateway(classpath=esc_classpath)
@@ -74,11 +74,13 @@ class EpidataLiteStreamingContext:
     '''
 
     def create_transformation(self, opName, meas_names, params):
-        java_meas_names = ListConverter().convert(meas_names, self._gg._gateway_client)
-        # java_params = {k: self.to_java_list(v) for k, v in params.items()}
-        java_params = MapConverter().convert(params, self._gg._gateway_client)
-        trans = self._jesc.createTransformation(opName, java_meas_names, java_params)
-        return trans
+        if isinstance(opName, str):
+            java_meas_names = ListConverter().convert(meas_names, self._gg._gateway_client)
+            # java_params = {k: self.to_java_list(v) for k, v in params.items()}
+            java_params = MapConverter().convert(params, self._gg._gateway_client)
+            trans = self._jesc.createTransformation(opName, java_meas_names, java_params)
+            return trans    
+        return Transformation(opName, params)
 
     def create_stream(self, sourceTopic, destinationTopic, transformation):
         self._jesc.createStream(sourceTopic, destinationTopic, transformation)

@@ -5,18 +5,14 @@
 
 class Transformation(object):
 
-    def __init__(
-            self,
-            func,
-            args=[],
-            destination="measurements_cleansed",
-            datastore="cassandra"):
+    def __init__(self, func, args=[], name="Default", destination="", datastore="sqlite"):
         self._func = func
-        self._destination = destination
         self._args = args
+        self._name = name
+        self._destination = destination
         self._datastore = datastore
 
-    def apply(self, df, sqlCtx):
+    def apply(self, df, sqlCtx=None):
         return self._func(df, *self._args)
 
     def destination(self):
@@ -24,3 +20,6 @@ class Transformation(object):
 
     def datastore(self):
         return self._datastore
+    
+    class Java:
+        implements = ['com.epidata.spark.ops.Transformation']
