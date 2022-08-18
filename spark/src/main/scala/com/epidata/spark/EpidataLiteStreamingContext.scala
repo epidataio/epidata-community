@@ -197,6 +197,8 @@ class EpidataLiteStreamingContext {
   }
 
   def startStream(): Unit = {
+    stopStreamFlag = false
+
     val processorConfigs: ListBuffer[MutableMap[String, Any]] = streamAuditor.validate(topicMap, intermediatePort)
     logger.log(Level.INFO, "Streams being started. \nStreaming node configs: " + processorConfigs.toString())
 
