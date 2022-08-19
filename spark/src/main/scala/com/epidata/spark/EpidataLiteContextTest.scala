@@ -1802,6 +1802,17 @@ object elcTest extends App {
   //  val op6 = esc.createTransformation("MeasStatistics", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map("method" -> "standard"))
   //  println("transformation created: " + op6)
 
+  //val op7 = esc.createTransformation("Resample", List("Temperature"), Map("time_interval" -> 1, "timeunit" -> "min"))
+
+  //println("transformation created: " + op7)
+
+  //  val op8 = esc.createTransformation("NAs", List("Temperature"), Map[String, String]())
+  //  println("transformation created: " + op8)
+  val op9 = esc.createTransformation("Transpose", List("Temperature"), Map[String, String]())
+  println("transformation created: " + op9)
+
+  val op10 = esc.createTransformation("InverseTranspose", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
+  println("transformation created: " + op10)
   // Create Streams
   /*
        play producer
