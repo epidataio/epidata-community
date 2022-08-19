@@ -21,7 +21,8 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.1.4" % Test,
   "org.scalatestplus" %% "junit-4-12" % "3.1.2.0" % "test",
   "junit" % "junit" % "4.12" % Test,
-  "org.apache.cassandra" % "cassandra-all" % "3.11.6"
+  "org.apache.cassandra" % "cassandra-all" % "3.11.6",
+  "com.google.guava" % "guava" % "31.1-jre"
 ).map(_.exclude("org.slf4j", "log4j-over-slf4j"));  // Excluded for Cassandra embedded
 
 dependencyOverrides += "com.fasterxml.jackson.core" % "jackson-core" % "2.10.5"
