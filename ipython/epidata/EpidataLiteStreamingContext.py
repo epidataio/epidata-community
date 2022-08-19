@@ -79,7 +79,7 @@ class EpidataLiteStreamingContext:
             # java_params = {k: self.to_java_list(v) for k, v in params.items()}
             java_params = MapConverter().convert(params, self._gg._gateway_client)
             trans = self._jesc.createTransformation(opName, java_meas_names, java_params)
-            return trans    
+            return trans
         return Transformation(opName, params)
 
     def create_stream(self, sourceTopic, destinationTopic, transformation):
@@ -104,6 +104,6 @@ class EpidataLiteStreamingContext:
         print(s)
 
 
-if os.environ.get('EPIDATA_MODE') == r'LITE':
+#if os.environ.get('EPIDATA_MODE') == r'LITE':
     # The global EpidataLiteStreamingContext.
-    esc = EpidataLiteStreamingContext()
+#    esc = EpidataLiteStreamingContext()

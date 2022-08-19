@@ -29,7 +29,7 @@ class EpidataLiteContext:
             sqlite_conf=None,
             measurement_class=None
     ):
-        self._gateway = JavaGateway()
+        self._gateway = JavaGateway(start_callback_server=False)
         print("gateway: ", self._gateway)
 
         self._sqlite_conf = sqlite_conf
@@ -228,6 +228,6 @@ class EpidataLiteContext:
         pass  #not needed with the lite version
 
 
-if os.environ.get('EPIDATA_MODE') == r'LITE':
+#if os.environ.get('EPIDATA_MODE') == r'LITE':
     # The global EpidataLiteContext.
-    ec = EpidataLiteContext()
+#    ec = EpidataLiteContext()
