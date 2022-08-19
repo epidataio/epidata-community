@@ -93,6 +93,8 @@ def outliers(df, meas_names: list, percentage: float, method: str):
     meas_names : string of meas_names, eg: 'Temperature'
     percentage: float -> the upper and lower quantile that want to be considered as outliers, usually use 0.05 or 0.1
     method: string -> could be 'average', 'detete'
+            'average' means subsitute with average value of selected field
+            'delete' means delete outliers
     """
     
     for field in meas_names:
@@ -109,7 +111,7 @@ def outliers(df, meas_names: list, percentage: float, method: str):
                                                          
         elif method == 'average':
                                                          
-            df.loc[indices,['meas_value']] = df.loc[indices,['meas_value']].mean()[0]
+            df.loc[indices,['meas_value']] = df[df['meas_name'] == field]['meas_value'].mean()[0]
 
     return df
 
@@ -148,12 +150,12 @@ def missing_substitute(df, meas_names, method="rolling", size=3):
                         x,
                         basestring) and x != "") else np.nan)
 
-    drop = []
+    # drop = []
      # If too much missing in columns, just delete them
-    data_ratios = df.count()/len(df)
-    for i in range(0,len(data_ratios)):
-        if data_ratios[i] < 0.2:      
-            drop.append(data_ratios.index[i])  
+    # data_ratios = df.count()/len(df)
+    # for i in range(0,len(data_ratios)):
+    #     if data_ratios[i] < 0.2:      
+    #         drop.append(data_ratios.index[i])  
             
     df = df.drop(drop, axis = 1)
     for meas_name in meas_names:
@@ -174,6 +176,25 @@ def missing_substitute(df, meas_names, method="rolling", size=3):
             raise ValueError("Unsupported substitution method: ", repr(method))
 
     return df
+
+def creat_template(df):
+    """"
+    creat a new df which contains the structure of origainl df
+    keeps meas_name and corresponding sensor and meas_unit
+    this step is in order to merge into the prediction dataframe and helps to store in the db
+    """
+    temp = df.copy()
+    temp['ts'] = np.nan
+    temp['event'] = np.nan
+    temp['meas_value'] = np.nan
+    temp['meas_datatype'] = np.nan
+    temp['meas_status'] = np.nan
+    temp['meas_lower_limit'] = np.nan
+    temp['meas_upper_limit'] = np.nan
+    temp['meas_description'] = np.nan
+    
+    temp = temp[temp.columns.tolist()].drop_duplicates(subset = temp.columns.tolist()).reset_index(drop = True)
+    return temp 
 
 def transpose(df : pd.core.frame.DataFrame , meas_drop_columns : list):
     """
@@ -224,7 +245,7 @@ def feature_engineering(df, add = False, multiply = False):
     df['weekday'] =df['ts'].apply(lambda x : x.weekday())
     df['month'] =df['ts'].apply(lambda x : x.month)
     df['year'] =df['ts'].apply(lambda x : x.year)
-    
+    # df['microsecond'] = df['ts'].apply(lambda x : x.microseconds)
     
     def is_holiday(x):
         if x in holidays.US():
@@ -359,9 +380,10 @@ def prediction(train_df, predict_df, categorical_features:list, target: str, fol
             
     return predict_df
 
-def inverse_transpose(result_df, meas_col:list):
+def inverse_transpose(result_df, temp_df, meas_col:list):
     """
     result_df: the dataframe after calling prediction fuction 
+    template_df: the output dataframe of creat_template function
     meas_col:including all the measments target and varibales
         
     """
@@ -373,6 +395,10 @@ def inverse_transpose(result_df, meas_col:list):
     result_df['meas_value'] = result_df.apply(lambda x : x[x['meas_name']], axis=1)
     result_df = result_df[['company','site','station','ts', 'meas_name', 'meas_value']]
     result_df['ts'] = result_df['ts'].apply(lambda x : int(time.mktime(x.timetuple()) * 1000+ x.microsecond/1000))
+    
+    
+    result_df = result_df.merge(temp_df, on = ['company', 'site','station','meas_name' ], how = 'left')
+    
     return result_df
 
 
