@@ -19,6 +19,7 @@ import scala.util.control.Breaks._
 import java.io.FileInputStream
 import java.io.IOException
 import java.util.logging._
+import py4j.GatewayServer
 //import java.util.logging.ConsoleHandler
 //import java.util.logging.FileHandler
 //import java.util.logging.Handler
@@ -375,3 +376,13 @@ class EpidataLiteStreamingContext {
   }
 
 }
+
+object OpenGateway {
+
+  def main(args: Array[String]): Unit = {
+    val esc = new EpidataLiteStreamingContext();
+    val server = new GatewayServer(esc);
+    server.start()
+  }
+}
+
