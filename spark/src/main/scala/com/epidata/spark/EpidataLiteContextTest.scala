@@ -2,6 +2,7 @@
  * Copyright (c) 2015-2022 EpiData, Inc.
 */
 
+/*
 package com.epidata.spark
 
 import com.typesafe.config.ConfigFactory
@@ -19,8 +20,8 @@ import scala.util.Properties
 object elcTest extends App {
   val ec = new EpidataLiteContext()
 
-  /*  ----- EpiDataLite Batch  Test ----- */
-  /*
+  //  ----- EpiDataLite Batch  Test -----
+
   println("\n EpiDataLite Batch Test Started")
 
   Class.forName("org.sqlite.JDBC");
@@ -1760,8 +1761,8 @@ object elcTest extends App {
   try { con.close() } catch { case e: SQLException => println("Error closing database connection") }
   println("\n EpiDataLite Batch Query Test completed")
   println("----------------------------------------------------")
-*/
-  /*  ----- EpiDataLite Stream Test Started ----- */
+
+  //  ----- EpiDataLite Stream Test Started -----
   println("\n EpiDataLite Stream Test Started")
 
   val esc = new EpidataLiteStreamingContext()
@@ -1814,28 +1815,28 @@ object elcTest extends App {
   val op10 = esc.createTransformation("InverseTranspose", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
   println("transformation created: " + op10)
   // Create Streams
-  /*
-       play producer
-             |
-             ↓
-            op1 --------
-           /     \      |
-          ↓       ↓     |
-     --- op2     op3    |
-    |     | \     /     |
-    |     |  ↓   ↓      |
-    |     |   op4       |
-    |     |   |         |
-    |     \   |         |
-    |      \  |         |
-    |       \ |         |
-    |        ↓          ↓
-    |        op5       op6
-     \        |        /
-       \      |      /
-         \    ↓    /
-      play datasink
-   */
+
+  //     play producer
+  //           |
+  //           ↓
+  //          op1 --------
+  //         /     \      |
+  //        ↓       ↓     |
+  //   --- op2     op3    |
+  //  |     | \     /     |
+  //  |     |  ↓   ↓      |
+  //  |     |   op4       |
+  //  |     |   |         |
+  //  |     \   |         |
+  //  |      \  |         |
+  //  |       \ |         |
+  //  |        ↓          ↓
+  //  |        op5       op6
+  //   \        |        /
+  //     \      |      /
+  //       \    ↓    /
+  //    play datasink
+
 
   //op1
   esc.createStream("measurements_original", "measurements_cleansed", op1)
@@ -1904,3 +1905,4 @@ object elcTest extends App {
   println("\n EpiDataLite Stream Test completed")
   println("----------------------------------------------------")
 }
+*/

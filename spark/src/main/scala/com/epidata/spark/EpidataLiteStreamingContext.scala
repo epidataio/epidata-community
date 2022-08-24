@@ -32,7 +32,7 @@ import com.typesafe.config.{ ConfigFactory, ConfigValueFactory }
 import scala.collection.convert.ImplicitConversions.`list asScalaBuffer`
 import scala.collection.mutable.ListBuffer
 
-class EpidataLiteStreamingContext {
+class EpidataLiteStreamingContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
   var startPort: Integer = 5551
   var cleansedPort: Integer = 5552
   var summaryPort: Integer = 5553
@@ -75,9 +75,13 @@ class EpidataLiteStreamingContext {
   //default bufferSize based on configuration settings
   var bufferSize: Integer = conf.getInt("spark.epidata.streamDefaultBufferSize")
 
-  def config(): Unit = {
-
+  // Auxiliary constructor for Java and Python
+  def this() = {
+    this(EpiDataConf("", ""))
+    this.logger.log(Level.INFO, "EpiDataLiteStreamingContext object created with settings: " + epidataConf.model + ", " + epidataConf.dbUrl)
   }
+
+  def config(): Unit = {}
 
   def init(): Unit = {
     logger.log(Level.INFO, "EpiDataLiteStreamingContext is being initialized.")
@@ -380,9 +384,9 @@ class EpidataLiteStreamingContext {
 object OpenGateway {
 
   def main(args: Array[String]): Unit = {
+    val ec = new EpidataLiteContext()
     val esc = new EpidataLiteStreamingContext();
     val server = new GatewayServer(esc);
     server.start()
   }
 }
-
