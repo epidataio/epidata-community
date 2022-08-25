@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="windows-1252" standalone="no"?>
+<!DOCTYPE log SYSTEM "logger.dtd">
+<log>
+<record>
+  <date>2022-08-24T13:08:10</date>
+  <millis>1661371690659</millis>
+  <sequence>0</sequence>
+  <logger>EpiDataLiteContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteContext</class>
+  <method>&lt;init&gt;</method>
+  <thread>15</thread>
+  <message>measurement class: sensor_measurement</message>
+</record>
+<record>
+  <date>2022-08-24T13:08:10</date>
+  <millis>1661371690879</millis>
+  <sequence>1</sequence>
+  <logger>EpiDataLiteContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteContext</class>
+  <method>&lt;init&gt;</method>
+  <thread>15</thread>
+  <message>Database connection established. Connection object: org.sqlite.jdbc4.JDBC4Connection@111bd936</message>
+</record>
+<record>
+  <date>2022-08-24T13:08:10</date>
+  <millis>1661371690880</millis>
+  <sequence>2</sequence>
+  <logger>EpiDataLiteContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteContext</class>
+  <method>&lt;init&gt;</method>
+  <thread>15</thread>
+  <message>EpiData Lite object created with settings: , </message>
+</record>

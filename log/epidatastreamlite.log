@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE log SYSTEM "logger.dtd">
+<log>
+<record>
+  <date>2022-08-24T13:12:03</date>
+  <millis>1661371923136</millis>
+  <sequence>3</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext</class>
+  <method>&lt;init&gt;</method>
+  <thread>114</thread>
+  <message>EpiDataLiteStreamingContext object created with settings: , </message>
+</record>
+<record>
+  <date>2022-08-24T13:12:11</date>
+  <millis>1661371931184</millis>
+  <sequence>4</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext</class>
+  <method>&lt;init&gt;</method>
+  <thread>117</thread>
+  <message>EpiDataLiteStreamingContext object created with settings: , </message>
+</record>
+<record>
+  <date>2022-08-24T13:12:11</date>
+  <millis>1661371931189</millis>
+  <sequence>5</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext</class>
+  <method>init</method>
+  <thread>117</thread>
+  <message>EpiDataLiteStreamingContext is being initialized.</message>
+</record>
+<record>
+  <date>2022-08-24T13:12:11</date>
+  <millis>1661371931207</millis>
+  <sequence>6</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext</class>
+  <method>init</method>
+  <thread>117</thread>
+  <message>EpiDataLiteStreamingContext initialized.</message>
+</record>
+<record>
+  <date>2022-08-24T13:12:15</date>
+  <millis>1661371935991</millis>
+  <sequence>7</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext</class>
+  <method>createStream</method>
+  <thread>117</thread>
+  <message>createStream method invoked. Source topic: measurements_original, destination topic: measurements_cleansed</message>
+</record>
+<record>
+  <date>2022-08-24T13:12:15</date>
+  <millis>1661371935991</millis>
+  <sequence>8</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext</class>
+  <method>createStream</method>
+  <thread>117</thread>
+  <message>createStream method invoked. Source topic: ListBuffer(measurements_original), buffer size: ListBuffer(5), destination topic: measurements_cleansed</message>
+</record>
+<record>
+  <date>2022-08-24T13:12:15</date>
+  <millis>1661371935993</millis>
+  <sequence>9</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext</class>
+  <method>createStream</method>
+  <thread>117</thread>
+  <message>Stream source ports added: ListBuffer(5551)</message>
+</record>
+<record>
+  <date>2022-08-24T13:12:15</date>
+  <millis>1661371935993</millis>
+  <sequence>10</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext</class>
+  <method>createStream</method>
+  <thread>117</thread>
+  <message>Stream destination port already exists.</message>
+</record>
+<record>
+  <date>2022-08-24T13:12:15</date>
+  <millis>1661371935994</millis>
+  <sequence>11</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext</class>
+  <method>createStream</method>
+  <thread>117</thread>
+  <message>Stream processing node created successfully.</message>
+</record>

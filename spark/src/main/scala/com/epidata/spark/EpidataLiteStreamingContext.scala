@@ -130,27 +130,27 @@ class EpidataLiteStreamingContext(epidataConf: EpiDataConf = EpiDataConf("", "")
   }
 
   def createStream(sourceTopic: String, destinationTopic: String, operation: Transformation): Unit = {
-    logger.log(Level.INFO, "createStream method invoked. Source topic: " + sourceTopic.toString() + ", destination topic: " + destinationTopic.toString() + ", transformation: " + operation.toString())
+    logger.log(Level.INFO, "createStream method invoked. Source topic: " + sourceTopic.toString() + ", destination topic: " + destinationTopic.toString() /* + ", transformation: " + operation */ )
     createStream(ListBuffer(sourceTopic), ListBuffer(bufferSize), destinationTopic, operation)
   }
 
   def createStream(sourceTopic: ListBuffer[String], destinationTopic: String, operation: Transformation): Unit = {
-    logger.log(Level.INFO, "createStream method invoked. Source topics: " + sourceTopic.toString() + ", destination topic: " + destinationTopic.toString() + ", transformation: " + operation.toString())
+    logger.log(Level.INFO, "createStream method invoked. Source topics: " + sourceTopic.toString() + ", destination topic: " + destinationTopic.toString() + ", transformation: " + operation)
     createStream(sourceTopic, ListBuffer(bufferSize), destinationTopic, operation)
   }
 
   def createStream(sourceTopic: String, bufferSize: Integer, destinationTopic: String, operation: Transformation): Unit = {
-    logger.log(Level.INFO, "createStream method invoked. Source topic: " + sourceTopic.toString() + ", buffer size: " + bufferSize.toString() + ", destination topic: " + destinationTopic.toString() + ", transformation: " + operation.toString())
+    logger.log(Level.INFO, "createStream method invoked. Source topic: " + sourceTopic.toString() + ", buffer size: " + bufferSize.toString() + ", destination topic: " + destinationTopic.toString() /* + ", transformation: " + operation */ )
     createStream(ListBuffer(sourceTopic), ListBuffer(bufferSize), destinationTopic, operation)
   }
 
   def createStream(sourceTopic: ListBuffer[String], bufferSize: Integer, destinationTopic: String, operation: Transformation): Unit = {
-    logger.log(Level.INFO, "createStream method invoked. Source topic: " + sourceTopic.toString() + ", buffer size: " + bufferSize.toString() + ", destination topic: " + destinationTopic.toString() + ", transformation: " + operation.toString())
+    logger.log(Level.INFO, "createStream method invoked. Source topic: " + sourceTopic.toString() + ", buffer size: " + bufferSize.toString() + ", destination topic: " + destinationTopic.toString() /* + ", transformation: " + operation */ )
     createStream(sourceTopic, ListBuffer(bufferSize), destinationTopic, operation)
   }
 
   def createStream(sourceTopic: String, bufferSizes: ListBuffer[Integer], destinationTopic: String, operation: Transformation): Unit = {
-    logger.log(Level.INFO, "createStream method invoked. Source topic: " + sourceTopic.toString() + ", buffer sizes: " + bufferSizes.toString() + ", destination topic: " + destinationTopic.toString() + ", transformation: " + operation.toString())
+    logger.log(Level.INFO, "createStream method invoked. Source topic: " + sourceTopic.toString() + ", buffer sizes: " + bufferSizes.toString() + ", destination topic: " + destinationTopic.toString() /* + ", transformation: " + operation */ )
     createStream(ListBuffer(sourceTopic), bufferSizes, destinationTopic, operation)
   }
 
@@ -159,7 +159,7 @@ class EpidataLiteStreamingContext(epidataConf: EpiDataConf = EpiDataConf("", "")
     //logger.log(Level.INFO, "destinationTopic:  " + destinationTopic)
     //logger.log(Level.INFO, "transformation:  " + operation)
     //-------------------------------------------------------
-    logger.log(Level.INFO, "createStream method invoked. Source topic: " + sourceTopic.toString() + ", buffer size: " + bufferSizes.toString() + ", destination topic: " + destinationTopic.toString() + ", transformation: " + operation.toString())
+    logger.log(Level.INFO, "createStream method invoked. Source topic: " + sourceTopic.toString() + ", buffer size: " + bufferSizes.toString() + ", destination topic: " + destinationTopic.toString() /* + ", transformation: " + operation */ )
     var streamSourcePort: ListBuffer[String] = ListBuffer()
     for (topic <- sourceTopic) {
       if (topicMap.get(topic) != None) {
@@ -387,6 +387,7 @@ object OpenGateway {
     val ec = new EpidataLiteContext()
     val esc = new EpidataLiteStreamingContext();
     val server = new GatewayServer(esc);
+    println("RUNNING SERVER")
     server.start()
   }
 }
