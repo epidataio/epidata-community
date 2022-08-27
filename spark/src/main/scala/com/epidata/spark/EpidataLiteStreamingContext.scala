@@ -135,7 +135,7 @@ class EpidataLiteStreamingContext(epidataConf: EpiDataConf = EpiDataConf("", "")
   }
 
   def createStream(sourceTopic: ListBuffer[String], destinationTopic: String, operation: Transformation): Unit = {
-    logger.log(Level.INFO, "createStream method invoked. Source topics: " + sourceTopic.toString() + ", destination topic: " + destinationTopic.toString() + ", transformation: " + operation)
+    logger.log(Level.INFO, "createStream method invoked. Source topics: " + sourceTopic.toString() + ", destination topic: " + destinationTopic.toString() /* + ", transformation: " + operation */ )
     createStream(sourceTopic, ListBuffer(bufferSize), destinationTopic, operation)
   }
 
@@ -205,7 +205,7 @@ class EpidataLiteStreamingContext(epidataConf: EpiDataConf = EpiDataConf("", "")
     stopStreamFlag = false
 
     val processorConfigs: ListBuffer[MutableMap[String, Any]] = streamAuditor.validate(topicMap, intermediatePort)
-    logger.log(Level.INFO, "Streams being started. \nStreaming node configs: " + processorConfigs.toString())
+    logger.log(Level.INFO, "Streams being started. \nStreaming node configs: " /* + processorConfigs.toString() */ )
 
     def createProcessor(processorConfig: MutableMap[String, Any]): StreamingNode = {
       logger.log(Level.INFO, "createProcessor method invoked.")
@@ -221,10 +221,10 @@ class EpidataLiteStreamingContext(epidataConf: EpiDataConf = EpiDataConf("", "")
             receiveTimeout,
             operation,
             logger)
-          logger.log(Level.INFO, "New streaming node " + processor.toString() + " initialized with transformation object")
+          logger.log(Level.INFO, "New streaming node " /* + processor.toString() */ + " initialized with transformation object")
           processor
         }
-        case operation: Some[String] => {
+        case Some(operation: String) => {
           val processor: StreamingNode = new StreamingNode().init(
             context,
             processorConfig.get("receivePorts") match { case Some(list: ListBuffer[String]) => list },
@@ -235,7 +235,7 @@ class EpidataLiteStreamingContext(epidataConf: EpiDataConf = EpiDataConf("", "")
             receiveTimeout,
             createTransformation(operation.toString, List(), Map[String, String]()),
             logger)
-          logger.log(Level.INFO, "New streaming node " + processor.toString() + " initialized with transformation string")
+          logger.log(Level.INFO, "New streaming node " /* + processor.toString() */ + " initialized with transformation string")
           processor
         }
         case _: Throwable => {
@@ -273,7 +273,7 @@ class EpidataLiteStreamingContext(epidataConf: EpiDataConf = EpiDataConf("", "")
               logger.log(Level.INFO, "processor initSub called successfully")
               logger.log(Level.INFO, "New streaming node " + processor.toString() + " initialized with transformation object")
             }
-            case operation: Some[String] => {
+            case Some(operation: String) => {
               val processor: StreamingNode = new StreamingNode()
               processor.initSub(
                 context,

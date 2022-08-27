@@ -2,101 +2,880 @@
 <!DOCTYPE log SYSTEM "logger.dtd">
 <log>
 <record>
-  <date>2022-08-24T13:12:03</date>
-  <millis>1661371923136</millis>
+  <date>2022-08-26T09:47:44</date>
+  <millis>1661532464444</millis>
   <sequence>3</sequence>
   <logger>EpiDataLiteStreamingContext Logger</logger>
   <level>INFO</level>
   <class>com.epidata.spark.EpidataLiteStreamingContext</class>
   <method>&lt;init&gt;</method>
-  <thread>114</thread>
+  <thread>113</thread>
   <message>EpiDataLiteStreamingContext object created with settings: , </message>
 </record>
 <record>
-  <date>2022-08-24T13:12:11</date>
-  <millis>1661371931184</millis>
+  <date>2022-08-26T09:47:53</date>
+  <millis>1661532473086</millis>
   <sequence>4</sequence>
   <logger>EpiDataLiteStreamingContext Logger</logger>
   <level>INFO</level>
   <class>com.epidata.spark.EpidataLiteStreamingContext</class>
   <method>&lt;init&gt;</method>
-  <thread>117</thread>
+  <thread>116</thread>
   <message>EpiDataLiteStreamingContext object created with settings: , </message>
 </record>
 <record>
-  <date>2022-08-24T13:12:11</date>
-  <millis>1661371931189</millis>
+  <date>2022-08-26T09:47:53</date>
+  <millis>1661532473104</millis>
   <sequence>5</sequence>
   <logger>EpiDataLiteStreamingContext Logger</logger>
   <level>INFO</level>
   <class>com.epidata.spark.EpidataLiteStreamingContext</class>
   <method>init</method>
-  <thread>117</thread>
+  <thread>116</thread>
   <message>EpiDataLiteStreamingContext is being initialized.</message>
 </record>
 <record>
-  <date>2022-08-24T13:12:11</date>
-  <millis>1661371931207</millis>
+  <date>2022-08-26T09:47:53</date>
+  <millis>1661532473131</millis>
   <sequence>6</sequence>
   <logger>EpiDataLiteStreamingContext Logger</logger>
   <level>INFO</level>
   <class>com.epidata.spark.EpidataLiteStreamingContext</class>
   <method>init</method>
-  <thread>117</thread>
+  <thread>116</thread>
   <message>EpiDataLiteStreamingContext initialized.</message>
 </record>
 <record>
-  <date>2022-08-24T13:12:15</date>
-  <millis>1661371935991</millis>
+  <date>2022-08-26T09:47:59</date>
+  <millis>1661532479457</millis>
   <sequence>7</sequence>
   <logger>EpiDataLiteStreamingContext Logger</logger>
   <level>INFO</level>
   <class>com.epidata.spark.EpidataLiteStreamingContext</class>
   <method>createStream</method>
-  <thread>117</thread>
+  <thread>116</thread>
   <message>createStream method invoked. Source topic: measurements_original, destination topic: measurements_cleansed</message>
 </record>
 <record>
-  <date>2022-08-24T13:12:15</date>
-  <millis>1661371935991</millis>
+  <date>2022-08-26T09:47:59</date>
+  <millis>1661532479495</millis>
   <sequence>8</sequence>
   <logger>EpiDataLiteStreamingContext Logger</logger>
   <level>INFO</level>
   <class>com.epidata.spark.EpidataLiteStreamingContext</class>
   <method>createStream</method>
-  <thread>117</thread>
+  <thread>116</thread>
   <message>createStream method invoked. Source topic: ListBuffer(measurements_original), buffer size: ListBuffer(5), destination topic: measurements_cleansed</message>
 </record>
 <record>
-  <date>2022-08-24T13:12:15</date>
-  <millis>1661371935993</millis>
+  <date>2022-08-26T09:47:59</date>
+  <millis>1661532479501</millis>
   <sequence>9</sequence>
   <logger>EpiDataLiteStreamingContext Logger</logger>
   <level>INFO</level>
   <class>com.epidata.spark.EpidataLiteStreamingContext</class>
   <method>createStream</method>
-  <thread>117</thread>
+  <thread>116</thread>
   <message>Stream source ports added: ListBuffer(5551)</message>
 </record>
 <record>
-  <date>2022-08-24T13:12:15</date>
-  <millis>1661371935993</millis>
+  <date>2022-08-26T09:47:59</date>
+  <millis>1661532479501</millis>
   <sequence>10</sequence>
   <logger>EpiDataLiteStreamingContext Logger</logger>
   <level>INFO</level>
   <class>com.epidata.spark.EpidataLiteStreamingContext</class>
   <method>createStream</method>
-  <thread>117</thread>
+  <thread>116</thread>
   <message>Stream destination port already exists.</message>
 </record>
 <record>
-  <date>2022-08-24T13:12:15</date>
-  <millis>1661371935994</millis>
+  <date>2022-08-26T09:47:59</date>
+  <millis>1661532479509</millis>
   <sequence>11</sequence>
   <logger>EpiDataLiteStreamingContext Logger</logger>
   <level>INFO</level>
   <class>com.epidata.spark.EpidataLiteStreamingContext</class>
   <method>createStream</method>
-  <thread>117</thread>
+  <thread>116</thread>
   <message>Stream processing node created successfully.</message>
+</record>
+<record>
+  <date>2022-08-26T09:47:59</date>
+  <millis>1661532479512</millis>
+  <sequence>12</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext</class>
+  <method>startStream</method>
+  <thread>116</thread>
+  <message>Streams being started. 
+Streaming node configs: </message>
+</record>
+<record>
+  <date>2022-08-26T09:47:59</date>
+  <millis>1661532479513</millis>
+  <sequence>13</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext</class>
+  <method>startStream</method>
+  <thread>116</thread>
+  <message>Steam processors are being started.</message>
+</record>
+<record>
+  <date>2022-08-26T09:47:59</date>
+  <millis>1661532479515</millis>
+  <sequence>14</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext</class>
+  <method>startStream</method>
+  <thread>116</thread>
+  <message>EpiData stream started successfully.</message>
+</record>
+<record>
+  <date>2022-08-26T09:47:59</date>
+  <millis>1661532479515</millis>
+  <sequence>15</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext$$anon$1</class>
+  <method>run</method>
+  <thread>117</thread>
+  <message>processor is being created</message>
+</record>
+<record>
+  <date>2022-08-26T09:47:59</date>
+  <millis>1661532479520</millis>
+  <sequence>16</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext$$anon$1</class>
+  <method>run</method>
+  <thread>117</thread>
+  <message>processor created: com.epidata.spark.StreamingNode@55772a22</message>
+</record>
+<record>
+  <date>2022-08-26T09:47:59</date>
+  <millis>1661532479521</millis>
+  <sequence>17</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext$$anon$1</class>
+  <method>run</method>
+  <thread>117</thread>
+  <message>processor initSub being called</message>
+</record>
+<record>
+  <date>2022-08-26T09:47:59</date>
+  <millis>1661532479552</millis>
+  <sequence>18</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>initSub</method>
+  <thread>117</thread>
+  <message>subSocket created</message>
+</record>
+<record>
+  <date>2022-08-26T09:47:59</date>
+  <millis>1661532479580</millis>
+  <sequence>19</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>initSub</method>
+  <thread>117</thread>
+  <message>node initSub completed</message>
+</record>
+<record>
+  <date>2022-08-26T09:47:59</date>
+  <millis>1661532479580</millis>
+  <sequence>20</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext$$anon$1</class>
+  <method>run</method>
+  <thread>117</thread>
+  <message>processor initSub called successfully</message>
+</record>
+<record>
+  <date>2022-08-26T09:47:59</date>
+  <millis>1661532479581</millis>
+  <sequence>21</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext$$anon$1</class>
+  <method>run</method>
+  <thread>117</thread>
+  <message>New streaming node com.epidata.spark.StreamingNode@55772a22 initialized with transformation object</message>
+</record>
+<record>
+  <date>2022-08-26T09:47:59</date>
+  <millis>1661532479581</millis>
+  <sequence>22</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext$$anon$1</class>
+  <method>run</method>
+  <thread>117</thread>
+  <message>processor initPub being called</message>
+</record>
+<record>
+  <date>2022-08-26T09:47:59</date>
+  <millis>1661532479582</millis>
+  <sequence>23</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>initPub</method>
+  <thread>117</thread>
+  <message>publishPort: 5552, publishTopic: measurements_cleansed</message>
+</record>
+<record>
+  <date>2022-08-26T09:47:59</date>
+  <millis>1661532479585</millis>
+  <sequence>24</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>initPub</method>
+  <thread>117</thread>
+  <message>pubSocket created</message>
+</record>
+<record>
+  <date>2022-08-26T09:47:59</date>
+  <millis>1661532479587</millis>
+  <sequence>25</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>initPub</method>
+  <thread>117</thread>
+  <message>pubSocket bound</message>
+</record>
+<record>
+  <date>2022-08-26T09:47:59</date>
+  <millis>1661532479588</millis>
+  <sequence>26</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>initPub</method>
+  <thread>117</thread>
+  <message>node initPub completed</message>
+</record>
+<record>
+  <date>2022-08-26T09:47:59</date>
+  <millis>1661532479589</millis>
+  <sequence>27</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext$$anon$1</class>
+  <method>run</method>
+  <thread>117</thread>
+  <message>processor initPub called successfully</message>
+</record>
+<record>
+  <date>2022-08-26T09:47:59</date>
+  <millis>1661532479590</millis>
+  <sequence>28</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext$$anon$1</class>
+  <method>run</method>
+  <thread>117</thread>
+  <message>New streaming node com.epidata.spark.StreamingNode@55772a22 initialized with transformation object</message>
+</record>
+<record>
+  <date>2022-08-26T09:47:59</date>
+  <millis>1661532479590</millis>
+  <sequence>29</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext$$anon$1</class>
+  <method>run</method>
+  <thread>117</thread>
+  <message>Steaming Node created: com.epidata.spark.StreamingNode@55772a22</message>
+</record>
+<record>
+  <date>2022-08-26T09:47:59</date>
+  <millis>1661532479591</millis>
+  <sequence>30</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>receive</method>
+  <thread>117</thread>
+  <message>node receive called</message>
+</record>
+<record>
+  <date>2022-08-26T09:47:59</date>
+  <millis>1661532479597</millis>
+  <sequence>31</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>$anonfun$receive$2</method>
+  <thread>117</thread>
+  <message>node recvStr being called for topic</message>
+</record>
+<record>
+  <date>2022-08-26T09:47:59</date>
+  <millis>1661532479597</millis>
+  <sequence>32</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>$anonfun$receive$2</method>
+  <thread>117</thread>
+  <message>Node recvStr called. No topic received.</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:04</date>
+  <millis>1661532484612</millis>
+  <sequence>33</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>$anonfun$receive$2</method>
+  <thread>117</thread>
+  <message>node recvStr being called for topic</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:04</date>
+  <millis>1661532484612</millis>
+  <sequence>34</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>$anonfun$receive$2</method>
+  <thread>117</thread>
+  <message>Node recvStr called. No topic received.</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489618</millis>
+  <sequence>35</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>$anonfun$receive$2</method>
+  <thread>117</thread>
+  <message>node recvStr being called for topic</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489618</millis>
+  <sequence>36</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>$anonfun$receive$2</method>
+  <thread>117</thread>
+  <message>Node recvStr called. Topic received: measurements_original</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489619</millis>
+  <sequence>37</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>receive</method>
+  <thread>117</thread>
+  <message>node recvStr being called for message</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489619</millis>
+  <sequence>38</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>receive</method>
+  <thread>117</thread>
+  <message>message received: {"value":"{\"company\":\"EpiData\",\"site\":\"San_Francisco\",\"station\":\"WSN-1\",\"sensor\":\"Temperature_Probe\",\"ts\":1661532485498,\"event\":\"none\",\"meas_name\":\"Temperature\",\"meas_datatype\":\"double\",\"meas_value\":70.38,\"meas_unit\":\"deg F\",\"meas_status\":\"PASS\",\"meas_lower_limit\":10.1,\"meas_upper_limit\":120.4}","key":"2ab02765b9d9e74b07d64f310dac7637"}</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489624</millis>
+  <sequence>39</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext$$anon$1</class>
+  <method>$anonfun$run$1</method>
+  <thread>117</thread>
+  <message>waiting for interrupt or stopStreamFlag</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489624</millis>
+  <sequence>40</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext$$anon$1</class>
+  <method>$anonfun$run$1</method>
+  <thread>117</thread>
+  <message>thread interrupt status: false</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489625</millis>
+  <sequence>41</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>receive</method>
+  <thread>117</thread>
+  <message>node receive called</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489626</millis>
+  <sequence>42</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>$anonfun$receive$2</method>
+  <thread>117</thread>
+  <message>node recvStr being called for topic</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489627</millis>
+  <sequence>43</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>$anonfun$receive$2</method>
+  <thread>117</thread>
+  <message>Node recvStr called. Topic received: measurements_original</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489627</millis>
+  <sequence>44</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>receive</method>
+  <thread>117</thread>
+  <message>node recvStr being called for message</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489628</millis>
+  <sequence>45</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>receive</method>
+  <thread>117</thread>
+  <message>message received: {"value":"{\"company\":\"EpiData\",\"site\":\"San_Francisco\",\"station\":\"WSN-1\",\"sensor\":\"Anemometer\",\"ts\":1661532485498,\"event\":\"none\",\"meas_name\":\"Wind_Speed\",\"meas_datatype\":\"double\",\"meas_value\":10.38,\"meas_unit\":\"mph\",\"meas_status\":\"PASS\",\"meas_lower_limit\":0.0,\"meas_upper_limit\":25.0}","key":"97e78a035199dd672a0702a516cd791b"}</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489629</millis>
+  <sequence>46</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext$$anon$1</class>
+  <method>$anonfun$run$1</method>
+  <thread>117</thread>
+  <message>waiting for interrupt or stopStreamFlag</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489630</millis>
+  <sequence>47</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext$$anon$1</class>
+  <method>$anonfun$run$1</method>
+  <thread>117</thread>
+  <message>thread interrupt status: false</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489630</millis>
+  <sequence>48</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>receive</method>
+  <thread>117</thread>
+  <message>node receive called</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489632</millis>
+  <sequence>49</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>$anonfun$receive$2</method>
+  <thread>117</thread>
+  <message>node recvStr being called for topic</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489633</millis>
+  <sequence>50</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>$anonfun$receive$2</method>
+  <thread>117</thread>
+  <message>Node recvStr called. Topic received: measurements_original</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489634</millis>
+  <sequence>51</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>receive</method>
+  <thread>117</thread>
+  <message>node recvStr being called for message</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489635</millis>
+  <sequence>52</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>receive</method>
+  <thread>117</thread>
+  <message>message received: {"value":"{\"company\":\"EpiData\",\"site\":\"San_Francisco\",\"station\":\"WSN-1\",\"sensor\":\"RH_Probe\",\"ts\":1661532485498,\"event\":\"none\",\"meas_name\":\"Relative_Humidity\",\"meas_datatype\":\"double\",\"meas_value\":57.98,\"meas_unit\":\"%\",\"meas_status\":\"PASS\"}","key":"7d35698fc69c71ebe49f38241d7574f4"}</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489636</millis>
+  <sequence>53</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext$$anon$1</class>
+  <method>$anonfun$run$1</method>
+  <thread>117</thread>
+  <message>waiting for interrupt or stopStreamFlag</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489637</millis>
+  <sequence>54</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext$$anon$1</class>
+  <method>$anonfun$run$1</method>
+  <thread>117</thread>
+  <message>thread interrupt status: false</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489638</millis>
+  <sequence>55</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>receive</method>
+  <thread>117</thread>
+  <message>node receive called</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489640</millis>
+  <sequence>56</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>$anonfun$receive$2</method>
+  <thread>117</thread>
+  <message>node recvStr being called for topic</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489641</millis>
+  <sequence>57</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>$anonfun$receive$2</method>
+  <thread>117</thread>
+  <message>Node recvStr called. Topic received: measurements_original</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489641</millis>
+  <sequence>58</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>receive</method>
+  <thread>117</thread>
+  <message>node recvStr being called for message</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489642</millis>
+  <sequence>59</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>receive</method>
+  <thread>117</thread>
+  <message>message received: {"value":"{\"company\":\"EpiData\",\"site\":\"San_Francisco\",\"station\":\"WSN-1\",\"sensor\":\"Temperature_Probe\",\"ts\":1661532485678,\"event\":\"none\",\"meas_name\":\"Temperature\",\"meas_datatype\":\"double\",\"meas_value\":71.14,\"meas_unit\":\"deg F\",\"meas_status\":\"PASS\",\"meas_lower_limit\":10.1,\"meas_upper_limit\":120.4}","key":"2ab02765b9d9e74b07d64f310dac7637"}</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489646</millis>
+  <sequence>60</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext$$anon$1</class>
+  <method>$anonfun$run$1</method>
+  <thread>117</thread>
+  <message>waiting for interrupt or stopStreamFlag</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489649</millis>
+  <sequence>61</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext$$anon$1</class>
+  <method>$anonfun$run$1</method>
+  <thread>117</thread>
+  <message>thread interrupt status: false</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489649</millis>
+  <sequence>62</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>receive</method>
+  <thread>117</thread>
+  <message>node receive called</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489651</millis>
+  <sequence>63</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>$anonfun$receive$2</method>
+  <thread>117</thread>
+  <message>node recvStr being called for topic</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489651</millis>
+  <sequence>64</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>$anonfun$receive$2</method>
+  <thread>117</thread>
+  <message>Node recvStr called. Topic received: measurements_original</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489653</millis>
+  <sequence>65</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>receive</method>
+  <thread>117</thread>
+  <message>node recvStr being called for message</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489654</millis>
+  <sequence>66</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>receive</method>
+  <thread>117</thread>
+  <message>message received: {"value":"{\"company\":\"EpiData\",\"site\":\"San_Francisco\",\"station\":\"WSN-1\",\"sensor\":\"Anemometer\",\"ts\":1661532485678,\"event\":\"none\",\"meas_name\":\"Wind_Speed\",\"meas_datatype\":\"double\",\"meas_value\":5.88,\"meas_unit\":\"mph\",\"meas_status\":\"PASS\",\"meas_lower_limit\":0.0,\"meas_upper_limit\":25.0}","key":"97e78a035199dd672a0702a516cd791b"}</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489805</millis>
+  <sequence>67</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>WARNING</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>receive</method>
+  <thread>117</thread>
+  <message>Exception at StreamingNode line 276: py4j.Py4JException: An exception was raised by the Python Proxy. Return Message: Traceback (most recent call last):
+  File "C:\Users\Raj Sunku\OneDrive - UC San Diego\Epidata\epidata-community\ipython\epidata\py4j-0.10.9.2/src\py4j\java_gateway.py", line 2457, in _call_proxy
+    get_command_part(return_value, self.pool)
+  File "C:\Users\Raj Sunku\OneDrive - UC San Diego\Epidata\epidata-community\ipython\epidata\py4j-0.10.9.2/src\py4j\protocol.py", line 298, in get_command_part
+    command_part = REFERENCE_TYPE + parameter._get_object_id()
+  File "C:\Users\Raj Sunku\AppData\Local\Programs\Python\Python39\lib\site-packages\pandas\core\generic.py", line 5575, in __getattr__
+    return object.__getattribute__(self, name)
+AttributeError: 'DataFrame' object has no attribute '_get_object_id'
+</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489806</millis>
+  <sequence>68</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext$$anon$1</class>
+  <method>$anonfun$run$1</method>
+  <thread>117</thread>
+  <message>waiting for interrupt or stopStreamFlag</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489806</millis>
+  <sequence>69</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext$$anon$1</class>
+  <method>$anonfun$run$1</method>
+  <thread>117</thread>
+  <message>thread interrupt status: true</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489807</millis>
+  <sequence>70</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext$$anon$1</class>
+  <method>run</method>
+  <thread>117</thread>
+  <message>processor clearSub being called</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489807</millis>
+  <sequence>71</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>clearSub</method>
+  <thread>117</thread>
+  <message>node clearSub called</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489814</millis>
+  <sequence>72</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>WARNING</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>clearSub</method>
+  <thread>117</thread>
+  <message>Exception during subscriber unsubscribe. zmq.ZError$IOException: java.nio.channels.ClosedByInterruptException</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489815</millis>
+  <sequence>73</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>$anonfun$clearSub$2</method>
+  <thread>117</thread>
+  <message>subSocket unbound: Sub[1]</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489818</millis>
+  <sequence>74</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>WARNING</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>clearSub</method>
+  <thread>117</thread>
+  <message>Exception during subscriber close. zmq.ZError$IOException: java.nio.channels.ClosedByInterruptException</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489819</millis>
+  <sequence>75</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext$$anon$1</class>
+  <method>run</method>
+  <thread>117</thread>
+  <message>processor clearSub called successfully</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489819</millis>
+  <sequence>76</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext$$anon$1</class>
+  <method>run</method>
+  <thread>117</thread>
+  <message>processor clearPub being called</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489820</millis>
+  <sequence>77</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>clearPub</method>
+  <thread>117</thread>
+  <message>node clearPub called</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489826</millis>
+  <sequence>78</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>clearPub</method>
+  <thread>117</thread>
+  <message>publishSocket unbinded: Pub[2]</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489827</millis>
+  <sequence>79</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.StreamingNode</class>
+  <method>clearPub</method>
+  <thread>117</thread>
+  <message>publishSocket closed successfully: Pub[2]</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489827</millis>
+  <sequence>80</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext$$anon$1</class>
+  <method>run</method>
+  <thread>117</thread>
+  <message>processor clearPub called successfully</message>
+</record>
+<record>
+  <date>2022-08-26T09:48:09</date>
+  <millis>1661532489828</millis>
+  <sequence>81</sequence>
+  <logger>EpiDataLiteStreamingContext Logger</logger>
+  <level>INFO</level>
+  <class>com.epidata.spark.EpidataLiteStreamingContext$$anon$1</class>
+  <method>run</method>
+  <thread>117</thread>
+  <message>Processor com.epidata.spark.StreamingNode@55772a22 has been cleared.</message>
 </record>
