@@ -1,36 +1,36 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?xml version="1.0" encoding="windows-1252" standalone="no"?>
 <!DOCTYPE log SYSTEM "logger.dtd">
 <log>
 <record>
-  <date>2022-08-26T09:47:44</date>
-  <millis>1661532464323</millis>
+  <date>2022-08-30T10:14:29</date>
+  <millis>1661879669538</millis>
   <sequence>0</sequence>
   <logger>EpiDataLiteContext Logger</logger>
   <level>INFO</level>
   <class>com.epidata.spark.EpidataLiteContext</class>
   <method>&lt;init&gt;</method>
-  <thread>113</thread>
+  <thread>1</thread>
   <message>measurement class: sensor_measurement</message>
 </record>
 <record>
-  <date>2022-08-26T09:47:44</date>
-  <millis>1661532464437</millis>
+  <date>2022-08-30T10:14:29</date>
+  <millis>1661879669849</millis>
   <sequence>1</sequence>
   <logger>EpiDataLiteContext Logger</logger>
   <level>INFO</level>
   <class>com.epidata.spark.EpidataLiteContext</class>
   <method>&lt;init&gt;</method>
-  <thread>113</thread>
-  <message>Database connection established. Connection object: org.sqlite.jdbc4.JDBC4Connection@4c125e14</message>
+  <thread>1</thread>
+  <message>Database connection established. Connection object: org.sqlite.jdbc4.JDBC4Connection@13a5fe33</message>
 </record>
 <record>
-  <date>2022-08-26T09:47:44</date>
-  <millis>1661532464438</millis>
+  <date>2022-08-30T10:14:29</date>
+  <millis>1661879669850</millis>
   <sequence>2</sequence>
   <logger>EpiDataLiteContext Logger</logger>
   <level>INFO</level>
   <class>com.epidata.spark.EpidataLiteContext</class>
   <method>&lt;init&gt;</method>
-  <thread>113</thread>
+  <thread>1</thread>
   <message>EpiData Lite object created with settings: , </message>
 </record>

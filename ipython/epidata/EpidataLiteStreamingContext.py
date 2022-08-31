@@ -80,7 +80,7 @@ class EpidataLiteStreamingContext:
             java_params = MapConverter().convert(params, self._gg._gateway_client)
             trans = self._jesc.createTransformation(opName, java_meas_names, java_params)
             return trans
-        return Transformation(opName, meas_names, params)
+        return Transformation(opName, meas_names, params, gateway=self._gateway)
 
     def create_stream(self, sourceTopic, destinationTopic, transformation):
         self._jesc.createStream(sourceTopic, destinationTopic, transformation)

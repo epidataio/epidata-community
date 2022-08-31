@@ -1,20 +1,32 @@
 #
 # Copyright (c) 2015-2017 EpiData, Inc.
 #
-
+import pandas as pd
+from py4j.java_collections import SetConverter, MapConverter, ListConverter
 
 class Transformation(object):
 
-    def __init__(self, func, meas_names=[], args=[], name="Default", destination="", datastore="sqlite"):
+    def __init__(self, func, meas_names=[], args=[], name="Default", destination="", datastore="sqlite", gateway = None):
         self._func = func
         self._args = args
         self._name = name
         self._destination = destination
         self._datastore = datastore
         self._meas_names = meas_names
+        self._gateway = gateway
 
     def apply(self, df, sqlCtx=None):
-        return self._func(df, self._meas_names, *self._args)
+        if sqlCtx == None:
+            df = list(df)
+            df = pd.DataFrame.from_records(df)
+            df = self._func(df, self._meas_names, self._gateway, *self._args)
+            df = df.to_dict('records')
+            for i in range(len(df)):
+                df[i] = MapConverter().convert(df[i], self._gateway._gateway_client)
+            df = ListConverter().convert(df, self._gateway._gateway_client)
+            return df
+        return self._func(df, self._meas_names, self._gateway, *self._args)
+
 
     def destination(self):
         return self._destination

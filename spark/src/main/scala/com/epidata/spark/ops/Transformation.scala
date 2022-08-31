@@ -28,6 +28,14 @@ trait Transformation {
     measurements
   }
 
+  def apply(measurements: java.util.List[java.util.Map[String, Object]]): java.util.List[java.util.Map[String, Object]] = {
+    import scala.collection.JavaConversions._
+    val sBuffer = asScalaBuffer(measurements)
+    val applyBuffer = apply(sBuffer)
+    import scala.collection.JavaConverters._
+    applyBuffer.toList.asJava
+  }
+
   val name: String = "Default"
   def destination: String
 }

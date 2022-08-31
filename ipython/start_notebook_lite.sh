@@ -11,5 +11,4 @@ export EPIDATA_MODE=LITE
 export EPIDATA_LITE_JAR="$EPIDATA_HOME/spark/target/scala-2.12/epidata-spark-assembly-1.0-SNAPSHOT.jar"
 
 #ipython notebook --ipython-dir=config --profile=default
-#(java -jar "$EPIDATA_LITE_JAR") & 
-jupyter notebook --config config.py
+(java -jar "$EPIDATA_LITE_JAR") & jupyter notebook --config config.py
