@@ -8,7 +8,7 @@ import java.util.concurrent.{ Executors, ExecutorService, TimeUnit, Future }
 
 import org.zeromq.ZMQ
 import org.zeromq.ZMQException
-import com.epidata.spark.ops.{ FillMissingValue, Identity, MeasStatistics, OutlierDetector, Transformation }
+import com.epidata.spark.ops._
 import org.apache.spark.sql.{ DataFrame, SQLContext }
 import com.fasterxml.jackson.databind.JsonMappingException
 import scala.collection.mutable.{ HashMap, Map => MutableMap }
@@ -109,8 +109,13 @@ class EpidataLiteStreamingContext(epidataConf: EpiDataConf = EpiDataConf("", "")
       case "Identity" => new Identity()
 
       case "FillMissingValue" => new FillMissingValue(meas_names, params.getOrElse("method", "rolling").asInstanceOf[String], params.getOrElse("s", 3).asInstanceOf[Int])
-      //case "OutlierDetector" => new OutlierDetector("meas_value", params.get("method"))
+      case "OutlierDetector" => new OutlierDetector("meas_value", params.getOrElse("method", "quartile").asInstanceOf[String])
       case "MeasStatistics" => new MeasStatistics(meas_names, params.getOrElse("method", "standard").asInstanceOf[String])
+      case "InverseTranspose" => new InverseTranspose(meas_names)
+      case "NAs" => new NAs()
+      case "Outliers" => new Outliers(meas_names, params.get("mpercentage").get.asInstanceOf[Int], params.getOrElse("method", "delete").asInstanceOf[String])
+      case "Resample" => new Resample(meas_names, params.get("time_interval").get.asInstanceOf[Int], params.get("timeunit").get.asInstanceOf[String])
+      case "Transpose" => new Transpose(meas_names)
       case _ => new Identity()
     }
 
@@ -381,13 +386,13 @@ class EpidataLiteStreamingContext(epidataConf: EpiDataConf = EpiDataConf("", "")
 
 }
 
-object OpenGateway {
+// object OpenGateway {
 
-  def main(args: Array[String]): Unit = {
-    val ec = new EpidataLiteContext()
-    val esc = new EpidataLiteStreamingContext();
-    val server = new GatewayServer(esc);
-    println("RUNNING SERVER")
-    server.start()
-  }
-}
+//   def main(args: Array[String]): Unit = {
+//     val ec = new EpidataLiteContext()
+//     val esc = new EpidataLiteStreamingContext();
+//     val server = new GatewayServer(esc);
+//     println("RUNNING SERVER")
+//     server.start()
+//   }
+// }

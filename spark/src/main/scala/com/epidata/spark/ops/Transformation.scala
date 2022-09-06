@@ -20,7 +20,7 @@ trait Transformation {
       .withColumn("meas_flag", lit(null: String))
       .withColumn("meas_method", lit(null: String))
 
-  def apply(measurements: ListBuffer[JLinkedHashMap[String, Object]]): ListBuffer[JLinkedHashMap[String, Object]] = {
+  def apply(measurements: ListBuffer[java.util.Map[String, Object]]): ListBuffer[java.util.Map[String, Object]] = {
     for (index <- measurements.indices) {
       measurements(index).put("meas_flag", null)
       measurements(index).put("meas_method", null)
@@ -29,11 +29,17 @@ trait Transformation {
   }
 
   def apply(measurements: java.util.List[java.util.Map[String, Object]]): java.util.List[java.util.Map[String, Object]] = {
-    import scala.collection.JavaConversions._
-    val sBuffer = asScalaBuffer(measurements)
-    val applyBuffer = apply(sBuffer)
     import scala.collection.JavaConverters._
-    applyBuffer.toList.asJava
+    val sBuffer = measurements.asScala.to[ListBuffer]
+    println("List1: " + sBuffer)
+    val applyBuffer = apply(sBuffer)
+    println("List2: " + applyBuffer)
+    val retList = new java.util.ArrayList[java.util.Map[String, Object]]()
+    for (map <- applyBuffer) {
+      retList.add(map)
+    }
+    println("List3: " + retList)
+    retList
   }
 
   val name: String = "Default"

@@ -15,10 +15,10 @@ class MeasStatistics(
     val meas_names: List[String],
     val method: String) extends Transformation {
 
-  override def apply(measurements: ListBuffer[JLinkedHashMap[String, Object]]): ListBuffer[JLinkedHashMap[String, Object]] = {
+  override def apply(measurements: ListBuffer[java.util.Map[String, Object]]): ListBuffer[java.util.Map[String, Object]] = {
     println("\n input measurements - meas statistics: " + measurements + "\n")
 
-    var measStatistics = ListBuffer[JLinkedHashMap[String, Object]]()
+    var measStatistics = ListBuffer[java.util.Map[String, Object]]()
 
     method match {
       case "standard" =>
@@ -41,11 +41,11 @@ class MeasStatistics(
           map.put("key1", k._5)
           map.put("meas_name", k._6)
 
-          map.put("start_time", values(1).get("ts"))
-          map.put("stop_time", values(1).get("ts"))
+          map.put("start_time", values(0).get("ts"))
+          map.put("stop_time", values(0).get("ts"))
 
-          var min: Double = values(1).get("meas_value").asInstanceOf[Double]
-          var max: Double = values(1).get("meas_value").asInstanceOf[Double]
+          var min: Double = values(0).get("meas_value").asInstanceOf[Double]
+          var max: Double = values(0).get("meas_value").asInstanceOf[Double]
           var sum: Double = 0.00
           var count: Int = 0
           var mean: Double = min

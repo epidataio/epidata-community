@@ -20,7 +20,7 @@ class Resample(
   //  def dateRange(start: LocalDateTime, end: LocalDateTime, increment: LocalDateTime => LocalDateTime) =
   //    Iterator.unfold(start)(next => Option(increment(next)).filter(_.isBefore(end)))
 
-  override def apply(measurements: ListBuffer[JLinkedHashMap[String, Object]]): ListBuffer[JLinkedHashMap[String, Object]] = {
+  override def apply(measurements: ListBuffer[java.util.Map[String, Object]]): ListBuffer[java.util.Map[String, Object]] = {
 
     //    for (index <- measurements.indices) {
     //
@@ -65,7 +65,7 @@ class Resample(
       tempSeries += temp
     }
 
-    var newfiltered = new ListBuffer[JLinkedHashMap[String, Object]]()
+    var newfiltered = new ListBuffer[java.util.Map[String, Object]]()
     for (index <- filtered.indices) {
       if (tempSeries.contains(filtered(index).get("ts").asInstanceOf[Long])) {
         print("HERE: ", filtered(index).get("ts").asInstanceOf[Long])

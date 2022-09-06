@@ -144,7 +144,7 @@ while (True):
             # Construct an empty list of measurement objects
             measurement_list = []
 
-            for log_iteration in range(1, 2):
+            for log_iteration in range(1, 3):
 
                 current_time_string = datetime.now().strftime("%m/%d/%Y %H:%M:%S.%f")
                 current_time = get_time(current_time_string)
@@ -161,7 +161,7 @@ while (True):
                     else:
                         meas_value_diff = float(round(random.normalvariate(3.0, 0.25), 2))
                         meas_value = meas_last_temperature_value - meas_value_diff
-                elif ((data_iteration % 6 == 0) and (log_iteration == 3)):
+                elif ((data_iteration % 4 == 0) and (log_iteration == 1)):
                     meas_value = None
                 else:
                     if(data_iteration <= 12):
@@ -171,7 +171,7 @@ while (True):
                         meas_value_diff = float(round(random.normalvariate(0.5, 0.25), 2))
                         meas_value = meas_last_temperature_value - meas_value_diff
                     meas_last_temperature_value = meas_value
-                if (30 <= meas_value <= 120):
+                if ((meas_value is not None) and (30 <= meas_value <= 120)):
                     meas_status = 'PASS'
                 else:
                     meas_status = 'FAIL'
@@ -209,7 +209,7 @@ while (True):
                 else:
                     meas_value = float(round(random.normalvariate(8, 2), 2))
                     meas_last_windspeed_value = meas_value
-                if (0 < meas_value < 25):
+                if ((meas_value is not None) and (0 < meas_value < 25)):
                     meas_status = 'PASS'
                 else:
                     meas_status = 'FAIL'
@@ -244,7 +244,7 @@ while (True):
                 if (0 <= meas_value <= 100):
                     meas_status = 'PASS'
                 else:
-                    meas_status = 'PASS'
+                    meas_status = 'FAIL'
 
                 # Construct measurement object with data to be ingested.
                 measurement = {

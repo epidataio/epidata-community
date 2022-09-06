@@ -15,7 +15,7 @@ import java.util
 
 class NAs extends Transformation {
 
-  override def apply(measurements: ListBuffer[JLinkedHashMap[String, Object]]): ListBuffer[JLinkedHashMap[String, Object]] = {
+  override def apply(measurements: ListBuffer[java.util.Map[String, Object]]): ListBuffer[java.util.Map[String, Object]] = {
 
     var nonEmpty = new JLinkedHashMap[String, Int]()
 
@@ -24,19 +24,26 @@ class NAs extends Transformation {
         case (key, value) =>
           var curr = 0
           if (nonEmpty.containsKey(key)) {
+            // println("WORKING 1")
             curr = nonEmpty.get(key).asInstanceOf[Int]
-
+            // println("WORKING 2")
           }
           nonEmpty.put(key, curr)
       }
 
     }
-
+    // println("WORKING 3")
     var data_ratio: Map[String, Int] = Map()
     var measurement_size = measurements.size.asInstanceOf[Int]
+    // println("WORKING 4")
     nonEmpty.forEach {
       case (key, value) =>
-        var ratio = data_ratio.get(key).asInstanceOf[Int] / measurement_size
+        // println("WORKING 5")
+        var ratio = 0
+        if (data_ratio.get(key) != None) {
+          ratio = data_ratio.get(key).asInstanceOf[Int] / measurement_size
+        }
+        // println("WORKING 6")
         data_ratio + (key -> ratio)
     }
     for ((k, v) <- data_ratio) {

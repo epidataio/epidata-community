@@ -19,16 +19,16 @@ import scala.util.control.Breaks.break
 class InverseTranspose(
     val fields: List[String]) extends Transformation {
 
-  override def apply(measurements: ListBuffer[JLinkedHashMap[String, Object]]): ListBuffer[JLinkedHashMap[String, Object]] = {
-    var new_DF = new ListBuffer[JLinkedHashMap[String, Object]]()
+  override def apply(measurements: ListBuffer[java.util.Map[String, Object]]): ListBuffer[java.util.Map[String, Object]] = {
+    var new_DF = new ListBuffer[java.util.Map[String, Object]]()
     for (mfield <- fields) {
       var newHashmap = new JLinkedHashMap[String, Object]()
       newHashmap.put("company", measurements(0).get("company").asInstanceOf[String])
       newHashmap.put("site", measurements(0).get("site").asInstanceOf[String])
       newHashmap.put("station", measurements(0).get("station").asInstanceOf[String])
-      newHashmap.put("ts", measurements(0).get("ts").asInstanceOf[String])
+      newHashmap.put("ts", measurements(0).get("ts"))
       newHashmap.put("meas_name", mfield)
-      newHashmap.put("meas_value", measurements(0).get(mfield).asInstanceOf[String])
+      newHashmap.put("meas_value", measurements(0).get(mfield))
     }
 
     new_DF

@@ -105,6 +105,7 @@ class StreamingNode {
     for (i <- 0 until bufferSizes.length) { streamBuffers(i) = new Queue[String]() }
 
     outputBuffer = new Queue[String]
+    println("created outputBuffer")
 
     this.bufferSizes = bufferSizes
 
@@ -167,6 +168,9 @@ class StreamingNode {
 
     this.bufferSizes = bufferSizes
 
+    outputBuffer = new Queue[String]
+    println("created outputBuffer")
+
     logger.log(Level.INFO, "\nStreamNode Configs----------------------------------------------")
     logger.log(Level.INFO, "Sub Topic: " + subscribeTopics)
     logger.log(Level.INFO, "Sub Port: " + subscribePorts)
@@ -199,6 +203,7 @@ class StreamingNode {
       logger.log(Level.INFO, "pubSocket bound")
 
       outputBuffer = new Queue[String]
+      println("created outputBuffer")
 
       logger.log(Level.INFO, "\nStreamNode Configs----------------------------------------------")
       logger.log(Level.INFO, "Pub Topic: " + publishTopic)
@@ -309,11 +314,11 @@ class StreamingNode {
       logger.log(Level.INFO, "$$$$Meas: " + measurement + "\n")
     }
 
-    import scala.collection.JavaConversions._
+    // import scala.collection.JavaConversions._
 
     val measList = new java.util.ArrayList[java.util.Map[String, Object]]()
     for (json <- list) {
-      measList.append(jsonToMap(json))
+      measList.add(jsonToMap(json))
     }
     logger.log(Level.INFO, "input measurement list: " + measList + "\n")
     logger.log(Level.INFO, "transformation type: " + transformation + "\n")
@@ -321,15 +326,21 @@ class StreamingNode {
     val resultsListJava = transformation.apply(measList)
 
     // import scala.collection.JavaConversions._
-    val resultsList = asScalaBuffer(resultsListJava)
+    import scala.collection.JavaConverters._
+    val resultsList = resultsListJava.asScala.to[ListBuffer]
 
     logger.log(Level.INFO, "output measurement list (result): " + resultsList + "\n")
 
     for (result <- resultsList) {
+      println("WORKING1")
       val key = keyForSensorMeasurement(result)
+      println("WORKING2")
       val value = mapToJson(result)
+      println("WORKING3")
       val message: String = messageToJson(Message(key, value))
+      println("WORKING4 " + message)
       outputBuffer.enqueue(message)
+      println("WORKING5")
     }
     // logger.log(Level.INFO, "outputBuffer: " + outputBuffer + "\n")
   }

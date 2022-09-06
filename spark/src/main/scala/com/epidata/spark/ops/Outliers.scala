@@ -23,22 +23,33 @@ class Outliers(
     val mpercentage: Int,
     val method: String) extends Transformation {
 
-  override def apply(measurements: ListBuffer[JLinkedHashMap[String, Object]]): ListBuffer[JLinkedHashMap[String, Object]] = {
+  override def apply(measurements: ListBuffer[java.util.Map[String, Object]]): ListBuffer[java.util.Map[String, Object]] = {
     var dataset = collection.immutable.Map[String, util.ArrayList[java.lang.Double]]()
     for (mfield <- fields) {
+      println("WORKING HERE 1")
       if (!dataset.contains(mfield)) {
+        println("WORKING HERE 5")
         var empty = new util.ArrayList[java.lang.Double]()
         dataset + (mfield -> empty)
+        println("WORKING HERE 6")
       }
       for (index <- measurements.indices) {
+        println("WORKING HERE 2")
         //      q_low = measurements(index).get("meter_reading").quantile(0.01)
         //      q_hi = measurements(index).get("meter_reading").quantile(0.99)
         if (mfield.equals(measurements(index).get("meas_name").asInstanceOf[String])) {
-          dataset.get(mfield) + (measurements(index).get("meas_value").asInstanceOf[String])
+          println("WORKING HERE 3")
+          println(dataset.get(mfield))
+          println(measurements(index).get("meas_value"))
+          if (measurements(index).get("meas_value") != null) {
+            dataset.get(mfield) + (measurements(index).get("meas_value").toString)
+          }
+          println("WORKING HERE 4")
         }
       }
 
     }
+    println("WORKING HERE 7")
     var outliers = new ListBuffer[Int]()
     for (index <- measurements.indices) {
 
@@ -51,7 +62,7 @@ class Outliers(
           case Some(s: util.ArrayList[java.lang.Double]) => s //return the string to set your value
         }
         q_low = percentiles().index(mpercentage).compute(mdataset)
-        q_high = percentiles().index(1 - mpercentage).compute(mdataset)
+        q_high = percentiles().index(100 - mpercentage).compute(mdataset)
         val currData = measurements(index).get("meas_value").asInstanceOf[Double]
         if (currData < q_low || currData > q_high) {
           outliers += index
