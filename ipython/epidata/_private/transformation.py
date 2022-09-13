@@ -19,13 +19,13 @@ class Transformation(object):
         if sqlCtx == None:
             df = list(df)
             df = pd.DataFrame.from_records(df)
-            df = self._func(df, self._meas_names, self._gateway, *self._args)
+            df = self._func(df, self._meas_names, **self._args)
             df = df.to_dict('records')
             for i in range(len(df)):
                 df[i] = MapConverter().convert(df[i], self._gateway._gateway_client)
             df = ListConverter().convert(df, self._gateway._gateway_client)
             return df
-        return self._func(df, self._meas_names, self._gateway, *self._args)
+        return self._func(df, self._meas_names, *self._args)
 
 
     def destination(self):

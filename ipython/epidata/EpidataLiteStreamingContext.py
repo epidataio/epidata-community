@@ -73,7 +73,7 @@ class EpidataLiteStreamingContext:
     A Pandas dataframe containing measurements matching the query
     '''
 
-    def create_transformation(self, opName, meas_names, params):
+    def create_transformation(self, opName, meas_names=[], params={}):
         if isinstance(opName, str):
             java_meas_names = ListConverter().convert(meas_names, self._gg._gateway_client)
             # java_params = {k: self.to_java_list(v) for k, v in params.items()}
