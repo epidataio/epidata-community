@@ -526,11 +526,11 @@ def meas_statistics(df, meas_names, method="standard"):
         row['start_time'] = np.min(row["ts"])
         row["stop_time"] = np.max(row["ts"])
         row["meas_summary_name"] = "statistics"
-        count = 0
-        mean = 0
-        std = 0
-        min = 0
-        max = 0
+        count = np.nan
+        mean = np.nan
+        std = np.nan
+        min = np.nan
+        max = np.nan
         if not np.isnan(row["meas_value"].count()):
             count = int(row["meas_value"].count())
         if not np.isnan(row["meas_value"].mean()):
