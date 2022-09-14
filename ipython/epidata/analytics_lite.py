@@ -3,6 +3,7 @@
 #
 
 # from data_frame import DataFrame
+from cmath import isnan
 import pandas as pd
 import math
 import numbers
@@ -64,7 +65,6 @@ def resample(df : pd.core.frame.DataFrame, fields : list, time_interval: int, ti
         more frequency strings through this link: 
         https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#offset-aliases   
     """
-
     df['meas_value'] = df['meas_value'].apply(lambda x : float(x))
     
     # Transform ['ts'] into datetime
@@ -85,7 +85,8 @@ def resample(df : pd.core.frame.DataFrame, fields : list, time_interval: int, ti
     # Concat both filtered fields and unfiltered fileds.
     df = pd.concat([filtered, not_filtered]).reset_index()
 
-    df['ts'] = [x.timestamp() for x in df['ts']]
+    df['ts'] = df['ts'].apply(lambda x : int(time.mktime(x.timetuple()) * 1000+ x.microsecond/1000))
+    # df['ts'] = [x.timestamp() for x in df['ts']]
 
     return df
     
@@ -398,7 +399,7 @@ def inverse_transpose(result_df,original_df, meas_col:list):
     result_df = result_df.merge(temp1, on = 'value', how = 'left').drop(columns = 'value')
     result_df['meas_value'] = result_df.apply(lambda x : x[x['meas_name']], axis=1)
     result_df = result_df[['company','site','station','ts', 'meas_name', 'meas_value']]
-    result_df['ts'] = result_df['ts'].apply(lambda x : int(x))
+    # result_df['ts'] = result_df['ts'].apply(lambda x : int(x))
     result_df = original_df.merge(result_df, how = 'right', on = ['company','site','station','ts', 'meas_name'])
 
     return result_df
@@ -525,13 +526,28 @@ def meas_statistics(df, meas_names, method="standard"):
         row['start_time'] = np.min(row["ts"])
         row["stop_time"] = np.max(row["ts"])
         row["meas_summary_name"] = "statistics"
+        count = 0
+        mean = 0
+        std = 0
+        min = 0
+        max = 0
+        if not np.isnan(row["meas_value"].count()):
+            count = int(row["meas_value"].count())
+        if not np.isnan(row["meas_value"].mean()):
+            mean = int(row["meas_value"].mean())
+        if not np.isnan(row["meas_value"].std()):
+            std = int(row["meas_value"].std())
+        if not np.isnan(row["meas_value"].min()):
+            min = int(row["meas_value"].min())
+        if not np.isnan(row["meas_value"].max()):
+            max = int(row["meas_value"].max())
         row["meas_summary_value"] = json.dumps(
             {
-                'count': row["meas_value"].count(),
-                'mean': row["meas_value"].mean(),
-                'std': row["meas_value"].std(),
-                'min': row["meas_value"].min(),
-                'max': row["meas_value"].max()}, cls=NpEncoder)
+                'count': count,
+                'mean': mean,
+                'std': std,
+                'min': min,
+                'max': max})
         row["meas_summary_description"] = "descriptive statistics"
         return row
 
@@ -615,14 +631,3 @@ def meas_statistics_automated_test(df, meas_names, method="standard"):
         raise ValueError("Unsupported summary method: ", repr(method))
 
     return df_summary
-
-# Got this class from https://stackoverflow.com/questions/50916422/python-typeerror-object-of-type-int64-is-not-json-serializable
-class NpEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, np.integer):
-            return int(obj)
-        if isinstance(obj, np.floating):
-            return float(obj)
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        return super(NpEncoder, self).default(obj)
