@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2020 EpiData, Inc.
+ * Copyright (c) 2020-2022 EpiData, Inc.
 */
 
 package service
@@ -18,18 +18,12 @@ import org.zeromq.ZMQException
 import play.api.Logger
 
 class ZMQSummaryDataSink {
-  var context: ZMQ.Context = _
   var subSocket: ZMQ.Socket = _
   val subTopicSummary: String = "measurements_summary"
 
   val logger: Logger = Logger(this.getClass())
 
   def init(context: ZMQ.Context, subPort: String): Unit = {
-    println("ZMQSummaryDataSink initialized")
-
-    //initializing ZMQ context which will be used for SUB
-    this.context = context
-
     //using context to create SUB model and binding it to socket
     subSocket = context.socket(ZMQ.SUB)
     subSocket.connect("tcp://127.0.0.1:" + subPort)
@@ -38,7 +32,6 @@ class ZMQSummaryDataSink {
   }
 
   def sub(): (String, Message) = {
-    //println("ZMQSummaryDataSink sub called.")
     try {
       val topic = subSocket.recvStr()
       // println("Sub topic: " + topic + "\n")
@@ -55,9 +48,9 @@ class ZMQSummaryDataSink {
     try {
       subSocket.unsubscribe(subTopicSummary.getBytes(ZMQ.CHARSET))
       subSocket.setLinger(1)
-      subSocket.disconnect("tcp://127.0.0.1:" + subPort)
+      // subSocket.disconnect("tcp://127.0.0.1:" + subPort)
+      subSocket.disconnect(subSocket.getLastEndpoint())
       subSocket.close()
-      println("Summary DataSink service closed successfully")
     } catch {
       case e: Throwable => println("Exception while closing DataSink sub service", e.getMessage)
     }

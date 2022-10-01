@@ -17,9 +17,10 @@ import scala.util.Properties
 //import scala.collection.mutable.Map
 
 object elcTest extends App {
+  /*
   val ec = new EpidataLiteContext()
 
-  /*  ----- EpiDataLite Batch  Test ----- */
+  //  ----- EpiDataLite Batch  Test -----
 
   println("\n EpiDataLite Batch Test Started")
 
@@ -687,26 +688,26 @@ object elcTest extends App {
   // Insert Check - Measurements Original
   val rsOriginal = con.prepareStatement(s"SELECT * FROM ${com.epidata.lib.models.Measurement.DBTableName}").executeQuery()
   while (rsOriginal.next()) {
-    val t = com.epidata.lib.models.Measurement.rowToMeasurement(rsOriginal)
+    val t = com.epidata.lib.models.Measurement.resultSetToMeasurement(rsOriginal)
     println(s"Insert Check: ${t.toString}")
   }
   //println()
 
-  var fieldQueryOriginal = new JLinkedHashMap[String, JList[String]]()
-  fieldQueryOriginal.put("company", JArrays.asList("Company-2", "Company-1"))
-  fieldQueryOriginal.put("site", JArrays.asList("Site-1", "Site-2"))
-  fieldQueryOriginal.put("device_group", JArrays.asList("1000"))
-  fieldQueryOriginal.put("tester", JArrays.asList("Station-1", "Station-2"))
-  fieldQueryOriginal.put("test_name", JArrays.asList("Test-1", "Test-2"))
+  // var fieldQueryOriginal = new JLinkedHashMap[String, JList[String]]()
+  // fieldQueryOriginal.put("company", JArrays.asList("Company-2", "Company-1"))
+  // fieldQueryOriginal.put("site", JArrays.asList("Site-1", "Site-2"))
+  // fieldQueryOriginal.put("device_group", JArrays.asList("1000"))
+  // fieldQueryOriginal.put("tester", JArrays.asList("Station-1", "Station-2"))
+  // fieldQueryOriginal.put("test_name", JArrays.asList("Test-1", "Test-2"))
 
-  val resultsOriginal = ec.query(
-    fieldQueryOriginal,
-    beginTime,
-    endTime)
-  val measOriginalIter = resultsOriginal.iterator()
-  while (measOriginalIter.hasNext()) {
-    println(s"meas_original query row: ${measOriginalIter.next()}")
-  }
+  // val resultsOriginal = ec.query(
+  //   fieldQueryOriginal,
+  //   beginTime,
+  //   endTime)
+  // val measOriginalIter = resultsOriginal.iterator()
+  // while (measOriginalIter.hasNext()) {
+  //   println(s"meas_original query row: ${measOriginalIter.next()}")
+  // }
 
   // Manual Insert for measurements_cleansed
   val company1_site1_station1_test1_cleansed = Array("Company-1", "Site-1", "1000", "Station-1", epoch, ts, "100001", "Test-1",
@@ -1382,26 +1383,26 @@ object elcTest extends App {
   // Insert Check - Measurements Cleansed
   val rsCleansed = con.prepareStatement(s"SELECT * FROM ${com.epidata.lib.models.MeasurementCleansed.DBTableName}").executeQuery()
   while (rsCleansed.next()) {
-    val t = com.epidata.lib.models.MeasurementCleansed.rowToMeasurementCleansed(rsCleansed)
+    val t = com.epidata.lib.models.MeasurementCleansed.resultSetToMeasurementCleansed(rsCleansed)
     println(s"Insert Check: ${t.toString}")
   }
   //println()
 
-  val fieldQueryCleansed = new JLinkedHashMap[String, JList[String]]()
-  fieldQueryCleansed.put("company", JArrays.asList("Company-2", "Company-1"))
-  fieldQueryCleansed.put("site", JArrays.asList("Site-1", "Site-2"))
-  fieldQueryCleansed.put("device_group", JArrays.asList("1000"))
-  fieldQueryCleansed.put("tester", JArrays.asList("Station-1", "Station-2"))
-  fieldQueryCleansed.put("test_name", JArrays.asList("Test-1", "Test-2"))
+  // val fieldQueryCleansed = new JLinkedHashMap[String, JList[String]]()
+  // fieldQueryCleansed.put("company", JArrays.asList("Company-2", "Company-1"))
+  // fieldQueryCleansed.put("site", JArrays.asList("Site-1", "Site-2"))
+  // fieldQueryCleansed.put("device_group", JArrays.asList("1000"))
+  // fieldQueryCleansed.put("tester", JArrays.asList("Station-1", "Station-2"))
+  // fieldQueryCleansed.put("test_name", JArrays.asList("Test-1", "Test-2"))
 
-  val resultsCleansed = ec.queryMeasurementCleansed(
-    fieldQueryCleansed,
-    beginTime,
-    endTime)
-  val measCleansedIter = resultsCleansed.iterator()
-  while (measCleansedIter.hasNext()) {
-    println(s"meas_cleansed query row: ${measCleansedIter.next()}")
-  }
+  // val resultsCleansed = ec.queryMeasurementCleansed(
+  //   fieldQueryCleansed,
+  //   beginTime,
+  //   endTime)
+  // val measCleansedIter = resultsCleansed.iterator()
+  // while (measCleansedIter.hasNext()) {
+  //   println(s"meas_cleansed query row: ${measCleansedIter.next()}")
+  // }
 
   // Manual Insert for measurements_summary
   val testStartTime = new Timestamp(1619240032000L + 1000L)
@@ -1695,26 +1696,26 @@ object elcTest extends App {
   // Insert Check - Measurements Summary
   val rsSummary = con.prepareStatement(s"SELECT * FROM ${com.epidata.lib.models.MeasurementSummary.DBTableName}").executeQuery()
   while (rsSummary.next()) {
-    val t = com.epidata.lib.models.MeasurementSummary.rowToMeasurementSummary(rsSummary)
+    val t = com.epidata.lib.models.MeasurementSummary.resultSetToMeasurementSummary(rsSummary)
     println(s"Insert Check: ${t.toString}")
   }
   //println()
 
-  val fieldQuerySummary = new JLinkedHashMap[String, JList[String]]()
-  fieldQuerySummary.put("company", JArrays.asList("Company-2", "Company-1"))
-  fieldQuerySummary.put("site", JArrays.asList("Site-1", "Site-2"))
-  fieldQuerySummary.put("device_group", JArrays.asList("1000"))
-  fieldQuerySummary.put("tester", JArrays.asList("Station-1", "Station-2"))
-  fieldQuerySummary.put("test_name", JArrays.asList("Test-1", "Test-2"))
+  // val fieldQuerySummary = new JLinkedHashMap[String, JList[String]]()
+  // fieldQuerySummary.put("company", JArrays.asList("Company-2", "Company-1"))
+  // fieldQuerySummary.put("site", JArrays.asList("Site-1", "Site-2"))
+  // fieldQuerySummary.put("device_group", JArrays.asList("1000"))
+  // fieldQuerySummary.put("tester", JArrays.asList("Station-1", "Station-2"))
+  // fieldQuerySummary.put("test_name", JArrays.asList("Test-1", "Test-2"))
 
-  val resultsSummary = ec.queryMeasurementSummary(
-    fieldQuerySummary,
-    beginTime,
-    endTime)
-  val measSummaryIter = resultsSummary.iterator()
-  while (measSummaryIter.hasNext()) {
-    println(s"meas_summary query row: ${measSummaryIter.next()}")
-  }
+  // val resultsSummary = ec.queryMeasurementSummary(
+  //   fieldQuerySummary,
+  //   beginTime,
+  //   endTime)
+  // val measSummaryIter = resultsSummary.iterator()
+  // while (measSummaryIter.hasNext()) {
+  //   println(s"meas_summary query row: ${measSummaryIter.next()}")
+  // }
 
   // Measurement Keys
   //println("----------------------------------------------------")
@@ -1760,8 +1761,8 @@ object elcTest extends App {
   try { con.close() } catch { case e: SQLException => println("Error closing database connection") }
   println("\n EpiDataLite Batch Query Test completed")
   println("----------------------------------------------------")
-
-  /*  ----- EpiDataLite Stream Test Started ----- */
+*/
+  //  ----- EpiDataLite Stream Test Started -----
   println("\n EpiDataLite Stream Test Started")
 
   val esc = new EpidataLiteStreamingContext()
@@ -1779,10 +1780,10 @@ object elcTest extends App {
   //  }
 
   // Create Transformation
-  val op1 = esc.createTransformations("Identity", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
+  val op1 = esc.createTransformation("Identity", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
   println("transformation created: " + op1)
 
-  val op2 = esc.createTransformations("FillMissingValue", List("Temperature"), Map("method" -> "rolling", "s" -> 3))
+  val op2 = esc.createTransformation("FillMissingValue", List("Temperature"), Map("method" -> "rolling", "s" -> 3))
   println("transformation created: " + op2)
 
   var list = new JArrayList[String]()
@@ -1790,52 +1791,76 @@ object elcTest extends App {
   list.add("Wind_Speed")
   list.add("Relative_Humidity")
   val mutableMap = new JHashMap[String, String]
-  val op3 = esc.createTransformations("Identity", list, mutableMap)
-  println("transformation created: " + op3)
+  //  val op3 = esc.createTransformation("Identity", list, mutableMap)
+  //  println("transformation created: " + op3)
 
-  val op4 = esc.createTransformations("Identity", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
-  println("transformation created: " + op4)
+  //  val op4 = esc.createTransformation("Identity", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
+  //  println("transformation created: " + op4)
 
-  val op5 = esc.createTransformations("Identity", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
-  println("transformation created: " + op5)
+  //  val op5 = esc.createTransformation("Identity", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
+  //  println("transformation created: " + op5)
 
-  val op6 = esc.createTransformations("MeasStatistics", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map("method" -> "standard"))
-  println("transformation created: " + op6)
+  // val op6 = esc.createTransformation("MeasStatistics", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map("method" -> "standard"))
+  // println("transformation created: " + op6)
+
+  // val op7 = esc.createTransformation("Resample", List("Temperature"), Map("time_interval" -> 1, "timeunit" -> "min"))
+
+  // println("transformation created: " + op7)
+
+  val op8 = esc.createTransformation("NAs", List("Temperature"), Map[String, String]())
+  println("transformation created: " + op8)
+  // val op9 = esc.createTransformation("Transpose", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
+  // println("transformation created: " + op9)
+
+  // val op10 = esc.createTransformation("InverseTranspose", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
+  // println("transformation created: " + op10)
+
+  // val op11 = esc.createTransformation("OutlierDetector", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map("method" -> "quartile"))
+  // println("transformation created: " + op11)
+
+  // val op12 = esc.createTransformation("Outliers", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map("mpercentage" -> 25, "method" -> "quartile"))
+  // println("transformation created: " + op12)
 
   // Create Streams
-  /*
-     play producer
-           |
-           ↓
-          op1 -------
-        /     \     |
-       ↓       ↓    |
-      op2     op3   |
-       | \     /    |
-       |  ↓   ↓     |
-       |   op4      |
-       |   |        |
-       \   |        |
-        \  |        |
-         \ |        ↓
-          ↓        op6
-         op5
-          |
-          ↓
-    play datasink
-   */
+
+  //     play producer
+  //           |
+  //           ↓
+  //          op1 --------
+  //         /     \      |
+  //        ↓       ↓     |
+  //   --- op2     op3    |
+  //  |     | \     /     |
+  //  |     |  ↓   ↓      |
+  //  |     |   op4       |
+  //  |     |   |         |
+  //  |     \   |         |
+  //  |      \  |         |
+  //  |       \ |         |
+  //  |        ↓          ↓
+  //  |        op5       op6
+  //   \        |        /
+  //     \      |      /
+  //       \    ↓    /
+  //    play datasink
 
   //op1
-  esc.createStream("measurements_original", "measurements_intermediate_1", op1)
+  esc.createStream("measurements_original", "measurements_cleansed", op1)
   println("STREAM 1 created: " + op1)
 
   //op2
-  esc.createStream("measurements_intermediate_1", "measurements_intermediate_2", op2)
+  esc.createStream("measurements_original", "measurements_cleansed", op2)
   println("STREAM 2 created: " + op2)
 
   //op3
-  esc.createStream("measurements_intermediate_1", "measurements_intermediate_3", op3)
-  println("STREAM 3 created: " + op3)
+  //  esc.createStream("measurements_intermediate_1", "measurements_intermediate_3", op3)
+  //  println("STREAM 3 created: " + op3)
+
+  // esc.createStream("measurements_original", "measurements_intermediate", op9)
+  // println("STREAM 9 created: " + op9)
+
+  // esc.createStream("measurements_intermediate", "measurements_cleansed", op10)
+  // println("STREAM 10 created: " + op10)
 
   //op4
   val op4topics = ListBuffer[String]()
@@ -1844,24 +1869,44 @@ object elcTest extends App {
   val op4buffers = ListBuffer[Integer]()
   op4buffers += 5
   op4buffers += 12
-  println(op4buffers)
-  esc.createStream(op4topics, op4buffers, "measurements_intermediate_4", op4)
-  println("STREAM 4 created: " + op4 + "\n")
+  //  println(op4buffers)
+  //  esc.createStream(op4topics, op4buffers, "measurements_intermediate_4", op4)
+  //  println("STREAM 4 created: " + op4 + "\n")
 
   //op5 - measurements_cleansed
   val op5topics = ListBuffer[String]()
   op5topics += "measurements_intermediate_2"
   op5topics += "measurements_intermediate_4"
-  esc.createStream(op5topics, "measurements_cleansed", op5)
-  println("STREAM 5 created: " + "\n")
+  //  esc.createStream(op5topics, "measurements_cleansed", op5)
+  //  println("STREAM 5 created: " + "\n")
 
   //op6 - measurements_summary
   //esc.createStream("measurements_original", "measurements_intermediate_6", op6)
-  esc.createStream("measurements_original", "measurements_summary", op6)
-  println("STREAM 6 created: " + "\n")
+  // esc.createStream("measurements_original", "measurements_summary", op6)
+  // println("STREAM 6 created: " + "\n")
 
-  esc.testUnit()
-  println(esc.printSomething(""))
+  //op7
+  // esc.createStream("measurements_original", "measurements_cleansed", op7)
+  // println("STREAM 7 created: " + op7)
+
+  //op8
+  // esc.createStream("measurements_original", "measurements_cleansed", op8)
+  // println("STREAM 8 created: " + op8)
+
+  //op11
+  // esc.createStream("measurements_original", "measurements_cleansed", op11)
+  // println("STREAM 11 created: " + op11)
+
+  //op12
+  // esc.createStream("measurements_original", "measurements_cleansed", op12)
+  // println("STREAM 12 created: " + op12)
+
+  //op2 - measurements_cleansed
+  //  esc.createStream("measurements_original", "measurements_cleansed", op2)
+  //  println("STREAM 7 created: " + "\n")
+
+  //  esc.testUnit()
+  //  println(esc.printSomething(""))
 
   // Start Stream
   esc.startStream()
@@ -1874,10 +1919,16 @@ object elcTest extends App {
     println("Continuing streaming. Enter 'Q' to stop streaming.")
   }
 
-  // Stop stream
-  esc.stopStream()
+  //Thread.sleep(10000)
 
-  println("Stream processing stoppqed successfully.")
+  // Stop stream
+  try {
+    println("Stream being stopped in Test code")
+    esc.stopStream()
+    println("Stream processing stopped successfully.")
+  } catch {
+    case e: Throwable => println("Exception while stopping stream")
+  }
 
   println("\n EpiDataLite Stream Test completed")
   println("----------------------------------------------------")

@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2020 EpiData, Inc.
+ * Copyright (c) 2020-2022 EpiData, Inc.
 */
 
 package service
@@ -18,7 +18,6 @@ import play.api.Logger
 object ZMQProducer {
   var pushSocket: ZMQ.Socket = _
   var pubSocket: ZMQ.Socket = _
-  var context: ZMQ.Context = _
 
   var pushPort: String = _
   var pubPort: String = _
@@ -26,19 +25,14 @@ object ZMQProducer {
   val logger: Logger = Logger(this.getClass())
 
   def init(context: ZMQ.Context, pushPort: String, pubPort: String): ZMQProducer.type = {
-    //creating ZMQ context which will be used for PUB and PUSH
     this.pushPort = pushPort
     this.pubPort = pubPort
-    //context = ZMQ.context(1)
-    this.context = context
 
     //using context to create PUSH and PUB models and binding them to sockets
-    pushSocket = this.context.socket(ZMQ.PUSH)
+    pushSocket = context.socket(ZMQ.PUSH)
     pushSocket.connect("tcp://127.0.0.1:" + this.pushPort)
 
-    println("ZMQProducer initialized")
-
-    pubSocket = this.context.socket(ZMQ.PUB)
+    pubSocket = context.socket(ZMQ.PUB)
     pubSocket.bind("tcp://127.0.0.1:" + this.pubPort)
     this
   }
@@ -47,22 +41,18 @@ object ZMQProducer {
    * Encapsulating key and value as Message object and pushing data to DataSink
    */
   def push(key: String, value: String): Unit = {
-    //println("ZMQProducer push called")
-
     //create the Json message with (key, value) pair
     val message: String = messageToJson(Message(key, value))
 
     //push the Json message
     pushSocket.send(message.getBytes(ZMQ.CHARSET), 0)
-    println("Pushed: " + message + "\n")
+    // println("Pushed: " + message + "\n")
   }
 
   /**
    * Encapsulating key and value as Message object and publishing data to Stream
    */
   def pub(topic: String, key: String, value: String): Unit = {
-    //println("ZMQProducer pub called")
-
     //setting the topic as measurements_original
     pubSocket.sendMore(topic)
 
@@ -71,26 +61,28 @@ object ZMQProducer {
 
     //publish the message
     pubSocket.send(message.getBytes(ZMQ.CHARSET), 0)
-    println("Published: " + message + "\n")
+    // println("Published: " + message + "\n")
   }
 
   def clear(): Unit = {
     try {
       //pushSocket.send("$TERM")
-      pushSocket.unbind("tcp://127.0.0.1:" + this.pushPort)
+      pushSocket.setLinger(0)
+      // pushSocket.unbind("tcp://127.0.0.1:" + this.pushPort)
+      pushSocket.unbind(pushSocket.getLastEndpoint())
       pushSocket.close()
-      println("DataSource push service closed successfully")
     } catch {
-      case e: Throwable => println("Exception while closing ZMQ push socket", e)
+      case e: Throwable => println("Exception while closing ZMQ push socket", e.getMessage)
     }
 
     try {
       //pubSocket.send("$TERM")
-      pubSocket.unbind("tcp://127.0.0.1:" + this.pubPort)
+      pubSocket.setLinger(0)
+      // pubSocket.unbind("tcp://127.0.0.1:" + this.pubPort)
+      pubSocket.unbind(pubSocket.getLastEndpoint())
       pubSocket.close()
-      println("DataSource pub service closed successfully")
     } catch {
-      case e: Throwable => println("Exception while closing ZMQ Pub socket", e)
+      case e: Throwable => println("Exception while closing ZMQ Pub socket", e.getMessage)
     }
   }
 

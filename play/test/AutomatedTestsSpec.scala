@@ -2,6 +2,7 @@
  * Copyright (c) 2015-2017 EpiData, Inc.
 */
 
+/****
 import cassandra.DB
 import com.epidata.lib.models.{ AutomatedTest => Model }
 import com.epidata.lib.models.util.Binary
@@ -1106,3 +1107,4 @@ class AutomatedTestsSpec extends Specification {
     }
   }
 }
+****/

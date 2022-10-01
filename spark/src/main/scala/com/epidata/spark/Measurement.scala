@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2015-2022 EpiData, Inc.
+*/
+
 package com.epidata.spark
 
 import com.datastax.driver.core.{ Row => CassandraRow }
@@ -5,6 +9,7 @@ import com.epidata.lib.models.{ Measurement => BaseMeasurement, MeasurementClean
 import com.epidata.lib.models.util.{ TypeUtils, Binary }
 import java.sql.Timestamp
 import java.util.Date
+import java.sql.ResultSet
 
 import org.apache.spark.MeasurementValue
 
@@ -63,6 +68,8 @@ object Measurement {
   implicit def rowToMeasurement(row: CassandraRow): Measurement =
     baseMeasurementToMeasurement(row)
 
+  implicit def resultSetToMeasurement(row: ResultSet): Measurement =
+    baseMeasurementToMeasurement(row)
 }
 
 /**
@@ -129,6 +136,9 @@ object MeasurementCleansed {
       base.val2)
 
   implicit def rowToMeasurementCleansed(row: CassandraRow): MeasurementCleansed =
+    baseMeasurementCleansedToMeasurementCleansed(row)
+
+  implicit def resultSetToMeasurementCleansed(row: ResultSet): MeasurementCleansed =
     baseMeasurementCleansedToMeasurementCleansed(row)
 
   implicit def measurementToMeasurementCleansed(m: Measurement, measFlag: Option[String], measMethod: Option[String]): MeasurementCleansed = {

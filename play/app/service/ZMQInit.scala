@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2020 EpiData, Inc.
+ * Copyright (c) 2020-2022 EpiData, Inc.
 */
 
 package service
@@ -14,10 +14,10 @@ import org.zeromq.ZMQ
 object ZMQInit {
   var _ZMQProducer: ZMQProducer.type = _
   var _ZMQService: ZMQService.type = _
-  val context = ZMQ.context(1)
+  var context: ZMQ.Context = _
 
   def init(config: Configuration) = {
-    /**
+    /*
      * ZMQProducer: pushPort: 5550, pubPort: 5551
      * ZMQPullDataSink: pullPort: 5550,
      * ZMQCleansedDataSink: cleansedSubPort: 5552
@@ -26,8 +26,10 @@ object ZMQInit {
      * ZMQService executes ZMQStream and ZMQDataSink as threads
      */
 
+    this.context = ZMQ.context(1)
+
     _ZMQService = ZMQService.init(
-      context,
+      this.context,
       config.getOptional[Int]("queue.servers").get.toString,
       (config.getOptional[Int]("queue.servers").get + 2).toString,
       (config.getOptional[Int]("queue.servers").get + 3).toString,
@@ -36,15 +38,26 @@ object ZMQInit {
     _ZMQService.start()
 
     _ZMQProducer = ZMQProducer.init(
-      context,
+      this.context,
       config.getOptional[Int]("queue.servers").get.toString,
       (config.getOptional[Int]("queue.servers").get + 1).toString)
-
   }
 
   def clear() = {
-    _ZMQService.stop()
     _ZMQProducer.clear()
-    context.term()
+    _ZMQService.stop()
+    try {
+      this.context.term()
+    } catch {
+      case e: Throwable => {
+        println(e.getMessage)
+        try {
+          this.context.term()
+        } catch {
+          case e: Throwable => println(e.getMessage)
+        }
+      }
+    }
   }
+
 }

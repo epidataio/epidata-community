@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 EpiData, Inc.
+ * Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 package com.epidata.lib.models
@@ -49,7 +49,7 @@ object AutomatedTestCleansed {
 
   def rowToAutomatedTestCleansed(row: Row): AutomatedTestCleansed = MeasurementCleansed.rowToMeasurementCleansed(row)
 
-  def rowToAutomatedTestCleansed(row: ResultSet): AutomatedTestCleansed = MeasurementCleansed.rowToMeasurementCleansed(row)
+  def resultSetToAutomatedTestCleansed(row: ResultSet): AutomatedTestCleansed = MeasurementCleansed.resultSetToMeasurementCleansed(row)
 
   implicit def measurementCleansedToAutomatedTestCleansed(measurement: MeasurementCleansed): AutomatedTestCleansed =
     AutomatedTestCleansed(
@@ -111,10 +111,10 @@ object AutomatedTestCleansed {
   }
 
   // JSON Helpers
-  def rowToJLinkedHashMap(rowCleansed: ResultSet, tableName: String): JLinkedHashMap[String, Object] = {
+  def resultSetToJLinkedHashMap(rowCleansed: ResultSet, tableName: String): JLinkedHashMap[String, Object] = {
     tableName match {
       case com.epidata.lib.models.MeasurementCleansed.DBTableName =>
-        val mc = rowToAutomatedTestCleansed(rowCleansed)
+        val mc = resultSetToAutomatedTestCleansed(rowCleansed)
         toJLinkedHashMap(mc)
     }
   }

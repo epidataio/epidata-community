@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 EpiData, Inc.
+ * Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 package controllers
@@ -8,20 +8,22 @@ import javax.inject._
 import java.util.Date
 
 import com.epidata.lib.models.util.JsonHelpers
-import com.epidata.lib.models.MeasurementCleansed
-import models.{ MeasurementService, SQLiteMeasurementService, SensorMeasurement }
+import com.epidata.lib.models.{ Measurement, MeasurementCleansed, MeasurementSummary }
+import models.{ MeasurementService, SQLiteMeasurementService, SensorMeasurement, Device }
 import util.{ EpidataMetrics, Ordering }
-import play.api.libs.json.Json
+import play.api.libs.json._
 import play.api.mvc._
 import play.api.i18n.{ I18nSupport, Messages }
 import play.api.{ Configuration, Environment, Logger }
 import service.{ AppEnvironment, Configs }
 import securesocial.core.{ IdentityProvider, RuntimeEnvironment, SecureSocial }
 import service.Configs
+import service._
+import actions.ValidAction
 
 /** Controller for sensor measurement data. */
 @Singleton
-class SensorMeasurements @Inject() (val cc: ControllerComponents)(
+class SensorMeasurements @Inject() (val cc: ControllerComponents, validAction: ValidAction)(
   override implicit val env: RuntimeEnvironment) extends AbstractController(cc)
   with SecureSocial {
 
@@ -29,7 +31,7 @@ class SensorMeasurements @Inject() (val cc: ControllerComponents)(
 
   val logger: Logger = Logger(this.getClass())
 
-  def create = SecuredAction(parse.json) { implicit request =>
+  def create = validAction(parse.json) { implicit request: Request[JsValue] =>
     val sensorMeasurements = com.epidata.lib.models.SensorMeasurement.jsonToSensorMeasurements(request.body.toString)
     SensorMeasurement.insert(sensorMeasurements.flatMap(x => x), Configs.measDBLite)
 
@@ -55,7 +57,7 @@ class SensorMeasurements @Inject() (val cc: ControllerComponents)(
   //    }
   //  }
 
-  def insertQueue = SecuredAction(parse.json) { implicit request =>
+  def insertQueue = validAction(parse.json) { implicit request =>
     val sensorMeasurements = com.epidata.lib.models.SensorMeasurement.jsonToSensorMeasurements(request.body.toString)
     if (Configs.queueService.equalsIgnoreCase("Kafka")) {
       models.SensorMeasurement.insertToKafka(sensorMeasurements.flatMap(x => x))
@@ -74,6 +76,7 @@ class SensorMeasurements @Inject() (val cc: ControllerComponents)(
     }
   }
 
+  @Deprecated
   def query(
     company: String,
     site: String,
@@ -99,36 +102,48 @@ class SensorMeasurements @Inject() (val cc: ControllerComponents)(
     sensor: String,
     beginTime: Date,
     endTime: Date,
-    size: Int = 10000,
+    size: Int = 1000,
     batch: String = "",
     ordering: Ordering.Value = Ordering.Unspecified,
-    table: String = MeasurementCleansed.DBTableName) = Action {
-    if (Configs.measDBLite) {
-      Ok(SQLiteMeasurementService.query(
-        company,
-        site,
-        station,
-        sensor,
-        beginTime,
-        endTime,
-        size,
-        batch,
-        ordering,
-        table,
-        com.epidata.lib.models.SensorMeasurement.NAME))
-    } else {
-      Ok(MeasurementService.query(
-        company,
-        site,
-        station,
-        sensor,
-        beginTime,
-        endTime,
-        size,
-        batch,
-        ordering,
-        table,
-        com.epidata.lib.models.SensorMeasurement.NAME))
+    table: String = MeasurementCleansed.DBTableName) = validAction(parse.json) {
+    table match {
+      case MeasurementCleansed.DBTableName =>
+        Ok(com.epidata.lib.models.SensorMeasurementCleansed.toJson(SensorMeasurement.queryCleansed(
+          company,
+          site,
+          station,
+          sensor,
+          beginTime,
+          endTime,
+          size,
+          batch,
+          ordering,
+          Configs.measDBLite)))
+      case MeasurementSummary.DBTableName =>
+        Ok(com.epidata.lib.models.SensorMeasurementSummary.toJson(SensorMeasurement.querySummary(
+          company,
+          site,
+          station,
+          sensor,
+          beginTime,
+          endTime,
+          size,
+          batch,
+          ordering,
+          Configs.measDBLite)))
+      case _ =>
+        Ok(com.epidata.lib.models.SensorMeasurement.toJson(SensorMeasurement.query(
+          company,
+          site,
+          station,
+          sensor,
+          beginTime,
+          endTime,
+          size,
+          batch,
+          ordering,
+          Configs.measDBLite)))
     }
   }
+
 }

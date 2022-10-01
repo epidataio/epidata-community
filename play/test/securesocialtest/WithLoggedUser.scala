@@ -1,5 +1,6 @@
 // Based on https://github.com/jaliss/securesocial/commit/77ce2f94d6a0e1f0fb032dbdec344c953dea7771
 
+/****
 package securesocialtest
 
 import org.specs2.execute.{ AsResult, Result }
@@ -32,3 +33,4 @@ object WithLoggedUser {
   val includedPlugins = List("securesocialtest.FakeAuthenticatorStore")
   def minimalApp = new FakeApplication(withoutPlugins = excludedPlugins, additionalPlugins = includedPlugins)
 }
+****/

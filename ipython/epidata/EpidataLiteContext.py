@@ -1,6 +1,7 @@
-/*
- * Copyright (c) 2015-2022 EpiData, Inc.
-*/
+#
+# Copyright (c) 2015-2022 EpiData, Inc.
+#
+
 from datetime import datetime
 import _private.py4j_additions
 import json
@@ -24,16 +25,24 @@ class EpidataLiteContext:
     EpidataLiteContext.scala
     '''
     def __init__(self,
-            ec_classpath="spark/target/scala-2.12/epidata-spark-assembly-1.0-SNAPSHOT.jar",
+            ec_classpath=os.environ["EPIDATA_LITE_JAR"],
             sqlite_conf=None,
             measurement_class=None
     ):
-        self._gateway = JavaGateway()
-        self._gg = self._gateway.launch_gateway(classpath=ec_classpath)
-        self._jelc = self._gg.jvm.com.epidata.spark.EpidataLiteContext()
+        self._gateway = JavaGateway(start_callback_server=False)
+        print("gateway: ", self._gateway)
 
         self._sqlite_conf = sqlite_conf
         self._measurement_class = measurement_class
+
+        try:
+            self._gg = self._gateway.launch_gateway(classpath=ec_classpath)
+            print("gg: ", self._gg)
+            self._jelc = self._gg.jvm.com.epidata.spark.EpidataLiteContext()
+            print("jelc: ", self._jelc)
+        except Exception as e:
+            print(str(e))
+
 
     '''
     Converts a python list of dictionaries to a Pandas dataframe
@@ -42,8 +51,9 @@ class EpidataLiteContext:
         pdf = pd.DataFrame.from_records(list_of_dicts)
         return pdf
 
+
     '''
-    Query methods for epidata measurements
+    Query methods for original measurements
 
     Parameters
     ----------
@@ -60,53 +70,104 @@ class EpidataLiteContext:
 
     Returns
     -------
-    A Pandas dataframe containing measurements matching the query
+    A Pandas dataframe containing original measurements matching the query
     '''
-
     def query_measurements_original(self, field_query, begin_time, end_time):
         java_field_query, java_begin_time, java_end_time = self._to_java_params(field_query, begin_time, end_time)
+
         # calling the java code's query method
         java_df = self._jelc.query(java_field_query, java_begin_time, java_end_time)
-        # manual workaround for the case in which scala code returns an empty list to ensure no errors are thrown
+
+        # retrieve java's result as list of dictionaries while handling empty data case
         if isinstance(java_df, py4j.java_collections.JavaList):
-            print("java_df:", java_df)
+            #print("java_df:", java_df)
             if java_df.size() == 0:
                 java_df = []
             else:
                 java_df = list(java_df)
+
         # conversion to Pandas dataframe
         pdf = self.to_pandas_dataframe(java_df)
         return pdf
 
 
+    '''
+    Query methods for cleansed (processed) measurements
+
+    Parameters
+    ----------
+    field_query : dictionary containing either strings or lists of strings
+        A dictionary containing field names and the values those fields must
+        contain in matching measurements. Some system configurations require
+        that values of specific fields be specified. A string field value
+        represents an equality match, while a list value represents set
+        membership (all values within the set are matched).
+    begin_time : datetime
+        Beginning of the time interval to query, inclusive.
+    end_time : datetime
+        End of the time interval to query, exclusive.
+
+    Returns
+    -------
+    A Pandas dataframe containing cleansed (processed) measurements matching the query
+    '''
     def query_measurements_cleansed(self, field_query, begin_time, end_time):
         java_field_query, java_begin_time, java_end_time = self._to_java_params(field_query, begin_time, end_time)
+
+        # calling the java code's query method
         java_df = self._jelc.queryMeasurementCleansed(java_field_query, java_begin_time, java_end_time)
-        # manual workaround for the case in which scala code returns an empty list to ensure no errors are thrown
+
+        # retrieve java's result as list of dictionaries while handling empty data case
         if isinstance(java_df, py4j.java_collections.JavaList):
-            print("java_df:", java_df)
+            #print("java_df:", java_df)
             if java_df.size() == 0:
                 java_df = []
             else:
                 java_df = list(java_df)
+
         # conversion to Pandas dataframe
         pdf = self.to_pandas_dataframe(java_df)
         return pdf
 
+
+    '''
+    Query methods for summary (processed) measurements
+
+    Parameters
+    ----------
+    field_query : dictionary containing either strings or lists of strings
+        A dictionary containing field names and the values those fields must
+        contain in matching measurements. Some system configurations require
+        that values of specific fields be specified. A string field value
+        represents an equality match, while a list value represents set
+        membership (all values within the set are matched).
+    begin_time : datetime
+        Beginning of the time interval to query, inclusive.
+    end_time : datetime
+        End of the time interval to query, exclusive.
+
+    Returns
+    -------
+    A Pandas dataframe containing summary (processed) measurements matching the query
+    '''
     def query_measurements_summary(self, field_query, begin_time, end_time):
-
         java_field_query, java_begin_time, java_end_time = self._to_java_params(field_query, begin_time, end_time)
+
+        # calling the java code's query method
         java_df = self._jelc.queryMeasurementSummary(java_field_query, java_begin_time, java_end_time)
-        # manual workaround for the case in which scala code returns an empty list to ensure no errors are thrown
+
+        # retrieve java's result as list of dictionaries while handling empty data case
         if isinstance(java_df, py4j.java_collections.JavaList):
-            print("java_df:", java_df)
+            #print("java_df:", java_df)
             if java_df.size() == 0:
                 java_df = []
             else:
                 java_df = list(java_df)
+
         # conversion to Pandas dataframe
         pdf = self.to_pandas_dataframe(java_df)
         return pdf
+
 
     def list_keys(self):
         """
@@ -118,14 +179,19 @@ class EpidataLiteContext:
             A DataFrame containing values of the principal fields used for
             classifying measurements.
         """
+        # calling the java code's listKeys method
         java_df = self._jelc.listKeys()
+
+        # retrieve java's result as list of dictionaries while handling empty data case
         if isinstance(java_df, py4j.java_collections.JavaList):
-            print("java_df:", java_df)
+            #print("java_df:", java_df)
             if java_df.size() == 0:
                 java_df = []
             else:
                 java_df = list(java_df)
+
         return self.to_pandas_dataframe(java_df)
+
 
     def _to_java_params(self, field_query, begin_time, end_time):
         '''
@@ -135,7 +201,6 @@ class EpidataLiteContext:
         -------
         The field query, begin time, and end time as Java parameters.
         '''
-
         # creates a gateway client for the Java Gateway
         self.gc = self._gg._gateway_client
 
@@ -158,10 +223,11 @@ class EpidataLiteContext:
         timestamp = int(float(stamp))
         return self._gg.jvm.java.sql.Timestamp(timestamp)
 
+
     def _check_cluster_memory(self):
         pass  #not needed with the lite version
 
 
-if os.environ.get('EPIDATA_MODE') == r'LITE':
+#if os.environ.get('EPIDATA_MODE') == r'LITE':
     # The global EpidataLiteContext.
-    ec = EpidataLiteContext()
+#    ec = EpidataLiteContext()

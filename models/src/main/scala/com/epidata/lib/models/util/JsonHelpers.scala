@@ -94,11 +94,23 @@ object JsonHelpers {
     mapList.toList
   }
 
-  def mapToJson(map: JLinkedHashMap[String, Object]): String = {
+  // def mapToJson(map: JLinkedHashMap[String, Object]): String = {
+  //   JSONObject.toJSONString(map)
+  // }
+
+  def mapToJson(map: java.util.Map[String, Object]): String = {
     JSONObject.toJSONString(map)
   }
 
-  def mapToJson(mapList: List[JLinkedHashMap[String, Object]]): List[String] = {
+  // def mapToJson(mapList: List[JLinkedHashMap[String, Object]]): List[String] = {
+  //   var jsonList = ListBuffer[String]()
+  //   for (map <- mapList) {
+  //     jsonList :+ JSONObject.toJSONString(map)
+  //   }
+  //   jsonList.toList
+  // }
+
+  def mapToJson(mapList: List[java.util.Map[String, Object]]): List[String] = {
     var jsonList = ListBuffer[String]()
     for (map <- mapList) {
       jsonList :+ JSONObject.toJSONString(map)

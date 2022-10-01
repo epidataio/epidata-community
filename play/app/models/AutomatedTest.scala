@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 EpiData, Inc.
+ * Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 package models
@@ -39,6 +39,7 @@ object AutomatedTest {
    * @param automatedTest The AutomatedTest measurement to insert.
    */
   def insert(automatedTest: BaseAutomatedTest, sqliteEnable: Boolean): Unit = {
+    // println("automated test: " + automatedTest)
     if (sqliteEnable) {
       SQLiteMeasurementService.insert(automatedTest)
     } else {
@@ -51,6 +52,7 @@ object AutomatedTest {
    * @param automatedTests Multiple AutomatedTest measurements to insert.
    */
   def insert(automatedTests: List[BaseAutomatedTest], sqliteEnable: Boolean): Unit = {
+    // println("multiple automated tests: " + automatedTests)
     if (sqliteEnable) {
       SQLiteMeasurementService.bulkInsert(automatedTests.map(automatedTestToMeasurement))
     } else {
@@ -63,6 +65,7 @@ object AutomatedTest {
    * @param automatedTestCleansed The AutomatedTestCleansed measurement to insert.
    */
   def insertCleansed(automatedTestCleansed: BaseAutomatedTestCleansed, sqliteEnable: Boolean): Unit = {
+    // println("automated test cleansed: " + automatedTestCleansed)
     if (sqliteEnable) {
       SQLiteMeasurementService.insertCleansed(automatedTestCleansed)
     } else {
@@ -76,6 +79,7 @@ object AutomatedTest {
    * @param automatedTestsCleansed Multiple AutomatedTestCleansed measurements to insert.
    */
   def insertCleansed(automatedTestsCleansed: List[BaseAutomatedTestCleansed], sqliteEnable: Boolean): Unit = {
+    // println("multiple automated tests cleansed: " + automatedTestsCleansed)
     if (sqliteEnable) {
       SQLiteMeasurementService.bulkInsertCleansed(automatedTestsCleansed.map(automatedTestCleansedToMeasurementCleansed))
     } else {
@@ -89,6 +93,7 @@ object AutomatedTest {
    * @param automatedTestSummary The AutomatedTestSummary data to insert.
    */
   def insertSummary(automatedTestSummary: BaseAutomatedTestSummary, sqliteEnable: Boolean): Unit = {
+    // println("automated test summary: " + automatedTestSummary)
     if (sqliteEnable) {
       SQLiteMeasurementService.insertSummary(automatedTestSummary)
     } else {
@@ -102,6 +107,7 @@ object AutomatedTest {
    * @param automatedTestsSummary Multiple AutomatedTestSummary data to insert.
    */
   def insertSummary(automatedTestsSummary: List[BaseAutomatedTestSummary], sqliteEnable: Boolean): Unit = {
+    // println("multiple automated tests summary: " + automatedTestsSummary)
     if (sqliteEnable) {
       SQLiteMeasurementService.bulkInsertSummary(automatedTestsSummary.map(automatedTestSummaryToMeasurementSummary))
     } else {
@@ -125,6 +131,7 @@ object AutomatedTest {
   }
 
   def insertCleansedRecordFromZMQ(str: String): Unit = {
+    // println("cleansed record from zmq: " + str)
     BaseAutomatedTestCleansed.jsonToAutomatedTestCleansed(str) match {
       case Some(mc) => insertCleansed(mc, Configs.measDBLite)
       case _ => logger.error("Bad json format!")
@@ -132,6 +139,7 @@ object AutomatedTest {
   }
 
   def insertSummaryRecordFromZMQ(str: String): Unit = {
+    // println("summary record from zmq: " + str)
     BaseAutomatedTestSummary.jsonToAutomatedTestSummary(str) match {
       case Some(ms) => insertSummary(ms, Configs.measDBLite)
       case _ => logger.error("Bad json format!")
@@ -139,6 +147,7 @@ object AutomatedTest {
   }
 
   def insertDynamicRecordFromZMQ(str: String): Unit = {
+    // println("dynamic record from zmq: " + str)
     try {
       BaseAutomatedTestCleansed.jsonToAutomatedTestCleansed(str) match {
         case Some(mc: BaseAutomatedTestCleansed) => {
@@ -197,6 +206,66 @@ object AutomatedTest {
 
   /** Convert a list of AutomatedTest measurements to a json representation. */
   def toJson(automatedTests: List[BaseAutomatedTest]) = BaseAutomatedTest.toJson(automatedTests)
+
+  def query(
+    company: String,
+    site: String,
+    device_group: String,
+    tester: String,
+    beginTime: Date,
+    endTime: Date,
+    size: Int = 1000,
+    batch: String = "",
+    ordering: Ordering.Value,
+    sqliteEnable: Boolean): List[BaseAutomatedTest] = {
+    if (sqliteEnable) {
+      SQLiteMeasurementService.query(company, site, device_group, tester, beginTime, endTime, size, batch, ordering)
+        .map(BaseAutomatedTest.measurementToAutomatedTest)
+    } else {
+      MeasurementService.query(company, site, device_group, tester, beginTime, endTime, size, batch, ordering)
+        .map(BaseAutomatedTest.measurementToAutomatedTest)
+    }
+  }
+
+  def queryCleansed(
+    company: String,
+    site: String,
+    device_group: String,
+    tester: String,
+    beginTime: Date,
+    endTime: Date,
+    size: Int = 1000,
+    batch: String = "",
+    ordering: Ordering.Value,
+    sqliteEnable: Boolean): List[BaseAutomatedTestCleansed] = {
+    if (sqliteEnable) {
+      SQLiteMeasurementService.queryCleansed(company, site, device_group, tester, beginTime, endTime, size, batch, ordering)
+        .map(BaseAutomatedTestCleansed.measurementCleansedToAutomatedTestCleansed)
+    } else {
+      MeasurementService.queryCleansed(company, site, device_group, tester, beginTime, endTime, size, batch, ordering)
+        .map(BaseAutomatedTestCleansed.measurementCleansedToAutomatedTestCleansed)
+    }
+  }
+
+  def querySummary(
+    company: String,
+    site: String,
+    device_group: String,
+    tester: String,
+    beginTime: Date,
+    endTime: Date,
+    size: Int = 1000,
+    batch: String = "",
+    ordering: Ordering.Value,
+    sqliteEnable: Boolean): List[BaseAutomatedTestSummary] = {
+    if (sqliteEnable) {
+      SQLiteMeasurementService.querySummary(company, site, device_group, tester, beginTime, endTime, size, batch, ordering)
+        .map(BaseAutomatedTestSummary.measurementSummaryToAutomatedTestSummary)
+    } else {
+      MeasurementService.querySummary(company, site, device_group, tester, beginTime, endTime, size, batch, ordering)
+        .map(BaseAutomatedTestSummary.measurementSummaryToAutomatedTestSummary)
+    }
+  }
 
   /**
    * Find automated tests in the database matching the specified parameters.

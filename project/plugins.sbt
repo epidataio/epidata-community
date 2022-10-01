@@ -27,5 +27,9 @@ addSbtPlugin("org.scalariform" % "sbt-scalariform" % "1.8.3")
 // The sbt dependency graph plugin
 //addSbtPlugin("io.get-coursier" % "sbt-coursier" % "2.0.0-RC3-3")
 
+//resolvers += "Artima Maven Repository" at "https://repo.artima.com/releases"
+
 // The Artima SuperSafe plugin for ScalaTest/Scalactic
+//addSbtPlugin("com.artima.supersafe" % "sbtplugin" % "1.1.12")
+
 //addSbtPlugin("com.artima.supersafe" % "sbtplugin" % "1.1.12")

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 EpiData, Inc.
+ * Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 package models
@@ -219,6 +219,66 @@ object SensorMeasurement {
 
   /** Convert a list of SensorMeasurement to a json representation. */
   def toJson(sensorMeasurements: List[BaseSensorMeasurement]): String = BaseSensorMeasurement.toJson(sensorMeasurements)
+
+  def query(
+    company: String,
+    site: String,
+    station: String,
+    sensor: String,
+    beginTime: Date,
+    endTime: Date,
+    size: Int = 1000,
+    batch: String = "",
+    ordering: Ordering.Value,
+    sqliteEnable: Boolean): List[BaseSensorMeasurement] = {
+    if (sqliteEnable) {
+      SQLiteMeasurementService.query(company, site, station, sensor, beginTime, endTime, size, batch, ordering)
+        .map(BaseSensorMeasurement.measurementToSensorMeasurement)
+    } else {
+      MeasurementService.query(company, site, station, sensor, beginTime, endTime, size, batch, ordering)
+        .map(BaseSensorMeasurement.measurementToSensorMeasurement)
+    }
+  }
+
+  def queryCleansed(
+    company: String,
+    site: String,
+    station: String,
+    sensor: String,
+    beginTime: Date,
+    endTime: Date,
+    size: Int = 1000,
+    batch: String = "",
+    ordering: Ordering.Value,
+    sqliteEnable: Boolean): List[BaseSensorMeasurementCleansed] = {
+    if (sqliteEnable) {
+      SQLiteMeasurementService.queryCleansed(company, site, station, sensor, beginTime, endTime, size, batch, ordering)
+        .map(BaseSensorMeasurementCleansed.measurementCleansedToSensorMeasurementCleansed)
+    } else {
+      MeasurementService.queryCleansed(company, site, station, sensor, beginTime, endTime, size, batch, ordering)
+        .map(BaseSensorMeasurementCleansed.measurementCleansedToSensorMeasurementCleansed)
+    }
+  }
+
+  def querySummary(
+    company: String,
+    site: String,
+    station: String,
+    sensor: String,
+    beginTime: Date,
+    endTime: Date,
+    size: Int = 1000,
+    batch: String = "",
+    ordering: Ordering.Value,
+    sqliteEnable: Boolean): List[BaseSensorMeasurementSummary] = {
+    if (sqliteEnable) {
+      SQLiteMeasurementService.querySummary(company, site, station, sensor, beginTime, endTime, size, batch, ordering)
+        .map(BaseSensorMeasurementSummary.measurementSummaryToSensorMeasurementSummary)
+    } else {
+      MeasurementService.querySummary(company, site, station, sensor, beginTime, endTime, size, batch, ordering)
+        .map(BaseSensorMeasurementSummary.measurementSummaryToSensorMeasurementSummary)
+    }
+  }
 
   /**
    * Find sensor measurements in the database matching the specified parameters.

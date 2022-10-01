@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 EpiData, Inc.
+ * Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 package cassandra
@@ -31,6 +31,7 @@ object DB {
   @Inject()
   def connect(nodeNames: String, keyspace: String, replicationStrategy: String, replicationFactor: Int, username: String, password: String, migrationFile: java.io.File) = {
     connection = Some(new Connection(nodeNames, keyspace, replicationStrategy, replicationFactor, username, password, migrationFile))
+    println("connection: " + connection)
   }
 
   /** Generate a prepared statement. */

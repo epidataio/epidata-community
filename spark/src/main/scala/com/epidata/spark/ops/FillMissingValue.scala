@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2015-2017 EpiData, Inc.
+* Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 package com.epidata.spark.ops
@@ -17,7 +17,7 @@ class FillMissingValue(
     val method: String = "rolling",
     val s: Int = 3) extends Transformation {
 
-  override def apply(measurements: ListBuffer[JLinkedHashMap[String, Object]]): ListBuffer[JLinkedHashMap[String, Object]] = {
+  override def apply(measurements: ListBuffer[java.util.Map[String, Object]]): ListBuffer[java.util.Map[String, Object]] = {
 
     val field = "meas_value"
 

@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2020 EpiData, Inc.
+ * Copyright (c) 2020-2022 EpiData, Inc.
 */
 
 package service
@@ -18,18 +18,12 @@ import org.zeromq.ZMQException
 import play.api.Logger
 
 class ZMQDynamicDataSink {
-  var context: ZMQ.Context = _
   var subSocket: ZMQ.Socket = _
   val subTopicDynamic: String = "measurements_dynamic"
 
   val logger: Logger = Logger(this.getClass())
 
   def init(context: ZMQ.Context, subPort: String): Unit = {
-    println("ZMQDynamicDataSink initialized")
-
-    //initializing ZMQ context which will be used for SUB
-    this.context = context
-
     //using context to create SUB model and binding it to socket
     subSocket = context.socket(ZMQ.SUB)
     subSocket.connect("tcp://127.0.0.1:" + subPort)
@@ -38,7 +32,6 @@ class ZMQDynamicDataSink {
   }
 
   def sub(): (String, Message) = {
-    // println("ZMQDynamicDataSink sub called.")
     try {
       val topic = subSocket.recvStr()
       // println("Sub topic: " + topic + "\n")
@@ -55,7 +48,8 @@ class ZMQDynamicDataSink {
     try {
       subSocket.unsubscribe(subTopicDynamic.getBytes(ZMQ.CHARSET))
       subSocket.setLinger(1)
-      subSocket.disconnect("tcp://127.0.0.1:" + subPort)
+      // subSocket.disconnect("tcp://127.0.0.1:" + subPort)
+      subSocket.disconnect(subSocket.getLastEndpoint())
       subSocket.close()
       println("Dynamic DataSink service closed successfully")
     } catch {

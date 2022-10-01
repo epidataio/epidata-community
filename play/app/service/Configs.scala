@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2015-2022 EpiData, Inc.
+*/
+
 package service
 
 import play.api.Configuration
@@ -11,6 +15,7 @@ object Configs {
     _twoWaysIngestion = config.getOptional[Boolean]("application.ingestion.2ways").getOrElse(false)
     _measDB = config.getOptional[String]("measurements.database").get
     _userDB = config.getOptional[String]("user.database").get
+    _deviceDB = config.getOptional[String]("device.database").get
     _queueService = config.getOptional[String]("queue.service").get
     _queueSocket = config.getOptional[Int]("queue.servers").get
   }
@@ -21,6 +26,7 @@ object Configs {
   private var _twoWaysIngestion: Boolean = _
   private var _measDB: String = _
   private var _userDB: String = _
+  private var _deviceDB: String = _
   private var _queueService: String = _
   private var _queueSocket: Int = _
 
@@ -30,11 +36,16 @@ object Configs {
   def twoWaysIngestion = _twoWaysIngestion
   def measDB = _measDB
   def userDB = _userDB
+  def deviceDB = _deviceDB
   def measDBLite: Boolean = _measDB match {
     case "sqlite" => true
     case "cassandra" => false
   }
   def userDBLite: Boolean = _userDB match {
+    case "sqlite" => true
+    case "cassandra" => false
+  }
+  def deviceDBLite: Boolean = _deviceDB match {
     case "sqlite" => true
     case "cassandra" => false
   }

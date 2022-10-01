@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2020 EpiData, Inc.
+ * Copyright (c) 2020-2022 EpiData, Inc.
 */
 
 package service
@@ -19,29 +19,21 @@ import org.zeromq.ZMQException
 import play.api.Logger
 
 class ZMQPullDataSink {
-  var context: ZMQ.Context = _
   var pullSocket: ZMQ.Socket = _
   var forwardMessage: ZMQ.Socket = _
 
   val logger: Logger = Logger(this.getClass())
 
   def init(context: ZMQ.Context, pullPort: String): Unit = {
-    println("ZMQPullDataSink initialized")
-
-    //creating ZMQ context which will be used for PULL
-    this.context = context
-
     //using context to create PUSH and PUB models and binding them to sockets
     pullSocket = context.socket(ZMQ.PULL)
     pullSocket.bind("tcp://127.0.0.1:" + pullPort)
   }
 
   def pull(): Message = {
-    //println("ZMQDataSink pull called")
-
     try {
       val receivedString = pullSocket.recvStr()
-      println("Pull data: " + receivedString + "\n")
+      // println("Pull data: " + receivedString + "\n")
       val message: Message = jsonToMessage(receivedString)
       message
     } catch {
@@ -50,12 +42,11 @@ class ZMQPullDataSink {
   }
 
   def clear(pullPort: String): Unit = {
-    //println("DataSink pull clear called")
     try {
       pullSocket.setLinger(1)
-      pullSocket.unbind("tcp://127.0.0.1:" + pullPort)
+      // pullSocket.unbind("tcp://127.0.0.1:" + pullPort)
+      pullSocket.unbind(pullSocket.getLastEndpoint())
       pullSocket.close()
-      println("DataSink pull service closed successfully")
     } catch {
       case e: Throwable => println("Exception while closing DataSink pull service", e.getMessage)
     }

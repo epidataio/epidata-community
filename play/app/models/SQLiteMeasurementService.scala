@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2015-2020 EpiData, Inc.
+ * Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 package models
@@ -13,7 +13,7 @@ import com.epidata.lib.models.{ Measurement => Model, MeasurementsKeys, Measurem
 import com.epidata.lib.models.util.{ JsonHelpers, Binary }
 import _root_.util.{ EpidataMetrics, Ordering }
 import com.datastax.driver.core.querybuilder.{ Clause, QueryBuilder }
-
+import scala.collection.mutable.ListBuffer
 import java.sql._
 
 import scala.collection.convert.WrapAsScala
@@ -105,6 +105,7 @@ object SQLiteMeasurementService {
   def insertSummary(measurementSummary: ModelSummary): Unit = {
 
     // Prepares the statement and executes it
+    // println("measurement summary model: " + measurementSummary)
     val statementInsertSummary = getInsertSummaryStatements(measurementSummary)
     DB.executeUpdate(statementInsertSummary)
   }
@@ -116,6 +117,7 @@ object SQLiteMeasurementService {
   def bulkInsertSummary(measurementsSummary: List[ModelSummary]): Unit = {
 
     // Individually, inserts every statment into the database
+    // println("multiple measurement summary: " + measurementsSummary)
     val t0 = EpidataMetrics.getCurrentTime
     measurementsSummary.foreach(modelSummary => insertSummary(modelSummary))
     EpidataMetrics.increment("DB.batchExecute", t0)
@@ -166,35 +168,79 @@ object SQLiteMeasurementService {
   /**
    * Find measurements in the database matching the specified parameters.
    * @param customer
-   * @param customer_site
-   * @param collection
-   * @param dataset
+   * @param site
+   * @param station
+   * @param sensor
    * @param beginTime Beginning of query time interval, inclusive
    * @param endTime End of query time interval, exclusive
+   * @param size Maximum number of records to retrieve in batches
+   * @param batch Batch number of current retrieval
    * @param ordering Timestamp ordering of results, if specified.
    */
-
   def query(
-    company: String,
-    site: String,
-    station: String,
-    sensor: String,
+    customer: String,
+    customer_site: String,
+    collection: String,
+    dataset: String,
     beginTime: Date,
     endTime: Date,
     size: Int,
     batch: String,
-    ordering: Ordering.Value,
-    tableName: String,
-    modelName: String): String = {
+    ordering: Ordering.Value): List[Model] = {
 
     // Get the data from SQLite
-    val rs: ResultSet = SQLiteMeasurementService.query(company, site, station, sensor, beginTime, endTime, ordering, tableName, size, batch)
-    val records: JList[JLinkedHashMap[String, Object]] = new JLinkedList[JLinkedHashMap[String, Object]]()
-    while (rs.next() != false) {
-      records.add(Model.rowToJLinkedHashMap(rs, tableName, modelName))
+    var measurements: ListBuffer[Model] = new ListBuffer[Model]
+    val rs: ResultSet = SQLiteMeasurementService.query(customer, customer_site, collection, dataset, beginTime, endTime, size, batch, ordering, Model.DBTableName)
+    while (rs.next()) {
+      measurements += Model.resultSetToMeasurement(rs)
     }
-    val nextBatch = ""
-    JsonHelpers.toJson(records, nextBatch)
+
+    measurements
+      .toList
+  }
+
+  def queryCleansed(
+    customer: String,
+    customer_site: String,
+    collection: String,
+    dataset: String,
+    beginTime: Date,
+    endTime: Date,
+    size: Int,
+    batch: String,
+    ordering: Ordering.Value): List[ModelCleansed] = {
+
+    // Get the data from SQLite
+    var measurements: ListBuffer[ModelCleansed] = new ListBuffer[ModelCleansed]
+    val rs: ResultSet = SQLiteMeasurementService.query(customer, customer_site, collection, dataset, beginTime, endTime, size, batch, ordering, ModelCleansed.DBTableName)
+    while (rs.next()) {
+      measurements += ModelCleansed.resultSetToMeasurementCleansed(rs)
+    }
+
+    measurements
+      .toList
+  }
+
+  def querySummary(
+    customer: String,
+    customer_site: String,
+    collection: String,
+    dataset: String,
+    beginTime: Date,
+    endTime: Date,
+    size: Int,
+    batch: String,
+    ordering: Ordering.Value): List[ModelSummary] = {
+
+    // Get the data from SQLite
+    var measurements: ListBuffer[ModelSummary] = new ListBuffer[ModelSummary]
+    val rs: ResultSet = SQLiteMeasurementService.query(customer, customer_site, collection, dataset, beginTime, endTime, size, batch, ordering, ModelSummary.DBTableName)
+    while (rs.next()) {
+      measurements += ModelSummary.resultSetToMeasurementSummary(rs)
+    }
+
+    measurements
+      .toList
   }
 
   def query(
@@ -204,10 +250,10 @@ object SQLiteMeasurementService {
     dataset: String,
     beginTime: Date,
     endTime: Date,
+    size: Int = 1000,
+    batch: String = "",
     ordering: Ordering.Value = Ordering.Unspecified,
-    tableName: String = com.epidata.lib.models.Measurement.DBTableName,
-    size: Int = 10000,
-    batch: String = ""): ResultSet = {
+    tableName: String = com.epidata.lib.models.Measurement.DBTableName): ResultSet = {
 
     // Define the database query to execute for a single epoch.
     def queryForEpoch = {

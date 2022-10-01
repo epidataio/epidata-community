@@ -24,11 +24,19 @@ import requests
 arg_parser = argparse.ArgumentParser()
 arg_parser.add_argument('--host')
 arg_parser.add_argument('--access_token')
+arg_parser.add_argument('--device_id')
+arg_parser.add_argument('--device_token')
 args = arg_parser.parse_args()
 
 HOST = args.host or '127.0.0.1:9443'
-AUTHENTICATION_URL = 'https://' + HOST + '/authenticate/app'
-AUTHENTICATION_ROUTE = '/authenticate/app'
+# AUTHENTICATION_URL = 'https://' + HOST + '/authenticate/app'
+# AUTHENTICATION_ROUTE = '/authenticate/app'
+# AUTHENTICATION_URL = 'https://' + HOST + '/login/device'
+# AUTHENTICATION_ROUTE = '/login/device'
+
+AUTHENTICATION_URL = 'https://' + HOST + '/authenticate/deviceApp'
+AUTHENTICATION_ROUTE = '/authenticate/deviceApp'
+
 EPI_STREAM = True
 LOG_ITERATION = 1
 
@@ -59,7 +67,9 @@ current_time = get_time(current_time_string)
 #####################
 
 # Replace quoted string with API Token or GitHub Personal Access Token (REQUIRED)
-ACCESS_TOKEN = args.access_token or 'epidata123'
+# ACCESS_TOKEN = args.access_token or 'epidata123'
+DEVICE_ID = args.device_id or 'iot_device_1'
+DEVICE_TOKEN = args.device_token or 'epidata_123'
 
 # Modify default values (OPTIONAL)
 COMPANY = 'EpiData'
@@ -96,16 +106,18 @@ url = AUTHENTICATION_URL
 print(url)
 
 # An HTTP POST with JSON content requires the HTTP Content-type header.
-json_header = {'Content-type': 'application/json', 'Set-Cookie': "epidata"}
+json_header = {'Content-type': 'application/json', 'Set-Cookie': "epidata", 'device_id': DEVICE_ID,
+               'device_token': DEVICE_TOKEN}
 
 # The access token is povided via JSON.
-json_body = json.dumps({'accessToken': ACCESS_TOKEN})
+json_body = json.dumps({'device_id': DEVICE_ID,
+                        'device_token': DEVICE_TOKEN})
 
 # Send the POST request and receive the HTTP response.
-req = requests.Request('POST', AUTHENTICATION_URL, data=json_body, headers=json_header)
+req = requests.Request('POST', AUTHENTICATION_URL, headers=json_header)
 prepped = session.prepare_request(req)
 resp = session.send(prepped, stream=None, verify=None, proxies=None, cert=None, timeout=None)
-
+json_web_token = resp.headers.get('device_jwt')
 # Check that the response's HTTP response code is 200 (OK).
 assert resp.status_code == 200
 
@@ -132,7 +144,7 @@ while (True):
             # Construct an empty list of measurement objects
             measurement_list = []
 
-            for log_iteration in range(1, 2):
+            for log_iteration in range(1, 3):
 
                 current_time_string = datetime.now().strftime("%m/%d/%Y %H:%M:%S.%f")
                 current_time = get_time(current_time_string)
@@ -149,7 +161,7 @@ while (True):
                     else:
                         meas_value_diff = float(round(random.normalvariate(3.0, 0.25), 2))
                         meas_value = meas_last_temperature_value - meas_value_diff
-                elif ((data_iteration % 6 == 0) and (log_iteration == 3)):
+                elif ((data_iteration % 4 == 0) and (log_iteration == 1)):
                     meas_value = None
                 else:
                     if(data_iteration <= 12):
@@ -159,7 +171,7 @@ while (True):
                         meas_value_diff = float(round(random.normalvariate(0.5, 0.25), 2))
                         meas_value = meas_last_temperature_value - meas_value_diff
                     meas_last_temperature_value = meas_value
-                if (30 <= meas_value <= 120):
+                if ((meas_value is not None) and (30 <= meas_value <= 120)):
                     meas_status = 'PASS'
                 else:
                     meas_status = 'FAIL'
@@ -197,7 +209,7 @@ while (True):
                 else:
                     meas_value = float(round(random.normalvariate(8, 2), 2))
                     meas_last_windspeed_value = meas_value
-                if (0 < meas_value < 25):
+                if ((meas_value is not None) and (0 < meas_value < 25)):
                     meas_status = 'PASS'
                 else:
                     meas_status = 'FAIL'
@@ -232,7 +244,7 @@ while (True):
                 if (0 <= meas_value <= 100):
                     meas_status = 'PASS'
                 else:
-                    meas_status = 'PASS'
+                    meas_status = 'FAIL'
 
                 # Construct measurement object with data to be ingested.
                 measurement = {
@@ -273,7 +285,8 @@ while (True):
 
             # Request headers add parameters to the request.
             json_header = {
-                'Content-type': 'application/json'
+                'Content-type': 'application/json',
+                'device_jwt': json_web_token
                 }
 
             # Construct JSON body with data to be ingested.

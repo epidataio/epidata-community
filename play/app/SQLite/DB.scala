@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2015-2020 EpiData, Inc.
+ * Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 package SQLite
@@ -28,8 +28,8 @@ object DB {
    * Connect to SQlite.
    */
   @Inject()
-  def connect(url: String) = {
-    connection = Some(new ConnectionLite(url))
+  def connect(url: String, schemaPath: java.io.File) = {
+    connection = Some(new ConnectionLite(url, schemaPath))
   }
 
   /** Generate a prepared statement. */
@@ -47,7 +47,7 @@ object DB {
   /** Execute a SQL statement by binding ordered attributes. */
   def cql(statement: String, args: Any*): ResultSet = connection.get.cql(statement, args)
 
-  /** Execute a CQL statement by binding named attributes. */
+  /** Execute a SQL statement by binding named attributes. */
   def cql(statement: String, args: Map[String, Any]): ResultSet = connection.get.cql(statement, args)
 
   /** Closes a Cassandra connection. */
@@ -58,26 +58,30 @@ object DB {
 
 }
 
-private class ConnectionLite(url: String) {
-
+private class ConnectionLite(url: String, schemaPath: java.io.File) {
   Class.forName("org.sqlite.JDBC");
   val session = DriverManager.getConnection(url)
 
-  val cleansed = "play/conf/schema//measurements_cleansed"
-  val keys = "play/conf/schema/measurements_keys"
-  val original = "play/conf/schema/measurements_original"
-  val summary = "play/conf/schema/measurements_summary"
-  val users = "play/conf/schema/users"
-  val sql1 = Source.fromFile(cleansed).getLines.mkString
-  val sql2 = Source.fromFile(keys).getLines.mkString
-  val sql3 = Source.fromFile(original).getLines.mkString
-  val sql4 = Source.fromFile(summary).getLines.mkString
+  val original = schemaPath + "/measurements_original"
+  val cleansed = schemaPath + "/measurements_cleansed"
+  val summary = schemaPath + "/measurements_summary"
+  val keys = schemaPath + "/measurements_keys"
+  val users = schemaPath + "/users"
+  val devices = schemaPath + "/iot_devices"
+
+  val sql1 = Source.fromFile(original).getLines.mkString
+  val sql2 = Source.fromFile(cleansed).getLines.mkString
+  val sql3 = Source.fromFile(summary).getLines.mkString
+  val sql4 = Source.fromFile(keys).getLines.mkString
   val sql5 = Source.fromFile(users).getLines.mkString
+  val sql6 = Source.fromFile(devices).getLines.mkString
+
   session.createStatement().executeUpdate(sql1)
   session.createStatement().executeUpdate(sql2)
   session.createStatement().executeUpdate(sql3)
   session.createStatement().executeUpdate(sql4)
   session.createStatement().executeUpdate(sql5)
+  session.createStatement().executeUpdate(sql6)
 
   def prepare(statement: String): PreparedStatement = session.prepareStatement(statement)
 
