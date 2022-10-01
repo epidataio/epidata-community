@@ -258,7 +258,7 @@ c.NotebookApp.open_browser = False
 #  
 #  Setting to an empty string disables authentication altogether, which is NOT
 #  RECOMMENDED.
-#c.NotebookApp.token = '<generated>'
+c.NotebookApp.token = 'Tx9jwm2CfU7m5dvOvrP9CfzmmpvGHAIhCF8rxEctecol2hFfdyzW'
 
 ## Supply overrides for the tornado.web.Application that the Jupyter notebook
 #  uses.

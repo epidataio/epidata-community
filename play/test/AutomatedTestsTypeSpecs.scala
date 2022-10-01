@@ -2,6 +2,7 @@
  * Copyright (c) 2015-2017 EpiData, Inc.
 */
 
+/****
 import cassandra.DB
 import com.epidata.lib.models.{ AutomatedTest => Model }
 import com.epidata.lib.models.util.Binary
@@ -23,6 +24,7 @@ import play.api.test._
 import play.api.test.Helpers._
 import securesocialtest.WithLoggedUser
 import util.Ordering
+import org.scalatestplus.junit.JUnitRunner
 
 // scalastyle:off magic.number
 
@@ -144,8 +146,7 @@ class AutomatedTestsTypeSpecs extends Specification {
           automated_test.Routes.handlerFor(req) orElse super.onRouteRequest(req)
 
         override def onStop(app: Application) = Global.onStop(app)
-      })
-    )
+      }))
 
   import WithLoggedUser._
 
@@ -166,9 +167,7 @@ class AutomatedTestsTypeSpecs extends Specification {
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
         Json.parse(
-          Fixtures.measurementsJson
-        )
-      ).withCookies(cookie)).get
+          Fixtures.measurementsJson)).withCookies(cookie)).get
       status(create) must equalTo(BAD_REQUEST)
 
       var results = new Array[Model](70)
@@ -323,3 +322,4 @@ class AutomatedTestsTypeSpecs extends Specification {
     }
   }
 }
+****/

@@ -7,32 +7,36 @@
 # Additional routes files are located in the conf directory.
 # ~~~~
 
-# Login/logout pages.
+# Home Page.
 GET     /                           securesocial.controllers.LoginPage.login
-GET     /login                      securesocial.controllers.LoginPage.login
-GET     /logout                     securesocial.controllers.LoginPage.logout
+
+# User Login/logout pages.
+GET     /login/user                 securesocial.controllers.LoginPage.login
+GET     /logout/user                securesocial.controllers.LoginPage.logout
 
 # Interactive notebook session.
-GET     /notebook                   controllers.Notebook.show()
+GET     /notebook                   @controllers.Notebook.show()
 
 # Map static resources from the /public folder to the /assets URL path.
-GET     /assets/*file               controllers.Assets.at(path="/public", file)
+GET     /assets/*file               @controllers.Assets.versioned(path="/public", file)
+GET     /assets/auth/*file          @securesocial.controllers.Assets.at(path = "/public/lib/securesocial/securesocial", file)
 
 # OAuth providers entry points.
-
-GET     /authenticate/demo          controllers.DemoAuth.authenticate
-POST    /authenticate/app           controllers.DemoAuth.authenticateByPost
-
-GET     /authenticate/:provider     securesocial.controllers.ProviderController.authenticate(provider)
-POST    /authenticate/:provider     securesocial.controllers.ProviderController.authenticateByPost(provider)
-GET     /not-authorized             securesocial.controllers.ProviderController.notAuthorized
+GET     /authenticate/demo          @controllers.DemoAuth.authenticate
+POST    /authenticate/app           @controllers.DemoAuth.authenticateByPost
 
 # Redirect for external errors.
-GET     /error                      controllers.ErrorRedirect.show()
-GET     /unauthorized               controllers.Unauthorized.show()
+GET     /error                      @controllers.ErrorRedirect.show()
+GET     /unauthorized               @controllers.Unauthorized.show()
 
-# API based authentication.
-POST    /api/authenticate/:provider controllers.ApiAuth.authenticate(provider)
+# Get Metric.
+GET     /metrics                    @controllers.MetricController.getMetric()
 
-# Get Metric
-GET     /metrics                    controllers.MetricController.getMetric()
+# Device Authentication via IoT Device or Edge App.
+POST     /authenticate/deviceApp        @controllers.DeviceAuth.authenticateApp
+POST     /authenticate/deviceWeb        @controllers.DeviceAuth.authenticateWeb
+
+# Device Authentication via simple web page.
+GET     /login/device               @controllers.Devices.show()
+
+GET  /assets/*file        controllers.Assets.at(path="/public", file)

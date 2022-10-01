@@ -15,7 +15,7 @@ import org.junit.runner.RunWith
 import org.scalatest._
 import java.sql.Timestamp
 import org.apache.spark.MeasurementValue
-import org.scalatest.junit.JUnitRunner
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class EpidataContextAutomatedTestSpec extends FlatSpec with BeforeAndAfter with BeforeAndAfterAll with EmbeddedCassandra with SparkTemplate with Matchers {
@@ -28,7 +28,9 @@ class EpidataContextAutomatedTestSpec extends FlatSpec with BeforeAndAfter with 
   private val cassandraKeyspaceName = "epidata_test"
   private val measurementClass = "automated_test"
 
-  //Sets up CassandraConfig and SparkContext
+  YamlTransformations.Default.addTransformation("cdc_raw_directory", "./raw_dir/")
+
+  // Sets up CassandraConfig and SparkContext
   useCassandraConfig(Seq(YamlTransformations.Default))
 
   var conf = defaultConf
@@ -37,14 +39,17 @@ class EpidataContextAutomatedTestSpec extends FlatSpec with BeforeAndAfter with 
 
   useSparkConf(conf)
 
-  val connector = CassandraConnector(conf)
+  lazy val connector = CassandraConnector(conf)
 
   connector.withSessionDo { session =>
     session.execute(CassandraSchema.keyspaceCreation.format(cassandraKeyspaceName))
-    session.execute(CassandraSchema.measurementsTableCreation.format(cassandraKeyspaceName))
+    session.execute(CassandraSchema.measurementsOriginalTableCreation.format(cassandraKeyspaceName))
     session.execute(CassandraSchema.measurementKeysTableCreation.format(cassandraKeyspaceName))
     session.execute(CassandraSchema.userTableCreation.format(cassandraKeyspaceName))
+
+    println("sessions executed")
   }
+
   val beginTime = new Timestamp(1428004316123L)
   val endTime = new Timestamp(1428004316123L + 10000L)
 
@@ -55,7 +60,6 @@ class EpidataContextAutomatedTestSpec extends FlatSpec with BeforeAndAfter with 
       session.execute(s"TRUNCATE epidata_test.${com.epidata.lib.models.Measurement.DBTableName}")
       session.execute(s"TRUNCATE epidata_test.${com.epidata.lib.models.MeasurementsKeys.DBTableName}")
     }
-
   }
 
   override def afterAll(): Unit = {
@@ -82,11 +86,9 @@ class EpidataContextAutomatedTestSpec extends FlatSpec with BeforeAndAfter with 
         "company" -> List("Company-1"),
         "site" -> List("Site-1"),
         "device_group" -> List("1000"),
-        "tester" -> List("Station-1")
-      ),
+        "tester" -> List("Station-1")),
       beginTime,
-      endTime
-    )
+      endTime)
 
     results.count should equal(1)
     val result = results.first.toSeq
@@ -126,11 +128,9 @@ class EpidataContextAutomatedTestSpec extends FlatSpec with BeforeAndAfter with 
         "company" -> List("Company-1"),
         "site" -> List("Site-1"),
         "device_group" -> List("1000"),
-        "tester" -> List("Station-1")
-      ),
+        "tester" -> List("Station-1")),
       beginTime,
-      endTime
-    )
+      endTime)
 
     results.count should equal(1)
     val result = results.first.toSeq
@@ -170,11 +170,9 @@ class EpidataContextAutomatedTestSpec extends FlatSpec with BeforeAndAfter with 
         "company" -> List("Company-1"),
         "site" -> List("Site-1"),
         "device_group" -> List("1000"),
-        "tester" -> List("Station-1")
-      ),
+        "tester" -> List("Station-1")),
       beginTime,
-      endTime
-    )
+      endTime)
 
     results.count should equal(1)
     val result = results.first.toSeq
@@ -215,11 +213,9 @@ class EpidataContextAutomatedTestSpec extends FlatSpec with BeforeAndAfter with 
         "company" -> List("Company-1"),
         "site" -> List("Site-1"),
         "device_group" -> List("1000"),
-        "tester" -> List("Station-1")
-      ),
+        "tester" -> List("Station-1")),
       beginTime,
-      endTime
-    )
+      endTime)
 
     results.count should equal(1)
     val result = results.first.toSeq
@@ -250,11 +246,9 @@ class EpidataContextAutomatedTestSpec extends FlatSpec with BeforeAndAfter with 
           "company" -> List("Company-1"),
           // Missing required field 'site'
           "device_group" -> List("1000"),
-          "tester" -> List("Station-1")
-        ),
+          "tester" -> List("Station-1")),
         beginTime,
-        endTime
-      )
+        endTime)
     }
 
     intercept[IllegalArgumentException] {
@@ -263,11 +257,9 @@ class EpidataContextAutomatedTestSpec extends FlatSpec with BeforeAndAfter with 
           "company" -> List("Company-1"),
           "site" -> List("Site-1"),
           "device_groupWRONG" -> List("1000"), // Misspelled required field 'device_group'
-          "tester" -> List("Station-1")
-        ),
+          "tester" -> List("Station-1")),
         beginTime,
-        endTime
-      )
+        endTime)
     }
   }
 
@@ -281,11 +273,9 @@ class EpidataContextAutomatedTestSpec extends FlatSpec with BeforeAndAfter with 
           "company" -> List("Company-1"),
           "site" -> List("Site-1"),
           "device_group" -> List("1000"),
-          "tester" -> List()
-        ),
+          "tester" -> List()),
         beginTime,
-        endTime
-      )
+        endTime)
     }
 
     intercept[IllegalArgumentException] {
@@ -295,11 +285,9 @@ class EpidataContextAutomatedTestSpec extends FlatSpec with BeforeAndAfter with 
           "site" -> List("Site-1"),
           "device_group" -> List("1000"),
           "tester" -> List("Station-1"),
-          "meas_status" -> List()
-        ),
+          "meas_status" -> List()),
         beginTime,
-        endTime
-      )
+        endTime)
     }
   }
 
@@ -317,8 +305,7 @@ class EpidataContextAutomatedTestSpec extends FlatSpec with BeforeAndAfter with 
           "UNEXPECTED_FIELD" -> List("SOMEVALUE") // Unexpected field.
         ),
         beginTime,
-        endTime
-      )
+        endTime)
     }
   }
 
@@ -374,11 +361,9 @@ class EpidataContextAutomatedTestSpec extends FlatSpec with BeforeAndAfter with 
         "device_group" -> List("1000"),
         "tester" -> List("Station-1"),
         "meas_name" -> List("Meas-1"),
-        "meas_status" -> List("PASS")
-      ),
+        "meas_status" -> List("PASS")),
       beginTime,
-      endTime
-    )
+      endTime)
 
     results.count should equal(2)
     results.first.toSeq(1) should equal("Site-1")
@@ -449,11 +434,9 @@ class EpidataContextAutomatedTestSpec extends FlatSpec with BeforeAndAfter with 
         "device_group" -> List("1000"),
         "tester" -> List("Station-1", "Station-2"),
         "meas_name" -> List("Meas-1"),
-        "meas_status" -> List("PASS", "FAIL")
-      ),
+        "meas_status" -> List("PASS", "FAIL")),
       beginTime,
-      endTime
-    )
+      endTime)
 
     results.count should equal(4)
     val sortedResults = results.collect().sortBy(_.getAs[Timestamp](4).getTime)
@@ -487,11 +470,9 @@ class EpidataContextAutomatedTestSpec extends FlatSpec with BeforeAndAfter with 
         "company" -> List("Company-1"),
         "site" -> List("Site-1"),
         "device_group" -> List("1000"),
-        "tester" -> List("Station-1")
-      ),
+        "tester" -> List("Station-1")),
       ts(0),
-      ts(3)
-    ).collect()
+      ts(3)).collect()
 
     results.length should equal(3)
 
@@ -522,11 +503,9 @@ class EpidataContextAutomatedTestSpec extends FlatSpec with BeforeAndAfter with 
         "company" -> List("Company-1"),
         "site" -> List("Site-1"),
         "device_group" -> List("1000"),
-        "tester" -> List("Station-1")
-      ),
+        "tester" -> List("Station-1")),
       ts(0),
-      ts(5)
-    ).collect()
+      ts(5)).collect()
 
     results.length should equal(5)
 
@@ -550,7 +529,10 @@ class EpidataContextAutomatedTestSpec extends FlatSpec with BeforeAndAfter with 
       .saveToCassandra(cassandraKeyspaceName, com.epidata.lib.models.MeasurementsKeys.DBTableName, SomeColumns("customer", "customer_site",
         "collection", "dataset"))
 
-    val results = ec.listKeys().collect()
+    val results = ec.listKeys().collect().sortBy(_.getAs[String](0))
+    for (result <- results) {
+      println("result: " + result)
+    }
 
     results.length should equal(3)
     results(0).toSeq(0) should equal("Company-1")
@@ -576,7 +558,9 @@ class EpidataContextSensorMeasurementSpec extends FlatSpec with BeforeAndAfter w
   private val cassandraKeyspaceName = "epidata_test"
   private val measurementClass = "sensor_measurement"
 
-  //Sets up CassandraConfig and SparkContext
+  YamlTransformations.Default.addTransformation("cdc_raw_directory", "./raw_dir/")
+
+  // Sets up CassandraConfig and SparkContext
   useCassandraConfig(Seq(YamlTransformations.Default))
 
   var conf = defaultConf
@@ -585,11 +569,11 @@ class EpidataContextSensorMeasurementSpec extends FlatSpec with BeforeAndAfter w
 
   useSparkConf(conf)
 
-  val connector = CassandraConnector(conf)
+  lazy val connector = CassandraConnector(conf)
 
   connector.withSessionDo { session =>
     session.execute(CassandraSchema.keyspaceCreation.format(cassandraKeyspaceName))
-    session.execute(CassandraSchema.measurementsTableCreation.format(cassandraKeyspaceName))
+    session.execute(CassandraSchema.measurementsOriginalTableCreation.format(cassandraKeyspaceName))
     session.execute(CassandraSchema.measurementKeysTableCreation.format(cassandraKeyspaceName))
     session.execute(CassandraSchema.userTableCreation.format(cassandraKeyspaceName))
   }
@@ -602,8 +586,8 @@ class EpidataContextSensorMeasurementSpec extends FlatSpec with BeforeAndAfter w
     // Clear existing measurements.
     connector.withSessionDo { session =>
       session.execute(s"TRUNCATE epidata_test.${com.epidata.lib.models.Measurement.DBTableName}")
+      session.execute(s"TRUNCATE epidata_test.${com.epidata.lib.models.MeasurementsKeys.DBTableName}")
     }
-
   }
 
   override def afterAll(): Unit = {
@@ -630,11 +614,9 @@ class EpidataContextSensorMeasurementSpec extends FlatSpec with BeforeAndAfter w
         "company" -> List("Company-1"),
         "site" -> List("Site-1"),
         "station" -> List("Station-1"),
-        "sensor" -> List("Sensor-1")
-      ),
+        "sensor" -> List("Sensor-1")),
       beginTime,
-      endTime
-    )
+      endTime)
 
     results.count should equal(1)
     val result = results.first.toSeq
@@ -671,11 +653,9 @@ class EpidataContextSensorMeasurementSpec extends FlatSpec with BeforeAndAfter w
         "company" -> List("Company-1"),
         "site" -> List("Site-1"),
         "station" -> List("Station-1"),
-        "sensor" -> List("Sensor-1")
-      ),
+        "sensor" -> List("Sensor-1")),
       beginTime,
-      endTime
-    )
+      endTime)
 
     results.count should equal(1)
     val result = results.first.toSeq
@@ -714,11 +694,9 @@ class EpidataContextSensorMeasurementSpec extends FlatSpec with BeforeAndAfter w
         "company" -> List("Company-1"),
         "site" -> List("Site-1"),
         "station" -> List("Station-1"),
-        "sensor" -> List("Sensor-1")
-      ),
+        "sensor" -> List("Sensor-1")),
       beginTime,
-      endTime
-    )
+      endTime)
 
     results.count should equal(1)
     val result = results.first.toSeq
@@ -755,11 +733,9 @@ class EpidataContextSensorMeasurementSpec extends FlatSpec with BeforeAndAfter w
         "company" -> List("Company-1"),
         "site" -> List("Site-1"),
         "station" -> List("Station-1"),
-        "sensor" -> List("Sensor-1")
-      ),
+        "sensor" -> List("Sensor-1")),
       beginTime,
-      endTime
-    )
+      endTime)
 
     results.count should equal(1)
     val result = results.first.toSeq
@@ -797,11 +773,9 @@ class EpidataContextSensorMeasurementSpec extends FlatSpec with BeforeAndAfter w
         "company" -> List("Company-1"),
         "site" -> List("Site-1"),
         "station" -> List("Station-1"),
-        "sensor" -> List("Sensor-1")
-      ),
+        "sensor" -> List("Sensor-1")),
       beginTime,
-      endTime
-    )
+      endTime)
 
     results.count should equal(1)
     val result = results.first.toSeq
@@ -833,8 +807,7 @@ class EpidataContextSensorMeasurementSpec extends FlatSpec with BeforeAndAfter w
           "tester" -> List("Sensor-1") // Missing required field 'sensor'.
         ),
         beginTime,
-        endTime
-      )
+        endTime)
     }
   }
 

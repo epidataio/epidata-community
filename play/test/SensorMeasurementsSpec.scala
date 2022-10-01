@@ -2,6 +2,7 @@
  * Copyright (c) 2015-2017 EpiData, Inc.
 */
 
+/****
 import cassandra.DB
 import com.epidata.lib.models.{ SensorMeasurement => Model }
 import com.epidata.lib.models.util.Binary
@@ -18,10 +19,19 @@ import play.api.libs.json.JsArray
 import play.api.libs.json.Json
 import play.api.mvc.Handler
 import play.api.mvc.RequestHeader
+
+import org.scalatest._
+import org.scalatestplus.play._
+
 import play.api.test._
-import play.api.test.Helpers._
+import play.api.test.Helpers.{ GET => GET_REQUEST, _ }
+
+// import play.api.test._
+// import play.api.test.Helpers._
+
 import securesocialtest.WithLoggedUser
 import util.Ordering
+import org.scalatestplus.junit.JUnitRunner
 
 // scalastyle:off magic.number
 
@@ -68,16 +78,14 @@ class SensorMeasurementsSpec extends Specification {
           sensor_measurement.Routes.handlerFor(req) orElse super.onRouteRequest(req)
 
         override def onStop(app: Application) = Global.onStop(app)
-      })
-    )
+      }))
 
   import WithLoggedUser._
 
   object FakeApp {
     def apply() = new FakeApp(
       withoutPlugins = excludedPlugins,
-      additionalPlugins = includedPlugins
-    )
+      additionalPlugins = includedPlugins)
   }
 
   "SensorMeasurements" should {
@@ -105,8 +113,7 @@ class SensorMeasurementsSpec extends Specification {
             #"meas_lower_limit": 0.0,
             #"meas_upper_limit": 0.5,
             #"meas_description": "d"
-            #}]""".stripMargin('#'))
-      ).withCookies(cookie)).get
+            #}]""".stripMargin('#'))).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
 
       SensorMeasurement.find("company0", "site0", "station0", "sensor0",
@@ -137,8 +144,7 @@ class SensorMeasurementsSpec extends Specification {
             #"meas_lower_limit": 0.0,
             #"meas_upper_limit": 0.5,
             #"meas_description": "d"
-            #}]""".stripMargin('#'))
-      )).get // No User cookie is provided.
+            #}]""".stripMargin('#')))).get // No User cookie is provided.
       status(create) must equalTo(SEE_OTHER)
     }
 
@@ -165,8 +171,7 @@ class SensorMeasurementsSpec extends Specification {
             #"company": "company0",
             #"meas_upper_limit": 0.5,
             #"meas_description": "d"
-            #}]""".stripMargin('#'))
-      ).withCookies(cookie)).get
+            #}]""".stripMargin('#'))).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
 
       SensorMeasurement.find("company0", "site0", "station0", "sensor0",
@@ -264,7 +269,7 @@ class SensorMeasurementsSpec extends Specification {
         "beginTime=111000001000&" +
         "endTime=111000001000&" +
         "sort=badorder" // sort invalid
-        ).withCookies(cookie)).get
+      ).withCookies(cookie)).get
       status(query) must equalTo(BAD_REQUEST)
     }
 
@@ -292,8 +297,7 @@ class SensorMeasurementsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
 
       val found = SensorMeasurement.find("company0", "site0", "station0", "sensor0",
@@ -339,8 +343,7 @@ class SensorMeasurementsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
 
       val found = SensorMeasurement.find("company0", "site0", "station0", "sensor0",
@@ -383,8 +386,7 @@ class SensorMeasurementsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
 
       val found = SensorMeasurement.find("company0", "site0", "station0", "sensor0",
@@ -430,8 +432,7 @@ class SensorMeasurementsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
 
       val found = SensorMeasurement.find("company0", "site0", "station0", "sensor0",
@@ -477,8 +478,7 @@ class SensorMeasurementsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
 
       val found = SensorMeasurement.find("company0", "site0", "station0", "sensor0",
@@ -521,8 +521,7 @@ class SensorMeasurementsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
     }
 
@@ -549,8 +548,7 @@ class SensorMeasurementsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
     }
 
@@ -576,8 +574,7 @@ class SensorMeasurementsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
     }
 
@@ -603,8 +600,7 @@ class SensorMeasurementsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
     }
 
@@ -630,8 +626,7 @@ class SensorMeasurementsSpec extends Specification {
         POST,
         "/measurements",
         FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-        jsonMeasurement
-      ).withCookies(cookie)).get
+        jsonMeasurement).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
 
       val found = SensorMeasurement.find("company0", "site0", "station0", "sensor0",
@@ -675,8 +670,7 @@ class SensorMeasurementsSpec extends Specification {
             #"meas_lower_limit": 0.0,
             #"meas_upper_limit": 0.5,
             #"meas_description": ""        ${"" /* empty string field */ }
-            #}]""".stripMargin('#'))
-      ).withCookies(cookie)).get
+            #}]""".stripMargin('#'))).withCookies(cookie)).get
       status(create) must equalTo(CREATED)
 
       val results = SensorMeasurement.find("company0", "site0", "station0", "sensor0",
@@ -694,3 +688,5 @@ class SensorMeasurementsSpec extends Specification {
 
   }
 }
+
+****/

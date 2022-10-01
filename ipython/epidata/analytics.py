@@ -10,6 +10,398 @@ import copy
 import numpy as np
 import json
 
+from datetime import datetime
+import pandas as pd
+
+import argparse
+import base64
+from datetime import datetime, timedelta
+# import httplib
+import json
+import numpy as np
+import random
+from decimal import Decimal
+import struct
+import time
+from time import sleep
+# ! pip install holidays
+import holidays
+
+# !pip install lightgbm
+import lightgbm as lgb
+from sklearn.preprocessing import LabelEncoder
+le = LabelEncoder()
+
+from sklearn.model_selection import KFold, StratifiedKFold
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_absolute_error
+
+from tensorflow import keras
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+
+# from sklearn.keras.utils import np_utils
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import make_column_transformer
+import tensorflow as tf
+from tensorflow.keras.layers import Dropout
+import sklearn.metrics as metrics
+import optuna
+from optuna.integration import LightGBMPruningCallback
+from optuna import Trial
+
+def resample(df : pd.core.frame.DataFrame, fields : list, time_interval: int, time_unit: str):    
+    
+    """
+    df : DataFrame
+    fields : list of meas_names
+    time_interval: integer: 1, 60, 120...
+    time_unit: string 
+    
+    eg: 'H' -> hourly frequency
+        'T', 'min' -> minutely frequency
+        'S' -> secondly frequency
+        more frequency strings through this link: 
+        https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#offset-aliases   
+    """
+    df['meas_value'] = df['meas_value'].apply(lambda x : float(x))
+    
+    # Transform ['ts'] into datetime
+    df['ts'] = df['ts'].apply(lambda x : datetime.fromtimestamp(int(x)/1e3))
+    
+    # Make dataframe with and without the elements in list(fields)
+    filtered = df[df['meas_name'].isin(fields)]
+    not_filtered = df[~df['meas_name'].isin(fields)]
+    
+    # Create times series in the frequency of input
+    temp_series = pd.DataFrame()
+    freq = str(time_interval) + str(time_unit)
+    temp_series['ts'] = pd.date_range(df['ts'].min(), df['ts'].max(), freq=freq)
+    
+    # Filtered dataframe will be updated through merge series in wanted frequency
+    filtered = filtered.merge(temp_series, on = 'ts' , how = 'left')
+    
+    # Concat both filtered fields and unfiltered fileds.
+    df = pd.concat([filtered, not_filtered]).reset_index()
+    
+    return df
+    
+
+    
+def outliers(df, meas_names: list, percentage: float, method: str):
+    """
+    meas_names : string of meas_names, eg: 'Temperature'
+    percentage: float -> the upper and lower quantile that want to be considered as outliers, usually use 0.05 or 0.1
+    method: string -> could be 'average', 'detete'
+            'average' means subsitute with average value of selected field
+            'delete' means delete outliers
+    """
+    
+    for field in meas_names:
+        
+        q_low = df[df['meas_name'] == field]['meas_value'].quantile(percentage)
+        q_high  = df[df['meas_name'] == field]['meas_value'].quantile(1-percentage)
+
+        indices = df.loc[df["meas_name"] == field].index[df.loc[df["meas_name"] == field]["meas_value"].apply(lambda x: x < q_low or x > q_high)]
+
+
+        if method == 'delete':
+                                                         
+            df = df.drop(indices)
+                                                         
+        elif method == 'average':
+                                                         
+            df.loc[indices,['meas_value']] = df[df['meas_name'] == field]['meas_value'].mean()[0]
+
+    return df
+
+
+
+
+def missing_substitute(df, meas_names, method="rolling", size=3):
+    """
+    Substitute missing measurement values within a data frame, using the specified method.
+
+    Parameters
+    ----------
+    df : pandas DataFrame
+        A DataFrame in which to detect missing values.
+    meas_name : list of strings
+        The names of the measurements within df in which to detect missing values and perform substitution.
+        The columns must contain numeric values.
+    method : string
+        The name of the substitution method. Available methods include:
+        'rolling'.
+    size: int
+        The window size for calculating moving average.
+
+    Returns
+    -------
+    result : pandas DataFrame
+        A DataFrame containing full copies of the substituted and non-substituted rows within df. Some substitution methods may add a new column to the result to indicate that substitution was perfomed.
+    """
+    df["meas_value"] = df["meas_value"].apply(
+        lambda x: x if (
+            not isinstance(
+                x,
+                basestring) and not (
+                x is None or np.isnan(x))) or (
+                    isinstance(
+                        x,
+                        basestring) and x != "") else np.nan)
+
+    # drop = []
+     # If too much missing in columns, just delete them
+    # data_ratios = df.count()/len(df)
+    # for i in range(0,len(data_ratios)):
+    #     if data_ratios[i] < 0.2:      
+    #         drop.append(data_ratios.index[i])  
+            
+    df = df.drop(drop, axis = 1)
+    for meas_name in meas_names:
+
+        if (method == "rolling"):
+            if ((size % 2 == 0) and (size != 0)):
+                size += 1
+            if df.loc[df["meas_name"] == meas_name].size > 0:
+                indices = df.loc[df["meas_name"] == meas_name].index[df.loc[df["meas_name"] == meas_name]["meas_value"].apply(
+                    lambda x: not isinstance(x, basestring) and (x is None or np.isnan(x)))]
+                substitutes = df.loc[df["meas_name"] == meas_name]["meas_value"].rolling(
+                    window=size, min_periods=1, center=True).mean()
+
+                df["meas_value"].fillna(substitutes, inplace=True)
+                df.loc[indices, "meas_flag"] = "substituted"
+                df.loc[indices, "meas_method"] = "rolling average"
+        else:
+            raise ValueError("Unsupported substitution method: ", repr(method))
+
+    return df
+
+def creat_template(df):
+    """"
+    creat a new df which contains the structure of origainl df
+    keeps meas_name and corresponding sensor and meas_unit
+    this step is in order to merge into the prediction dataframe and helps to store in the db
+    """
+    temp = df.copy()
+    temp['ts'] = np.nan
+    temp['event'] = np.nan
+    temp['meas_value'] = np.nan
+    temp['meas_datatype'] = np.nan
+    temp['meas_status'] = np.nan
+    temp['meas_lower_limit'] = np.nan
+    temp['meas_upper_limit'] = np.nan
+    temp['meas_description'] = np.nan
+    
+    temp = temp[temp.columns.tolist()].drop_duplicates(subset = temp.columns.tolist()).reset_index(drop = True)
+    return temp 
+
+def transpose(df : pd.core.frame.DataFrame , meas_drop_columns : list):
+    """
+    df : DataFrame
+    Note:
+    If df is for training, df should be called by resample, outliers, missing_subsitute.
+    If df is for prediction, df should just be called by current function
+    
+    meas_drop_columns : list of meas_names, if no leave it empty -> []
+    """
+    
+    # Extract keys dataframe without duplicate
+    only_keys = df[['company', 'site', 'station','ts']].drop_duplicates(subset = ['company', 'site', 'station','ts']).reset_index(drop = True)
+    
+    
+    new_df = pd.DataFrame()
+    
+    for i in range(only_keys.shape[0]):
+        
+        # Merge each row of only_keys dataframe with the input dataframe 
+        # In each row, do the transpose for all the meas_name and meas_value 
+        temp = only_keys[i : i + 1].merge(df, how = 'left')[['meas_name', 'meas_value']]\
+                               .transpose().reset_index().drop(columns = 'index')
+        
+        # Create the list of column names in order to reset the col name of dataframe
+        temp.columns = temp[ : ].transpose()[0].tolist()
+        
+        # Concact new rows together
+        new_df = pd.concat([ pd.concat([only_keys[i : i+1].reset_index(drop = True)\
+                , temp.drop([0]).reset_index(drop = True)], axis = 1), new_df ]).reset_index(drop = True)
+
+        
+    if len(meas_drop_columns) != 0:
+        new_df = new_df.drop(columns = meas_drop_columns)
+    
+    return new_df
+
+def feature_engineering(df, add = False, multiply = False):
+    
+    """
+  
+    Add some feature such as time features: hour, day, weekday..and featrues like if itis holiday.
+    More features can be added under different situations like if there is any event etc.
+    """
+    
+    df['hour'] = df['ts'].apply(lambda x : x.hour)
+    df['day'] =df['ts'].apply(lambda x : x.day)
+    df['weekday'] =df['ts'].apply(lambda x : x.weekday())
+    df['month'] =df['ts'].apply(lambda x : x.month)
+    df['year'] =df['ts'].apply(lambda x : x.year)
+    # df['microsecond'] = df['ts'].apply(lambda x : x.microseconds)
+    
+    def is_holiday(x):
+        if x in holidays.US():
+            return 1
+        else:
+            return 0
+        
+    df['Holiday'] = df['ts'].apply(is_holiday)
+    
+    if add != False:
+        df['new_1'] = 0
+        for i in range (0, len(add)):
+            df['new_1'] = df['new_1'] + df[str(add[i])]
+    
+    if multiply != False:
+        df['new_2'] = 1
+        for i in range (0, len(multiply)):
+            df['new_2'] = df['new_2'] * df[str(multiply[i])]
+
+    
+    
+    
+    return df
+
+
+
+def prediction(train_df, predict_df, categorical_features:list, target: str, fold: int, trails: int):
+    
+    """
+    train_df: The dataframe after calling feature_engineering, including variables and target value
+    predict_df: The dataframe after calling feature_engineering, with variables but without target value
+    categorical_features:list
+    target: str
+    fold: int
+    trails: int
+    """
+    
+    dropped = ['company','site','station','ts']
+    train_df = train_df.drop(columns=dropped, axis = 1)
+    train = train_df.astype(float)
+    categorical_features = categorical_features
+    for i in categorical_features:
+        train[i] = le.fit_transform(train[i])
+#     print(train.info)
+
+    predict = predict_df.drop(columns=dropped, axis = 1)
+    predict = predict.astype(float)
+    categorical_features = categorical_features
+    for i in categorical_features:
+        predict[i] = le.fit_transform(predict[i])
+#     print(predict.info)
+    
+    
+#     print(train)
+    target  = target
+    fold = fold
+    trails = trails
+    X = train.drop(columns=[target], axis = 1)
+    y = train[target].values
+
+    
+    def fit_lgbm(trial, train, val):
+    
+        X_train, y_train = train
+        X_valid, y_valid = val
+
+        #Auto find hyperparameters
+        params = {
+            "boosting": "gbdt",
+            "objective": "regression",
+            "num_leaves": trial.suggest_int("num_leaves", 20, 256),
+            "max_depth": trial.suggest_int("max_depth", 3, 12),
+            'lambda_l2': trial.suggest_loguniform('lambda_l2', 1e-8, 10.0),
+            "feature_fraction": 0.85,
+            "learning_rate": 0.05,
+            "metric": "rmse",
+        }
+
+        d_training = lgb.Dataset(X_train, label=y_train,categorical_feature=categorical_features, free_raw_data=False)
+        d_test = lgb.Dataset(X_valid, label=y_valid,categorical_feature=categorical_features, free_raw_data=False)
+
+
+        pruning_callback = optuna.integration.LightGBMPruningCallback(trial, 'rmse', valid_name='valid_1')    
+        model = lgb.train(params, train_set=d_training, num_boost_round=1000, valid_sets=[d_training,d_test], verbose_eval=25, early_stopping_rounds=20)
+
+        y_pred_valid = model.predict(X_valid, num_iteration=model.best_iteration)
+
+        best_val_score = model.best_score['valid_1']['rmse']
+        return model, y_pred_valid, best_val_score
+    
+    
+    def objective(trial : Trial, return_info = False):
+        folds = fold
+        kf = KFold(n_splits=folds, shuffle=False, random_state=None)
+        y_valid_pred_total = np.zeros(X.shape[0])
+
+        models = []
+        valid_score = 0
+
+        for train_idx, valid_idx in kf.split(X, y):
+            train_data = X.iloc[train_idx,:], y[train_idx]
+            valid_data = X.iloc[valid_idx,:], y[valid_idx]
+
+            model, y_pred_valid, score = fit_lgbm(trial, train_data, valid_data)
+            y_valid_pred_total[valid_idx] = y_pred_valid
+            models.append(model)
+            valid_score += score
+        valid_score /= len(models)
+
+        if return_info:
+            return valid_score, models, y_pred_valid, y
+        else:
+            return valid_score
+        
+    study = optuna.create_study(pruner=optuna.pruners.SuccessiveHalvingPruner(min_resource=2, reduction_factor=4, min_early_stopping_rate=1))
+    study.optimize(objective, n_trials=trails)
+    
+    best = study.best_params
+    valid_score, models, y_pred_valid, y_train = objective(optuna.trial.FixedTrial(best), return_info = True)
+    results = []
+    
+    for model in models:
+        if  results == []:
+            results = model.predict(predict, num_iteration=model.best_iteration, predict_disable_shape_check=True)/ len(models)
+        else:
+            results += model.predict(predict, num_iteration=model.best_iteration, predict_disable_shape_check=True) / len(models)
+            
+            
+            
+    predict_df[target] = results
+            
+            
+    return predict_df
+
+def inverse_transpose(result_df, temp_df, meas_col:list):
+    """
+    result_df: the dataframe after calling prediction fuction 
+    template_df: the output dataframe of creat_template function
+    meas_col:including all the measments target and varibales
+        
+    """
+    
+    temp1 = pd.DataFrame({'meas_name' :meas_col})
+    temp1['value'] = 1
+    result_df['value'] =1
+    result_df = result_df.merge(temp1, on = 'value', how = 'left').drop(columns = 'value')
+    result_df['meas_value'] = result_df.apply(lambda x : x[x['meas_name']], axis=1)
+    result_df = result_df[['company','site','station','ts', 'meas_name', 'meas_value']]
+    result_df['ts'] = result_df['ts'].apply(lambda x : int(time.mktime(x.timetuple()) * 1000+ x.microsecond/1000))
+    
+    
+    result_df = result_df.merge(temp_df, on = ['company', 'site','station','meas_name' ], how = 'left')
+    
+    return result_df
+
+
 
 def IMR(measurements, meas_names=None):
     """
@@ -105,58 +497,6 @@ def outliers(df_input, column, method):
         return outliers
 
     raise ValueError('Unexpected outlier method: ' + repr(method))
-
-
-def substitute(df, meas_names, method="rolling", size=3):
-    """
-    Substitute missing measurement values within a data frame, using the specified method.
-
-    Parameters
-    ----------
-    df : pandas DataFrame
-        A DataFrame in which to detect missing values.
-    meas_name : list of strings
-        The names of the measurements within df in which to detect missing values and perform substitution.
-        The columns must contain numeric values.
-    method : string
-        The name of the substitution method. Available methods include:
-        'rolling'.
-    size: int
-        The window size for calculating moving average.
-
-    Returns
-    -------
-    result : pandas DataFrame
-        A DataFrame containing full copies of the substituted and non-substituted rows within df. Some substitution methods may add a new column to the result to indicate that substitution was perfomed.
-    """
-    df["meas_value"] = df["meas_value"].apply(
-        lambda x: x if (
-            not isinstance(
-                x,
-                basestring) and not (
-                x is None or np.isnan(x))) or (
-                    isinstance(
-                        x,
-                        basestring) and x != "") else np.nan)
-    for meas_name in meas_names:
-
-        if (method == "rolling"):
-            if ((size % 2 == 0) and (size != 0)):
-                size += 1
-            if df.loc[df["meas_name"] == meas_name].size > 0:
-                indices = df.loc[df["meas_name"] == meas_name].index[df.loc[df["meas_name"] == meas_name]["meas_value"].apply(
-                    lambda x: not isinstance(x, basestring) and (x is None or np.isnan(x)))]
-                substitutes = df.loc[df["meas_name"] == meas_name]["meas_value"].rolling(
-                    window=size, min_periods=1, center=True).mean()
-
-                df["meas_value"].fillna(substitutes, inplace=True)
-                df.loc[indices, "meas_flag"] = "substituted"
-                df.loc[indices, "meas_method"] = "rolling average"
-        else:
-            raise ValueError("Unsupported substitution method: ", repr(method))
-
-    return df
-
 
 def meas_statistics(df, meas_names, method="standard"):
     """

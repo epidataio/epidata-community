@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2015-2022 EpiData, Inc.
+*/
+
 package com.epidata.spark
 
 import com.datastax.driver.core.{ Row => CassandraRow }
@@ -5,6 +9,7 @@ import com.epidata.lib.models.{ Measurement => BaseMeasurement, MeasurementClean
 import com.epidata.lib.models.util.{ TypeUtils, Binary }
 import java.sql.Timestamp
 import java.util.Date
+import java.sql.ResultSet
 
 import org.apache.spark.MeasurementValue
 
@@ -13,24 +18,23 @@ import org.apache.spark.MeasurementValue
  * differences from BaseMeasurement allow for integration with Spark SQL.
  */
 case class Measurement(
-  customer: String,
-  customer_site: String,
-  collection: String,
-  dataset: String,
-  ts: Timestamp,
-  key1: Option[String],
-  key2: Option[String],
-  key3: Option[String],
-  meas_datatype: Option[String],
-  meas_value: MeasurementValue,
-  meas_unit: Option[String],
-  meas_status: Option[String],
-  meas_lower_limit: Option[MeasurementValue],
-  meas_upper_limit: Option[MeasurementValue],
-  meas_description: Option[String],
-  val1: Option[String],
-  val2: Option[String]
-)
+    customer: String,
+    customer_site: String,
+    collection: String,
+    dataset: String,
+    ts: Timestamp,
+    key1: Option[String],
+    key2: Option[String],
+    key3: Option[String],
+    meas_datatype: Option[String],
+    meas_value: MeasurementValue,
+    meas_unit: Option[String],
+    meas_status: Option[String],
+    meas_lower_limit: Option[MeasurementValue],
+    meas_upper_limit: Option[MeasurementValue],
+    meas_description: Option[String],
+    val1: Option[String],
+    val2: Option[String])
 
 object Measurement {
 
@@ -59,10 +63,12 @@ object Measurement {
       base.meas_upper_limit.map(MeasurementValue(_)),
       base.meas_description,
       base.val1,
-      base.val2
-    )
+      base.val2)
 
   implicit def rowToMeasurement(row: CassandraRow): Measurement =
+    baseMeasurementToMeasurement(row)
+
+  implicit def resultSetToMeasurement(row: ResultSet): Measurement =
     baseMeasurementToMeasurement(row)
 }
 
@@ -72,33 +78,31 @@ object Measurement {
  * the database's measurements table.
  */
 case class MeasurementKey(
-  customer: String,
-  customer_site: String,
-  collection: String,
-  dataset: String
-)
+    customer: String,
+    customer_site: String,
+    collection: String,
+    dataset: String)
 
 case class MeasurementCleansed(
-  customer: String,
-  customer_site: String,
-  collection: String,
-  dataset: String,
-  ts: Timestamp,
-  key1: Option[String],
-  key2: Option[String],
-  key3: Option[String],
-  meas_datatype: Option[String],
-  meas_value: MeasurementValue,
-  meas_unit: Option[String],
-  meas_status: Option[String],
-  meas_flag: Option[String],
-  meas_method: Option[String],
-  meas_lower_limit: Option[MeasurementValue],
-  meas_upper_limit: Option[MeasurementValue],
-  meas_description: Option[String],
-  val1: Option[String],
-  val2: Option[String]
-)
+    customer: String,
+    customer_site: String,
+    collection: String,
+    dataset: String,
+    ts: Timestamp,
+    key1: Option[String],
+    key2: Option[String],
+    key3: Option[String],
+    meas_datatype: Option[String],
+    meas_value: MeasurementValue,
+    meas_unit: Option[String],
+    meas_status: Option[String],
+    meas_flag: Option[String],
+    meas_method: Option[String],
+    meas_lower_limit: Option[MeasurementValue],
+    meas_upper_limit: Option[MeasurementValue],
+    meas_description: Option[String],
+    val1: Option[String],
+    val2: Option[String])
 
 object MeasurementCleansed {
 
@@ -129,9 +133,35 @@ object MeasurementCleansed {
       base.meas_upper_limit.map(MeasurementValue(_)),
       base.meas_description,
       base.val1,
-      base.val2
-    )
+      base.val2)
 
   implicit def rowToMeasurementCleansed(row: CassandraRow): MeasurementCleansed =
     baseMeasurementCleansedToMeasurementCleansed(row)
+
+  implicit def resultSetToMeasurementCleansed(row: ResultSet): MeasurementCleansed =
+    baseMeasurementCleansedToMeasurementCleansed(row)
+
+  implicit def measurementToMeasurementCleansed(m: Measurement, measFlag: Option[String], measMethod: Option[String]): MeasurementCleansed = {
+    MeasurementCleansed(
+      m.customer,
+      m.customer_site,
+      m.collection,
+      m.dataset,
+      m.ts,
+      m.key1,
+      m.key2,
+      m.key3,
+      m.meas_datatype,
+      m.meas_value,
+      m.meas_unit,
+      m.meas_status,
+      measFlag,
+      measMethod,
+      m.meas_lower_limit,
+      m.meas_upper_limit,
+      m.meas_description,
+      m.val1,
+      m.val2)
+  }
+
 }

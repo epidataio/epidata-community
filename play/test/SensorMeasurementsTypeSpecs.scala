@@ -2,6 +2,7 @@
  * Copyright (c) 2015-2017 EpiData, Inc.
 */
 
+/****
 import cassandra.DB
 import com.epidata.lib.models.{ SensorMeasurement => Model }
 import com.epidata.lib.models.util.Binary
@@ -18,10 +19,19 @@ import play.api.libs.json.JsArray
 import play.api.libs.json.Json
 import play.api.mvc.Handler
 import play.api.mvc.RequestHeader
+
+import org.scalatest._
+import org.scalatestplus.play._
+
 import play.api.test._
-import play.api.test.Helpers._
+import play.api.test.Helpers.{ GET => GET_REQUEST, _ }
+
+// import play.api.test._
+// import play.api.test.Helpers._
+
 import securesocialtest.WithLoggedUser
 import util.Ordering
+import org.scalatestplus.junit.JUnitRunner
 
 // scalastyle:off magic.number
 
@@ -138,16 +148,14 @@ class SensorMeasurementsTypeSpecs extends Specification {
           sensor_measurement.Routes.handlerFor(req) orElse super.onRouteRequest(req)
 
         override def onStop(app: Application) = Global.onStop(app)
-      })
-    )
+      }))
 
   import WithLoggedUser._
 
   object FakeApp {
     def apply() = new FakeApp(
       withoutPlugins = excludedPlugins,
-      additionalPlugins = includedPlugins
-    )
+      additionalPlugins = includedPlugins)
   }
 
   "insert a sensor measurements with all combination datatype" in new WithLoggedUser(FakeApp()) {
@@ -158,8 +166,7 @@ class SensorMeasurementsTypeSpecs extends Specification {
       POST,
       "/measurements",
       FakeHeaders(("Content-Type", Seq("text/json")) :: Nil),
-      Json.parse(Fixtures.measurementsJson)
-    ).withCookies(cookie)).get
+      Json.parse(Fixtures.measurementsJson)).withCookies(cookie)).get
     status(create) must equalTo(BAD_REQUEST)
 
     var results = new Array[Model](70)
@@ -264,3 +271,5 @@ class SensorMeasurementsTypeSpecs extends Specification {
   }
 
 }
+
+****/

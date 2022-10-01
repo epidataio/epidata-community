@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2015-2017 EpiData, Inc.
+* Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 package com.epidata.spark.ops
@@ -9,8 +9,7 @@ import org.apache.spark.sql.{ SQLContext, DataFrame }
 
 class OutlierDetector(
     val column: String,
-    val method: String
-) extends Transformation {
+    val method: String) extends Transformation {
   override def apply(dataFrame: DataFrame, sqlContext: SQLContext): DataFrame = {
     method match {
       case "quartile" =>
@@ -34,5 +33,6 @@ class OutlierDetector(
     }
   }
 
+  override val name: String = "OutlierDetector"
   override def destination: String = "measurements_cleansed"
 }

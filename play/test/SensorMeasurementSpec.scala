@@ -2,6 +2,7 @@
  * Copyright (c) 2015-2017 EpiData, Inc.
 */
 
+/****
 import cassandra.DB
 import com.epidata.lib.models.{ SensorMeasurement => Model }
 import java.util.Date
@@ -10,9 +11,18 @@ import models.SensorMeasurement
 import org.specs2.mutable._
 import org.specs2.runner._
 import org.junit.runner._
+
+import org.scalatest._
+import org.scalatestplus.play._
+
 import play.api.test._
-import play.api.test.Helpers._
+import play.api.test.Helpers.{ GET => GET_REQUEST, _ }
+
+// import play.api.test._
+// import play.api.test.Helpers._
+
 import util.Ordering
+import org.scalatestplus.junit.JUnitRunner
 
 // scalastyle:off magic.number
 
@@ -78,8 +88,7 @@ class SensorMeasurementSpec extends Specification {
         s"SELECT * FROM ${com.epidata.lib.models.Measurement.DBTableName} WHERE customer = 'com' AND " +
           " customer_site = 'sit' AND collection = 'dg' AND dataset = 'tes' " +
           " AND epoch = ? AND ts = ? AND key1 = 'dev' AND key2 = 'tna'",
-        epoch: java.lang.Integer, ts
-      ).all.size must equalTo(0)
+        epoch: java.lang.Integer, ts).all.size must equalTo(0)
 
       SensorMeasurement.insert(Model("com", "sit", "dg", "tes", ts, "dev",
         "tna", Some("double"), 1.0, Some("uni"), Some("sta"), Some(0.0), Some(2.0), Some("des")))
@@ -90,8 +99,7 @@ class SensorMeasurementSpec extends Specification {
           s"SELECT * FROM ${com.epidata.lib.models.Measurement.DBTableName} WHERE customer = 'com' AND " +
             " customer_site = 'sit' AND collection = 'dg' AND dataset = 'tes' " +
             " AND epoch = ? AND ts = ? AND key1 = 'dev' AND key2 = 'tna'",
-          epoch: java.lang.Integer, ts
-        ).one
+          epoch: java.lang.Integer, ts).one
       row.getString("customer") must equalTo("com")
       row.getString("customer_site") must equalTo("sit")
       row.getString("collection") must equalTo("dg")
@@ -120,8 +128,7 @@ class SensorMeasurementSpec extends Specification {
         "se_a",
         Fixtures.beginTime,
         Fixtures.endTime,
-        Ordering.Unspecified
-      ).toSet must
+        Ordering.Unspecified).toSet must
         equalTo(Fixtures.models.filter(x => x.company == "co_a" &&
           x.site == "si_a" &&
           x.station == "st_a" &&
@@ -137,8 +144,7 @@ class SensorMeasurementSpec extends Specification {
         "se_a",
         Fixtures.time(1),
         Fixtures.time(3),
-        Ordering.Unspecified
-      ).toSet must
+        Ordering.Unspecified).toSet must
         equalTo(Fixtures.models.filter(x => x.company == "co_a" &&
           x.site == "si_a" &&
           x.station == "st_a" &&
@@ -156,8 +162,7 @@ class SensorMeasurementSpec extends Specification {
         "se_a",
         Fixtures.beginTime,
         Fixtures.endTime,
-        Ordering.Ascending
-      ) must
+        Ordering.Ascending) must
         equalTo(Fixtures.models.filter(x => x.company == "co_a" &&
           x.site == "si_a" &&
           x.station == "st_a" &&
@@ -173,8 +178,7 @@ class SensorMeasurementSpec extends Specification {
         "se_a",
         Fixtures.beginTime,
         Fixtures.endTime,
-        Ordering.Descending
-      ) must
+        Ordering.Descending) must
         equalTo(Fixtures.models.filter(x => x.company == "co_a" &&
           x.site == "si_a" &&
           x.station == "st_a" &&
@@ -182,3 +186,4 @@ class SensorMeasurementSpec extends Specification {
     }
   }
 }
+****/

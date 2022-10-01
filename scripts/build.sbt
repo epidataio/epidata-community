@@ -1,14 +1,17 @@
+import com.typesafe.sbt.SbtScalariform.ScalariformKeys
+import scalariform.formatter.preferences._
+
 name := "epidata-scripts"
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.12.11"
 
 libraryDependencies ++= Seq(
-  "com.typesafe" % "config" % "1.3.1",
-  "org.apache.spark" %% "spark-core" % "2.1.0" % "provided",
-  "org.apache.spark" %% "spark-sql" % "2.1.0" % "provided",
-  "org.apache.spark" % "spark-streaming_2.11" % "2.1.0" % "provided",
-  "org.scalatest" %% "scalatest" % "2.2.4" % "test",
-  "junit" % "junit" % "4.12" % "test"
+  "com.typesafe" % "config" % "1.4.0",
+  "org.apache.spark" %% "spark-core" % "2.4.6",
+  "org.apache.spark" %% "spark-sql" % "2.4.6",
+  "org.apache.spark" %% "spark-streaming" % "2.4.6" % "provided",
+  "org.scalatest" %% "scalatest" % "3.2.0" % Test,
+  "junit" % "junit" % "4.13" % Test
 )
 
 assemblyMergeStrategy in assembly := {
@@ -20,8 +23,8 @@ test in assembly := {}
 
 Keys.fork in Test := true
 
-scalariformSettings
-
-
+ScalariformKeys.preferences := ScalariformKeys.preferences.value
+  .setPreference(DoubleIndentConstructorArguments, true)
+  .setPreference(AlignParameters, false)
 
 testOptions in Test += Tests.Argument("-oF")

@@ -1,29 +1,51 @@
+import com.typesafe.sbt.SbtScalariform.ScalariformKeys
+import scalariform.formatter.preferences._
+
 name := "epidata-spark"
 
-scalaVersion := "2.11.8"
+resolvers += Resolver.jcenterRepo
+
+scalaVersion := "2.12.11"
 
 libraryDependencies ++= Seq(
-  "com.datastax.spark" % "spark-cassandra-connector-unshaded_2.11" % "2.0.0-M3",
-  "com.datastax.cassandra" % "cassandra-driver-core" % "3.0.2",
-  "org.apache.spark" %% "spark-core" % "2.1.0" % "provided",
-  "org.apache.spark" %% "spark-sql" % "2.1.0" % "provided",
-  "org.apache.spark" % "spark-streaming_2.11" % "2.1.0" % "provided",
-  "org.apache.spark" % "spark-streaming-kafka-0-8_2.11" % "2.1.0",
-  "com.datastax.spark" % "spark-cassandra-connector-embedded_2.11" % "2.0.1" % "test",
-  "org.scalatest" %% "scalatest" % "2.2.4" % "test",
-  "junit" % "junit" % "4.12" % "test",
-  "org.apache.cassandra" % "cassandra-all" % "3.2" % "test"
-).map(_.exclude("org.slf4j", "log4j-over-slf4j"))  // Excluded to allow for Cassandra to run embedded
+  "com.typesafe.play" %% "play-json" % "2.7.4",
+  "org.xerial" % "sqlite-jdbc" % "3.32.3.3",
+  "com.datastax.spark" %% "spark-cassandra-connector" % "2.4.3",
+  "com.datastax.cassandra" % "cassandra-driver-core" % "3.9.0",
+  "org.apache.spark" %% "spark-core" % "2.4.6",
+  "org.apache.spark" %% "spark-sql" % "2.4.6",
+  "org.apache.spark" %% "spark-streaming" % "2.4.6" % "provided",
+  "org.apache.spark" %% "spark-streaming-kafka-0-10" % "2.4.6",
+  "org.apache.kafka" % "kafka-streams" % "2.4.1",
+  "com.datastax.spark" %% "spark-cassandra-connector-embedded" % "2.4.3" % Test,
+  "org.scalatest" %% "scalatest" % "3.1.4" % Test,
+  "org.scalatestplus" %% "junit-4-12" % "3.1.2.0" % "test",
+  "junit" % "junit" % "4.12" % Test,
+  "org.apache.cassandra" % "cassandra-all" % "3.11.6",
+  "com.google.guava" % "guava" % "31.1-jre",
+  "net.sf.py4j" % "py4j" % "0.10.9.2"
+).map(_.exclude("org.slf4j", "log4j-over-slf4j"));  // Excluded for Cassandra embedded
+
+dependencyOverrides += "com.fasterxml.jackson.core" % "jackson-core" % "2.10.5"
+dependencyOverrides += "com.fasterxml.jackson.core" % "jackson-databind" % "2.10.5"
+dependencyOverrides += "com.fasterxml.jackson.module" % "jackson-module-scala_2.12" % "2.10.5"
 
 assemblyMergeStrategy in assembly := {
   case PathList("META-INF", xs @ _*) => MergeStrategy.discard
   case x => MergeStrategy.first
 }
 
+
 test in assembly := {}
 
 Keys.fork in Test := true
 
-scalariformSettings
+ScalariformKeys.preferences := ScalariformKeys.preferences.value
+  .setPreference(DoubleIndentConstructorArguments, true)
+  .setPreference(AlignParameters, false)
+
+libraryDependencies += "ru.dgis" %% "reactive-zmq" % "0.4.0"
 
 testOptions in Test += Tests.Argument("-oF")
+
+assembly / mainClass := Some("com.epidata.spark.OpenGateway")

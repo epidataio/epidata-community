@@ -1,22 +1,22 @@
 /*
- * Copyright (c) 2015-2017 EpiData, Inc.
+ * Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 package models
 
 import java.util
-
-import cassandra.DB
-import com.datastax.driver.core.querybuilder.{ Clause, QueryBuilder }
-import com.epidata.lib.models.{ Measurement => Model, MeasurementsKeys, MeasurementSummary }
-import com.epidata.lib.models.util.{ JsonHelpers, Binary }
+import java.util.{ Date, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList, List => JList }
 import java.nio.ByteBuffer
-import java.util.{ Date, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList }
+import cassandra.DB
 import service.Configs
+import com.epidata.lib.models.{ Measurement => Model, MeasurementsKeys, MeasurementCleansed => ModelCleansed, MeasurementSummary => ModelSummary }
+import com.epidata.lib.models.util.{ JsonHelpers, Binary }
+import _root_.util.{ EpidataMetrics, Ordering }
+import com.datastax.driver.core.querybuilder.{ Clause, QueryBuilder }
+import com.datastax.driver.core._
 
 import scala.collection.convert.WrapAsScala
-import _root_.util.{ EpidataMetrics, Ordering }
-import com.datastax.driver.core._
+import scala.collection.JavaConverters._
 
 object MeasurementService {
 
@@ -85,8 +85,7 @@ object MeasurementService {
         measurement.customer,
         measurement.customer_site,
         measurement.collection,
-        measurement.dataset
-      )
+        measurement.dataset)
       List(measurementInsertStatement, statement2)
     } else {
       List(measurementInsertStatement)
@@ -112,8 +111,8 @@ object MeasurementService {
     beginTime: Date,
     endTime: Date,
     ordering: Ordering.Value = Ordering.Unspecified,
-    tableName: String = com.epidata.lib.models.Measurement.DBTableName
-  ): List[Model] = {
+    tableName: String = com.epidata.lib.models.Measurement.DBTableName): List[Model] = {
+
     import WrapAsScala.iterableAsScalaIterable
 
     // Find the epochs from which measurements are required, in timestamp
@@ -150,22 +149,31 @@ object MeasurementService {
       .toList
   }
 
+  /**
+   * Find measurements in the database matching the specified parameters.
+   * @param customer
+   * @param customer_site
+   * @param collection
+   * @param dataset
+   * @param beginTime Beginning of query time interval, inclusive
+   * @param endTime End of query time interval, exclusive
+   * @param size Maximum number of records to retrieve in batches
+   * @param batch Batch number of current retrieval
+   * @param ordering Timestamp ordering of results, if specified.
+   */
   def query(
-    company: String,
-    site: String,
-    station: String,
-    sensor: String,
+    customer: String,
+    customer_site: String,
+    collection: String,
+    dataset: String,
     beginTime: Date,
     endTime: Date,
     size: Int,
     batch: String,
-    ordering: Ordering.Value,
-    tableName: String,
-    modelName: String
-  ): String = {
+    ordering: Ordering.Value): List[Model] = {
 
     // Get the data from Cassandra
-    val rs: ResultSet = MeasurementService.query(company, site, station, sensor, beginTime, endTime, ordering, tableName, size, batch)
+    val rs: ResultSet = MeasurementService.query(customer, customer_site, collection, dataset, beginTime, endTime, size, batch, ordering, Model.DBTableName)
 
     // Get the next page info
     val nextPage = rs.getExecutionInfo().getPagingState()
@@ -173,14 +181,86 @@ object MeasurementService {
 
     // only return the available ones by not fetching.
     val rows = 1.to(rs.getAvailableWithoutFetching()).map(_ => rs.one())
-    val records = new JLinkedList[JLinkedHashMap[String, Object]]()
+    //    val records: JList[JLinkedHashMap[String, Object]] = new JLinkedList[JLinkedHashMap[String, Object]]()
 
-    rows
-      .map(Model.rowToJLinkedHashMap(_, tableName, modelName))
-      .foreach(m => records.add(m))
+    //    rows
+    //      .map(Model.rowToJLinkedHashMap(_, tableName, modelName))
+    //      .foreach(m => records.add(m))
 
     // Return the json object
-    JsonHelpers.toJson(records, nextBatch)
+    //    JsonHelpers.toJson(records, nextBatch)
+
+    rows
+      .map(rowToMeasurement)
+      .toList
+  }
+
+  def queryCleansed(
+    customer: String,
+    customer_site: String,
+    collection: String,
+    dataset: String,
+    beginTime: Date,
+    endTime: Date,
+    size: Int,
+    batch: String,
+    ordering: Ordering.Value): List[ModelCleansed] = {
+
+    // Get the data from Cassandra
+    val rs: ResultSet = MeasurementService.query(customer, customer_site, collection, dataset, beginTime, endTime, size, batch, ordering, ModelCleansed.DBTableName)
+
+    // Get the next page info
+    val nextPage = rs.getExecutionInfo().getPagingState()
+    val nextBatch = if (nextPage == null) "" else nextPage.toString
+
+    // only return the available ones by not fetching.
+    val rows = 1.to(rs.getAvailableWithoutFetching()).map(_ => rs.one())
+    //    val records: JList[JLinkedHashMap[String, Object]] = new JLinkedList[JLinkedHashMap[String, Object]]()
+
+    //    rows
+    //      .map(Model.rowToJLinkedHashMap(_, tableName, modelName))
+    //      .foreach(m => records.add(m))
+
+    // Return the json object
+    //    JsonHelpers.toJson(records, nextBatch)
+
+    rows
+      .map(ModelCleansed.rowToMeasurementCleansed)
+      .toList
+  }
+
+  def querySummary(
+    customer: String,
+    customer_site: String,
+    collection: String,
+    dataset: String,
+    beginTime: Date,
+    endTime: Date,
+    size: Int,
+    batch: String,
+    ordering: Ordering.Value): List[ModelSummary] = {
+
+    // Get the data from Cassandra
+    val rs: ResultSet = MeasurementService.query(customer, customer_site, collection, dataset, beginTime, endTime, size, batch, ordering, ModelSummary.DBTableName)
+
+    // Get the next page info
+    val nextPage = rs.getExecutionInfo().getPagingState()
+    val nextBatch = if (nextPage == null) "" else nextPage.toString
+
+    // only return the available ones by not fetching.
+    val rows = 1.to(rs.getAvailableWithoutFetching()).map(_ => rs.one())
+    //    val records: JList[JLinkedHashMap[String, Object]] = new JLinkedList[JLinkedHashMap[String, Object]]()
+
+    //    rows
+    //      .map(Model.rowToJLinkedHashMap(_, tableName, modelName))
+    //      .foreach(m => records.add(m))
+
+    // Return the json object
+    //    JsonHelpers.toJson(records, nextBatch)
+
+    rows
+      .map(ModelSummary.rowToMeasurementSummary)
+      .toList
   }
 
   def query(
@@ -190,11 +270,10 @@ object MeasurementService {
     dataset: String,
     beginTime: Date,
     endTime: Date,
-    ordering: Ordering.Value = Ordering.Unspecified,
-    tableName: String = com.epidata.lib.models.Measurement.DBTableName,
     size: Int = 10000,
-    batch: String = ""
-  ): ResultSet = {
+    batch: String = "",
+    ordering: Ordering.Value = Ordering.Unspecified,
+    tableName: String = com.epidata.lib.models.Measurement.DBTableName): ResultSet = {
 
     // Define the database query to execute for a single epoch.
     def queryForEpoch = {
@@ -262,7 +341,7 @@ object MeasurementService {
 
     // Execute the query
     tableName match {
-      case MeasurementSummary.DBTableName => DB.execute(queryForMeasurementSummary)
+      case ModelSummary.DBTableName => DB.execute(queryForMeasurementSummary)
       case _ => DB.execute(queryForEpoch)
     }
 
@@ -303,8 +382,7 @@ object MeasurementService {
           measurement.meas_status.getOrElse(""),
           measurement.meas_description.getOrElse(""),
           measurement.val1.getOrElse(""),
-          measurement.val2.getOrElse("")
-        )
+          measurement.val2.getOrElse(""))
       case (_, None) =>
         // Insert with a lower limit only.
         insertStatements(1).bind(
@@ -324,8 +402,7 @@ object MeasurementService {
           measurement.meas_lower_limit.get.asInstanceOf[AnyRef],
           measurement.meas_description.getOrElse(""),
           measurement.val1.getOrElse(""),
-          measurement.val2.getOrElse("")
-        )
+          measurement.val2.getOrElse(""))
       case (None, _) =>
         // Insert with an upper limit only.
         insertStatements(2).bind(
@@ -345,8 +422,7 @@ object MeasurementService {
           measurement.meas_upper_limit.get.asInstanceOf[AnyRef],
           measurement.meas_description.getOrElse(""),
           measurement.val1.getOrElse(""),
-          measurement.val2.getOrElse("")
-        )
+          measurement.val2.getOrElse(""))
       case _ =>
         // Insert with both a lower and an upper limit.
         insertStatements(3).bind(
@@ -367,8 +443,7 @@ object MeasurementService {
           measurement.meas_upper_limit.get.asInstanceOf[AnyRef],
           measurement.meas_description.getOrElse(""),
           measurement.val1.getOrElse(""),
-          measurement.val2.getOrElse("")
-        )
+          measurement.val2.getOrElse(""))
     }
   }
 
@@ -395,8 +470,7 @@ object MeasurementService {
           measurement.meas_status.getOrElse(""),
           measurement.meas_description.getOrElse(""),
           measurement.val1.getOrElse(""),
-          measurement.val2.getOrElse("")
-        )
+          measurement.val2.getOrElse(""))
       case (_, None) =>
         // Insert with a lower limit only.
         insertStatements(1).bind(
@@ -415,8 +489,7 @@ object MeasurementService {
           measurement.meas_lower_limit.get.asInstanceOf[AnyRef],
           measurement.meas_description.getOrElse(""),
           measurement.val1.getOrElse(""),
-          measurement.val2.getOrElse("")
-        )
+          measurement.val2.getOrElse(""))
       case (None, _) =>
         // Insert with an upper limit only.
         insertStatements(2).bind(
@@ -435,8 +508,7 @@ object MeasurementService {
           measurement.meas_upper_limit.get.asInstanceOf[AnyRef],
           measurement.meas_description.getOrElse(""),
           measurement.val1.getOrElse(""),
-          measurement.val2.getOrElse("")
-        )
+          measurement.val2.getOrElse(""))
       case _ =>
         // Insert with both a lower and an upper limit.
         insertStatements(3).bind(
@@ -456,8 +528,7 @@ object MeasurementService {
           measurement.meas_upper_limit.get.asInstanceOf[AnyRef],
           measurement.meas_description.getOrElse(""),
           measurement.val1.getOrElse(""),
-          measurement.val2.getOrElse("")
-        )
+          measurement.val2.getOrElse(""))
     }
   }
 
@@ -546,8 +617,7 @@ object MeasurementService {
             #meas_upper_limit${limitTypeSuffix},
             #meas_description,
             #val1,
-            #val2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#')
-    )
+            #val2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#'))
 
   private def prepareNullValueInserts(typeSuffix: String) =
     List(
@@ -621,8 +691,7 @@ object MeasurementService {
          #meas_upper_limit${typeSuffix},
          #meas_description,
          #val1,
-         #val2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#')
-    )
+         #val2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#'))
 
   private def prepareKeysInsert =
     s"""#INSERT INTO ${MeasurementsKeys.DBTableName} (

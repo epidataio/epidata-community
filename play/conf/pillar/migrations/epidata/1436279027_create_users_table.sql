@@ -7,7 +7,8 @@
 -- up:
 
 CREATE TABLE users (
-  id TEXT PRIMARY KEY,
+  providerId TEXT,
+  userId TEXT,
   first_name TEXT,
   last_name TEXT,
   full_name TEXT,
@@ -16,7 +17,8 @@ CREATE TABLE users (
   oauth2_token TEXT,
   oauth2_token_type TEXT,
   oauth2_expires_in INT,
-  oauth2_refresh_token TEXT
+  oauth2_refresh_token TEXT,
+  PRIMARY KEY (providerId, userId )
 )
 
 -- down:

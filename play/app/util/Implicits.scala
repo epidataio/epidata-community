@@ -1,11 +1,11 @@
 /*
-* Copyright (c) 2015-2017 EpiData, Inc.
+ * Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 package util
 
 import java.util.concurrent.{ CancellationException, Future => JFuture, TimeUnit }
-import org.jboss.netty.util.{ Timeout, TimerTask, HashedWheelTimer }
+import io.netty.util.{ Timeout, TimerTask, HashedWheelTimer }
 import scala.concurrent.{ Promise, Future }
 import scala.util.Try
 

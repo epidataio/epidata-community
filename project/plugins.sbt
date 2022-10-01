@@ -1,20 +1,35 @@
 // Comment to get more information during initialization
 logLevel := Level.Warn
 
-// The Typesafe repository 
-resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/"
+
+lazy val root = (project in file("."))
+  .enablePlugins(SbtPlugin)
+
+
+// The Typesafe repository
+resolvers += "Typesafe repository" at "https://repo.typesafe.com/typesafe/releases/"
 
 // Use the Play sbt plugin for Play projects
-addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.2.6")
+addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.6.25")
 
 // Use the Assembly plugin to produce fat jars.
-addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.12.0")
+addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.15.0")
 
 // The Scalastyle plugin, a Scala style checker.
-addSbtPlugin("org.scalastyle" %% "scalastyle-sbt-plugin" % "0.6.0")
+addSbtPlugin("org.scalastyle" %% "scalastyle-sbt-plugin" % "1.0.0")
 
 // The Sonatype repository, for Scalastyle.
 resolvers += "sonatype-releases" at "https://oss.sonatype.org/content/repositories/releases/"
 
 // The Scalariform plugin, an automatic Scala sourcecode formatter.
-addSbtPlugin("com.typesafe.sbt" % "sbt-scalariform" % "1.3.0")
+addSbtPlugin("org.scalariform" % "sbt-scalariform" % "1.8.3")
+
+// The sbt dependency graph plugin
+//addSbtPlugin("io.get-coursier" % "sbt-coursier" % "2.0.0-RC3-3")
+
+//resolvers += "Artima Maven Repository" at "https://repo.artima.com/releases"
+
+// The Artima SuperSafe plugin for ScalaTest/Scalactic
+//addSbtPlugin("com.artima.supersafe" % "sbtplugin" % "1.1.12")
+
+//addSbtPlugin("com.artima.supersafe" % "sbtplugin" % "1.1.12")

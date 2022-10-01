@@ -1,14 +1,23 @@
 /*
  * Copyright (c) 2015-2017 EpiData, Inc.
 */
-
+/****
 import cassandra.DB
 import com.datastax.driver.core.exceptions.InvalidQueryException
 import org.specs2.mutable._
 import org.specs2.runner._
 import org.junit.runner._
+
+import org.scalatest._
+import org.scalatestplus.play._
+
 import play.api.test._
-import play.api.test.Helpers._
+import play.api.test.Helpers.{ GET => GET_REQUEST, _ }
+
+// import play.api.test._
+// import play.api.test.Helpers._
+
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class DBSpec extends Specification {
@@ -27,3 +36,4 @@ class DBSpec extends Specification {
 
   }
 }
+****/

@@ -1,27 +1,26 @@
 /*
- * Copyright (c) 2015-2017 EpiData, Inc.
+ * Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 package cassandra
 
-import com.chrisomeara.pillar.Migration
-import com.chrisomeara.pillar.Migrator
-import com.chrisomeara.pillar.Registry
-import com.chrisomeara.pillar.Reporter
-import com.chrisomeara.pillar.ReplicationOptions
+import de.kaufhof.pillar._
 import com.datastax.driver.core._
 import java.io.File
 import java.io.PrintStream
 import java.util.Date
 import org.joda.time.Instant
 import play.api.Logger
-import play.api.Play
+import play.api.Application
+import play.api.{ Configuration, Environment }
 import util.EpidataMetrics
+import javax.inject._
 
 /**
  * Singleton object for managing the server's connection to a Cassandra
  * database and executing queries.
  */
+
 object DB {
   private var connection: Option[Connection] = None
 
@@ -29,8 +28,10 @@ object DB {
    * Connect to cassandra. On connect, the keyspace is created and migrated if
    * necessary.
    */
-  def connect(nodeNames: String, keyspace: String, username: String, password: String) = {
-    connection = Some(new Connection(nodeNames, keyspace, username, password))
+  @Inject()
+  def connect(nodeNames: String, keyspace: String, replicationStrategy: String, replicationFactor: Int, username: String, password: String, migrationFile: java.io.File) = {
+    connection = Some(new Connection(nodeNames, keyspace, replicationStrategy, replicationFactor, username, password, migrationFile))
+    println("connection: " + connection)
   }
 
   /** Generate a prepared statement. */
@@ -47,6 +48,7 @@ object DB {
     val t0 = EpidataMetrics.getCurrentTime
     val batch = new BatchStatement()
     statements.foreach(s => batch.add(s))
+
     // execute the batch
     val rs = connection.get.execute(batch)
     EpidataMetrics.increment("DB.batchExecute", t0)
@@ -79,60 +81,81 @@ object DB {
 }
 
 private class TerseMigrationReporter(stream: PrintStream) extends Reporter {
-  override def initializing(
+  def initializing(
     session: Session,
     keyspace: String,
-    replicationOptions: ReplicationOptions
-  ) {
+    replicationStrategy: ReplicationStrategy) {
+    stream.println( // scalastyle:ignore
+      s"Initializing ${session} ${keyspace} ${replicationStrategy}")
+  }
+
+  override def creatingKeyspace(session: Session, keyspace: String, replicationStrategy: ReplicationStrategy) {
+    stream.println( // scalastyle:ignore
+      s"Creating keyspace ${keyspace}")
+  }
+
+  override def creatingMigrationsTable(session: Session, keyspace: String, appliedMigrationsTableName: String) {
+    stream.println( // scalastyle:ignore
+      s"Creating migration table ${keyspace} ${appliedMigrationsTableName}")
   }
 
   override def migrating(session: Session, dateRestriction: Option[Date]) {
+    stream.println( // scalastyle:ignore
+      s"Migrating ${session} ${Some(dateRestriction)}")
   }
 
   override def applying(migration: Migration) {
     stream.println( // scalastyle:ignore
-      s"Applying migration ${migration.authoredAt.getTime}: ${migration.description}"
-    )
+      s"Applying migration ${migration.authoredAt.getTime}: ${migration.description}")
   }
 
   override def reversing(migration: Migration) {
     stream.println( // scalastyle:ignore
-      s"Reversing migration ${migration.authoredAt.getTime}: ${migration.description}"
-    )
+      s"Reversing migration ${migration.authoredAt.getTime}: ${migration.description}")
   }
 
   override def destroying(session: Session, keyspace: String) {
+    stream.println( // scalastyle:ignore
+      s"Destrohing ${keyspace}")
   }
 }
 
-private class Connection(nodeNames: String, keyspace: String, username: String, password: String) {
+private class Connection(nodeNames: String, keyspace: String, replicationStrategy: String, replicationFactor: Int, username: String, password: String, migrationFile: java.io.File) {
+  val logger: Logger = Logger(this.getClass())
+  val appliedMigrationsTableName = "migrations_table"
+
+  // Verify configuration matches SimpleStrategy
+  val rs = replicationStrategy match {
+    case "SimpleStrategy" => SimpleStrategy(replicationFactor)
+    case _ => throw new IllegalArgumentException("ReplicationStrategy not supported")
+  }
 
   val cluster = nodeNames.split(',').foldLeft(Cluster.builder())({ (builder, nodeName) =>
     try {
       builder.addContactPoint(nodeName).withCredentials(username, password)
     } catch {
-      case e: IllegalArgumentException => Logger.warn(e.getMessage); builder
+      case e: IllegalArgumentException => logger.warn(e.getMessage); builder
     }
   }).build()
 
   val session = cluster.connect()
-
   val reporter = new TerseMigrationReporter(System.out)
+
   val registry = {
-    import play.api.Play.current
     Registry.fromDirectory(
-      Play.application.getFile("conf/pillar/migrations/epidata"), reporter
-    )
+      migrationFile, reporter)
   }
 
   // Create keyspace if necessary.
-  Migrator(registry, reporter).initialize(session, keyspace)
+  Migrator(registry, reporter, appliedMigrationsTableName)
+    .initialize(session, keyspace, rs)
 
   // Use the specified keyspace.
   session.execute(s"USE ${keyspace}")
 
   // Perform migrations if necessary.
-  Migrator(registry, reporter).migrate(session)
+  Migrator(registry, reporter, appliedMigrationsTableName)
+    .migrate(session)
 
   def prepare(statementSpec: String) = session.prepare(statementSpec)
 

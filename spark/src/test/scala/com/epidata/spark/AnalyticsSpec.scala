@@ -14,7 +14,7 @@ import org.junit.runner.RunWith
 import org.scalatest._
 import java.sql.Timestamp
 import org.apache.spark.MeasurementValue
-import org.scalatest.junit.JUnitRunner
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class AnalyticsAutomatedTestSpec extends FlatSpec with BeforeAndAfter with BeforeAndAfterAll with EmbeddedCassandra with SparkTemplate with Matchers {
@@ -24,15 +24,19 @@ class AnalyticsAutomatedTestSpec extends FlatSpec with BeforeAndAfter with Befor
   Logger.getLogger("com").setLevel(Level.WARN)
   Logger.getLogger("org").setLevel(Level.WARN)
 
-  private val cassandraKeyspaceName = "epidata_test"
+  private val cassandraKeyspaceName = "epidata_analytics_test"
   private val measurementClass = "automated_test"
 
-  //Sets up CassandraConfig and SparkContext
+  YamlTransformations.Default.addTransformation("cdc_raw_directory", "./raw_dir/")
+
+  // Sets up CassandraConfig and SparkContext
   useCassandraConfig(Seq(YamlTransformations.Default))
 
   var conf = defaultConf
     .set("spark.epidata.cassandraKeyspaceName", cassandraKeyspaceName)
     .set("spark.epidata.measurementClass", measurementClass)
+
+  //play/run
 
   useSparkConf(conf)
 
@@ -40,8 +44,11 @@ class AnalyticsAutomatedTestSpec extends FlatSpec with BeforeAndAfter with Befor
 
   connector.withSessionDo { session =>
     session.execute(CassandraSchema.keyspaceCreation.format(cassandraKeyspaceName))
-    session.execute(CassandraSchema.measurementsTableCreation.format(cassandraKeyspaceName))
+    session.execute(CassandraSchema.measurementsOriginalTableCreation.format(cassandraKeyspaceName))
+    session.execute(CassandraSchema.measurementsCleansedTableCreation.format(cassandraKeyspaceName))
+    session.execute(CassandraSchema.measurementsSummaryTableCreation.format(cassandraKeyspaceName))
     session.execute(CassandraSchema.measurementKeysTableCreation.format(cassandraKeyspaceName))
+    session.execute(CassandraSchema.userTableCreation.format(cassandraKeyspaceName))
   }
 
   val beginTime = new Timestamp(1428004316123L)
@@ -50,7 +57,8 @@ class AnalyticsAutomatedTestSpec extends FlatSpec with BeforeAndAfter with Befor
   before {
     // Clear existing measurements.
     connector.withSessionDo { session =>
-      session.execute(s"TRUNCATE epidata_test.${com.epidata.lib.models.Measurement.DBTableName}")
+      session.execute(s"TRUNCATE epidata_analytics_test.${com.epidata.lib.models.Measurement.DBTableName}")
+      session.execute(s"TRUNCATE epidata_analytics_test.${com.epidata.lib.models.MeasurementsKeys.DBTableName}")
     }
 
     // Add fixtures
@@ -109,11 +117,9 @@ class AnalyticsAutomatedTestSpec extends FlatSpec with BeforeAndAfter with Befor
         "site" -> List("Site-1"),
         "device_group" -> List("1000"),
         "tester" -> List("Station-1"),
-        "meas_name" -> List("Meas-1")
-      ),
+        "meas_name" -> List("Meas-1")),
       beginTime,
-      endTime
-    )
+      endTime)
 
     val (imr, imrSchema) = IMR(results.collect.toList, results.schema)
     val row0 = imr(0).toSeq
@@ -174,11 +180,9 @@ class AnalyticsAutomatedTestSpec extends FlatSpec with BeforeAndAfter with Befor
         "company" -> List("Company-1"),
         "site" -> List("Site-1"),
         "device_group" -> List("1000"),
-        "tester" -> List("Station-1")
-      ),
+        "tester" -> List("Station-1")),
       beginTime,
-      new Timestamp(beginTime.getTime + 1)
-    )
+      new Timestamp(beginTime.getTime + 1))
 
     intercept[IllegalArgumentException] {
       IMR(results.collect.toList, results.schema)
@@ -198,8 +202,7 @@ class AnalyticsAutomatedTestSpec extends FlatSpec with BeforeAndAfter with Befor
       // Not restricting meas_name field.
       ),
       beginTime,
-      endTime
-    )
+      endTime)
 
     intercept[IllegalArgumentException] {
       IMR(results.collect.toList, results.schema)
@@ -216,11 +219,9 @@ class AnalyticsAutomatedTestSpec extends FlatSpec with BeforeAndAfter with Befor
         "site" -> List("Site-1"),
         "device_group" -> List("1000"),
         "tester" -> List("Station-1"),
-        "meas_name" -> List("Meas-2")
-      ),
+        "meas_name" -> List("Meas-2")),
       beginTime,
-      endTime
-    )
+      endTime)
 
     intercept[IllegalArgumentException] {
       IMR(results.collect.toList, results.schema)
@@ -237,10 +238,12 @@ class AnalyticsSensorMeasurementSpec extends FlatSpec with BeforeAndAfter with B
   Logger.getLogger("com").setLevel(Level.WARN)
   Logger.getLogger("org").setLevel(Level.WARN)
 
-  private val cassandraKeyspaceName = "epidata_test"
+  private val cassandraKeyspaceName = "epidata_analytics_test"
   private val measurementClass = "sensor_measurement"
 
-  //Sets up CassandraConfig and SparkContext
+  YamlTransformations.Default.addTransformation("cdc_raw_directory", "./raw_dir/")
+
+  // Sets up CassandraConfig and SparkContext
   useCassandraConfig(Seq(YamlTransformations.Default))
 
   var conf = defaultConf
@@ -253,7 +256,9 @@ class AnalyticsSensorMeasurementSpec extends FlatSpec with BeforeAndAfter with B
 
   connector.withSessionDo { session =>
     session.execute(CassandraSchema.keyspaceCreation.format(cassandraKeyspaceName))
-    session.execute(CassandraSchema.measurementsTableCreation.format(cassandraKeyspaceName))
+    session.execute(CassandraSchema.measurementsOriginalTableCreation.format(cassandraKeyspaceName))
+    session.execute(CassandraSchema.measurementsCleansedTableCreation.format(cassandraKeyspaceName))
+    session.execute(CassandraSchema.measurementsSummaryTableCreation.format(cassandraKeyspaceName))
     session.execute(CassandraSchema.measurementKeysTableCreation.format(cassandraKeyspaceName))
     session.execute(CassandraSchema.userTableCreation.format(cassandraKeyspaceName))
   }
@@ -265,7 +270,8 @@ class AnalyticsSensorMeasurementSpec extends FlatSpec with BeforeAndAfter with B
 
     // Clear existing measurements.
     connector.withSessionDo { session =>
-      session.execute(s"TRUNCATE epidata_test.${com.epidata.lib.models.Measurement.DBTableName}")
+      session.execute(s"TRUNCATE epidata_analytics_test.${com.epidata.lib.models.Measurement.DBTableName}")
+      session.execute(s"TRUNCATE epidata_analytics_test.${com.epidata.lib.models.MeasurementsKeys.DBTableName}")
     }
 
     // Add fixtures
@@ -309,11 +315,9 @@ class AnalyticsSensorMeasurementSpec extends FlatSpec with BeforeAndAfter with B
         "company" -> List("Company-1"),
         "site" -> List("Site-1"),
         "station" -> List("Station-1"),
-        "sensor" -> List("Sensor-1")
-      ),
+        "sensor" -> List("Sensor-1")),
       beginTime,
-      endTime
-    )
+      endTime)
 
     val (imr, imrSchema) = IMR(results.collect.toList, results.schema)
     val row0 = imr(0).toSeq

@@ -1,17 +1,24 @@
 /*
- * Copyright (c) 2015-2017 EpiData, Inc.
+ * Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 package controllers
 
+import javax.inject._
+
 import play.api.mvc._
-import securesocial.core.SecureSocial
+import play.api.i18n.{ I18nSupport, MessagesApi }
+import securesocial.core.{ IdentityProvider, RuntimeEnvironment, SecureSocial }
 
 /**
  * Controller for error redirection. The primary use case is to display the
  * play error page when a jupyterhub error occurs.
  */
-object Unauthorized extends Controller with securesocial.core.SecureSocial {
+class Unauthorized @Inject() (val cc: ControllerComponents)(
+  override implicit val env: RuntimeEnvironment) extends AbstractController(cc)
+  with SecureSocial {
+
+  override def messagesApi: MessagesApi = super.messagesApi
 
   def show = Action { implicit request =>
     Ok(views.html.unauthorized.unauthorized())

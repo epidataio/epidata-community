@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS measurements_keys (
+  customer TEXT,
+  customer_site TEXT,
+  collection TEXT,
+  dataset TEXT,
+  PRIMARY KEY (dataset, customer, customer_site, collection)
+)

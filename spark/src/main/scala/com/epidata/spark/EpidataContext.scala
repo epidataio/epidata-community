@@ -1,12 +1,12 @@
 /*
- * Copyright (c) 2015-2017 EpiData, Inc.
+ * Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 package com.epidata.spark
 
 import com.datastax.spark.connector._
 import java.sql.Timestamp
-import com.epidata.lib.models.{ Measurement => BaseMeasurement, MeasurementCleansed => BaseMeasurementCleansed, MeasurementSummary, SensorMeasurement => BaseSensorMeasurement, AutomatedTest => BaseAutomatedTest, MeasurementsKeys => BaseMeasurementsKeys }
+import com.epidata.lib.models.{ Measurement => BaseMeasurement, MeasurementCleansed => BaseMeasurementCleansed, MeasurementSummary => BaseMeasurementSummary, SensorMeasurement => BaseSensorMeasurement, SensorMeasurementCleansed => BaseSensorMeasurementCleansed, SensorMeasurementSummary => BaseSensorMeasurementSummary, AutomatedTest => BaseAutomatedTest, AutomatedTestCleansed => BaseAutomatedTestCleansed, AutomatedTestSummary => BaseAutomatedTestSummary, MeasurementsKeys => BaseMeasurementsKeys }
 import com.epidata.spark.ops.{ Identity, OutlierDetector, MeasStatistics, FillMissingValue }
 import com.epidata.spark.utils.DataFrameUtils
 import org.apache.spark.SparkContext
@@ -41,8 +41,7 @@ class EpidataContext(private val sparkContext: SparkContext) {
   def query(
     fieldQuery: Map[String, List[String]],
     beginTime: Timestamp,
-    endTime: Timestamp
-  ): DataFrame = {
+    endTime: Timestamp): DataFrame = {
     query(fieldQuery, beginTime, endTime, com.epidata.lib.models.Measurement.DBTableName)
   }
 
@@ -50,8 +49,7 @@ class EpidataContext(private val sparkContext: SparkContext) {
     fieldQuery: Map[String, List[String]],
     beginTime: Timestamp,
     endTime: Timestamp,
-    tableName: String
-  ): RDD[Measurement] = {
+    tableName: String): RDD[Measurement] = {
 
     import MeasurementHelpers._
 
@@ -69,8 +67,7 @@ class EpidataContext(private val sparkContext: SparkContext) {
     def rddForPartition(partition: List[Any]): RDD[Measurement] =
       table.where(
         DataFrameUtils.whereStatementForTable(tableName),
-        partition ++ List(beginTime, endTime): _*
-      ).withAscOrder
+        partition ++ List(beginTime, endTime): _*).withAscOrder
 
     val partitions = for (
       a <- partitionFieldsQuery(0);
@@ -93,8 +90,7 @@ class EpidataContext(private val sparkContext: SparkContext) {
     fieldQuery: Map[String, List[String]],
     beginTime: Timestamp,
     endTime: Timestamp,
-    tableName: String
-  ): RDD[MeasurementCleansed] = {
+    tableName: String): RDD[MeasurementCleansed] = {
 
     import MeasurementHelpers._
 
@@ -112,8 +108,7 @@ class EpidataContext(private val sparkContext: SparkContext) {
     def rddForPartition(partition: List[Any]): RDD[MeasurementCleansed] =
       table.where(
         DataFrameUtils.whereStatementForTable(tableName),
-        partition ++ List(beginTime, endTime): _*
-      ).withAscOrder
+        partition ++ List(beginTime, endTime): _*).withAscOrder
 
     val partitions = for (
       a <- partitionFieldsQuery(0);
@@ -135,8 +130,7 @@ class EpidataContext(private val sparkContext: SparkContext) {
     fieldQuery: Map[String, List[String]],
     beginTime: Timestamp,
     endTime: Timestamp,
-    tableName: String
-  ): RDD[MeasurementSummary] = {
+    tableName: String): RDD[BaseMeasurementSummary] = {
 
     import MeasurementHelpers._
 
@@ -145,14 +139,13 @@ class EpidataContext(private val sparkContext: SparkContext) {
       .map(partitionFieldsMap)
       .map(fieldQuery)
 
-    val table = sparkContext.cassandraTable[MeasurementSummary](cassandraKeyspaceName, tableName)
+    val table = sparkContext.cassandraTable[BaseMeasurementSummary](cassandraKeyspaceName, tableName)
 
     // Create an RDD for a specified epoch, using a CQL query.
-    def rddForPartition(partition: List[Any]): RDD[MeasurementSummary] =
+    def rddForPartition(partition: List[Any]): RDD[BaseMeasurementSummary] =
       table.where(
         DataFrameUtils.whereStatementForTable(tableName),
-        partition ++ List(beginTime, endTime): _*
-      ).withAscOrder
+        partition ++ List(beginTime, endTime): _*).withAscOrder
 
     val partitions = for (
       a <- partitionFieldsQuery(0);
@@ -174,8 +167,7 @@ class EpidataContext(private val sparkContext: SparkContext) {
     fieldQuery: Map[String, List[String]],
     beginTime: Timestamp,
     endTime: Timestamp,
-    tableName: String
-  ): DataFrame = {
+    tableName: String): DataFrame = {
 
     tableName match {
       case BaseMeasurement.DBTableName =>
@@ -189,15 +181,15 @@ class EpidataContext(private val sparkContext: SparkContext) {
       case BaseMeasurementCleansed.DBTableName =>
         val unionRDD = getUnionRDDMeasurementCleansed(fieldQuery, beginTime, endTime, tableName)
         measurementClass match {
-          case BaseAutomatedTest.NAME => sqlContext.createDataFrame(unionRDD.map(AutomatedTestCleansed.measurementCleansedToAutomatedTestCleansed))
-          case BaseSensorMeasurement.NAME => sqlContext.createDataFrame(unionRDD.map(SensorMeasurementCleansed.measurementCleansedToSensorMeasurementCleansed))
+          case BaseAutomatedTestCleansed.NAME => sqlContext.createDataFrame(unionRDD.map(AutomatedTestCleansed.measurementCleansedToAutomatedTestCleansed))
+          case BaseSensorMeasurementCleansed.NAME => sqlContext.createDataFrame(unionRDD.map(SensorMeasurementCleansed.measurementCleansedToSensorMeasurementCleansed))
         }
 
-      case MeasurementSummary.DBTableName =>
+      case BaseMeasurementSummary.DBTableName =>
         val unionRDD = getUnionRDDMeasurementSummary(fieldQuery, beginTime, endTime, tableName)
         measurementClass match {
-          case BaseAutomatedTest.NAME => sqlContext.createDataFrame(unionRDD.map(BaseAutomatedTest.measurementSummaryToAutomatedTestSummary))
-          case BaseSensorMeasurement.NAME => sqlContext.createDataFrame(unionRDD.map(BaseSensorMeasurement.measurementSummaryToSensorMeasurementSummary))
+          case BaseAutomatedTestSummary.NAME => sqlContext.createDataFrame(unionRDD.map(BaseAutomatedTestSummary.measurementSummaryToAutomatedTestSummary))
+          case BaseSensorMeasurementSummary.NAME => sqlContext.createDataFrame(unionRDD.map(BaseSensorMeasurementSummary.measurementSummaryToSensorMeasurementSummary))
         }
     }
 
@@ -215,8 +207,7 @@ class EpidataContext(private val sparkContext: SparkContext) {
     fieldQuery: Map[String, List[String]],
     beginTime: Timestamp,
     endTime: Timestamp,
-    tableName: String
-  ): DataFrame = {
+    tableName: String): DataFrame = {
 
     if (beginTime.getTime > endTime.getTime) {
       throw new IllegalArgumentException("beginTime must not be after endTime. ")
@@ -229,8 +220,7 @@ class EpidataContext(private val sparkContext: SparkContext) {
 
     if (fieldQuery.filter(_._2.isEmpty).nonEmpty) {
       throw new IllegalArgumentException(
-        "All fieldQuery entries must have at least one match value."
-      )
+        "All fieldQuery entries must have at least one match value.")
     }
 
     val dataFrame = getDataFrame(fieldQuery, beginTime, endTime, tableName)
@@ -254,8 +244,7 @@ class EpidataContext(private val sparkContext: SparkContext) {
   def query(
     fieldQuery: java.util.Map[String, java.util.List[String]],
     beginTime: Timestamp,
-    endTime: Timestamp
-  ): DataFrame = {
+    endTime: Timestamp): DataFrame = {
     import scala.collection.JavaConversions._
     query(fieldQuery.toMap.mapValues(_.toList), beginTime, endTime, BaseMeasurement.DBTableName)
   }
@@ -264,8 +253,7 @@ class EpidataContext(private val sparkContext: SparkContext) {
   def queryMeasurementCleansed(
     fieldQuery: java.util.Map[String, java.util.List[String]],
     beginTime: Timestamp,
-    endTime: Timestamp
-  ): DataFrame = {
+    endTime: Timestamp): DataFrame = {
     import scala.collection.JavaConversions._
     query(fieldQuery.toMap.mapValues(_.toList), beginTime, endTime, BaseMeasurementCleansed.DBTableName)
   }
@@ -274,10 +262,9 @@ class EpidataContext(private val sparkContext: SparkContext) {
   def queryMeasurementSummary(
     fieldQuery: java.util.Map[String, java.util.List[String]],
     beginTime: Timestamp,
-    endTime: Timestamp
-  ): DataFrame = {
+    endTime: Timestamp): DataFrame = {
     import scala.collection.JavaConversions._
-    query(fieldQuery.toMap.mapValues(_.toList), beginTime, endTime, MeasurementSummary.DBTableName)
+    query(fieldQuery.toMap.mapValues(_.toList), beginTime, endTime, BaseMeasurementSummary.DBTableName)
   }
 
   /** List the values of the currently saved partition key fields. */
@@ -298,8 +285,7 @@ class EpidataContext(private val sparkContext: SparkContext) {
     val esc = new EpidataStreamingContext(
       this,
       Seconds(streamingBatchDuration),
-      com.epidata.lib.models.Measurement.KafkaTopic
-    )
+      com.epidata.lib.models.Measurement.KafkaTopic)
 
     op match {
       case "Identity" => esc.saveToCassandra(new Identity())
@@ -322,17 +308,14 @@ class EpidataContext(private val sparkContext: SparkContext) {
       "customer" -> "company",
       "customer_site" -> "site",
       "collection" -> "device_group",
-      "dataset" -> "tester"
-    )
+      "dataset" -> "tester")
     case BaseSensorMeasurement.NAME => Map(
       "customer" -> "company",
       "customer_site" -> "site",
       "collection" -> "station",
-      "dataset" -> "sensor"
-    )
+      "dataset" -> "sensor")
     case _ => throw new IllegalArgumentException(
-      "Invalid spark.epidata.measurementClass configuration."
-    )
+      "Invalid spark.epidata.measurementClass configuration.")
   }
 
 }

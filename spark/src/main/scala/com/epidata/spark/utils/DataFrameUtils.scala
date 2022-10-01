@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2015-2017 EpiData, Inc.
+* Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 package com.epidata.spark.utils
@@ -59,8 +59,7 @@ object DataFrameUtils {
       meas_upper_limit_l,
       meas_description,
       val1,
-      val2
-    )
+      val2)
 
   }
 

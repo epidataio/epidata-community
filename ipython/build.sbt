@@ -1,15 +1,23 @@
+import com.typesafe.sbt.SbtScalariform.ScalariformKeys
+import scalariform.formatter.preferences._
+import scala.sys.process._
+
 name := "epidata-ipython-tests"
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.12.11"
 
 libraryDependencies ++= Seq(
-  "com.datastax.cassandra" % "cassandra-driver-core" % "3.0.2",
-  "org.apache.spark" %% "spark-sql" % "2.1.0" % "provided",
-  "io.netty" % "netty-transport-native-epoll" % "4.0.37.Final" classifier "linux-x86_64",
-  "org.scalatest" %% "scalatest" % "2.2.4" % "test"
+  "org.xerial" % "sqlite-jdbc" % "3.32.3.3",
+  "com.datastax.cassandra" % "cassandra-driver-core" % "3.9.0",
+  "org.apache.spark" %% "spark-sql" % "2.4.6",
+  "org.scalactic" %% "scalactic" % "3.2.5",
+  "org.scalatest" %% "scalatest" % "3.2.5" % "test"
+
 )
 
-scalariformSettings
+ScalariformKeys.preferences := ScalariformKeys.preferences.value
+  .setPreference(DoubleIndentConstructorArguments, true)
+  .setPreference(AlignParameters, false)
 
 lazy val sparkAssembly = TaskKey[File]("spark-assembly")
 
@@ -27,8 +35,8 @@ bdistEgg := {
     new java.io.File("ipython")).!!
 }
 
-bdistEgg <<= bdistEgg
-  .dependsOn(autopep8)
+bdistEgg := (bdistEgg
+  .dependsOn(autopep8)).value
 
 // Overall build target
 lazy val build = taskKey[Unit]("build")
@@ -36,10 +44,10 @@ lazy val build = taskKey[Unit]("build")
 build := {
 }
 
-build <<= build
+build := (build
   .dependsOn(sparkAssembly)
   .dependsOn(autopep8)
-  .dependsOn(bdistEgg)  
+  .dependsOn(bdistEgg)).value
 
-(test in Test) <<= (test in Test)
-  .dependsOn(build)
+(test in Test) := ((test in Test)
+  .dependsOn(build)).value
