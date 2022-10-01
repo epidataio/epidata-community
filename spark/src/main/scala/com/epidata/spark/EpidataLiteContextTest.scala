@@ -1780,11 +1780,11 @@ object elcTest extends App {
   //  }
 
   // Create Transformation
-  // val op1 = esc.createTransformation("Identity", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
-  // println("transformation created: " + op1)
+  val op1 = esc.createTransformation("Identity", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
+  println("transformation created: " + op1)
 
-  // val op2 = esc.createTransformation("FillMissingValue", List("Temperature"), Map("method" -> "rolling", "s" -> 3))
-  // println("transformation created: " + op2)
+  val op2 = esc.createTransformation("FillMissingValue", List("Temperature"), Map("method" -> "rolling", "s" -> 3))
+  println("transformation created: " + op2)
 
   var list = new JArrayList[String]()
   list.add("Temperature")
@@ -1845,12 +1845,12 @@ object elcTest extends App {
   //    play datasink
 
   //op1
-  // esc.createStream("measurements_original", "measurements_cleansed", op1)
-  // println("STREAM 1 created: " + op1)
+  esc.createStream("measurements_original", "measurements_cleansed", op1)
+  println("STREAM 1 created: " + op1)
 
   //op2
-  // esc.createStream("measurements_original", "measurements_cleansed", op2)
-  // println("STREAM 2 created: " + op2)
+  esc.createStream("measurements_original", "measurements_cleansed", op2)
+  println("STREAM 2 created: " + op2)
 
   //op3
   //  esc.createStream("measurements_intermediate_1", "measurements_intermediate_3", op3)
@@ -1889,8 +1889,9 @@ object elcTest extends App {
   // esc.createStream("measurements_original", "measurements_cleansed", op7)
   // println("STREAM 7 created: " + op7)
 
-  esc.createStream("measurements_original", "measurements_cleansed", op8)
-  println("STREAM 8 created: " + op8)
+  //op8
+  // esc.createStream("measurements_original", "measurements_cleansed", op8)
+  // println("STREAM 8 created: " + op8)
 
   //op11
   // esc.createStream("measurements_original", "measurements_cleansed", op11)
@@ -1932,4 +1933,3 @@ object elcTest extends App {
   println("\n EpiDataLite Stream Test completed")
   println("----------------------------------------------------")
 }
-
