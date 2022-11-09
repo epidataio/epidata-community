@@ -386,13 +386,13 @@ class EpidataLiteStreamingContext(epidataConf: EpiDataConf = EpiDataConf("", "")
 
 }
 
-// object OpenGateway {
+object OpenGateway {
 
-//   def main(args: Array[String]): Unit = {
-//     val ec = new EpidataLiteContext()
-//     val esc = new EpidataLiteStreamingContext();
-//     val server = new GatewayServer(esc);
-//     println("RUNNING SERVER")
-//     server.start()
-//   }
-// }
+  def main(args: Array[String]): Unit = {
+    val ec = new EpidataLiteContext()
+    val esc = new EpidataLiteStreamingContext();
+    val server = new GatewayServer(esc);
+    println("RUNNING SERVER")
+    server.start()
+  }
+}

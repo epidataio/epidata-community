@@ -6,9 +6,12 @@
 export EPIDATA_HOME="../"
 export EPIDATA_PYTHON_HOME=$EPIDATA_HOME/python
 export EPIDATA_IPYTHON_HOME=$EPIDATA_HOME/ipython
-export PYTHONPATH="$PYTHONPATH;$EPIDATA_IPYTHON_HOME;$EPIDATA_IPYTHON_HOME/epidata;$EPIDATA_IPYTHON_HOME/epidata/_private;$EPIDATA_IPYTHON_HOME/epidata/py4j-0.10.9.2/src/py4j;$EPIDATA_PYTHON_HOME/epidata_common;$EPIDATA_PYTHON_HOME"
+#export PYTHONPATH="$PYTHONPATH;$EPIDATA_IPYTHON_HOME;$EPIDATA_IPYTHON_HOME/epidata;$EPIDATA_IPYTHON_HOME/epidata/_private;$EPIDATA_IPYTHON_HOME/epidata/py4j-0.10.9.2/src/py4j;$EPIDATA_PYTHON_HOME/epidata_common;$EPIDATA_PYTHON_HOME"
+export PYTHONPATH="$PYTHONPATH:$EPIDATA_IPYTHON_HOME:$EPIDATA_IPYTHON_HOME/epidata:$EPIDATA_IPYTHON_HOME/epidata/_private:$EPIDATA_IPYTHON_HOME/epidata/py4j-0.10.9.2/src/py4j:$EPIDATA_PYTHON_HOME/epidata_common:$EPIDATA_PYTHON_HOME"
 export EPIDATA_MODE=LITE
 export EPIDATA_LITE_JAR="$EPIDATA_HOME/spark/target/scala-2.12/epidata-spark-assembly-1.0-SNAPSHOT.jar"
 
-#ipython notebook --ipython-dir=config --profile=default
+echo $PYTHONPATH
+
+# jupyter notebook --config config.py
 (java -jar "$EPIDATA_LITE_JAR") & jupyter notebook --config config.py

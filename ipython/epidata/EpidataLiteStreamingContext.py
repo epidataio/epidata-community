@@ -34,8 +34,13 @@ class EpidataLiteStreamingContext:
         self._gateway = JavaGateway(start_callback_server=True)
 
         try:
-            # self._gg = self._gateway.launch_gateway(classpath=esc_classpath)
+            # self._gg = self._gateway.launch_gateway(classpath=ec_classpath)
             # print("gg: ", self._gg)
+            # self._jesc = self._gg.jvm.com.epidata.spark.EpidataLiteStreamingContext()
+            # print("jesc: ", self._jesc)
+
+            self._gg = self._gateway
+            print("gg: ", self._gg)
             self._jesc = self._gateway.jvm.com.epidata.spark.EpidataLiteStreamingContext()
             print("jesc: ", self._jesc)
         except Exception as e:
