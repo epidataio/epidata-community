@@ -2,6 +2,7 @@
 * Copyright (c) 2015-2022 EpiData, Inc.
 */
 
+/****
 package controllers
 
 import java.util.UUID
@@ -137,3 +138,4 @@ class DemoAuth @Inject() (val cc: ControllerComponents)(
   }
 
 }
+****/

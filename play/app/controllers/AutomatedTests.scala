@@ -18,17 +18,19 @@ import providers.DemoProvider
 import util.Ordering
 import javax.inject._
 import play.api.i18n.{ I18nSupport, Messages, Lang }
-import securesocial.core.{ IdentityProvider, RuntimeEnvironment, SecureSocial }
+//import securesocial.core.{ IdentityProvider, RuntimeEnvironment, SecureSocial }
 import service.Configs
 import actions._
 
 /** Controller for automated test data. */
 @Singleton
-class AutomatedTests @Inject() (val cc: ControllerComponents, validAction: ValidAction)(
-  override implicit val env: RuntimeEnvironment) extends AbstractController(cc)
-  with SecureSocial {
+class AutomatedTests @Inject() (val cc: ControllerComponents, validAction: ValidAction)( //  override implicit val env: Environment
+//  override implicit val env: RuntimeEnvironment
+)
+  extends AbstractController(cc) //  with SecureSocial
+  {
 
-  override def messagesApi = env.messagesApi
+  //  override def messagesApi = env.messagesApi
 
   val logger: Logger = Logger(this.getClass())
 
@@ -128,22 +130,23 @@ class AutomatedTests @Inject() (val cc: ControllerComponents, validAction: Valid
     }
   }
 
-  @Deprecated
-  def query(
-    company: String,
-    site: String,
-    device_group: String,
-    tester: String,
-    beginTime: Date,
-    endTime: Date,
-    ordering: Ordering.Value = Ordering.Unspecified) = SecuredAction {
-    Ok(com.epidata.lib.models.AutomatedTest.toJson(AutomatedTest.find(
-      company,
-      site,
-      device_group,
-      tester,
-      beginTime,
-      endTime,
-      ordering)))
-  }
+  //  @Deprecated
+  //  def query(
+  //    company: String,
+  //    site: String,
+  //    device_group: String,
+  //    tester: String,
+  //    beginTime: Date,
+  //    endTime: Date,
+  //    ordering: Ordering.Value = Ordering.Unspecified) = SecuredAction {
+  //    Ok(com.epidata.lib.models.AutomatedTest.toJson(AutomatedTest.find(
+  //      company,
+  //      site,
+  //      device_group,
+  //      tester,
+  //      beginTime,
+  //      endTime,
+  //      ordering)))
+  //  }
+
 }

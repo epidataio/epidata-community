@@ -29,9 +29,10 @@ class Devices @Inject() (val cc: ControllerComponents)(implicit assets: AssetsFi
     mapping(
       "device_id" -> text,
       "device_token" -> text)(DeviceRequestInfo.apply)(DeviceRequestInfo.unapply))
+
   override def messagesApi: MessagesApi = super.messagesApi
 
-  // shows webpage
+  // shows login webpage
   def show = Action { implicit request =>
     Ok(views.html.Device.auth(deviceForm))
   }

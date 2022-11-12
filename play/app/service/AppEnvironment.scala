@@ -17,25 +17,27 @@ import play.api.i18n.{ MessagesApi, MessagesProvider, Lang }
 import play.api.libs.mailer.MailerClient
 import play.api.libs.ws.WSClient
 import play.api.mvc.PlayBodyParsers
-import securesocial.core._
-import securesocial.core.services._
-import securesocial.core.{ IdentityProvider, RuntimeEnvironment, OAuth2Client }
-import securesocial.controllers._
+//import securesocial.core._
+//import securesocial.core.services._
+//import securesocial.core.{ IdentityProvider, RuntimeEnvironment, OAuth2Client }
+//import securesocial.controllers._
 
 import scala.collection.immutable.ListMap
 import scala.concurrent.ExecutionContext
 
 @Singleton
 class AppEnvironment @Inject() (
-  override val configuration: Configuration,
-  override val messagesApi: MessagesApi,
-  override val environment: Environment,
-  override val wsClient: WSClient,
-  override val cacheApi: AsyncCacheApi,
-  override val mailerClient: MailerClient,
-  override val parsers: PlayBodyParsers,
-  override val actorSystem: ActorSystem,
-  assets: AssetsFinder) extends RuntimeEnvironment.Default {
+  //  override val configuration: Configuration,
+  //  override val messagesApi: MessagesApi,
+  //  override val environment: Environment,
+  //  override val wsClient: WSClient,
+  //  override val cacheApi: AsyncCacheApi,
+  //  override val mailerClient: MailerClient,
+  //  override val parsers: PlayBodyParsers,
+  //  override val actorSystem: ActorSystem,
+  assets: AssetsFinder) //   extends RuntimeEnvironment.Default
+  {
+/***
   override type U = BasicProfile
   override val userService: UserService[U] = new DBUserService()
   override implicit val executionContext: scala.concurrent.ExecutionContext = scala.concurrent.ExecutionContext.global
@@ -56,4 +58,5 @@ class AppEnvironment @Inject() (
     configuration.get[Configuration]("securesocial.demo")
       .get[String]("clientSecret"),
     None, Map.empty, Map.empty)
+***/
 }

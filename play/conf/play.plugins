@@ -1,8 +1,4 @@
 1500:play.api.libs.mailer.CommonsMailerPlugin
-9994:securesocial.core.DefaultAuthenticatorStore
-9995:securesocial.core.DefaultIdGenerator
 9997:controllers.Users
 9998:service.CassandraUserService
-10005:securesocial.core.providers.GitHubProvider
 10006:providers.DemoProvider
-

@@ -18,7 +18,7 @@ POST    /measurements                      @controllers.SensorMeasurements.creat
 POST    /stream/measurements               @controllers.SensorMeasurements.insertQueue
 
 # Query Measurement
-GET     /measurements_query                @controllers.SensorMeasurements.query(company: String, site: String, station: String, sensor: String, beginTime: Date, endTime: Date, sort: Ordering.Value ?= Ordering.Unspecified)
+# GET     /measurements_query                @controllers.SensorMeasurements.query(company: String, site: String, station: String, sensor: String, beginTime: Date, endTime: Date, sort: Ordering.Value ?= Ordering.Unspecified)
 
 GET     /measurements_original             @controllers.SensorMeasurements.find(company: String, site: String, station: String, sensor: String, beginTime: Date, endTime: Date, size: Int ?= 10000, batch: String ?= "", sort: Ordering.Value ?= Ordering.Unspecified, table: String = "measurements_original")
 GET     /measurements_cleansed             @controllers.SensorMeasurements.find(company: String, site: String, station: String, sensor: String, beginTime: Date, endTime: Date, size: Int ?= 10000, batch: String ?= "", sort: Ordering.Value ?= Ordering.Unspecified, table: String = "measurements_cleansed")

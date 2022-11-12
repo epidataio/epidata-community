@@ -8,15 +8,17 @@ import javax.inject._
 
 import play.api.mvc._
 import play.api.i18n.{ I18nSupport, MessagesApi }
-import securesocial.core.{ IdentityProvider, RuntimeEnvironment, SecureSocial }
+import play.api.{ Configuration, Environment }
+//import securesocial.core.{ IdentityProvider, RuntimeEnvironment, SecureSocial }
 
 /**
  * Controller for error redirection. The primary use case is to display the
  * play error page when a jupyterhub error occurs.
  */
-class Unauthorized @Inject() (val cc: ControllerComponents)(
-  override implicit val env: RuntimeEnvironment) extends AbstractController(cc)
-  with SecureSocial {
+class Unauthorized @Inject() (val cc: ControllerComponents)( //  override implicit val env: Environment
+//  override implicit val env: RuntimeEnvironment
+) extends AbstractController(cc) //  with SecureSocial
+{
 
   override def messagesApi: MessagesApi = super.messagesApi
 
