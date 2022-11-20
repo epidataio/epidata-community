@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2020 EpiData, Inc.
+ * Copyright (c) 2020-2022 EpiData, Inc.
 */
 
 package service
@@ -7,34 +7,57 @@ package service
 import play.api.Configuration
 
 import scala.collection.mutable
+import org.zeromq.ZMQ
 
-case class Message(topic: Object, key: Object, value: Object)
+// case class Message(topic: Object, key: Object, value: Object)
 
 object ZMQInit {
   var _ZMQProducer: ZMQProducer.type = _
   var _ZMQService: ZMQService.type = _
+  var context: ZMQ.Context = _
 
   def init(config: Configuration) = {
-    /**
+    /*
      * ZMQProducer: pushPort: 5550, pubPort: 5551
-     * //  ZMQStream: subPort: 5551, pubPort: 5552
-     * ZMQDataSink: pullPort: 5550, subPort: 5551
+     * ZMQPullDataSink: pullPort: 5550,
+     * ZMQCleansedDataSink: cleansedSubPort: 5552
+     * ZMQSummaryDataSink: summarySubPort: 5553
+     * ZMQDynamicDataSink: dynamicSubPort: 5554
      * ZMQService executes ZMQStream and ZMQDataSink as threads
      */
 
-    _ZMQService = ZMQService
+    this.context = ZMQ.context(1)
 
-    _ZMQService.startThreads(config)
+    _ZMQService = ZMQService.init(
+      this.context,
+      config.getOptional[Int]("queue.servers").get.toString,
+      (config.getOptional[Int]("queue.servers").get + 2).toString,
+      (config.getOptional[Int]("queue.servers").get + 3).toString,
+      (config.getOptional[Int]("queue.servers").get + 4).toString)
 
-    _ZMQProducer = ZMQProducer.init(config.getOptional[Int]("queue.servers").get.toString, (config.getOptional[Int]("queue.servers").get + 1).toString)
+    _ZMQService.start()
 
-    //_streamQueue = mutable.Queue[Message]()
+    _ZMQProducer = ZMQProducer.init(
+      this.context,
+      config.getOptional[Int]("queue.servers").get.toString,
+      (config.getOptional[Int]("queue.servers").get + 1).toString)
   }
-  //var _streamQueue: mutable.Queue[Message] = _
-  //def streamQueue = _streamQueue
 
   def clear() = {
-    _ZMQService.stop()
     _ZMQProducer.clear()
+    _ZMQService.stop()
+    try {
+      this.context.term()
+    } catch {
+      case e: Throwable => {
+        println(e.getMessage)
+        try {
+          this.context.term()
+        } catch {
+          case e: Throwable => println(e.getMessage)
+        }
+      }
+    }
   }
+
 }

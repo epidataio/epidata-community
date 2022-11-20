@@ -2,12 +2,14 @@
  * Copyright (c) 2015-2017 EpiData, Inc.
 */
 
+/****
 import org.specs2.mutable._
 import org.specs2.runner._
 import org.junit.runner._
 import play.api.test._
 import play.api.test.Helpers._
 import securesocialtest.WithLoggedUser
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class ApplicationSpec extends Specification {
@@ -35,5 +37,16 @@ class ApplicationSpec extends Specification {
       status(notebook) must equalTo(SEE_OTHER)
     }
 
+    "fail to retrieve the device route without authentication" in new WithApplication {
+      val device = route(FakeRequest(GET, "/authenticate/device")).get
+      status(device) must equalTo(SEE_OTHER)
+    }
+
+    "retrieve the device route" in new WithLoggedUser(minimalApp) {
+      val device = route(FakeRequest(GET, "/authenticate/device").withCookies(cookie)).get
+      status(device) must equalTo(OK)
+    }
+
   }
 }
+****/

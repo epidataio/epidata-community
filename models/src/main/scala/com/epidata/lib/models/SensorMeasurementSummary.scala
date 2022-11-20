@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 EpiData, Inc.
+ * Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 package com.epidata.lib.models
@@ -42,7 +42,7 @@ object SensorMeasurementSummary {
   def rowToSensorMeasurementSummary(row: Row): SensorMeasurementSummary = MeasurementSummary.rowToMeasurementSummary(row)
 
   // Model Conversions for SQLite
-  def rowToSensorMeasurementSummary(row: ResultSet): SensorMeasurementSummary = MeasurementSummary.rowToMeasurementSummary(row)
+  def resultSetToSensorMeasurementSummary(row: ResultSet): SensorMeasurementSummary = MeasurementSummary.resultSetToMeasurementSummary(row)
 
   implicit def measurementSummaryToSensorMeasurementSummary(ms: MeasurementSummary): SensorMeasurementSummary =
     SensorMeasurementSummary(
@@ -60,10 +60,10 @@ object SensorMeasurementSummary {
 
   implicit def sensorMeasurementSummaryToMeasurementSummary(sms: SensorMeasurementSummary): MeasurementSummary =
     MeasurementSummary(
-      sms.customer,
-      sms.customer_site,
-      sms.collection,
-      sms.dataset,
+      sms.company,
+      sms.site,
+      sms.station,
+      sms.sensor,
       sms.start_time,
       sms.stop_time,
       Some(sms.event),
@@ -89,10 +89,10 @@ object SensorMeasurementSummary {
   }
 
   // JSON Helpers for SQLite
-  def rowToJLinkedHashMap(rowSummary: ResultSet, tableName: String): JLinkedHashMap[String, Object] = {
+  def resultSetToJLinkedHashMap(rowSummary: ResultSet, tableName: String): JLinkedHashMap[String, Object] = {
     tableName match {
       case MeasurementSummary.DBTableName =>
-        val ms = rowToSensorMeasurementSummary(rowSummary)
+        val ms = resultSetToSensorMeasurementSummary(rowSummary)
         toJLinkedHashMap(ms)
     }
   }
@@ -132,9 +132,36 @@ object SensorMeasurementSummary {
     putToMap(map, "meas_name", m.meas_name)
     putToMap(map, "meas_summary_name", m.meas_summary_name)
     putToMap(map, "meas_summary_value", m.meas_summary_value)
-    putToMap(map, "meas_summary_description", m.meas_summary_description)
+    putOptionToMap(map, "meas_summary_description", m.meas_summary_description)
 
     map
+  }
+
+  def fromJLinkedHashMap(map: JLinkedHashMap[String, Object]): SensorMeasurementSummary = {
+    val company: String = map.get("company").asInstanceOf[String]
+    val site: String = map.get("site").asInstanceOf[String]
+    val station: String = map.get("station").asInstanceOf[String]
+    val sensor: String = map.get("sensor").asInstanceOf[String]
+    val start_time: Date = new Date(map.get("start_time").asInstanceOf[Long])
+    val stop_time: Date = new Date(map.get("stop_time").asInstanceOf[Long])
+    val event: String = map.get("event").asInstanceOf[String]
+    val meas_name: String = map.get("meas_name").asInstanceOf[String]
+    val meas_summary_name: String = map.get("meas_summary_name").asInstanceOf[String]
+    val meas_summary_value: String = map.get("meas_summary_value").asInstanceOf[String]
+    val meas_summary_description: Option[String] = TypeUtils.blankToNone(map.get("meas_summary_description").asInstanceOf[String])
+
+    SensorMeasurementSummary(
+      company,
+      site,
+      station,
+      sensor,
+      start_time,
+      stop_time,
+      event,
+      meas_name,
+      meas_summary_name,
+      meas_summary_value,
+      meas_summary_description)
   }
 
   def jsonToSensorMeasurementSummary(str: String): Option[SensorMeasurementSummary] = {
@@ -162,8 +189,13 @@ object SensorMeasurementSummary {
     val site: String = jSONObject.get("site").asInstanceOf[String]
     val station: String = jSONObject.get("station").asInstanceOf[String]
     val sensor: String = jSONObject.get("sensor").asInstanceOf[String]
+
+    if (jSONObject.get("start_time") == null || jSONObject.get("stop_time") == null)
+      throw new Exception("invalid json format!")
+
     val start_time: Date = new Date(jSONObject.get("start_time").asInstanceOf[Long])
     val stop_time: Date = new Date(jSONObject.get("stop_time").asInstanceOf[Long])
+
     val event: String = jSONObject.get("event").asInstanceOf[String]
     val meas_name: String = jSONObject.get("meas_name").asInstanceOf[String]
     val meas_summary_name: String = jSONObject.get("meas_summary_name").asInstanceOf[String]
@@ -184,4 +216,24 @@ object SensorMeasurementSummary {
       meas_summary_description)
   }
 
+  def jsonToJLinkedHashMap(str: String): JLinkedHashMap[String, Object] = {
+    val m = jsonToSensorMeasurementSummary(str).get
+    toJLinkedHashMap(m)
+  }
+
+  def getColumns: Set[String] = {
+    val col_set = Set(
+      "company",
+      "site",
+      "station",
+      "sensor",
+      "start_time",
+      "stop_time",
+      "event",
+      "meas_name",
+      "meas_summary_name",
+      "meas_summary_value",
+      "meas_summary_description")
+    col_set
+  }
 }

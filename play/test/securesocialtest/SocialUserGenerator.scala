@@ -1,5 +1,6 @@
 // Based on https://github.com/jaliss/securesocial/commit/77ce2f94d6a0e1f0fb032dbdec344c953dea7771
 
+/****
 package securesocialtest
 
 import org.scalacheck.Gen
@@ -31,3 +32,4 @@ object SocialUserGenerator {
 
   def socialUser(id: IdentityId = identityId, authMethod: AuthenticationMethod = authMethod) = socialUserGen(id, authMethod).sample.get
 }
+****/

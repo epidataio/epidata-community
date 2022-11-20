@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 EpiData, Inc.
+ * Copyright (c) 2015-2022 EpiData, Inc.
 */
 
 package models
@@ -8,8 +8,8 @@ import java.util.Date
 
 import com.epidata.lib.models.{ Measurement, MeasurementCleansed, MeasurementSummary, AutomatedTest => BaseAutomatedTest, AutomatedTestCleansed => BaseAutomatedTestCleansed, AutomatedTestSummary => BaseAutomatedTestSummary }
 import _root_.util.Ordering
-import models.SensorMeasurement.{ insert, logger }
 import play.api.Logger
+import models.AutomatedTest.keyForMeasurementTopic
 import service.{ Configs, DataService, KafkaService, ZMQProducer, ZMQInit }
 
 object AutomatedTest {
@@ -19,6 +19,8 @@ object AutomatedTest {
   import com.epidata.lib.models.AutomatedTestSummary._
 
   val logger: Logger = Logger(this.getClass())
+
+  val name: String = "AutomatedTest"
 
   private def keyForMeasurementTopic(measurement: BaseAutomatedTest): String = {
     val key =
@@ -37,6 +39,7 @@ object AutomatedTest {
    * @param automatedTest The AutomatedTest measurement to insert.
    */
   def insert(automatedTest: BaseAutomatedTest, sqliteEnable: Boolean): Unit = {
+    // println("automated test: " + automatedTest)
     if (sqliteEnable) {
       SQLiteMeasurementService.insert(automatedTest)
     } else {
@@ -49,6 +52,7 @@ object AutomatedTest {
    * @param automatedTests Multiple AutomatedTest measurements to insert.
    */
   def insert(automatedTests: List[BaseAutomatedTest], sqliteEnable: Boolean): Unit = {
+    // println("multiple automated tests: " + automatedTests)
     if (sqliteEnable) {
       SQLiteMeasurementService.bulkInsert(automatedTests.map(automatedTestToMeasurement))
     } else {
@@ -61,6 +65,7 @@ object AutomatedTest {
    * @param automatedTestCleansed The AutomatedTestCleansed measurement to insert.
    */
   def insertCleansed(automatedTestCleansed: BaseAutomatedTestCleansed, sqliteEnable: Boolean): Unit = {
+    // println("automated test cleansed: " + automatedTestCleansed)
     if (sqliteEnable) {
       SQLiteMeasurementService.insertCleansed(automatedTestCleansed)
     } else {
@@ -74,6 +79,7 @@ object AutomatedTest {
    * @param automatedTestsCleansed Multiple AutomatedTestCleansed measurements to insert.
    */
   def insertCleansed(automatedTestsCleansed: List[BaseAutomatedTestCleansed], sqliteEnable: Boolean): Unit = {
+    // println("multiple automated tests cleansed: " + automatedTestsCleansed)
     if (sqliteEnable) {
       SQLiteMeasurementService.bulkInsertCleansed(automatedTestsCleansed.map(automatedTestCleansedToMeasurementCleansed))
     } else {
@@ -84,9 +90,10 @@ object AutomatedTest {
 
   /**
    * Insert an automated test measurement summary into the database.
-   * @param automatedTestSummary The AutomatedTest measurement summary to insert.
+   * @param automatedTestSummary The AutomatedTestSummary data to insert.
    */
   def insertSummary(automatedTestSummary: BaseAutomatedTestSummary, sqliteEnable: Boolean): Unit = {
+    // println("automated test summary: " + automatedTestSummary)
     if (sqliteEnable) {
       SQLiteMeasurementService.insertSummary(automatedTestSummary)
     } else {
@@ -96,10 +103,11 @@ object AutomatedTest {
   }
 
   /**
-   * Insert multiple automated test measurement summaries into the database.
-   * @param automatedTestsSummary Multiple AutomatedTest measurement summaries to insert.
+   * Insert multiple automated test measurement summary data into the database.
+   * @param automatedTestsSummary Multiple AutomatedTestSummary data to insert.
    */
   def insertSummary(automatedTestsSummary: List[BaseAutomatedTestSummary], sqliteEnable: Boolean): Unit = {
+    // println("multiple automated tests summary: " + automatedTestsSummary)
     if (sqliteEnable) {
       SQLiteMeasurementService.bulkInsertSummary(automatedTestsSummary.map(automatedTestSummaryToMeasurementSummary))
     } else {
@@ -123,6 +131,7 @@ object AutomatedTest {
   }
 
   def insertCleansedRecordFromZMQ(str: String): Unit = {
+    // println("cleansed record from zmq: " + str)
     BaseAutomatedTestCleansed.jsonToAutomatedTestCleansed(str) match {
       case Some(mc) => insertCleansed(mc, Configs.measDBLite)
       case _ => logger.error("Bad json format!")
@@ -130,16 +139,41 @@ object AutomatedTest {
   }
 
   def insertSummaryRecordFromZMQ(str: String): Unit = {
+    // println("summary record from zmq: " + str)
     BaseAutomatedTestSummary.jsonToAutomatedTestSummary(str) match {
       case Some(ms) => insertSummary(ms, Configs.measDBLite)
       case _ => logger.error("Bad json format!")
     }
   }
 
-  def insertToKafka(list: List[BaseAutomatedTest]): Unit = {
-    list.foreach(m => insertToKafka(m))
-    if (Configs.twoWaysIngestion) {
-      models.AutomatedTest.insert(list, Configs.measDBLite)
+  def insertDynamicRecordFromZMQ(str: String): Unit = {
+    // println("dynamic record from zmq: " + str)
+    try {
+      BaseAutomatedTestCleansed.jsonToAutomatedTestCleansed(str) match {
+        case Some(mc: BaseAutomatedTestCleansed) => {
+          // println("inserting dynamic record as measurements cleansed record.\n")
+          insertCleansed(mc, Configs.measDBLite)
+          return
+        }
+        case _ => throw new Exception("Dynamic data is not of type MeasurementCleansed.")
+      }
+    } catch {
+      case _: Throwable => {
+        try {
+          BaseAutomatedTestSummary.jsonToAutomatedTestSummary(str) match {
+            case Some(ms: BaseAutomatedTestSummary) => {
+              // println("inserting dynamic record as measurements summary record.\n")
+              insertSummary(ms, Configs.measDBLite)
+              return
+            }
+            case _ => throw new Exception("Dynamic data is not of type MeasurementSummary.")
+          }
+        } catch {
+          case _: Throwable => {
+            logger.error("Bad json format!")
+          }
+        }
+      }
     }
   }
 
@@ -149,8 +183,8 @@ object AutomatedTest {
     KafkaService.sendMessage(Measurement.KafkaTopic, key, value)
   }
 
-  def insertToZMQ(list: List[BaseAutomatedTest]): Unit = {
-    list.foreach(m => insertToZMQ(m))
+  def insertToKafka(list: List[BaseAutomatedTest]): Unit = {
+    list.foreach(m => insertToKafka(m))
     if (Configs.twoWaysIngestion) {
       models.AutomatedTest.insert(list, Configs.measDBLite)
     }
@@ -160,10 +194,78 @@ object AutomatedTest {
     val key = keyForMeasurementTopic(m)
     val value = BaseAutomatedTest.toJson(m)
     ZMQInit._ZMQProducer.push(key, value)
-    ZMQInit._ZMQProducer.pub(key, value)
+    ZMQInit._ZMQProducer.pub(Measurement.zmqTopic, key, value)
   }
 
+  def insertToZMQ(list: List[BaseAutomatedTest]): Unit = {
+    list.foreach(m => insertToZMQ(m))
+    if (Configs.twoWaysIngestion) {
+      models.AutomatedTest.insert(list, Configs.measDBLite)
+    }
+  }
+
+  /** Convert a list of AutomatedTest measurements to a json representation. */
   def toJson(automatedTests: List[BaseAutomatedTest]) = BaseAutomatedTest.toJson(automatedTests)
+
+  def query(
+    company: String,
+    site: String,
+    device_group: String,
+    tester: String,
+    beginTime: Date,
+    endTime: Date,
+    size: Int = 1000,
+    batch: String = "",
+    ordering: Ordering.Value,
+    sqliteEnable: Boolean): List[BaseAutomatedTest] = {
+    if (sqliteEnable) {
+      SQLiteMeasurementService.query(company, site, device_group, tester, beginTime, endTime, size, batch, ordering)
+        .map(BaseAutomatedTest.measurementToAutomatedTest)
+    } else {
+      MeasurementService.query(company, site, device_group, tester, beginTime, endTime, size, batch, ordering)
+        .map(BaseAutomatedTest.measurementToAutomatedTest)
+    }
+  }
+
+  def queryCleansed(
+    company: String,
+    site: String,
+    device_group: String,
+    tester: String,
+    beginTime: Date,
+    endTime: Date,
+    size: Int = 1000,
+    batch: String = "",
+    ordering: Ordering.Value,
+    sqliteEnable: Boolean): List[BaseAutomatedTestCleansed] = {
+    if (sqliteEnable) {
+      SQLiteMeasurementService.queryCleansed(company, site, device_group, tester, beginTime, endTime, size, batch, ordering)
+        .map(BaseAutomatedTestCleansed.measurementCleansedToAutomatedTestCleansed)
+    } else {
+      MeasurementService.queryCleansed(company, site, device_group, tester, beginTime, endTime, size, batch, ordering)
+        .map(BaseAutomatedTestCleansed.measurementCleansedToAutomatedTestCleansed)
+    }
+  }
+
+  def querySummary(
+    company: String,
+    site: String,
+    device_group: String,
+    tester: String,
+    beginTime: Date,
+    endTime: Date,
+    size: Int = 1000,
+    batch: String = "",
+    ordering: Ordering.Value,
+    sqliteEnable: Boolean): List[BaseAutomatedTestSummary] = {
+    if (sqliteEnable) {
+      SQLiteMeasurementService.querySummary(company, site, device_group, tester, beginTime, endTime, size, batch, ordering)
+        .map(BaseAutomatedTestSummary.measurementSummaryToAutomatedTestSummary)
+    } else {
+      MeasurementService.querySummary(company, site, device_group, tester, beginTime, endTime, size, batch, ordering)
+        .map(BaseAutomatedTestSummary.measurementSummaryToAutomatedTestSummary)
+    }
+  }
 
   /**
    * Find automated tests in the database matching the specified parameters.
@@ -185,6 +287,6 @@ object AutomatedTest {
     endTime: Date,
     ordering: Ordering.Value): List[BaseAutomatedTest] =
     MeasurementService.find(company, site, device_group, tester, beginTime, endTime, ordering)
-      .map(measurementToAutomatedTest)
+      .map(BaseAutomatedTest.measurementToAutomatedTest)
 
 }

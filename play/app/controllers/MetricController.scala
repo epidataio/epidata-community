@@ -1,3 +1,7 @@
+/*
+* Copyright (c) 2015-2022 EpiData, Inc.
+*/
+
 package controllers
 
 import _root_.util.EpidataMetrics

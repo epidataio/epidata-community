@@ -2,6 +2,7 @@
  * Copyright (c) 2015-2017 EpiData, Inc.
 */
 
+/****
 import cassandra.DB
 import com.epidata.lib.models.{ AutomatedTest => Model }
 import com.epidata.lib.models.util.Binary
@@ -22,6 +23,7 @@ import play.api.test._
 import play.api.test.Helpers._
 import securesocialtest.WithLoggedUser
 import util.Ordering
+import org.scalatestplus.junit.JUnitRunner
 
 // scalastyle:off magic.number
 
@@ -1105,3 +1107,4 @@ class AutomatedTestsSpec extends Specification {
     }
   }
 }
+****/
