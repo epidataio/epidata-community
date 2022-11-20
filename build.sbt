@@ -48,9 +48,10 @@ lazy val play = project
 lazy val spark = project
   .dependsOn(models)
 
+lazy val playAssembly = TaskKey[File]("play-assembly")
+playAssembly in Global := (assembly in play).value
 
 lazy val sparkAssembly = TaskKey[File]("spark-assembly")
-
 sparkAssembly in Global := (assembly in spark).value
 
 
