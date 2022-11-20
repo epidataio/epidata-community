@@ -59,14 +59,19 @@ class EpidataLiteStreamingContext(epidataConf: EpiDataConf = EpiDataConf("", "")
 
   //adding custom handler
   private val conf = ConfigFactory.parseResources("sqlite-defaults.conf").resolve()
-  private val basePath = new java.io.File(".").getAbsoluteFile().getParentFile().getParent()
 
-  private var logFilePath = conf.getString("spark.epidata.logFilePath")
-  if ((logFilePath == "") || (logFilePath == null)) {
-    logFilePath = basePath + "/log/" + conf.getString("spark.epidata.streamLogFileName")
-  } else {
-    logFilePath = logFilePath + conf.getString("spark.epidata.streamLogFileName")
-  }
+  //  private val basePath = new java.io.File(".").getAbsoluteFile().getParentFile().getParent()
+
+  private val basePath = scala.util.Properties.envOrElse("EPIDATA_HOME", "undefined")
+  private val logFilePath = basePath + "/log/" + conf.getString("spark.epidata.streamLogFileName")
+
+  //  private var logFilePath = conf.getString("spark.epidata.logFilePath")
+  //  if ((logFilePath == "") || (logFilePath == null)) {
+  //    logFilePath = basePath + "/log/" + conf.getString("spark.epidata.streamLogFileName")
+  //  } else {
+  //    logFilePath = logFilePath + conf.getString("spark.epidata.streamLogFileName")
+  //  }
+
   println("log file path: " + logFilePath)
   val fileHandler = new FileHandler(logFilePath)
   logger.addHandler(fileHandler)
@@ -386,13 +391,13 @@ class EpidataLiteStreamingContext(epidataConf: EpiDataConf = EpiDataConf("", "")
 
 }
 
-// object OpenGateway {
+object OpenGateway {
 
-//   def main(args: Array[String]): Unit = {
-//     val ec = new EpidataLiteContext()
-//     val esc = new EpidataLiteStreamingContext();
-//     val server = new GatewayServer(esc);
-//     println("RUNNING SERVER")
-//     server.start()
-//   }
-// }
+  def main(args: Array[String]): Unit = {
+    val ec = new EpidataLiteContext()
+    val esc = new EpidataLiteStreamingContext();
+    val server = new GatewayServer(esc);
+    println("RUNNING SERVER")
+    server.start()
+  }
+}

@@ -8,29 +8,32 @@
 # ~~~~
 
 # Home Page.
-GET     /                           securesocial.controllers.LoginPage.login
+GET     /                           controllers.Default.redirect(to = "/login/device")
+# GET     /                           securesocial.controllers.LoginPage.login
 
 # User Login/logout pages.
-GET     /login/user                 securesocial.controllers.LoginPage.login
-GET     /logout/user                securesocial.controllers.LoginPage.logout
+# GET     /login/user                 securesocial.controllers.LoginPage.login
+# GET     /logout/user                securesocial.controllers.LoginPage.logout
 
 # Interactive notebook session.
-GET     /notebook                   @controllers.Notebook.show()
+# GET     /notebook                   @controllers.Notebook.show()
 
 # Map static resources from the /public folder to the /assets URL path.
-GET     /assets/*file               @controllers.Assets.versioned(path="/public", file)
-GET     /assets/auth/*file          @securesocial.controllers.Assets.at(path = "/public/lib/securesocial/securesocial", file)
+# GET     /assets/*file               @controllers.Assets.versioned(path="/public", file)
+# GET     /assets/auth/*file          @securesocial.controllers.Assets.at(path = "/public/lib/securesocial/securesocial", file)
 
+# not supported
 # OAuth providers entry points.
-GET     /authenticate/demo          @controllers.DemoAuth.authenticate
-POST    /authenticate/app           @controllers.DemoAuth.authenticateByPost
+# GET     /authenticate/demo          @controllers.DemoAuth.authenticate
+# POST    /authenticate/app           @controllers.DemoAuth.authenticateByPost
 
+# not supported
 # Redirect for external errors.
-GET     /error                      @controllers.ErrorRedirect.show()
-GET     /unauthorized               @controllers.Unauthorized.show()
+# GET     /error                      @controllers.ErrorRedirect.show()
+# GET     /unauthorized               @controllers.Unauthorized.show()
 
 # Get Metric.
-GET     /metrics                    @controllers.MetricController.getMetric()
+# GET     /metrics                    @controllers.MetricController.getMetric()
 
 # Device Authentication via IoT Device or Edge App.
 POST     /authenticate/deviceApp        @controllers.DeviceAuth.authenticateApp

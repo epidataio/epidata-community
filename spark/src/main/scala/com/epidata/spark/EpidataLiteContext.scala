@@ -32,14 +32,17 @@ class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
   //  logger.addHandler(new ConsoleHandler)
 
   private val conf = ConfigFactory.parseResources("sqlite-defaults.conf").resolve()
-  private val basePath = new java.io.File(".").getAbsoluteFile().getParent()
+  //  private val basePath = new java.io.File(".").getAbsoluteFile().getParent()
 
-  private var logFilePath = conf.getString("spark.epidata.logFilePath")
-  if ((logFilePath == "") || (logFilePath == None)) {
-    logFilePath = basePath + "/log/" + conf.getString("spark.epidata.logFileName")
-  } else {
-    logFilePath = logFilePath + conf.getString("spark.epidata.logFileName")
-  }
+  private val basePath = scala.util.Properties.envOrElse("EPIDATA_HOME", "undefined")
+  private val logFilePath = basePath + "/log/" + conf.getString("spark.epidata.logFileName")
+
+  //  private var logFilePath = conf.getString("spark.epidata.logFilePath")
+  //  if ((logFilePath == "") || (logFilePath == None)) {
+  //    logFilePath = basePath + "/log/" + conf.getString("spark.epidata.logFileName")
+  //  } else {
+  //    logFilePath = logFilePath + conf.getString("spark.epidata.logFileName")
+  //  }
   println("log file path: " + logFilePath)
   val fileHandler = new FileHandler(logFilePath)
   logger.addHandler(fileHandler)
@@ -64,6 +67,8 @@ class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
     }
     case s => s
   }
+
+  println("SQLite DB url: " + sqliteDBUrl)
 
   // Connect to SQLite database
   Class.forName("org.sqlite.JDBC")

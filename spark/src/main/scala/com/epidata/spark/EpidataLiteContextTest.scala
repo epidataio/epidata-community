@@ -16,8 +16,10 @@ import scala.io.StdIn
 import scala.util.Properties
 //import scala.collection.mutable.Map
 
+/*
 object elcTest extends App {
-  /*
+*/
+/*
   val ec = new EpidataLiteContext()
 
   //  ----- EpiDataLite Batch  Test -----
@@ -26,11 +28,14 @@ object elcTest extends App {
 
   Class.forName("org.sqlite.JDBC");
   private val conf = ConfigFactory.parseResources("sqlite-defaults.conf")
-  private val basePath = new java.io.File(".").getAbsoluteFile().getParent()
+//  private val basePath = new java.io.File(".").getAbsoluteFile().getParent()
+
+  private val basePath = scala.util.Properties.envOrElse("EPIDATA_HOME", "undefined")
+
   private val dbName = conf.getString("spark.epidata.SQLite.test.dbFileName")
   private val dbUrl = "jdbc:sqlite:" + basePath + "/data/" + dbName
 
-  // println("sqlite db url: " + dbUrl)
+  println("sqlite db url: " + dbUrl)
 
   private val con: Connection = DriverManager.getConnection(dbUrl)
   //  val conf = ConfigFactory.parseResources("sqlite-defaults.conf")
@@ -1762,6 +1767,7 @@ object elcTest extends App {
   println("\n EpiDataLite Batch Query Test completed")
   println("----------------------------------------------------")
 */
+/*
   //  ----- EpiDataLite Stream Test Started -----
   println("\n EpiDataLite Stream Test Started")
 
@@ -1845,11 +1851,11 @@ object elcTest extends App {
   //    play datasink
 
   //op1
-  esc.createStream("measurements_original", "measurements_cleansed", op1)
+  esc.createStream("measurements_original", "measurements_substituted", op1)
   println("STREAM 1 created: " + op1)
 
   //op2
-  esc.createStream("measurements_original", "measurements_cleansed", op2)
+  esc.createStream("measurements_substituted", "measurements_cleansed", op2)
   println("STREAM 2 created: " + op2)
 
   //op3
@@ -1933,3 +1939,4 @@ object elcTest extends App {
   println("\n EpiDataLite Stream Test completed")
   println("----------------------------------------------------")
 }
+*/

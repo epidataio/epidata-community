@@ -56,6 +56,13 @@ autopep8 := {
 (test in Test) := ((test in Test)
   .dependsOn(autopep8)).value
 
+assemblyMergeStrategy in assembly := {
+  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+  case x => MergeStrategy.first
+}
+
+test in assembly := {}
+
 //TwirlKeys.templateImports += "org.example._"
 
 //ScalariformKeys.preferences := ScalariformKeys.preferences.value

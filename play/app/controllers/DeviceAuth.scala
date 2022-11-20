@@ -16,10 +16,10 @@ import play.api.libs.ws.WSResponse
 import scala.collection.immutable.ListMap
 import scala.util.{ Success, Failure }
 import models._
+
 @Singleton
-class DeviceAuth @Inject() (val cc: ControllerComponents)(
-  implicit
-  val env: AppEnvironment) extends AbstractController(cc) {
+class DeviceAuth @Inject() (val cc: ControllerComponents)(implicit assets: AssetsFinder, implicit val conf: Configuration, implicit val env: AppEnvironment)
+  extends AbstractController(cc) {
 
   // authentication for app/command line that utilizes headers
   def authenticateApp = Action.async { implicit request =>
@@ -32,7 +32,7 @@ class DeviceAuth @Inject() (val cc: ControllerComponents)(
       try {
         // authenticates and returns jwt in header
         val deviceJWT = Device.authenticate(deviceID, deviceToken)
-        Future.successful(Ok(Json.obj("device_jwt" -> deviceJWT)).withHeaders("device_jwt" -> deviceJWT))
+        Future.successful(Ok(Json.obj("status" -> "authenticated")).withHeaders("device_jwt" -> deviceJWT))
       } catch {
         // gives this status if invalid token/id pair is given
         case _: Throwable => Future.successful(BadRequest(Json.obj("status" -> "ERROR", "message" -> "incorrect id or token")))
@@ -48,11 +48,13 @@ class DeviceAuth @Inject() (val cc: ControllerComponents)(
     var deviceID = ""
     var deviceToken = ""
     var content: AnyContent = request.body
-    // converst the body to a string
+
+    // convert the body to a string
     val deviceString: String = content.asText match {
       case None => ""
       case Some(s: String) => s
     }
+
     // gives error if body is empty
     if (deviceString == "") {
       Future.successful(BadRequest(Json.obj("status" -> "Internal Server Error", "message" -> "empty id or token")))
@@ -66,7 +68,7 @@ class DeviceAuth @Inject() (val cc: ControllerComponents)(
         try {
           // authenticates and returns jwt in header
           val deviceJWT = Device.authenticate(deviceID, deviceToken)
-          Future.successful(Ok(Json.obj("device_jwt" -> deviceJWT)).withHeaders("device_jwt" -> deviceJWT))
+          Future.successful(Ok(Json.obj("status" -> "authenticated")).withHeaders("authstatus" -> "authenticated", "device_jwt" -> deviceJWT))
         } catch {
           // gives this status if invalid token/id pair is given
           case _: Throwable => Future.successful(BadRequest(Json.obj("status" -> "ERROR", "message" -> "incorrect id or token")))

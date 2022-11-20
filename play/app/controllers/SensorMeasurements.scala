@@ -16,18 +16,19 @@ import play.api.mvc._
 import play.api.i18n.{ I18nSupport, Messages }
 import play.api.{ Configuration, Environment, Logger }
 import service.{ AppEnvironment, Configs }
-import securesocial.core.{ IdentityProvider, RuntimeEnvironment, SecureSocial }
+//import securesocial.core.{ IdentityProvider, RuntimeEnvironment, SecureSocial }
 import service.Configs
 import service._
 import actions.ValidAction
 
 /** Controller for sensor measurement data. */
 @Singleton
-class SensorMeasurements @Inject() (val cc: ControllerComponents, validAction: ValidAction)(
-  override implicit val env: RuntimeEnvironment) extends AbstractController(cc)
-  with SecureSocial {
+class SensorMeasurements @Inject() (val cc: ControllerComponents, validAction: ValidAction)( //  override implicit val env: Environment
+//  override implicit val env: RuntimeEnvironment
+) extends AbstractController(cc) //  with SecureSocial
+{
 
-  override def messagesApi = env.messagesApi
+  //  override def messagesApi = env.messagesApi
 
   val logger: Logger = Logger(this.getClass())
 
@@ -76,24 +77,24 @@ class SensorMeasurements @Inject() (val cc: ControllerComponents, validAction: V
     }
   }
 
-  @Deprecated
-  def query(
-    company: String,
-    site: String,
-    station: String,
-    sensor: String,
-    beginTime: Date,
-    endTime: Date,
-    ordering: Ordering.Value = Ordering.Unspecified) = SecuredAction {
-    Ok(SensorMeasurement.toJson(SensorMeasurement.find(
-      company,
-      site,
-      station,
-      sensor,
-      beginTime,
-      endTime,
-      ordering)))
-  }
+  //  @Deprecated
+  //  def query(
+  //    company: String,
+  //    site: String,
+  //    station: String,
+  //    sensor: String,
+  //    beginTime: Date,
+  //    endTime: Date,
+  //    ordering: Ordering.Value = Ordering.Unspecified) = SecuredAction {
+  //    Ok(SensorMeasurement.toJson(SensorMeasurement.find(
+  //      company,
+  //      site,
+  //      station,
+  //      sensor,
+  //      beginTime,
+  //      endTime,
+  //      ordering)))
+  //  }
 
   def find(
     company: String,
