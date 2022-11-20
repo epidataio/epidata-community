@@ -28,11 +28,14 @@ object elcTest extends App {
 
   Class.forName("org.sqlite.JDBC");
   private val conf = ConfigFactory.parseResources("sqlite-defaults.conf")
-  private val basePath = new java.io.File(".").getAbsoluteFile().getParent()
+//  private val basePath = new java.io.File(".").getAbsoluteFile().getParent()
+
+  private val basePath = scala.util.Properties.envOrElse("EPIDATA_HOME", "undefined")
+
   private val dbName = conf.getString("spark.epidata.SQLite.test.dbFileName")
   private val dbUrl = "jdbc:sqlite:" + basePath + "/data/" + dbName
 
-  // println("sqlite db url: " + dbUrl)
+  println("sqlite db url: " + dbUrl)
 
   private val con: Connection = DriverManager.getConnection(dbUrl)
   //  val conf = ConfigFactory.parseResources("sqlite-defaults.conf")

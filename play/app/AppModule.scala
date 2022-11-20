@@ -16,7 +16,7 @@ import models.{ SQLiteDeviceService, NoSQLDeviceService }
 import scala.concurrent.Future
 import javax.inject._
 import play.api.inject.{ ApplicationLifecycle, Binding, Module }
-import securesocial.core.RuntimeEnvironment
+//import securesocial.core.RuntimeEnvironment
 import service.ZMQInit
 
 import scala.collection.JavaConverters._
@@ -24,7 +24,7 @@ import play.api.libs.json._
 
 class AppModule extends Module {
   def bindings(env: Environment, conf: Configuration) = Seq(
-    (bind[RuntimeEnvironment].to[AppEnvironment]).eagerly(),
+    //    (bind[RuntimeEnvironment].to[AppEnvironment]).eagerly(),
     (bind[ApplicationDBStart].toSelf).eagerly(),
     (bind[ApplicationStreamStart].toSelf).eagerly(),
     (bind[ApplicationDBStop].toSelf).eagerly(),

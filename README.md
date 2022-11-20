@@ -30,7 +30,7 @@ One can also set up EpiData platform by following the installation and launch sc
 Configuration
 --------------
 - Authentication:
-Access to EpiData platform is managed via tokens and OAuth 2 authorization (with GitHub). The configuration settings for tokens are available in play/conf/application.conf, and OAuth 2 are available in play/conf/securesocial.conf. Authenticated users can be added to the system manually via Cassandra's CQL commands.
+Access to EpiData platform is managed via Json Web Tokens (JWT). The configuration settings for JWT tokens are available in play/conf/application.conf. Authenticated devices can be added to the system manually via play/conf/application.conf.
 
 - Measurement Class:
 EpiData platform can be configured to operate on 'sensor measurement' or 'automated test' data. To enable sensor measurement data, play's application.conf must set measurement-class to sensor_measurement. In addition, spark's spark-defaults.conf must set spark.epidata.measurementClass to sensor_measurement. To enable automated test data, play's application.conf must set measurement-class to automated_test. In addition, spark's spark-defaults.conf must set spark.epidata.measurementClass to automated_test.

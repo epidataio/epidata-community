@@ -39,10 +39,10 @@ lazy val models = (project in file("models"))
   crossScalaVersions := Seq("2.11.12", "2.12.11")
 )
 
-lazy val securesocial = ProjectRef(uri("git://github.com/jaliss/securesocial#0f9710325724da34a46c5ecefb439121fce837b7"), "core")
+//lazy val securesocial = ProjectRef(uri("git://github.com/jaliss/securesocial#0f9710325724da34a46c5ecefb439121fce837b7"), "core")
 
 lazy val play = project
-  .dependsOn(models, securesocial)
+  .dependsOn(models)
   .enablePlugins(PlayScala)
 
 lazy val spark = project
