@@ -8,6 +8,7 @@ import play.api.Configuration
 
 import scala.collection.mutable
 import org.zeromq.ZMQ
+import play.api.Logger
 
 // case class Message(topic: Object, key: Object, value: Object)
 
@@ -16,9 +17,11 @@ object ZMQInit {
   var _ZMQService: ZMQService.type = _
   var context: ZMQ.Context = _
 
+  val logger: Logger = Logger(this.getClass())
+
   def init(config: Configuration) = {
     /*
-     * ZMQProducer: pushPort: 5550, pubPort: 5551
+     * ZMQProducer: pushPort: 5550; pubPort: 5551
      * ZMQPullDataSink: pullPort: 5550,
      * ZMQCleansedDataSink: cleansedSubPort: 5552
      * ZMQSummaryDataSink: summarySubPort: 5553
@@ -50,11 +53,11 @@ object ZMQInit {
       this.context.term()
     } catch {
       case e: Throwable => {
-        println(e.getMessage)
+        logger.error(e.getMessage)
         try {
           this.context.term()
         } catch {
-          case e: Throwable => println(e.getMessage)
+          case e: Throwable => logger.error(e.getMessage)
         }
       }
     }

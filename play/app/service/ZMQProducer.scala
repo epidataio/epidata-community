@@ -46,7 +46,7 @@ object ZMQProducer {
 
     //push the Json message
     pushSocket.send(message.getBytes(ZMQ.CHARSET), 0)
-    // println("Pushed: " + message + "\n")
+    logger.info("Message pushed: " + message)
   }
 
   /**
@@ -61,7 +61,7 @@ object ZMQProducer {
 
     //publish the message
     pubSocket.send(message.getBytes(ZMQ.CHARSET), 0)
-    // println("Published: " + message + "\n")
+    logger.info("Message published: " + message)
   }
 
   def clear(): Unit = {
@@ -72,7 +72,7 @@ object ZMQProducer {
       pushSocket.unbind(pushSocket.getLastEndpoint())
       pushSocket.close()
     } catch {
-      case e: Throwable => println("Exception while closing ZMQ push socket", e.getMessage)
+      case e: Throwable => logger.error("Exception while closing ZMQ push socket" + e.getMessage)
     }
 
     try {
@@ -82,7 +82,7 @@ object ZMQProducer {
       pubSocket.unbind(pubSocket.getLastEndpoint())
       pubSocket.close()
     } catch {
-      case e: Throwable => println("Exception while closing ZMQ Pub socket", e.getMessage)
+      case e: Throwable => logger.error("Exception while closing ZMQ Pub socket" + e.getMessage)
     }
   }
 

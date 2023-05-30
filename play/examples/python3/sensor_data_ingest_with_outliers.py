@@ -139,7 +139,7 @@ while (True):
         meas_last_windspeed_value = 8
         meas_last_rh_value = 60
 
-        for data_iteration in range(1, 5):
+        for data_iteration in range(1, 3):
 
             # Construct an empty list of measurement objects
             measurement_list = []
@@ -161,7 +161,7 @@ while (True):
                     else:
                         meas_value_diff = float(round(random.normalvariate(3.0, 0.25), 2))
                         meas_value = meas_last_temperature_value - meas_value_diff
-                elif ((data_iteration % 3 == 0) and (log_iteration == 2)):
+                elif ((data_iteration % 2 == 0) and (log_iteration == 1)):
                     meas_value = None
                 else:
                     if(data_iteration <= 12):
@@ -191,7 +191,7 @@ while (True):
                     'meas_status': meas_status,
                     'meas_lower_limit': 10.1,
                     'meas_upper_limit': 120.4,
-                    'meas_description': ''
+                    'meas_description': 'Simulated temperature measurement'
                 }
 
                 # Construct measurement list with data to be ingested.
@@ -204,7 +204,7 @@ while (True):
                 # Simulate Wind Speed measurement data
                 if ((data_iteration % 4 == 0) and (log_iteration == 2)):
                     meas_value = float(30)
-                elif ((data_iteration % 3 == 0) and (log_iteration == 2)):
+                elif ((data_iteration % 2 == 0) and (log_iteration == 1)):
                     meas_value = None
                 else:
                     meas_value = float(round(random.normalvariate(8, 2), 2))
@@ -229,7 +229,7 @@ while (True):
                     'meas_status': meas_status,
                     'meas_lower_limit': 0,
                     'meas_upper_limit': 25,
-                    'meas_description': ''
+                    'meas_description': 'Simulated wind speed measurement'
                 }
 
                 # Construct measurement list with data to be ingested.
@@ -261,7 +261,7 @@ while (True):
                     'meas_status': meas_status,
                     'meas_lower_limit': None,
                     'meas_upper_limit': None,
-                    'meas_description': ''
+                    'meas_description': 'Simulated Relative Humidity measurement'
                 }
 
                 # Construct measurement list with data to be ingested.
@@ -305,7 +305,7 @@ while (True):
             print("iteration: ", data_iteration)
             print(json_body + "\n")
 
-            #break
+            # break
 
         break
 

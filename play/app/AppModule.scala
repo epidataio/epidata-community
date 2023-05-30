@@ -12,6 +12,7 @@ import play.api.{ Configuration, Environment }
 import service.{ AppEnvironment, Configs, DataService, DataSinkService, KafkaService, ZMQProducer }
 import providers.DemoProvider
 import models.{ SQLiteDeviceService, NoSQLDeviceService }
+import java.nio.file.Paths
 
 import scala.concurrent.Future
 import javax.inject._
@@ -39,9 +40,21 @@ class ApplicationDBStart @Inject() (env: Environment, conf: Configuration) {
   // Connect to the SQLite database.
   if ((Configs.measDB == "sqlite") || (Configs.userDB == "sqlite") || (Configs.deviceDB == "sqlite")) {
     try {
-      val dbURL: String = conf.getOptional[Configuration]("lite.db.epidata").get
+      val basePath: String = sys.env.get("EPIDATA_HOME") match {
+        case None => throw new IllegalStateException("EPIDATA_HOME environment variable not set")
+        case Some(s) => s
+      }
+      println("base path: " + basePath)
+
+      val dbURL: String = "jdbc:sqlite:" + Paths.get(basePath, "data", conf.getOptional[Configuration]("lite.db.epidata").get
         .getOptional[Configuration](env.mode.toString.toLowerCase).get
-        .getOptional[String]("sqlite.url").get
+        .getOptional[String]("sqlite.url").get)
+
+      //      val dbURL: String = "jdbc:sqlite:" + basePath + conf.getOptional[Configuration]("lite.db.epidata").get
+      //        .getOptional[Configuration](env.mode.toString.toLowerCase).get
+      //        .getOptional[String]("sqlite.url").get
+      println("DB url: " + dbURL)
+      println("Schema file path: " + env.getFile("conf/schema"))
       DBLite.connect(dbURL, env.getFile("conf/schema"))
       // println("DB connection successful")
     } catch {
@@ -110,10 +123,8 @@ class ApplicationDBStart @Inject() (env: Environment, conf: Configuration) {
 class ApplicationStreamStart @Inject() (env: Environment, conf: Configuration) {
 
   if (conf.getOptional[String]("queue.service").get.equalsIgnoreCase("Kafka")) {
-
     KafkaService.init("127.0.0.1:" + conf.getOptional[Int]("queue.servers").get)
   } else if (conf.getOptional[String]("queue.service").get.equalsIgnoreCase("ZMQ")) {
-
     // Initiating object that will initiate 3 instances of ZMQProducer/DataSink to be used across the application
     ZMQInit.init(conf)
   } else {

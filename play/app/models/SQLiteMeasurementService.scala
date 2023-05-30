@@ -526,6 +526,8 @@ object SQLiteMeasurementService {
 
     val insertCleansedStatements = insertCleansedStatementsStr.map(getPrepareStatement(_))
 
+    // println("insertCleansedStatementsStr: " + insertCleansedStatementsStr)
+
     (measurementCleansed.meas_lower_limit, measurementCleansed.meas_upper_limit) match {
       case (None, None) =>
         // Insert with neither a lower nor upper limit.
@@ -544,6 +546,8 @@ object SQLiteMeasurementService {
           meas_value,
           measurementCleansed.meas_unit.getOrElse(""),
           measurementCleansed.meas_status.getOrElse(""),
+          measurementCleansed.meas_flag.getOrElse(""),
+          measurementCleansed.meas_method.getOrElse(""),
           measurementCleansed.meas_description.getOrElse(""),
           measurementCleansed.val1.getOrElse(""),
           measurementCleansed.val2.getOrElse(""))
@@ -565,6 +569,8 @@ object SQLiteMeasurementService {
           measurementCleansed.meas_unit.getOrElse(""),
           measurementCleansed.meas_status.getOrElse(""),
           measurementCleansed.meas_lower_limit.get.asInstanceOf[AnyRef],
+          measurementCleansed.meas_flag.getOrElse(""),
+          measurementCleansed.meas_method.getOrElse(""),
           measurementCleansed.meas_description.getOrElse(""),
           measurementCleansed.val1.getOrElse(""),
           measurementCleansed.val2.getOrElse(""))
@@ -586,6 +592,8 @@ object SQLiteMeasurementService {
           measurementCleansed.meas_unit.getOrElse(""),
           measurementCleansed.meas_status.getOrElse(""),
           measurementCleansed.meas_upper_limit.get.asInstanceOf[AnyRef],
+          measurementCleansed.meas_flag.getOrElse(""),
+          measurementCleansed.meas_method.getOrElse(""),
           measurementCleansed.meas_description.getOrElse(""),
           measurementCleansed.val1.getOrElse(""),
           measurementCleansed.val2.getOrElse(""))
@@ -608,6 +616,8 @@ object SQLiteMeasurementService {
           measurementCleansed.meas_status.getOrElse(""),
           measurementCleansed.meas_lower_limit.get.asInstanceOf[AnyRef],
           measurementCleansed.meas_upper_limit.get.asInstanceOf[AnyRef],
+          measurementCleansed.meas_flag.getOrElse(""),
+          measurementCleansed.meas_method.getOrElse(""),
           measurementCleansed.meas_description.getOrElse(""),
           measurementCleansed.val1.getOrElse(""),
           measurementCleansed.val2.getOrElse(""))
@@ -636,6 +646,8 @@ object SQLiteMeasurementService {
           measurementCleansed.meas_datatype.getOrElse(""),
           measurementCleansed.meas_unit.getOrElse(""),
           measurementCleansed.meas_status.getOrElse(""),
+          measurementCleansed.meas_flag.getOrElse(""),
+          measurementCleansed.meas_method.getOrElse(""),
           measurementCleansed.meas_description.getOrElse(""),
           measurementCleansed.val1.getOrElse(""),
           measurementCleansed.val2.getOrElse(""))
@@ -656,6 +668,8 @@ object SQLiteMeasurementService {
           measurementCleansed.meas_unit.getOrElse(""),
           measurementCleansed.meas_status.getOrElse(""),
           measurementCleansed.meas_lower_limit.get.asInstanceOf[AnyRef],
+          measurementCleansed.meas_flag.getOrElse(""),
+          measurementCleansed.meas_method.getOrElse(""),
           measurementCleansed.meas_description.getOrElse(""),
           measurementCleansed.val1.getOrElse(""),
           measurementCleansed.val2.getOrElse(""))
@@ -676,6 +690,8 @@ object SQLiteMeasurementService {
           measurementCleansed.meas_unit.getOrElse(""),
           measurementCleansed.meas_status.getOrElse(""),
           measurementCleansed.meas_upper_limit.get.asInstanceOf[AnyRef],
+          measurementCleansed.meas_flag.getOrElse(""),
+          measurementCleansed.meas_method.getOrElse(""),
           measurementCleansed.meas_description.getOrElse(""),
           measurementCleansed.val1.getOrElse(""),
           measurementCleansed.val2.getOrElse(""))
@@ -697,6 +713,8 @@ object SQLiteMeasurementService {
           measurementCleansed.meas_status.getOrElse(""),
           measurementCleansed.meas_lower_limit.get.asInstanceOf[AnyRef],
           measurementCleansed.meas_upper_limit.get.asInstanceOf[AnyRef],
+          measurementCleansed.meas_flag.getOrElse(""),
+          measurementCleansed.meas_method.getOrElse(""),
           measurementCleansed.meas_description.getOrElse(""),
           measurementCleansed.val1.getOrElse(""),
           measurementCleansed.val2.getOrElse(""))

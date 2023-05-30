@@ -45,6 +45,7 @@ object SensorMeasurement {
   def insert(sensorMeasurement: BaseSensorMeasurement, sqliteEnable: Boolean) = {
     if (sqliteEnable) {
       SQLiteMeasurementService.insert(sensorMeasurement)
+      // logger.info("insert called. sensorMeasurement: " + sensorMeasurement)
     } else {
       MeasurementService.insert(sensorMeasurement)
     }
@@ -57,6 +58,7 @@ object SensorMeasurement {
   def insert(sensorMeasurementList: List[BaseSensorMeasurement], sqliteEnable: Boolean): Unit = {
     if (sqliteEnable) {
       SQLiteMeasurementService.bulkInsert(sensorMeasurementList.map(sensorMeasurementToMeasurement))
+      // logger.info("Bulk insert called. sensorMeasurementList map: " + sensorMeasurementList.map(sensorMeasurementToMeasurement))
     } else {
       MeasurementService.bulkInsert(sensorMeasurementList.map(sensorMeasurementToMeasurement))
     }
@@ -191,7 +193,9 @@ object SensorMeasurement {
 
   def insertToKafka(sensorMeasurementList: List[BaseSensorMeasurement]): Unit = {
     sensorMeasurementList.foreach(m => insertToKafka(m))
-    if (Configs.twoWaysIngestion) {
+
+    // Two way ingestion NOT supported with SQLite
+    if (Configs.twoWaysIngestion && !Configs.measDBLite) {
       insert(sensorMeasurementList, Configs.measDBLite)
     }
   }
@@ -201,18 +205,21 @@ object SensorMeasurement {
    * @param sensorMeasurement The Measurement to insert.
    */
   def insertToZMQ(sensorMeasurement: BaseSensorMeasurement): Unit = {
+    // logger.info("insertToZMQ called. sensorMeasurement: " + sensorMeasurement)
     val key = keyForMeasurementTopic(sensorMeasurement)
     val value = BaseSensorMeasurement.toJson(sensorMeasurement)
-    // println("insertToZMQ called. key: " + key + ", value: " + value + "\n")
+    // logger.info("key: " + key + ", value: " + value)
+
     ZMQInit._ZMQProducer.push(key, value)
     ZMQInit._ZMQProducer.pub(Measurement.zmqTopic, key, value)
   }
 
   def insertToZMQ(sensorMeasurementList: List[BaseSensorMeasurement]): Unit = {
-    // println("Bulk insertToZMQ called.\n")
+    // logger.info("Bulk insertToZMQ called. sensorMeasurementList: " + sensorMeasurementList)
     sensorMeasurementList.foreach(m => insertToZMQ(m))
 
-    if (Configs.twoWaysIngestion) {
+    // Two way ingestion NOT supported with SQLite
+    if (Configs.twoWaysIngestion && !Configs.measDBLite) {
       insert(sensorMeasurementList, Configs.measDBLite)
     }
   }

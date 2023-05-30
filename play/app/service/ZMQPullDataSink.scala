@@ -33,7 +33,7 @@ class ZMQPullDataSink {
   def pull(): Message = {
     try {
       val receivedString = pullSocket.recvStr()
-      // println("Pull data: " + receivedString + "\n")
+      logger.info("Pull data: " + receivedString)
       val message: Message = jsonToMessage(receivedString)
       message
     } catch {
@@ -48,7 +48,7 @@ class ZMQPullDataSink {
       pullSocket.unbind(pullSocket.getLastEndpoint())
       pullSocket.close()
     } catch {
-      case e: Throwable => println("Exception while closing DataSink pull service", e.getMessage)
+      case e: Throwable => logger.error("Exception while closing DataSink pull service" + e.getMessage)
     }
   }
 

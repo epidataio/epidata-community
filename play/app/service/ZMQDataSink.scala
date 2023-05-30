@@ -34,7 +34,7 @@ object ZMQDataSink {
     //val context = ZMQ.context(1)
     this.context = context
 
-    println("ZMQDataSink init called")
+    logger.info("ZMQDataSink init called")
 
     //using context to create PUSH and PUB models and binding them to sockets
     //pullSocket = context.socket(ZMQ.PULL)
@@ -57,7 +57,7 @@ object ZMQDataSink {
     pullSocket = context.socket(ZMQ.PULL)
     pullSocket.setLinger(0)
     pullSocket.bind("tcp://127.0.0.1:" + pullPort)
-    //println("pull port: " + pullPort)
+    logger.info("pull port: " + pullPort)
   }
 
   def initSub(subPort: String): Unit = {
@@ -66,7 +66,7 @@ object ZMQDataSink {
     subSocket = context.socket(ZMQ.SUB)
     subSocket.setLinger(0)
     subSocket.connect("tcp://127.0.0.1:" + subPort)
-    //println("sub port: " + subPort)
+    logger.info("sub port: " + subPort)
 
     subSocket.subscribe(subTopicOriginal.getBytes(ZMQ.CHARSET))
     subSocket.subscribe(subTopicCleansed.getBytes(ZMQ.CHARSET))
@@ -74,11 +74,11 @@ object ZMQDataSink {
   }
 
   def pull(): Message = {
-    println("ZMQDataSink pull called")
+    logger.info("ZMQDataSink pull called")
 
     try {
       val receivedString = pullSocket.recvStr()
-      //println("pulled string: " + receivedString + "\n")
+      logger.info("pulled string: " + receivedString + "\n")
 
       //    val parser = new JSONParser()
       //    val messageObject = parser.parse(receivedString).asInstanceOf[Message]
@@ -86,21 +86,21 @@ object ZMQDataSink {
       messageObject
     } catch {
       case e: Throwable => {
-        println("Unhandled exception in DataSink pull service")
+        logger.error("Unhandled exception in DataSink pull service")
         throw e
       }
     }
   }
 
   def sub(): Message = {
-    println("ZMQDataSink sub called.")
+    logger.info("ZMQDataSink sub called.")
 
     try {
       val topic = subSocket.recvStr()
       val receivedString = subSocket.recvStr()
 
-      //println("subscribe topic: " + topic)
-      //println("subscribed received string: " + receivedString + "\n")
+      logger.info("subscribe topic: " + topic)
+      logger.info("subscribed received string: " + receivedString + "\n")
 
       //    val parser = new JSONParser()
       //    val messageObject = parser.parse(receivedString).asInstanceOf[Message]
@@ -109,27 +109,27 @@ object ZMQDataSink {
       messageObject
     } catch {
       case e: Throwable => {
-        println("Unhandled exception in DataSink sub service")
+        logger.error("Unhandled exception in DataSink sub service")
         throw e
       }
     }
   }
 
   def clearPull(pullPort: String, subPort: String): Unit = {
-    println("DataSink pull service disconnecting from DataSource")
+    logger.info("DataSink pull service disconnecting from DataSource")
     try {
       //pullSocket.send(STOP_MESSAGE, 0);
       pullSocket.setLinger(0)
       pullSocket.unbind("tcp://127.0.0.1:" + pullPort)
       pullSocket.close()
-      println("DataSink pull service closed successfully")
+      logger.info("DataSink pull service closed successfully")
     } catch {
-      case e: Throwable => println("Exception while closing DataSink pull service", e.getMessage)
+      case e: Throwable => logger.error("Exception while closing DataSink pull service" + e.getMessage)
     }
   }
 
   def clearSub(pullPort: String, subPort: String): Unit = {
-    println("DataSink sub service disconnecting from DataSource")
+    logger.info("DataSink sub service disconnecting from DataSource")
 
     try {
       //subSocket.send(STOP_MESSAGE, 0);
@@ -139,9 +139,9 @@ object ZMQDataSink {
       subSocket.setLinger(0)
       subSocket.disconnect("tcp://127.0.0.1:" + subPort)
       subSocket.close()
-      println("DataSink subscription service closed successfully")
+      logger.info("DataSink subscription service closed successfully")
     } catch {
-      case e: Throwable => println("Exception while closing DataSink sub service", e.getMessage)
+      case e: Throwable => logger.error("Exception while closing DataSink sub service" + e.getMessage)
     }
   }
 

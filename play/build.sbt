@@ -2,14 +2,16 @@ import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 import scalariform.formatter.preferences._
 import scala.sys.process._
 
-name := "epidata-play"
+name := "epidata-https-server"
+maintainer := "EpiData, Inc."
+
+scalaVersion := "2.12.11"
 
 resolvers += "Typesafe repository" at "https://repo.typesafe.com/typesafe/releases/"
 resolvers ++= Seq(
   "Typesafe repository" at "https://repo.typesafe.com/typesafe/releases/",
   Resolver.jcenterRepo
 )
-
 
 routesGenerator := InjectedRoutesGenerator
 
@@ -58,8 +60,25 @@ autopep8 := {
 
 assemblyMergeStrategy in assembly := {
   case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+  case manifest if manifest.contains("MANIFEST.MF") =>
+    // We don't need manifest files since sbt-assembly will create
+    // one with the given settings
+    MergeStrategy.discard
+  case referenceOverrides if referenceOverrides.contains("reference-overrides.conf") =>
+    // Keep the content for all reference-overrides.conf files
+    MergeStrategy.concat
   case x => MergeStrategy.first
+
+//  case x =>
+    // For all the other files, use the default sbt-assembly merge strategy
+//    val oldStrategy = (assemblyMergeStrategy in assembly).value
+//    oldStrategy(x)
 }
+
+mainClass in assembly := Some("play.core.server.ProdServerStart")
+fullClasspath in assembly += Attributed.blank(PlayKeys.playPackageAssets.value)
+
+doc in Compile := (target.value / "none")
 
 test in assembly := {}
 
@@ -68,7 +87,5 @@ test in assembly := {}
 //ScalariformKeys.preferences := ScalariformKeys.preferences.value
 //  .setPreference(DoubleIndentConstructorArguments, true)
 //  .setPreference(AlignParameters, false)
-
-scalaVersion := "2.12.11"
 
 libraryDependencies += "ru.dgis" %% "reactive-zmq" % "0.4.0"

@@ -34,9 +34,9 @@ class ZMQSummaryDataSink {
   def sub(): (String, Message) = {
     try {
       val topic = subSocket.recvStr()
-      // println("Sub topic: " + topic + "\n")
+      logger.info("Sub topic: " + topic)
       val receivedString = subSocket.recvStr()
-      // println("Sub data: " + receivedString + "\n")
+      logger.info("Sub data: " + receivedString + "\n")
       val message = jsonToMessage(receivedString)
       (topic, message)
     } catch {
@@ -52,7 +52,7 @@ class ZMQSummaryDataSink {
       subSocket.disconnect(subSocket.getLastEndpoint())
       subSocket.close()
     } catch {
-      case e: Throwable => println("Exception while closing DataSink sub service", e.getMessage)
+      case e: Throwable => logger.error("Exception while closing DataSink sub service" + e.getMessage)
     }
   }
 
