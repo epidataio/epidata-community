@@ -97,10 +97,23 @@ object TypeUtils {
 */
 
   def getOptionBinary(row: ResultSet, field: String): Option[Binary] = {
+    /*
     val binaryBuf = ByteBuffer.wrap(row.getBytes(field))
     binaryBuf match {
       case null => None
       case _ =>
+        val valueBytes = new Array[Byte](binaryBuf.limit - binaryBuf.position)
+        binaryBuf.get(valueBytes)
+        val binary = new Binary(valueBytes)
+        Option(binary)
+    }
+    */
+
+    val bytes = row.getBytes(field)
+    bytes match {
+      case null => None
+      case _ =>
+        val binaryBuf = ByteBuffer.wrap(bytes)
         val valueBytes = new Array[Byte](binaryBuf.limit - binaryBuf.position)
         binaryBuf.get(valueBytes)
         val binary = new Binary(valueBytes)

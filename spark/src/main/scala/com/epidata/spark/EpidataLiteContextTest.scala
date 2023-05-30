@@ -6,6 +6,7 @@ package com.epidata.spark
 
 import com.typesafe.config.ConfigFactory
 import java.io.File
+import java.nio.file.Paths
 import java.sql.{ Connection, DriverManager, SQLException, Timestamp }
 // import java.util
 import java.util.{ Date, LinkedHashMap => JLinkedHashMap, HashMap => JHashMap, LinkedList => JLinkedList, List => JList, ArrayList => JArrayList, Arrays => JArrays }
@@ -15,11 +16,10 @@ import scala.io.Source
 import scala.io.StdIn
 import scala.util.Properties
 //import scala.collection.mutable.Map
-
 /*
 object elcTest extends App {
 */
-/*
+  /*
   val ec = new EpidataLiteContext()
 
   //  ----- EpiDataLite Batch  Test -----
@@ -27,13 +27,19 @@ object elcTest extends App {
   println("\n EpiDataLite Batch Test Started")
 
   Class.forName("org.sqlite.JDBC");
-  private val conf = ConfigFactory.parseResources("sqlite-defaults.conf")
-//  private val basePath = new java.io.File(".").getAbsoluteFile().getParent()
+  private val basePath = scala.util.Properties.envOrElse("EPIDATA_HOME", "")
+  if (basePath.equals("") || (basePath == null)) {
+    throw new IllegalStateException("EPIDATA_HOME environment variable not set")
+  }
 
-  private val basePath = scala.util.Properties.envOrElse("EPIDATA_HOME", "undefined")
+  private val conf = ConfigFactory.parseFile(new java.io.File(Paths.get(basePath, "conf", "sqlite-defaults.conf").toString())).resolve()
+  println("conf value: " + conf)
+  //  private val conf = ConfigFactory.parseResources("sqlite-defaults.conf")
+  //  private val basePath = new java.io.File(".").getAbsoluteFile().getParent()
 
   private val dbName = conf.getString("spark.epidata.SQLite.test.dbFileName")
-  private val dbUrl = "jdbc:sqlite:" + basePath + "/data/" + dbName
+  private val dbUrl = Paths.get("jdbc:sqlite:", basePath, "data", dbName).toString()
+  //private val dbUrl = "jdbc:sqlite:" + basePath + "/data/" + dbName
 
   println("sqlite db url: " + dbUrl)
 
@@ -141,6 +147,25 @@ object elcTest extends App {
      #meas_description,
      #val1,
      #val2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#')
+
+  val insert_q_null =
+    s"""#INSERT OR REPLACE INTO ${com.epidata.lib.models.Measurement.DBTableName} (
+        #customer,
+        #customer_site,
+        #collection,
+        #dataset,
+        #epoch,
+        #ts,
+        #key1,
+        #key2,
+        #key3,
+        #meas_datatype,
+        #meas_unit,
+        #meas_status,
+        #meas_description,
+        #val1,
+        #val2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""".stripMargin('#')
+
   //println(s"prebinding: ${insert_q.toString}")
   // Company-1 Test Data
   val prepare_insert = con.prepareStatement(insert_q.toString)
@@ -161,6 +186,7 @@ object elcTest extends App {
   prepare_insert.setString(15, company1_site1_station1_test1(21).asInstanceOf[String])
   prepare_insert.setString(16, company1_site1_station1_test1(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
+
   prepare_insert.setString(1, company1_site1_station1_test1(0).asInstanceOf[String])
   prepare_insert.setString(2, company1_site1_station1_test1(1).asInstanceOf[String])
   prepare_insert.setString(3, company1_site1_station1_test1(2).asInstanceOf[String])
@@ -178,6 +204,7 @@ object elcTest extends App {
   prepare_insert.setString(15, company1_site1_station1_test1(21).asInstanceOf[String])
   prepare_insert.setString(16, company1_site1_station1_test1(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
+
   prepare_insert.setString(1, company1_site1_station1_test2(0).asInstanceOf[String])
   prepare_insert.setString(2, company1_site1_station1_test2(1).asInstanceOf[String])
   prepare_insert.setString(3, company1_site1_station1_test2(2).asInstanceOf[String])
@@ -195,6 +222,7 @@ object elcTest extends App {
   prepare_insert.setString(15, company1_site1_station1_test2(21).asInstanceOf[String])
   prepare_insert.setString(16, company1_site1_station1_test2(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
+
   prepare_insert.setString(1, company1_site1_station1_test2(0).asInstanceOf[String])
   prepare_insert.setString(2, company1_site1_station1_test2(1).asInstanceOf[String])
   prepare_insert.setString(3, company1_site1_station1_test2(2).asInstanceOf[String])
@@ -212,6 +240,7 @@ object elcTest extends App {
   prepare_insert.setString(15, company1_site1_station1_test2(21).asInstanceOf[String])
   prepare_insert.setString(16, company1_site1_station1_test2(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
+
   prepare_insert.setString(1, company1_site1_station2_test1(0).asInstanceOf[String])
   prepare_insert.setString(2, company1_site1_station2_test1(1).asInstanceOf[String])
   prepare_insert.setString(3, company1_site1_station2_test1(2).asInstanceOf[String])
@@ -229,6 +258,7 @@ object elcTest extends App {
   prepare_insert.setString(15, company1_site1_station2_test1(21).asInstanceOf[String])
   prepare_insert.setString(16, company1_site1_station2_test1(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
+
   prepare_insert.setString(1, company1_site1_station2_test1(0).asInstanceOf[String])
   prepare_insert.setString(2, company1_site1_station2_test1(1).asInstanceOf[String])
   prepare_insert.setString(3, company1_site1_station2_test1(2).asInstanceOf[String])
@@ -246,6 +276,7 @@ object elcTest extends App {
   prepare_insert.setString(15, company1_site1_station2_test1(21).asInstanceOf[String])
   prepare_insert.setString(16, company1_site1_station2_test1(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
+
   prepare_insert.setString(1, company1_site1_station2_test2(0).asInstanceOf[String])
   prepare_insert.setString(2, company1_site1_station2_test2(1).asInstanceOf[String])
   prepare_insert.setString(3, company1_site1_station2_test2(2).asInstanceOf[String])
@@ -263,6 +294,7 @@ object elcTest extends App {
   prepare_insert.setString(15, company1_site1_station2_test2(21).asInstanceOf[String])
   prepare_insert.setString(16, company1_site1_station2_test2(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
+
   prepare_insert.setString(1, company1_site1_station2_test2(0).asInstanceOf[String])
   prepare_insert.setString(2, company1_site1_station2_test2(1).asInstanceOf[String])
   prepare_insert.setString(3, company1_site1_station2_test2(2).asInstanceOf[String])
@@ -280,6 +312,7 @@ object elcTest extends App {
   prepare_insert.setString(15, company1_site1_station2_test2(21).asInstanceOf[String])
   prepare_insert.setString(16, company1_site1_station2_test2(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
+
   prepare_insert.setString(1, company1_site2_station1_test1(0).asInstanceOf[String])
   prepare_insert.setString(2, company1_site2_station1_test1(1).asInstanceOf[String])
   prepare_insert.setString(3, company1_site2_station1_test1(2).asInstanceOf[String])
@@ -297,6 +330,7 @@ object elcTest extends App {
   prepare_insert.setString(15, company1_site2_station1_test1(21).asInstanceOf[String])
   prepare_insert.setString(16, company1_site2_station1_test1(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
+
   prepare_insert.setString(1, company1_site2_station1_test1(0).asInstanceOf[String])
   prepare_insert.setString(2, company1_site2_station1_test1(1).asInstanceOf[String])
   prepare_insert.setString(3, company1_site2_station1_test1(2).asInstanceOf[String])
@@ -314,6 +348,7 @@ object elcTest extends App {
   prepare_insert.setString(15, company1_site2_station1_test1(21).asInstanceOf[String])
   prepare_insert.setString(16, company1_site2_station1_test1(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
+
   prepare_insert.setString(1, company1_site2_station1_test2(0).asInstanceOf[String])
   prepare_insert.setString(2, company1_site2_station1_test2(1).asInstanceOf[String])
   prepare_insert.setString(3, company1_site2_station1_test2(2).asInstanceOf[String])
@@ -331,6 +366,7 @@ object elcTest extends App {
   prepare_insert.setString(15, company1_site2_station1_test2(21).asInstanceOf[String])
   prepare_insert.setString(16, company1_site2_station1_test2(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
+
   prepare_insert.setString(1, company1_site2_station1_test2(0).asInstanceOf[String])
   prepare_insert.setString(2, company1_site2_station1_test2(1).asInstanceOf[String])
   prepare_insert.setString(3, company1_site2_station1_test2(2).asInstanceOf[String])
@@ -348,6 +384,7 @@ object elcTest extends App {
   prepare_insert.setString(15, company1_site2_station1_test2(21).asInstanceOf[String])
   prepare_insert.setString(16, company1_site2_station1_test2(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
+
   prepare_insert.setString(1, company1_site2_station2_test1(0).asInstanceOf[String])
   prepare_insert.setString(2, company1_site2_station2_test1(1).asInstanceOf[String])
   prepare_insert.setString(3, company1_site2_station2_test1(2).asInstanceOf[String])
@@ -365,6 +402,7 @@ object elcTest extends App {
   prepare_insert.setString(15, company1_site2_station2_test1(21).asInstanceOf[String])
   prepare_insert.setString(16, company1_site2_station2_test1(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
+
   prepare_insert.setString(1, company1_site2_station2_test1(0).asInstanceOf[String])
   prepare_insert.setString(2, company1_site2_station2_test1(1).asInstanceOf[String])
   prepare_insert.setString(3, company1_site2_station2_test1(2).asInstanceOf[String])
@@ -382,6 +420,7 @@ object elcTest extends App {
   prepare_insert.setString(15, company1_site2_station2_test1(21).asInstanceOf[String])
   prepare_insert.setString(16, company1_site2_station2_test1(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
+
   prepare_insert.setString(1, company1_site2_station2_test2(0).asInstanceOf[String])
   prepare_insert.setString(2, company1_site2_station2_test2(1).asInstanceOf[String])
   prepare_insert.setString(3, company1_site2_station2_test2(2).asInstanceOf[String])
@@ -399,6 +438,7 @@ object elcTest extends App {
   prepare_insert.setString(15, company1_site2_station2_test2(21).asInstanceOf[String])
   prepare_insert.setString(16, company1_site2_station2_test2(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
+
   prepare_insert.setString(1, company1_site2_station2_test2(0).asInstanceOf[String])
   prepare_insert.setString(2, company1_site2_station2_test2(1).asInstanceOf[String])
   prepare_insert.setString(3, company1_site2_station2_test2(2).asInstanceOf[String])
@@ -416,6 +456,7 @@ object elcTest extends App {
   prepare_insert.setString(15, company1_site2_station2_test2(21).asInstanceOf[String])
   prepare_insert.setString(16, company1_site2_station2_test2(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
+
   // Compnay-2 Test Data
   prepare_insert.setString(1, company2_site1_station1_test1(0).asInstanceOf[String])
   prepare_insert.setString(2, company2_site1_station1_test1(1).asInstanceOf[String])
@@ -434,6 +475,7 @@ object elcTest extends App {
   prepare_insert.setString(15, company2_site1_station1_test1(21).asInstanceOf[String])
   prepare_insert.setString(16, company2_site1_station1_test1(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
+
   prepare_insert.setString(1, company2_site1_station1_test1(0).asInstanceOf[String])
   prepare_insert.setString(2, company2_site1_station1_test1(1).asInstanceOf[String])
   prepare_insert.setString(3, company2_site1_station1_test1(2).asInstanceOf[String])
@@ -451,6 +493,7 @@ object elcTest extends App {
   prepare_insert.setString(15, company2_site1_station1_test1(21).asInstanceOf[String])
   prepare_insert.setString(16, company2_site1_station1_test1(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
+
   prepare_insert.setString(1, company2_site1_station1_test2(0).asInstanceOf[String])
   prepare_insert.setString(2, company2_site1_station1_test2(1).asInstanceOf[String])
   prepare_insert.setString(3, company2_site1_station1_test2(2).asInstanceOf[String])
@@ -468,6 +511,7 @@ object elcTest extends App {
   prepare_insert.setString(15, company2_site1_station1_test2(21).asInstanceOf[String])
   prepare_insert.setString(16, company2_site1_station1_test2(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
+
   prepare_insert.setString(1, company2_site1_station1_test2(0).asInstanceOf[String])
   prepare_insert.setString(2, company2_site1_station1_test2(1).asInstanceOf[String])
   prepare_insert.setString(3, company2_site1_station1_test2(2).asInstanceOf[String])
@@ -485,6 +529,7 @@ object elcTest extends App {
   prepare_insert.setString(15, company2_site1_station1_test2(21).asInstanceOf[String])
   prepare_insert.setString(16, company2_site1_station1_test2(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
+
   prepare_insert.setString(1, company2_site1_station2_test1(0).asInstanceOf[String])
   prepare_insert.setString(2, company2_site1_station2_test1(1).asInstanceOf[String])
   prepare_insert.setString(3, company2_site1_station2_test1(2).asInstanceOf[String])
@@ -502,6 +547,7 @@ object elcTest extends App {
   prepare_insert.setString(15, company2_site1_station2_test1(21).asInstanceOf[String])
   prepare_insert.setString(16, company2_site1_station2_test1(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
+
   prepare_insert.setString(1, company2_site1_station2_test1(0).asInstanceOf[String])
   prepare_insert.setString(2, company2_site1_station2_test1(1).asInstanceOf[String])
   prepare_insert.setString(3, company2_site1_station2_test1(2).asInstanceOf[String])
@@ -519,6 +565,7 @@ object elcTest extends App {
   prepare_insert.setString(15, company2_site1_station2_test1(21).asInstanceOf[String])
   prepare_insert.setString(16, company2_site1_station2_test1(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
+
   prepare_insert.setString(1, company2_site1_station2_test2(0).asInstanceOf[String])
   prepare_insert.setString(2, company2_site1_station2_test2(1).asInstanceOf[String])
   prepare_insert.setString(3, company2_site1_station2_test2(2).asInstanceOf[String])
@@ -536,6 +583,7 @@ object elcTest extends App {
   prepare_insert.setString(15, company2_site1_station2_test2(21).asInstanceOf[String])
   prepare_insert.setString(16, company2_site1_station2_test2(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
+
   prepare_insert.setString(1, company2_site1_station2_test2(0).asInstanceOf[String])
   prepare_insert.setString(2, company2_site1_station2_test2(1).asInstanceOf[String])
   prepare_insert.setString(3, company2_site1_station2_test2(2).asInstanceOf[String])
@@ -553,6 +601,7 @@ object elcTest extends App {
   prepare_insert.setString(15, company2_site1_station2_test2(21).asInstanceOf[String])
   prepare_insert.setString(16, company2_site1_station2_test2(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
+
   prepare_insert.setString(1, company2_site2_station1_test1(0).asInstanceOf[String])
   prepare_insert.setString(2, company2_site2_station1_test1(1).asInstanceOf[String])
   prepare_insert.setString(3, company2_site2_station1_test1(2).asInstanceOf[String])
@@ -570,6 +619,7 @@ object elcTest extends App {
   prepare_insert.setString(15, company2_site2_station1_test1(21).asInstanceOf[String])
   prepare_insert.setString(16, company2_site2_station1_test1(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
+
   prepare_insert.setString(1, company2_site2_station1_test1(0).asInstanceOf[String])
   prepare_insert.setString(2, company2_site2_station1_test1(1).asInstanceOf[String])
   prepare_insert.setString(3, company2_site2_station1_test1(2).asInstanceOf[String])
@@ -587,6 +637,7 @@ object elcTest extends App {
   prepare_insert.setString(15, company2_site2_station1_test1(21).asInstanceOf[String])
   prepare_insert.setString(16, company2_site2_station1_test1(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
+
   prepare_insert.setString(1, company2_site2_station1_test2(0).asInstanceOf[String])
   prepare_insert.setString(2, company2_site2_station1_test2(1).asInstanceOf[String])
   prepare_insert.setString(3, company2_site2_station1_test2(2).asInstanceOf[String])
@@ -604,6 +655,7 @@ object elcTest extends App {
   prepare_insert.setString(15, company2_site2_station1_test2(21).asInstanceOf[String])
   prepare_insert.setString(16, company2_site2_station1_test2(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
+
   prepare_insert.setString(1, company2_site2_station1_test2(0).asInstanceOf[String])
   prepare_insert.setString(2, company2_site2_station1_test2(1).asInstanceOf[String])
   prepare_insert.setString(3, company2_site2_station1_test2(2).asInstanceOf[String])
@@ -621,6 +673,7 @@ object elcTest extends App {
   prepare_insert.setString(15, company2_site2_station1_test2(21).asInstanceOf[String])
   prepare_insert.setString(16, company2_site2_station1_test2(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
+
   prepare_insert.setString(1, company2_site2_station2_test1(0).asInstanceOf[String])
   prepare_insert.setString(2, company2_site2_station2_test1(1).asInstanceOf[String])
   prepare_insert.setString(3, company2_site2_station2_test1(2).asInstanceOf[String])
@@ -638,6 +691,7 @@ object elcTest extends App {
   prepare_insert.setString(15, company2_site2_station2_test1(21).asInstanceOf[String])
   prepare_insert.setString(16, company2_site2_station2_test1(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
+
   prepare_insert.setString(1, company2_site2_station2_test1(0).asInstanceOf[String])
   prepare_insert.setString(2, company2_site2_station2_test1(1).asInstanceOf[String])
   prepare_insert.setString(3, company2_site2_station2_test1(2).asInstanceOf[String])
@@ -655,6 +709,7 @@ object elcTest extends App {
   prepare_insert.setString(15, company2_site2_station2_test1(21).asInstanceOf[String])
   prepare_insert.setString(16, company2_site2_station2_test1(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
+
   prepare_insert.setString(1, company2_site2_station2_test2(0).asInstanceOf[String])
   prepare_insert.setString(2, company2_site2_station2_test2(1).asInstanceOf[String])
   prepare_insert.setString(3, company2_site2_station2_test2(2).asInstanceOf[String])
@@ -672,6 +727,7 @@ object elcTest extends App {
   prepare_insert.setString(15, company2_site2_station2_test2(21).asInstanceOf[String])
   prepare_insert.setString(16, company2_site2_station2_test2(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
+
   prepare_insert.setString(1, company2_site2_station2_test2(0).asInstanceOf[String])
   prepare_insert.setString(2, company2_site2_station2_test2(1).asInstanceOf[String])
   prepare_insert.setString(3, company2_site2_station2_test2(2).asInstanceOf[String])
@@ -689,6 +745,26 @@ object elcTest extends App {
   prepare_insert.setString(15, company2_site2_station2_test2(21).asInstanceOf[String])
   prepare_insert.setString(16, company2_site2_station2_test2(22).asInstanceOf[String])
   prepare_insert.executeUpdate()
+
+  // Company-1 Test Data - null value
+  val prepare_insert_null = con.prepareStatement(insert_q_null.toString)
+  prepare_insert_null.setString(1, company1_site1_station1_test1(0).asInstanceOf[String])
+  prepare_insert_null.setString(2, company1_site1_station1_test1(1).asInstanceOf[String])
+  prepare_insert_null.setString(3, company1_site1_station1_test1(2).asInstanceOf[String])
+  prepare_insert_null.setString(4, company1_site1_station1_test1(3).asInstanceOf[String])
+  prepare_insert_null.setInt(5, epoch(0))
+  prepare_insert_null.setTimestamp(6, beginTime)
+  prepare_insert_null.setString(7, company1_site1_station1_test1(6).asInstanceOf[String])
+  prepare_insert_null.setString(8, company1_site1_station1_test1(7).asInstanceOf[String])
+  prepare_insert_null.setString(9, company1_site1_station1_test1(8).asInstanceOf[String])
+  prepare_insert_null.setString(10, company1_site1_station1_test1(9).asInstanceOf[String])
+  //  prepare_insert_null.setDouble(11, company1_site1_station1_test1(10).asInstanceOf[Double])
+  prepare_insert_null.setString(11, company1_site1_station1_test1(14).asInstanceOf[String])
+  prepare_insert_null.setString(12, company1_site1_station1_test1(15).asInstanceOf[String])
+  prepare_insert_null.setString(13, company1_site1_station1_test1(20).asInstanceOf[String])
+  prepare_insert_null.setString(14, company1_site1_station1_test1(21).asInstanceOf[String])
+  prepare_insert_null.setString(15, company1_site1_station1_test1(22).asInstanceOf[String])
+  prepare_insert_null.executeUpdate()
 
   // Insert Check - Measurements Original
   val rsOriginal = con.prepareStatement(s"SELECT * FROM ${com.epidata.lib.models.Measurement.DBTableName}").executeQuery()
@@ -1766,8 +1842,9 @@ object elcTest extends App {
   try { con.close() } catch { case e: SQLException => println("Error closing database connection") }
   println("\n EpiDataLite Batch Query Test completed")
   println("----------------------------------------------------")
-*/
-/*
+  */
+
+  /*
   //  ----- EpiDataLite Stream Test Started -----
   println("\n EpiDataLite Stream Test Started")
 
@@ -1789,7 +1866,7 @@ object elcTest extends App {
   val op1 = esc.createTransformation("Identity", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
   println("transformation created: " + op1)
 
-  val op2 = esc.createTransformation("FillMissingValue", List("Temperature"), Map("method" -> "rolling", "s" -> 3))
+  val op2 = esc.createTransformation("FillMissingValue", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map("method" -> "rolling", "s" -> 3))
   println("transformation created: " + op2)
 
   var list = new JArrayList[String]()
@@ -1813,8 +1890,9 @@ object elcTest extends App {
 
   // println("transformation created: " + op7)
 
-  val op8 = esc.createTransformation("NAs", List("Temperature"), Map[String, String]())
-  println("transformation created: " + op8)
+  // val op8 = esc.createTransformation("NAs", List("Temperature"), Map[String, String]())
+  // println("transformation created: " + op8)
+
   // val op9 = esc.createTransformation("Transpose", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
   // println("transformation created: " + op9)
 
@@ -1938,5 +2016,7 @@ object elcTest extends App {
 
   println("\n EpiDataLite Stream Test completed")
   println("----------------------------------------------------")
+  */
+/*
 }
 */

@@ -14,6 +14,7 @@ import org.zeromq.ZMQException
 
 import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.Queue
+import scala.collection.mutable.MutableList
 import java.util.{ LinkedHashMap => JLinkedHashMap, List => JList, Map => JMap }
 
 import com.epidata.lib.models.util.JsonHelpers._
@@ -24,8 +25,10 @@ import com.typesafe.config.ConfigFactory
 import scala.io.StdIn
 import scala.util.control.Breaks._
 import java.util.logging._
+import java.nio.file.Paths
 
-class StreamingNode {
+class StreamingNode(logger: Logger) {
+  println("Streaming Node class")
   var subSocket: ZMQ.Socket = _ //add as parameter
   var publishSocket: ZMQ.Socket = _ //add as parameter
 
@@ -37,16 +40,29 @@ class StreamingNode {
 
   var transformation: Transformation = _
 
-  var streamBuffers: Array[Queue[String]] = _
+  // var inputBuffers: Array[Queue[String]] = _
+  var inputBuffers: Array[MutableList[String]] = _
   var bufferSizes: ListBuffer[Integer] = _
+  var bufferOverlapSizes: ListBuffer[Integer] = _
 
-  var outputBuffer: Queue[String] = _
+  // var outputBuffer: Queue[String] = _
+  var outputBuffer: MutableList[String] = _
 
-  var logger: Logger = _
+  var this.logger: Logger = logger
 
-  private val conf = ConfigFactory.parseResources("sqlite-defaults.conf")
+  private val basePath = scala.util.Properties.envOrElse("EPIDATA_HOME", "")
+  if (basePath.equals("") || (basePath == null)) {
+    throw new IllegalStateException("EPIDATA_HOME environment variable not set")
+  } else
+    println("base path:" + basePath)
+
+  private val conf = ConfigFactory.parseFile(new java.io.File(Paths.get(basePath, "conf", "sqlite-defaults.conf").toString())).resolve()
+  println("conf value: " + conf)
+
   val measurementClass: String = conf.getString("spark.epidata.measurementClass")
+  println("measurement class: " + measurementClass)
 
+/***
   def init(
     context: ZMQ.Context,
 
@@ -73,7 +89,7 @@ class StreamingNode {
       bufferSizes.remove((bufferSizes.length - difference), difference) //append pattern until buffersizes is same size or greater than receive ports
     }
 
-    //logger.log(Level.INFO, "Sizes: " + receivePorts.length + ", " + bufferSizes.length)
+    // logger.log(Level.INFO, "Sizes: " + receivePorts.length + ", " + bufferSizes.length)
 
     subscribePorts = receivePorts
     subscribeTopics = receiveTopics
@@ -81,63 +97,62 @@ class StreamingNode {
     publishPort = sendPort
     publishTopic = sendTopic
 
-    logger.log(Level.INFO, "subscribePorts: " + subscribePorts + ", subscribeTopics: " + subscribeTopics + ", publishPort: " + publishPort + ", publishTopic: " + publishTopic)
+    // logger.log(Level.INFO, "subscribePorts: " + subscribePorts + ", subscribeTopics: " + subscribeTopics + ", publishPort: " + publishPort + ", publishTopic: " + publishTopic)
 
     subSocket = context.socket(ZMQ.SUB)
     subSocket.setLinger(10)
-    logger.log(Level.INFO, "subSocket created")
+    logger.log(Level.FINE, "subSocket created")
 
     for (port <- subscribePorts) { subSocket.connect("tcp://127.0.0.1:" + port) }
     for (topic <- subscribeTopics) { subSocket.subscribe(topic.getBytes(ZMQ.CHARSET)) }
 
     publishSocket = context.socket(ZMQ.PUB)
     publishSocket.setLinger(0)
-    logger.log(Level.INFO, "pubSocket created")
+    logger.log(Level.FINE, "pubSocket created")
 
     // logger.log(Level.INFO, "LINE 84: " + publishPort)
     publishSocket.bind("tcp://127.0.0.1:" + publishPort)
-    logger.log(Level.INFO, "pubSocket bound")
+    logger.log(Level.FINE, "pubSocket bound")
 
     this.transformation = transformation
 
-    streamBuffers = new Array[Queue[String]](bufferSizes.length)
+    inputBuffers = new Array[Queue[String]](bufferSizes.length)
 
-    for (i <- 0 until bufferSizes.length) { streamBuffers(i) = new Queue[String]() }
+    for (i <- 0 until bufferSizes.length) { inputBuffers(i) = new Queue[String]() }
 
     outputBuffer = new Queue[String]
     println("created outputBuffer")
 
     this.bufferSizes = bufferSizes
 
-    logger.log(Level.INFO, "\nStreamNode Configs----------------------------------------------")
-    logger.log(Level.INFO, "Sub Topic: " + subscribeTopics)
-    logger.log(Level.INFO, "Sub Port: " + subscribePorts)
-    logger.log(Level.INFO, "Pub Topic: " + publishTopic)
-    logger.log(Level.INFO, "Pub Port: " + publishPort)
-    logger.log(Level.INFO, "Stream Buffers: " + streamBuffers)
-    logger.log(Level.INFO, "Stream Buffer Sizes: " + bufferSizes)
-    logger.log(Level.INFO, "StreamNode Configs----------------------------------------------")
+    // logger.log(Level.INFO, "\nStreamNode Configs----------------------------------------------")
+    // logger.log(Level.INFO, "Sub Topic: " + subscribeTopics)
+    // logger.log(Level.INFO, "Sub Port: " + subscribePorts)
+    // logger.log(Level.INFO, "Pub Topic: " + publishTopic)
+    // logger.log(Level.INFO, "Pub Port: " + publishPort)
+    // logger.log(Level.INFO, "Stream Input Buffers: " + inputBuffers)
+    // logger.log(Level.INFO, "Stream Buffer Sizes: " + bufferSizes)
+    // logger.log(Level.INFO, "Stream Buffer Overlap Sizes: " + bufferOverlapSizes)
+    // logger.log(Level.INFO, "StreamNode Configs----------------------------------------------")
 
     logger.log(Level.INFO, "node init completed")
     this
   }
+  ***/
 
   def initSub(
     context: ZMQ.Context,
-
     receivePorts: ListBuffer[String], //allows Node to subscribe to various ports
     receiveTopics: ListBuffer[String], //allows Node to listen on various topics
     bufferSizes: ListBuffer[Integer],
-
+    bufferOverlapSizes: ListBuffer[Integer],
     receiveTimeout: Integer,
-    transformation: Transformation,
-    logger: Logger): StreamingNode = {
-    this.logger = logger
+    transformation: Transformation): StreamingNode = {
     if (receivePorts.length > bufferSizes.length) { //more ports than buffer sizes make a pattern
-      val pattern = new ListBuffer[Integer]()
-      pattern.appendAll(bufferSizes)
+      val bufferPattern = new ListBuffer[Integer]()
+      bufferPattern.appendAll(bufferSizes)
       while (receivePorts.length > bufferSizes.length) {
-        bufferSizes.appendAll(pattern) //append pattern until buffersizes is same size or greater than receive ports
+        bufferSizes.appendAll(bufferPattern) //append pattern until buffersizes is same size or greater than receive ports
       }
     }
 
@@ -146,39 +161,57 @@ class StreamingNode {
       bufferSizes.remove((bufferSizes.length - difference), difference) //append pattern until buffersizes is same size or greater than receive ports
     }
 
-    //logger.log(Level.INFO, "Sizes: " + receivePorts.length + ", " + bufferSizes.length)
+    if (receivePorts.length > bufferOverlapSizes.length) { //more ports than buffer overlap sizes make a pattern
+      val bufferOverlapPattern = new ListBuffer[Integer]()
+      bufferOverlapPattern.appendAll(bufferOverlapSizes)
+      while (receivePorts.length > bufferOverlapSizes.length) {
+        bufferOverlapSizes.appendAll(bufferOverlapPattern) //append pattern until buffer overlap sizes is same size or greater than receive ports
+      }
+    }
+
+    if (receivePorts.length < bufferOverlapSizes.length) { //more buffer overlap sizes than ports so some will be ignored
+      val overlapDifference = bufferOverlapSizes.length - receivePorts.length
+      bufferOverlapSizes.remove((bufferOverlapSizes.length - overlapDifference), overlapDifference) //append pattern until buffer overlap sizes is same size or greater than receive ports
+    }
+
+    // logger.log(Level.INFO, "Sizes: " + receivePorts.length + ", " + bufferSizes.length)
 
     subscribePorts = receivePorts
     subscribeTopics = receiveTopics
 
-    logger.log(Level.INFO, "subscribePorts: " + subscribePorts + ", subscribeTopics: " + subscribeTopics)
+    // logger.log(Level.FINE, "subscribePorts: " + subscribePorts + ", subscribeTopics: " + subscribeTopics)
 
     subSocket = context.socket(ZMQ.SUB)
     subSocket.setLinger(1)
-    logger.log(Level.INFO, "subSocket created")
+    logger.log(Level.FINE, "Stream processor subSocket created")
 
     for (port <- subscribePorts) { subSocket.connect("tcp://127.0.0.1:" + port) }
     for (topic <- subscribeTopics) { subSocket.subscribe(topic.getBytes(ZMQ.CHARSET)) }
 
     this.transformation = transformation
 
-    streamBuffers = new Array[Queue[String]](bufferSizes.length)
+    // inputBuffers = new Array[Queue[String]](bufferSizes.length)
+    inputBuffers = new Array[MutableList[String]](bufferSizes.length)
 
-    for (i <- 0 until bufferSizes.length) { streamBuffers(i) = new Queue[String]() }
+    for (i <- 0 until bufferSizes.length) { inputBuffers(i) = new MutableList[String]() }
+    // for (i <- 0 until bufferSizes.length) { inputBuffers(i) = new Queue[String]() }
+    logger.log(Level.FINE, "Stream processor input buffers created")
 
     this.bufferSizes = bufferSizes
+    this.bufferOverlapSizes = bufferOverlapSizes
 
-    outputBuffer = new Queue[String]
-    println("created outputBuffer")
+    // outputBuffer = new Queue[String]
+    // println("created outputBuffer")
 
-    logger.log(Level.INFO, "\nStreamNode Configs----------------------------------------------")
-    logger.log(Level.INFO, "Sub Topic: " + subscribeTopics)
-    logger.log(Level.INFO, "Sub Port: " + subscribePorts)
-    logger.log(Level.INFO, "Stream Buffers: " + streamBuffers)
-    logger.log(Level.INFO, "Stream Buffer Sizes: " + bufferSizes)
-    logger.log(Level.INFO, "StreamNode Configs----------------------------------------------")
+    // logger.log(Level.INFO, "\nStreamNode Configs----------------------------------------------")
+    // logger.log(Level.INFO, "Sub Topic: " + subscribeTopics)
+    // logger.log(Level.INFO, "Sub Port: " + subscribePorts)
+    // logger.log(Level.INFO, "Stream Input Buffers: " + inputBuffers)
+    // logger.log(Level.INFO, "Stream Input Buffer Sizes: " + bufferSizes)
+    // logger.log(Level.INFO, "Stream Input Buffer Overlap Sizes: " + bufferOverlapSizes)
+    // logger.log(Level.INFO, "StreamNode Configs----------------------------------------------")
 
-    logger.log(Level.INFO, "node initSub completed")
+    logger.log(Level.FINE, "Stream processor initSub completed")
     this
   }
 
@@ -186,31 +219,29 @@ class StreamingNode {
     context: ZMQ.Context,
 
     sendPort: String,
-    sendTopic: String,
-    logger: Logger): StreamingNode = {
-    this.logger = logger
+    sendTopic: String): StreamingNode = {
 
     publishPort = sendPort
     publishTopic = sendTopic
-    logger.log(Level.INFO, "publishPort: " + publishPort + ", publishTopic: " + publishTopic)
+    // logger.log(Level.INFO, "publishPort: " + publishPort + ", publishTopic: " + publishTopic)
     try {
       publishSocket = context.socket(ZMQ.PUB)
       publishSocket.setLinger(0)
-      logger.log(Level.INFO, "pubSocket created")
+      // logger.log(Level.FINE, "Stream processor pubSocket created")
 
-      // logger.log(Level.INFO, "LINE 84: " + publishPort)
       publishSocket.bind("tcp://127.0.0.1:" + publishPort)
-      logger.log(Level.INFO, "pubSocket bound")
+      // logger.log(Level.FINE, "Stream processor pubSocket bound")
 
-      outputBuffer = new Queue[String]
-      println("created outputBuffer")
+      // outputBuffer = new Queue[String]
+      outputBuffer = new MutableList[String]
+      // logger.log(Level.FINE, "Stream processor output buffer created")
 
-      logger.log(Level.INFO, "\nStreamNode Configs----------------------------------------------")
-      logger.log(Level.INFO, "Pub Topic: " + publishTopic)
-      logger.log(Level.INFO, "Pub Port: " + publishPort)
-      logger.log(Level.INFO, "StreamNode Configs----------------------------------------------")
+      // logger.log(Level.INFO, "\nStreamNode Configs----------------------------------------------")
+      // logger.log(Level.INFO, "Pub Topic: " + publishTopic)
+      // logger.log(Level.INFO, "Pub Port: " + publishPort)
+      // logger.log(Level.INFO, "StreamNode Configs----------------------------------------------")
 
-      logger.log(Level.INFO, "node initPub completed")
+      logger.log(Level.FINE, "Stream processor initPub completed")
     } catch {
       case e: Throwable => {
         logger.log(Level.WARNING, e.getMessage)
@@ -220,13 +251,13 @@ class StreamingNode {
   }
 
   def receive() = {
-    logger.log(Level.INFO, "node receive called")
-    logger.log(Level.INFO, "\n\nReceiving----------------------------------------------")
-    logger.log(Level.INFO, "\nReceiving from--------------:")
-    for (port <- subscribePorts) {
-      logger.log(Level.INFO, "port: " + port)
-    }
-    logger.log(Level.INFO, "-----------------------:")
+    logger.log(Level.FINE, "Stream processor receive method called")
+    // logger.log(Level.FINE, "\n\nReceiving----------------------------------------------")
+    // logger.log(Level.FINE, "\nReceiving from--------------:")
+    // for (port <- subscribePorts) {
+    //   logger.log(Level.FINE, "Stream processor - receiving from port: " + port)
+    // }
+    // logger.log(Level.INFO, "-----------------------:")
 
     var topic: String = ""
     val parser = new JSONParser()
@@ -235,14 +266,14 @@ class StreamingNode {
     try {
       breakable {
         while (!Thread.currentThread().isInterrupted()) {
-          logger.log(Level.INFO, "node recvStr being called for topic")
+          logger.log(Level.FINE, "Stream processor recvStr being called for topic")
           topic = subSocket.recvStr(ZMQ.NOBLOCK)
           //Thread.sleep(1000)
           if ((topic == "") || (topic == null)) {
-            logger.log(Level.INFO, "Node recvStr called. No topic received.")
+            logger.log(Level.FINE, "Stream processor recvStr called. No topic received.")
             Thread.sleep(5000)
           } else {
-            logger.log(Level.INFO, "Node recvStr called. Topic received: " + topic)
+            logger.log(Level.FINE, "Stream processor recvStr called. Topic received: " + topic)
             break
           }
         }
@@ -250,37 +281,55 @@ class StreamingNode {
 
       if (!Thread.currentThread().isInterrupted()) {
         try {
-          logger.log(Level.INFO, "node recvStr being called for message")
+          logger.log(Level.FINE, "Stream processor recvStr being called for message")
           receivedString = subSocket.recvStr(ZMQ.NOBLOCK)
-          logger.log(Level.INFO, "message received: " + receivedString)
-          //Thread.sleep(1000)
+          // logger.log(Level.FINE, "Stream processor - message received: " + receivedString)
+          // Thread.sleep(1000)
         } catch {
           case e: ZMQException if ZMQ.Error.ETERM == e.getErrorCode() => {
-            logger.log(Level.INFO, "No message received so far.")
+            logger.log(Level.FINE, "Stream processor - no message received.")
           }
           case e: Throwable => {
-            logger.log(Level.WARNING, "Exception on StreamingNode line 239: " + e)
+            logger.log(Level.WARNING, "Exception - Stream process exception while receiving message. " + e)
             Thread.currentThread.interrupt()
           }
         }
       }
 
       //      val receivedString = subSocket.recvStr(ZMQ.DONTBLOCK)
-      logger.log(Level.INFO, "received message: " + receivedString + "\n")
+      // logger.log(Level.INFO, "received message: " + receivedString + "\n")
 
       receivedString match {
         case _: String => {
           val measurement: String = jsonToMessage(receivedString).value
 
-          val index = subscribeTopics.indexOf(topic) //getting index of corresponding Buffer in streamBuffers
+          val index = subscribeTopics.indexOf(topic) //getting index of corresponding Buffer in inputBuffers
           //logger.log(Level.INFO, "index: " + index + " in range " + subscribeTopics.length)
-          //print("Obj or Null: " + streamBuffers(index))
-          streamBuffers(index).enqueue(measurement) //adding current message value to buffer
+          //print("Obj or Null: " + inputBuffers(index))
 
-          if (streamBuffers(index).size >= bufferSizes(index)) { //checking to see if size of Buffer reached max
-            printf("\n\n DEQUEUING WHEN (" + index + ") BUFFER SIZE IS: " + streamBuffers(index).size + "\n\n")
-            val list = streamBuffers(index).toList //if desired buffer size is achieved -> convert Queued measurements to list
-            streamBuffers(index).clear() //clear buffer
+          //append (enqueue) current message value to the input buffer
+          // inputBuffers(index).enqueue(measurement)
+          inputBuffers(index) += measurement
+
+          // logger.log(Level.INFO, "input buffers at index " + index + ": " + inputBuffers(index))
+
+          if (inputBuffers(index).size >= bufferSizes(index)) { //checking to see if size of Buffer reached max
+            logger.log(Level.INFO, "Dequeuing from input buffer " + index + ". Input buffer size: " + inputBuffers(index).size)
+
+            val list = inputBuffers(index).toList //if desired buffer size is achieved -> convert Queued measurements to list
+            // logger.log(Level.INFO, "list: " + list)
+
+            // logger.log(Level.INFO, "inputBuffer size before drop() method: " + inputBuffers(index).length)
+            // logger.log(Level.INFO, "inputBuffer before drop() method: " + inputBuffers(index))
+
+            // remove (dequeue) non-overlapping elements from the list
+            inputBuffers(index) = inputBuffers(index).drop(bufferSizes(index) - bufferOverlapSizes(index))
+            // inputBuffers(index).clear() //clear buffer
+
+            // logger.log(Level.INFO, "inputBuffer size after drop() method: " + inputBuffers(index).length)
+            // logger.log(Level.INFO, "inputBuffer after drop() method: " + inputBuffers(index))
+
+            // logger.log(Level.INFO, "updated input buffer at index " + index + ": " + inputBuffers(index))
 
             transform(list)
 
@@ -292,27 +341,25 @@ class StreamingNode {
       }
     } catch {
       case e: ZMQException if ZMQ.Error.ETERM == e.getErrorCode() => {
-        logger.log(Level.WARNING, "Processors interrupted via ZMQException")
+        logger.log(Level.WARNING, "Stream processors interrupted via ZMQException")
         Thread.currentThread.interrupt()
       }
       case e: InterruptedException => {
-        logger.log(Level.INFO, "Processor service interrupted via InterruptedException")
+        logger.log(Level.INFO, "Stream processor service interrupted via InterruptedException")
         Thread.currentThread.interrupt()
       }
       case e: Throwable => {
-        logger.log(Level.WARNING, "Exception at StreamingNode line 276: " + e)
+        logger.log(Level.WARNING, "Stream processor raised exception while receiving message. " + e.getMessage)
         Thread.currentThread.interrupt()
       }
     }
   }
 
   def transform(list: List[String]): Unit = {
-    logger.log(Level.INFO, "\n\nTransforming----------------------------------------------")
-    logger.log(Level.INFO, "Performing Transformation on-----------------------------------------------------------: ")
+    logger.log(Level.FINE, "Stream processor - performing Transformation")
 
-    for (measurement <- list) {
-      logger.log(Level.INFO, "$$$$Meas: " + measurement + "\n")
-    }
+    // logger.log(Level.INFO, "Input measurement list size: " + list.length)
+    // logger.log(Level.INFO, "Input measurement list: " + list)
 
     // import scala.collection.JavaConversions._
 
@@ -320,8 +367,6 @@ class StreamingNode {
     for (json <- list) {
       measList.add(jsonToMap(json))
     }
-    logger.log(Level.INFO, "input measurement list: " + measList + "\n")
-    logger.log(Level.INFO, "transformation type: " + transformation + "\n")
 
     val resultsListJava = transformation.apply(measList)
 
@@ -329,30 +374,34 @@ class StreamingNode {
     import scala.collection.JavaConverters._
     val resultsList = resultsListJava.asScala.to[ListBuffer]
 
-    logger.log(Level.INFO, "output measurement list (result): " + resultsList + "\n")
-
     for (result <- resultsList) {
-      println("WORKING1")
       val key = keyForSensorMeasurement(result)
-      println("WORKING2")
       val value = mapToJson(result)
-      println("WORKING3")
       val message: String = messageToJson(Message(key, value))
-      println("WORKING4 " + message)
-      outputBuffer.enqueue(message)
-      println("WORKING5")
+
+      // enqueue message to output buffer
+      // outputBuffer.enqueue(message)
+
+      outputBuffer += message
     }
-    // logger.log(Level.INFO, "outputBuffer: " + outputBuffer + "\n")
+
+    logger.log(Level.FINE, "Stream processor - transformation performed")
+    // logger.log(Level.INFO, "Output measurement list size: " + outputBuffer.length)
+    // logger.log(Level.INFO, "Output measurement list: " + outputBuffer)
   }
 
   def publish( /*processedMapList: ListBuffer[JLinkedHashMap[String, String]]*/ ): Unit = {
     //val processedMessage: Message = epidataLiteStreamingContext(ZMQInit.streamQueue.dequeue)
-    //logger.log(Level.INFO, "Streamingnode publish method called")
-    logger.log(Level.INFO, "\n\nPublishing---------------------------------------------- $$$ " + !outputBuffer.isEmpty + "\n")
+    logger.log(Level.FINE, "Stream processor publish method called")
 
     while (!outputBuffer.isEmpty) {
-      val msg = outputBuffer.dequeue()
-      logger.log(Level.INFO, "publised topic: " + this.publishTopic + ", published message: " + msg + "\n")
+      // dequeue message from output buffer
+
+      // val msg = outputBuffer.dequeue()
+      val msg = outputBuffer.get(0).get
+      outputBuffer = outputBuffer.drop(1)
+
+      // logger.log(Level.INFO, "Publised topic: " + this.publishTopic + ", published message: " + msg)
       publishSocket.sendMore(this.publishTopic)
       publishSocket.send(msg.getBytes(), 0)
     }
@@ -386,14 +435,14 @@ class StreamingNode {
     try {
       //      publishSocket.send(ZMQ.STOP_MESSAGE, 0)
       publishSocket.close()
-      logger.log(Level.INFO, "publishSocket closed successfully: " + publishSocket)
+      logger.log(Level.INFO, "Stream processor publishSocket closed successfully: " + publishSocket)
     } catch {
       case e: Throwable => logger.log(Level.WARNING, "Exception during publisher close. " + e.toString())
     }
 
     try {
       subSocket.close()
-      logger.log(Level.INFO, "subSocket closed successfully: " + subSocket)
+      logger.log(Level.INFO, "Stream processor subSocket closed successfully: " + subSocket)
     } catch {
       case e: Throwable => logger.log(Level.WARNING, "Exception during subscriber close. " + e.toString())
     }
@@ -401,26 +450,26 @@ class StreamingNode {
   }
 
   def clearPub(): Unit = {
-    logger.log(Level.INFO, "node clearPub called")
+    logger.log(Level.FINE, "node clearPub called")
 
     try {
       //      publishSocket.unbind("tcp://127.0.0.1:" + publishPort)
       publishSocket.unbind(publishSocket.getLastEndpoint())
-      logger.log(Level.INFO, "publishSocket unbinded: " + publishSocket)
+      logger.log(Level.INFO, "Stream processor publishSocket unbinded: " + publishSocket)
     } catch {
       case e: Throwable => logger.log(Level.WARNING, "Exception during publisher unbind. " + e.toString())
     }
 
     try {
       publishSocket.close()
-      logger.log(Level.INFO, "publishSocket closed successfully: " + publishSocket)
+      logger.log(Level.INFO, "Stream processor publishSocket closed successfully: " + publishSocket)
     } catch {
       case e: Throwable => logger.log(Level.WARNING, "Exception during publisher close. " + e.toString())
     }
   }
 
   def clearSub(): Unit = {
-    logger.log(Level.INFO, "node clearSub called")
+    logger.log(Level.FINE, "Stream processor clearSub called")
     try {
       for (topic <- subscribeTopics) {
         subSocket.unsubscribe(topic.getBytes(ZMQ.CHARSET))
@@ -434,7 +483,7 @@ class StreamingNode {
       for (port <- subscribePorts) {
         //        subSocket.unbind("tcp://127.0.0.1:" + port)
         subSocket.disconnect(subSocket.getLastEndpoint())
-        logger.log(Level.INFO, "subSocket unbound: " + subSocket)
+        logger.log(Level.INFO, "Stream processor subSocket unbound: " + subSocket)
       }
     } catch {
       case e: Throwable => logger.log(Level.WARNING, "Exception during subscriber unbind. " + e.toString())
@@ -442,7 +491,7 @@ class StreamingNode {
 
     try {
       subSocket.close()
-      logger.log(Level.INFO, "subSocket closed: " + subSocket)
+      logger.log(Level.INFO, "Stream processor subSocket closed: " + subSocket)
     } catch {
       case e: Throwable => logger.log(Level.WARNING, "Exception during subscriber close. " + e.toString())
     }

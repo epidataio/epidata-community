@@ -30,16 +30,12 @@ trait Transformation {
 
   def apply(measurements: java.util.List[java.util.Map[String, Object]]): java.util.List[java.util.Map[String, Object]] = {
     import scala.collection.JavaConverters._
-    val sBuffer = measurements.asScala.to[ListBuffer]
-    println("List1: " + sBuffer)
-    val applyBuffer = apply(sBuffer)
-    println("List2: " + applyBuffer)
-    val retList = new java.util.ArrayList[java.util.Map[String, Object]]()
-    for (map <- applyBuffer) {
-      retList.add(map)
+    val scalaBuffer = measurements.asScala.to[ListBuffer]
+    val resultList = new java.util.ArrayList[java.util.Map[String, Object]]()
+    for (map <- this.apply(scalaBuffer)) {
+      resultList.add(map)
     }
-    println("List3: " + retList)
-    retList
+    resultList
   }
 
   val name: String = "Default"

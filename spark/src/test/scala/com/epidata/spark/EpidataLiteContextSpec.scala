@@ -23,6 +23,7 @@ import java.sql.Timestamp
 import org.scalatestplus.junit.JUnitRunner
 import java.nio.ByteBuffer
 import java.io.File
+import java.nio.file.Paths
 
 @RunWith(classOf[JUnitRunner])
 class EpidataLiteContextAutomatedTestSpec extends FlatSpec with BeforeAndAfter with BeforeAndAfterAll with Matchers {
@@ -32,12 +33,20 @@ class EpidataLiteContextAutomatedTestSpec extends FlatSpec with BeforeAndAfter w
   Logger.getLogger("com").setLevel(Level.WARN)
   Logger.getLogger("org").setLevel(Level.WARN)
 
-  private val conf = ConfigFactory.parseResources("sqlite-defaults.conf")
-  private val basePath = new java.io.File(".").getAbsoluteFile().getParentFile().getParent()
+  private val basePath = scala.util.Properties.envOrElse("EPIDATA_HOME", "")
+  if (basePath.equals("")) {
+    throw new IllegalStateException("EPIDATA_HOME environment variable not set")
+  }
+
+  private val conf = ConfigFactory.parseResources(Paths.get(basePath, "conf", "sqlite-defaults.conf").toString()).resolve()
+
+  //  private val conf = ConfigFactory.parseResources("sqlite-defaults.conf")
+  //  private val basePath = new java.io.File(".").getAbsoluteFile().getParentFile().getParent()
 
   //  private val sqliteDBName = conf.getString("spark.epidata.SQLite.test.dbFileName")
   private val sqliteDBName = conf.getString("spark.epidata.SQLite.dbFileName")
-  private val sqliteDBUrl = "jdbc:sqlite:" + basePath + "/data/" + sqliteDBName
+  private val sqliteDBUrl = Paths.get("jdbc:sqlite:", basePath, "data", sqliteDBName).toString()
+  //  private val sqliteDBUrl = "jdbc:sqlite:" + basePath + "/data/" + sqliteDBName
 
   //  private val con: Connection = DriverManager.getConnection(dbUrl)
 
@@ -974,12 +983,20 @@ class EpidataLiteContextSensorMeasurementSpec extends FlatSpec with BeforeAndAft
   Logger.getLogger("com").setLevel(Level.WARN)
   Logger.getLogger("org").setLevel(Level.WARN)
 
-  private val conf = ConfigFactory.parseResources("sqlite-defaults.conf")
-  private val basePath = new java.io.File(".").getAbsoluteFile().getParentFile().getParent()
+  private val basePath = scala.util.Properties.envOrElse("EPIDATA_HOME", "")
+  if (basePath.equals("")) {
+    throw new IllegalStateException("EPIDATA_HOME environment variable not set")
+  }
+
+  private val conf = ConfigFactory.parseResources(Paths.get(basePath, "conf", "sqlite-defaults.conf").toString()).resolve()
+
+  //  private val conf = ConfigFactory.parseResources("sqlite-defaults.conf")
+  //  private val basePath = new java.io.File(".").getAbsoluteFile().getParentFile().getParent()
 
   //  private val sqliteDBName = conf.getString("spark.epidata.SQLite.test.dbFileName")
   private val sqliteDBName = conf.getString("spark.epidata.SQLite.dbFileName")
-  private val sqliteDBUrl = "jdbc:sqlite:" + basePath + "/data/" + sqliteDBName
+  private val sqliteDBUrl = Paths.get("jdbc:sqlite:", basePath, "data", sqliteDBName).toString()
+  //  private val sqliteDBUrl = "jdbc:sqlite:" + basePath + "/data/" + sqliteDBName
 
   private val appName = "EpidataLiteContextSensorMeasurementSpec"
   private val measurementClass = "sensor_measurement"

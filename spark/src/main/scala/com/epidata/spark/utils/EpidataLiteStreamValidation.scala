@@ -10,8 +10,9 @@ import org.json4s.JsonDSL.int2jvalue
 
 import scala.collection.mutable.{ HashMap, ListBuffer, Map => MutableMap }
 import scala.io.StdIn
+import java.util.logging._
 
-class EpidataStreamValidation {
+class EpidataLiteStreamValidation {
   //Stores all StreamingNode configs that need validatoring before init.
   var processorConfigs: ListBuffer[MutableMap[String, Any]] = _
   //Stores all the topics and whether theyre loose or closed.
@@ -21,19 +22,22 @@ class EpidataStreamValidation {
   var numOfProcessors: Integer = _
   var topicMap: MutableMap[String, Integer] = _
   var intermediatePort: Integer = _
+  var logger: Logger = _
 
-  def init(): Unit = {
+  def init(logger: Logger): Unit = {
     processorConfigs = ListBuffer[MutableMap[String, Any]]()
     //streamStatus = HashMap[String, Boolean]()
     looseSource = HashMap[String, Boolean]()
     looseDestination = HashMap[String, Boolean]()
     numOfProcessors = 0
+    this.logger = logger
   }
 
   def addProcessor(
     receivePorts: ListBuffer[String],
     receiveTopics: ListBuffer[String],
     bufferSizes: ListBuffer[Integer],
+    bufferOverlapSizes: ListBuffer[Integer],
     sendPort: String,
     sendTopic: String,
     transformation: Transformation): Unit = {
@@ -42,6 +46,7 @@ class EpidataStreamValidation {
       "receivePorts" -> receivePorts,
       "receiveTopics" -> receiveTopics,
       "bufferSizes" -> bufferSizes,
+      "bufferOverlapSizes" -> bufferOverlapSizes,
       "sendPort" -> sendPort,
       "sendTopic" -> sendTopic,
       "transformation" -> transformation)
@@ -59,7 +64,7 @@ class EpidataStreamValidation {
     looseStreamValidation()
 
     for (processor <- processorConfigs) {
-      //println("Operation: " + processor.get("transformation").getClass + "\n")
+      logger.log(Level.INFO, "Operation: " + processor.get("transformation").getClass + "\n")
     }
 
     processorConfigs
@@ -213,6 +218,7 @@ class EpidataStreamValidation {
             "receivePorts" -> newNodePorts,
             "receiveTopics" -> newNodeTopics,
             "bufferSizes" -> ListBuffer(0),
+            "bufferOverlapSizes" -> ListBuffer(0),
             "sendPort" -> "5552",
             "sendTopic" -> "measurements_cleansed",
             "transformation" -> "Identity")
@@ -221,6 +227,7 @@ class EpidataStreamValidation {
             "receivePorts" -> newNodePorts,
             "receiveTopics" -> newNodeTopics,
             "bufferSizes" -> ListBuffer(0),
+            "bufferOverlapSizes" -> ListBuffer(0),
             "sendPort" -> "5553",
             "sendTopic" -> "measurements_summary",
             "transformation" -> "Identity")
@@ -229,6 +236,7 @@ class EpidataStreamValidation {
             "receivePorts" -> newNodePorts,
             "receiveTopics" -> newNodeTopics,
             "bufferSizes" -> ListBuffer(0),
+            "bufferOverlapSizes" -> ListBuffer(0),
             "sendPort" -> "5554",
             "sendTopic" -> "measurements_dynamic",
             "transformation" -> "Identity")

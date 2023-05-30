@@ -1,11 +1,18 @@
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 import scalariform.formatter.preferences._
+import scala.sys.process._
 
-name := "epidata-spark"
-
-resolvers += Resolver.jcenterRepo
+name := "epidata-stream-processor"
+maintainer := "EpiData, Inc."
 
 scalaVersion := "2.12.11"
+
+resolvers += Resolver.jcenterRepo
+resolvers += "Typesafe repository" at "https://repo.typesafe.com/typesafe/releases/"
+resolvers ++= Seq(
+  "Typesafe repository" at "https://repo.typesafe.com/typesafe/releases/",
+  Resolver.jcenterRepo
+)
 
 libraryDependencies ++= Seq(
   "com.typesafe.play" %% "play-json" % "2.7.4",
@@ -32,11 +39,22 @@ dependencyOverrides += "com.fasterxml.jackson.module" % "jackson-module-scala_2.
 
 assemblyMergeStrategy in assembly := {
   case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+  case manifest if manifest.contains("MANIFEST.MF") =>
+    // We don't need manifest files since sbt-assembly will create
+    // one with the given settings
+    MergeStrategy.discard
+  case referenceOverrides if referenceOverrides.contains("reference-overrides.conf") =>
+    // Keep the content for all reference-overrides.conf files
+    MergeStrategy.concat
   case x => MergeStrategy.first
 }
 
-
 test in assembly := {}
+
+mappings in Universal += {
+  val jar = (packageBin in Compile).value
+  jar -> ("lib/" + jar.getName)
+}
 
 Keys.fork in Test := true
 

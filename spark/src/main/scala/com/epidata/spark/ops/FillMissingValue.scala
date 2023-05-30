@@ -26,32 +26,38 @@ class FillMissingValue(
 
     method match {
       case "rolling" =>
-        val filteredMeas = measurements
-          .filter(m => meas_names.contains(m.get("meas_name").asInstanceOf[String]))
+        var filteredMeasCollection = new ListBuffer[java.util.Map[String, Object]]()
 
-        for (index <- filteredMeas.indices) {
-          // If value is null, then substitute it!
-          if (filteredMeas(index).get("meas_value") == null) { //TODO: it should not need for 0 here!
-            var sum: Double = 0
-            var count = 0
+        for (meas_name <- meas_names) {
+          val filteredMeas = measurements
+            .filter(m => meas_name.equals(m.get("meas_name").asInstanceOf[String]))
 
-            for (i <- index - (size - 1) / 2 to index + (size + 1) / 2) {
-              if (i >= 0 && i < filteredMeas.size && filteredMeas(i).get("meas_value") != null) {
-                sum = sum + filteredMeas(i).get("meas_value").asInstanceOf[Double]
-                count = count + 1
+          for (index <- filteredMeas.indices) {
+            // If value is null, then substitute it!
+            if (filteredMeas(index).get("meas_value") == null) { //TODO: it should not need for 0 here!
+              var sum: Double = 0
+              var count = 0
+
+              for (i <- index - (size - 1) / 2 to index + (size + 1) / 2) {
+                if (i >= 0 && i < filteredMeas.size && filteredMeas(i).get("meas_value") != null) {
+                  sum = sum + filteredMeas(i).get("meas_value").asInstanceOf[Double]
+                  count = count + 1
+                }
+              }
+
+              if (count > 0) {
+                val measValue = (sum / count).asInstanceOf[Object]
+                filteredMeas(index).put("meas_value", measValue)
+                filteredMeas(index).put("meas_flag", "substituted")
+                filteredMeas(index).put("meas_method", method)
               }
             }
-
-            if (count > 0) {
-              val measValue = (sum / count).asInstanceOf[Object]
-              filteredMeas(index).put("meas_value", measValue)
-              filteredMeas(index).put("meas_flag", "substituted")
-              filteredMeas(index).put("meas_method", method)
-            }
           }
-        }
 
-        filteredMeas
+          filteredMeasCollection ++= filteredMeas
+
+        }
+        filteredMeasCollection
     }
   }
 
