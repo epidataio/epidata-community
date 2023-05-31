@@ -5,6 +5,7 @@
 package com.epidata.spark.ops
 
 import com.epidata.lib.models.{ StatsSummary, StatsSummaryAsJson }
+import com.epidata.lib.models.{ SensorMeasurement => BaseSensorMeasurement, AutomatedTest => BaseAutomatedTest }
 import org.apache.spark.sql.{ SQLContext, Column, DataFrame }
 import org.apache.spark.sql.functions._
 import scala.collection.mutable.{ Map => MutableMap, ListBuffer }
@@ -12,87 +13,172 @@ import java.util.{ Date, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedL
 import scala.io.StdIn
 
 class MeasStatistics(
+    val model: String,
     val meas_names: List[String],
     val method: String) extends Transformation {
 
   override def apply(measurements: ListBuffer[java.util.Map[String, Object]]): ListBuffer[java.util.Map[String, Object]] = {
-    println("\n input measurements - meas statistics: " + measurements + "\n")
+    // println("\n MeasStatistics trasnformation. Input measurements: " + measurements + "\n")
 
     var measStatistics = ListBuffer[java.util.Map[String, Object]]()
 
+    val groupByFields = model match {
+      case BaseAutomatedTest.NAME => Seq("company", "site", "device_group", "tester", "start_time", "stop_time", "device_name", "test_name", "meas_name")
+      case BaseSensorMeasurement.NAME => Seq("company", "site", "station", "sensor", "start_time", "stop_time", "event", "meas_name")
+      case _ => {
+        throw new IllegalStateException("Unsupported measurement model")
+      }
+    }
+
     method match {
       case "standard" =>
-        val groupBy = Seq("customer", "customer_site", "collection", "dataset", "start_time", "stop_time", "key1", "key2", "key3")
+        // val groupBy = Seq("customer", "customer_site", "collection", "dataset", "start_time", "stop_time", "key1", "key2", "key3")
         val operations = Seq("start_time", "stop_time", "min", "max", "mean", "count", "std")
 
-        val filteredMeas = measurements
-          .filter(m => meas_names.contains(m.get("meas_name").asInstanceOf[String]))
-          .groupBy(record => (record.get("customer"), record.get("customer_site"), record.get("collection"), record.get("dataset"), record.get("key1"), record.get("meas_name")))
+        //val filteredMeas = measurements
+        //  .filter(m => meas_names.contains(m.get("meas_name").asInstanceOf[String]))
+        /*.groupBy(record =>
+            if (model.equals(BaseSensorMeasurement.NAME)
+              (record.get(groupByFields(0)), record.get(groupByFields(1)), record.get(groupByFields(2)), record.get(groupByFields(3)), record.get(groupByFields(6)), record.get(groupByFields(7)), record.get(groupByFields(8)))
+            else
+              (record.get(groupByFields(0)), record.get(groupByFields(1)), record.get(groupByFields(2)), record.get(groupByFields(3)), record.get(groupByFields(6)), record.get(groupByFields(7)))
+          )
+          */
+        //  .groupBy(record => (record.get("customer"), record.get("customer_site"), record.get("collection"), record.get("dataset"), record.get("key1"), record.get("meas_name")))
         //          .groupBy(record => (record.get("company"), record.get("site"), record.get("station"), record.get("sensor"), record.get("event"), record.get("meas_name")))
 
-        for (k <- filteredMeas.keySet.toSeq) {
-          var values = filteredMeas.get(k).get
+        if (model.equals(BaseAutomatedTest.NAME)) {
+          val filteredMeas = measurements
+            .filter(m => meas_names.contains(m.get("meas_name").asInstanceOf[String]))
+            .groupBy(record => (record.get(groupByFields(0)), record.get(groupByFields(1)), record.get(groupByFields(2)), record.get(groupByFields(3)), record.get(groupByFields(6)), record.get(groupByFields(7)), record.get(groupByFields(8))))
 
-          var map = new JLinkedHashMap[String, Object]()
-          map.put("customer", k._1)
-          map.put("customer_site", k._2)
-          map.put("collection", k._3)
-          map.put("dataset", k._4)
-          map.put("key1", k._5)
-          map.put("meas_name", k._6)
+          for (k <- filteredMeas.keySet.toSeq) {
+            var values = filteredMeas.get(k).get
 
-          map.put("start_time", values(0).get("ts"))
-          map.put("stop_time", values(0).get("ts"))
+            var map = new JLinkedHashMap[String, Object]()
+            map.put(groupByFields(0), k._1)
+            map.put(groupByFields(1), k._2)
+            map.put(groupByFields(2), k._3)
+            map.put(groupByFields(3), k._4)
+            map.put(groupByFields(6), k._5)
+            map.put(groupByFields(7), k._6)
+            map.put(groupByFields(8), k._7)
 
-          var min: Double = values(0).get("meas_value").asInstanceOf[Double]
-          var max: Double = values(0).get("meas_value").asInstanceOf[Double]
-          var sum: Double = 0.00
-          var count: Int = 0
-          var mean: Double = min
-          var std: Double = 0
+            map.put("start_time", values(0).get("ts"))
+            map.put("stop_time", values(0).get("ts"))
 
-          var measValues = ListBuffer[Double]()
+            var min: Double = values(0).get("meas_value").asInstanceOf[Double]
+            var max: Double = values(0).get("meas_value").asInstanceOf[Double]
+            var sum: Double = 0.00
+            var count: Int = 0
+            var mean: Double = min
+            var std: Double = 0
 
-          for (v <- values) {
-            if (v.get("ts").asInstanceOf[Long].compareTo(map.get("start_time").asInstanceOf[Long]) < 0)
-              map.put("start_time", v.get("ts"))
-            if (v.get("ts").asInstanceOf[Long].compareTo(map.get("stop_time").asInstanceOf[Long]) > 0)
-              map.put("stop_time", v.get("ts"))
+            var measValues = ListBuffer[Double]()
 
-            if (v.get("meas_value").asInstanceOf[Double].compareTo(min) < 0)
-              min = v.get("meas_value").asInstanceOf[Double]
-            if (v.get("meas_value").asInstanceOf[Double].compareTo(max) > 0)
-              max = v.get("meas_value").asInstanceOf[Double]
+            for (v <- values) {
+              if (v.get("ts").asInstanceOf[Long].compareTo(map.get("start_time").asInstanceOf[Long]) < 0)
+                map.put("start_time", v.get("ts"))
+              if (v.get("ts").asInstanceOf[Long].compareTo(map.get("stop_time").asInstanceOf[Long]) > 0)
+                map.put("stop_time", v.get("ts"))
 
-            sum += v.get("meas_value").asInstanceOf[Double]
-            count += 1
-            measValues += v.get("meas_value").asInstanceOf[Double]
+              if (v.get("meas_value").asInstanceOf[Double].compareTo(min) < 0)
+                min = v.get("meas_value").asInstanceOf[Double]
+              if (v.get("meas_value").asInstanceOf[Double].compareTo(max) > 0)
+                max = v.get("meas_value").asInstanceOf[Double]
+
+              sum += v.get("meas_value").asInstanceOf[Double]
+              count += 1
+              measValues += v.get("meas_value").asInstanceOf[Double]
+            }
+
+            if (count > 0) {
+              mean = (sum / count).asInstanceOf[Double]
+              std = Math.sqrt((measValues.map(_ - mean)
+                .map(x => x * x).sum) / measValues.length).asInstanceOf[Double]
+              map.put("meas_summary_description", "descriptive statistics")
+              map.put("meas_summary_name", "statistics")
+              map.put("meas_summary_value", StatsSummaryAsJson(min, max, mean, count, std).toJson)
+            } else {
+              println("insufficient data for computing measurements statistics")
+            }
+
+            measStatistics.append(map)
+          }
+        } else if (model.equals(BaseSensorMeasurement.NAME)) {
+          val filteredMeas = measurements
+            .filter(m => meas_names.contains(m.get("meas_name").asInstanceOf[String]))
+            .groupBy(record => (record.get(groupByFields(0)), record.get(groupByFields(1)), record.get(groupByFields(2)), record.get(groupByFields(3)), record.get(groupByFields(6)), record.get(groupByFields(7))))
+
+          for (k <- filteredMeas.keySet.toSeq) {
+            var values = filteredMeas.get(k).get
+
+            var map = new JLinkedHashMap[String, Object]()
+            map.put(groupByFields(0), k._1)
+            map.put(groupByFields(1), k._2)
+            map.put(groupByFields(2), k._3)
+            map.put(groupByFields(3), k._4)
+            map.put(groupByFields(6), k._5)
+            map.put(groupByFields(7), k._6)
+
+            map.put("start_time", values(0).get("ts"))
+            map.put("stop_time", values(0).get("ts"))
+
+            var min: Double = values(0).get("meas_value").asInstanceOf[Double]
+            var max: Double = values(0).get("meas_value").asInstanceOf[Double]
+            var sum: Double = 0.00
+            var count: Int = 0
+            var mean: Double = min
+            var std: Double = 0
+
+            var measValues = ListBuffer[Double]()
+
+            for (v <- values) {
+              if (v.get("ts").asInstanceOf[Long].compareTo(map.get("start_time").asInstanceOf[Long]) < 0)
+                map.put("start_time", v.get("ts"))
+              if (v.get("ts").asInstanceOf[Long].compareTo(map.get("stop_time").asInstanceOf[Long]) > 0)
+                map.put("stop_time", v.get("ts"))
+
+              if (v.get("meas_value").asInstanceOf[Double].compareTo(min) < 0)
+                min = v.get("meas_value").asInstanceOf[Double]
+              if (v.get("meas_value").asInstanceOf[Double].compareTo(max) > 0)
+                max = v.get("meas_value").asInstanceOf[Double]
+
+              sum += v.get("meas_value").asInstanceOf[Double]
+              count += 1
+              measValues += v.get("meas_value").asInstanceOf[Double]
+            }
+
+            if (count > 0) {
+              mean = (sum / count).asInstanceOf[Double]
+              std = Math.sqrt((measValues.map(_ - mean)
+                .map(x => x * x).sum) / measValues.length).asInstanceOf[Double]
+              map.put("meas_summary_description", "descriptive statistics")
+              map.put("meas_summary_name", "statistics")
+              map.put("meas_summary_value", StatsSummaryAsJson(min, max, mean, count, std).toJson)
+            } else {
+              println("insufficient data for computing measurements statistics")
+            }
+
+            measStatistics.append(map)
           }
 
-          if (count > 0) {
-            mean = (sum / count).asInstanceOf[Double]
-            std = Math.sqrt((measValues.map(_ - mean)
-              .map(x => x * x).sum) / measValues.length).asInstanceOf[Double]
-            map.put("meas_summary_description", "descriptive statistics")
-            map.put("meas_summary_name", "statistics")
-            map.put("meas_summary_value", StatsSummaryAsJson(min, max, mean, count, std).toJson)
-          } else {
-            println("insufficient data for computing measurements statistics")
-          }
-
-          measStatistics.append(map)
+        } else {
+          throw new IllegalStateException("unsupported measurment model")
         }
 
-        println("\n output - measurement statistics: " + measStatistics + "\n")
+        // println("\n output - measurement statistics: " + measStatistics + "\n")
 
         measStatistics
 
-      case _ => throw new Exception("Unsupported statistics method: " + method)
+      case _ => {
+        throw new Exception("Unsupported statistics method: " + method)
+      }
     }
   }
 
   override def apply(dataFrame: DataFrame, sqlContext: SQLContext): DataFrame = {
-    println("\n input measurements - meas statistics: " + dataFrame + "\n")
+    // println("\n MeasStatistics transformation. Input measurements: " + dataFrame + "\n")
 
     method match {
       case "standard" =>
@@ -105,7 +191,15 @@ class MeasStatistics(
         val mapping: Map[String, Column => Column] = Map(
           "min" -> min, "max" -> max, "mean" -> mean, "count" -> count, "std" -> stddev)
 
-        val groupBy = Seq("customer", "customer_site", "collection", "dataset", "start_time", "stop_time", "key1", "key2", "key3")
+        val groupByFields = model match {
+          case BaseAutomatedTest.NAME => Seq("company", "site", "device_group", "tester", "start_time", "stop_time", "device_name", "test_name", "meas_name")
+          case BaseSensorMeasurement.NAME => Seq("company", "site", "station", "sensor", "start_time", "stop_time", "event", "meas_name")
+          case _ => {
+            throw new IllegalStateException("Unsupported measurement model")
+          }
+        }
+
+        // val groupBy = Seq("customer", "customer_site", "collection", "dataset", "start_time", "stop_time", "key1", "key2", "key3")
         val aggregate = Seq("meas_value")
         val operations = Seq("min", "max", "mean", "count", "std")
         val exprs = aggregate.flatMap(c => operations.map(f => mapping(f)(col(c)).alias(f)))
@@ -116,19 +210,22 @@ class MeasStatistics(
         val df = dataFrame
           .withColumn("start_time", lit(startTime))
           .withColumn("stop_time", lit(stopTime))
-          .filter(dataFrame("key2").isin(meas_names: _*) || dataFrame("key3").isin(meas_names: _*) || dataFrame("key1").isin(meas_names: _*))
-          .groupBy(groupBy.map(col): _*)
+          .filter(dataFrame("meas_name").isin(meas_names: _*))
+          //          .filter(dataFrame("key2").isin(meas_names: _*) || dataFrame("key3").isin(meas_names: _*) || dataFrame("key1").isin(meas_names: _*))
+          .groupBy(groupByFields.map(col): _*)
           .agg(exprs.head, exprs.tail: _*)
           .withColumn("meas_summary_description", lit("descriptive statistics"))
           .withColumn("meas_summary_name", lit("statistics"))
           .withColumn("meas_summary_value", describeUDF(col("min"), col("max"), col("mean"), col("count"), col("std")))
           .drop(operations: _*)
 
-        println("\n output - measurement statistics: " + df + "\n")
+        // println("\n output - measurement statistics: " + df + "\n")
 
         df
 
-      case _ => throw new Exception("Unsupported statistics method: " + method)
+      case _ => {
+        throw new Exception("Unsupported statistics method: " + method)
+      }
     }
   }
 

@@ -61,10 +61,10 @@ class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
   private lazy val sqliteDBName = conf.getString("spark.epidata.SQLite.dbFileName")
 
   private val measurementClass = epidataConf.model match {
-    case m if m.trim.isEmpty => Properties.envOrElse("EPIDATA_MEASUREMENT_MODEL", conf.getString("spark.epidata.measurementClass"))
+    case m if m.trim.isEmpty => scala.util.Properties.envOrElse("EPIDATA_MEASUREMENT_MODEL", conf.getString("spark.epidata.measurementClass"))
     case m: String => m
   }
-  logger.log(Level.INFO, "measurement class: " + measurementClass)
+  // logger.log(Level.INFO, "measurement class: " + measurementClass)
 
   private lazy val streamingBatchDuration = conf.getInt("spark.epidata.streamingBatchDuration")
 

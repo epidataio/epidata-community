@@ -291,7 +291,7 @@ class EpidataContext(private val sparkContext: SparkContext) {
       case "Identity" => esc.saveToCassandra(new Identity())
       case "FillMissingValue" => esc.saveToCassandra(new FillMissingValue(meas_names, "rolling", 3))
       case "OutlierDetector" => esc.saveToCassandra(new OutlierDetector("meas_value", "quartile"))
-      case "MeasStatistics" => esc.saveToCassandra(new MeasStatistics(meas_names, "standard"))
+      case "MeasStatistics" => esc.saveToCassandra(new MeasStatistics(measurementClass, meas_names, "standard"))
     }
 
     esc

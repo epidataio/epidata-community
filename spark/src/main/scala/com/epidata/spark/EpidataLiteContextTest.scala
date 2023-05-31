@@ -16,10 +16,11 @@ import scala.io.Source
 import scala.io.StdIn
 import scala.util.Properties
 //import scala.collection.mutable.Map
+
 /*
 object elcTest extends App {
 */
-  /*
+/*
   val ec = new EpidataLiteContext()
 
   //  ----- EpiDataLite Batch  Test -----
@@ -1843,8 +1844,7 @@ object elcTest extends App {
   println("\n EpiDataLite Batch Query Test completed")
   println("----------------------------------------------------")
   */
-
-  /*
+/*
   //  ----- EpiDataLite Stream Test Started -----
   println("\n EpiDataLite Stream Test Started")
 
@@ -1883,11 +1883,10 @@ object elcTest extends App {
   //  val op5 = esc.createTransformation("Identity", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
   //  println("transformation created: " + op5)
 
-  // val op6 = esc.createTransformation("MeasStatistics", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map("method" -> "standard"))
-  // println("transformation created: " + op6)
+  val op6 = esc.createTransformation("MeasStatistics", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map("method" -> "standard"))
+  println("transformation created: " + op6)
 
   // val op7 = esc.createTransformation("Resample", List("Temperature"), Map("time_interval" -> 1, "timeunit" -> "min"))
-
   // println("transformation created: " + op7)
 
   // val op8 = esc.createTransformation("NAs", List("Temperature"), Map[String, String]())
@@ -1929,12 +1928,12 @@ object elcTest extends App {
   //    play datasink
 
   //op1
-  esc.createStream("measurements_original", "measurements_substituted", op1)
-  println("STREAM 1 created: " + op1)
+  esc.createStream("measurements_original", "measurements_substituted", op2)
+  println("STREAM 1 created: " + op2)
 
   //op2
-  esc.createStream("measurements_substituted", "measurements_cleansed", op2)
-  println("STREAM 2 created: " + op2)
+  esc.createStream("measurements_substituted", "measurements_cleansed", op1)
+  println("STREAM 2 created: " + op1)
 
   //op3
   //  esc.createStream("measurements_intermediate_1", "measurements_intermediate_3", op3)
@@ -1966,8 +1965,8 @@ object elcTest extends App {
 
   //op6 - measurements_summary
   //esc.createStream("measurements_original", "measurements_intermediate_6", op6)
-  // esc.createStream("measurements_original", "measurements_summary", op6)
-  // println("STREAM 6 created: " + "\n")
+  esc.createStream("measurements_substituted", "measurements_summary", op6)
+  println("STREAM 6 created: " + "\n")
 
   //op7
   // esc.createStream("measurements_original", "measurements_cleansed", op7)
@@ -2016,7 +2015,7 @@ object elcTest extends App {
 
   println("\n EpiDataLite Stream Test completed")
   println("----------------------------------------------------")
-  */
+*/
 /*
 }
 */

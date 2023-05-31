@@ -68,9 +68,8 @@ class Resample(
     var newfiltered = new ListBuffer[java.util.Map[String, Object]]()
     for (index <- filtered.indices) {
       if (tempSeries.contains(filtered(index).get("ts").asInstanceOf[Long])) {
-        print("HERE: ", filtered(index).get("ts").asInstanceOf[Long])
+        // print("Timestamp: ", filtered(index).get("ts").asInstanceOf[Long])
 
-        print("Aaaaaaa")
         newfiltered += filtered(index)
       }
     }

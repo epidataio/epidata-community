@@ -191,7 +191,7 @@ while (True):
                     'meas_status': meas_status,
                     'meas_lower_limit': 10.1,
                     'meas_upper_limit': 120.4,
-                    'meas_description': 'Simulated temperature measurement'
+                    'meas_description': ''
                 }
 
                 # Construct measurement list with data to be ingested.
@@ -229,7 +229,7 @@ while (True):
                     'meas_status': meas_status,
                     'meas_lower_limit': 0,
                     'meas_upper_limit': 25,
-                    'meas_description': 'Simulated wind speed measurement'
+                    'meas_description': ''
                 }
 
                 # Construct measurement list with data to be ingested.
@@ -261,7 +261,7 @@ while (True):
                     'meas_status': meas_status,
                     'meas_lower_limit': None,
                     'meas_upper_limit': None,
-                    'meas_description': 'Simulated Relative Humidity measurement'
+                    'meas_description': ''
                 }
 
                 # Construct measurement list with data to be ingested.

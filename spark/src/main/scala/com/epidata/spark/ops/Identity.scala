@@ -25,8 +25,12 @@ class Identity(
           .filter(m => meas_name.equals(m.get("meas_name").asInstanceOf[String]))
 
         for (index <- filteredMeasurements.indices) {
-          filteredMeasurements(index).put("meas_flag", null)
-          filteredMeasurements(index).put("meas_method", null)
+          if (filteredMeasurements(index).get("meas_flag") == null) {
+            filteredMeasurements(index).put("meas_flag", null)
+          }
+          if (filteredMeasurements(index).get("meas_method") == null) {
+            filteredMeasurements(index).put("meas_method", null)
+          }
         }
 
         filteredMeasurementsCollection ++= filteredMeasurements
@@ -35,8 +39,12 @@ class Identity(
       filteredMeasurementsCollection
     } else {
       for (index <- measurements.indices) {
-        measurements(index).put("meas_flag", null)
-        measurements(index).put("meas_method", null)
+        if (measurements(index).get("meas_flag") == null) {
+          measurements(index).put("meas_flag", null)
+        }
+        if (measurements(index).get("meas_method") == null) {
+          measurements(index).put("meas_method", null)
+        }
       }
 
       measurements

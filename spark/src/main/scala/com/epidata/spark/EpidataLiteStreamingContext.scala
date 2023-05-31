@@ -62,6 +62,12 @@ class EpidataLiteStreamingContext(epidataConf: EpiDataConf = EpiDataConf("", "")
   val fileHandler = new FileHandler(logFilePath)
   logger.addHandler(fileHandler)
 
+  private val measurementClass = epidataConf.model match {
+    case m if m.trim.isEmpty => scala.util.Properties.envOrElse("EPIDATA_MEASUREMENT_MODEL", conf.getString("spark.epidata.measurementClass"))
+    case m: String => m
+  }
+  // logger.log(Level.INFO, "measurement class: " + measurementClass)
+
   //default bufferSize based on configuration settings
   var bufferSize: Integer = conf.getInt("spark.epidata.streamDefaultBufferSize")
   var bufferOverlapSize: Integer = conf.getInt("spark.epidata.streamDefaultBufferOverlap")
@@ -93,11 +99,11 @@ class EpidataLiteStreamingContext(epidataConf: EpiDataConf = EpiDataConf("", "")
 
     // create and return a transformation object
     val op: Transformation = opName match {
-      case "Identity" => new Identity()
+      case "Identity" => new Identity(Some(meas_names))
 
       case "FillMissingValue" => new FillMissingValue(meas_names, params.getOrElse("method", "rolling").asInstanceOf[String], params.getOrElse("s", 3).asInstanceOf[Int])
       case "OutlierDetector" => new OutlierDetector("meas_value", params.getOrElse("method", "quartile").asInstanceOf[String])
-      case "MeasStatistics" => new MeasStatistics(meas_names, params.getOrElse("method", "standard").asInstanceOf[String])
+      case "MeasStatistics" => new MeasStatistics(measurementClass, meas_names, params.getOrElse("method", "standard").asInstanceOf[String])
       case "InverseTranspose" => new InverseTranspose(meas_names)
       case "NAs" => new NAs()
       case "Outliers" => new Outliers(meas_names, params.get("mpercentage").get.asInstanceOf[Int], params.getOrElse("method", "delete").asInstanceOf[String])
@@ -377,7 +383,6 @@ class EpidataLiteStreamingContext(epidataConf: EpiDataConf = EpiDataConf("", "")
   }
 
 }
-
 
 object OpenGateway {
 
