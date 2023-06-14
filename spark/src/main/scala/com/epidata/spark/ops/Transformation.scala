@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2015-2022 EpiData, Inc.
+* Copyright (c) 2015-2023 EpiData, Inc.
 */
 
 package com.epidata.spark.ops
@@ -13,8 +13,14 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{ SQLContext, DataFrame }
 import java.util.{ Date, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList, List => JList }
 import scala.collection.mutable.{ Map => MutableMap, ListBuffer }
+import java.util.logging._
 
 trait Transformation {
+
+  val logger = Logger.getLogger("EpiDataLiteStreamingContext Logger")
+  logger.setLevel(Level.FINE)
+  logger.addHandler(new ConsoleHandler)
+
   def apply(dataFrame: DataFrame, sqlContext: SQLContext): DataFrame =
     dataFrame
       .withColumn("meas_flag", lit(null: String))

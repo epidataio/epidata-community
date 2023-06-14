@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2022 EpiData, Inc.
+ * Copyright (c) 2015-2023 EpiData, Inc.
 */
 
 package com.epidata.spark
@@ -18,45 +18,33 @@ import java.nio.file.Paths
 import java.util.logging._
 
 /**
- * The context of Epidata Lite.
+ * The context of EpiData Lite.
  */
 class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
 
   // Auxiliary constructor for Java and Python
   def this() = {
     this(EpiDataConf("", ""))
-    this.logger.log(Level.INFO, "EpiData Lite object created with settings: " + epidataConf.model + ", " + epidataConf.dbUrl)
+    logger.log(Level.INFO, "EpiData Lite object created with settings: " + epidataConf.model + ", " + epidataConf.dbUrl)
   }
 
   val logger = Logger.getLogger("EpiDataLiteContext Logger")
   logger.setLevel(Level.ALL)
-  //  logger.addHandler(new ConsoleHandler)
 
   private val basePath = scala.util.Properties.envOrElse("EPIDATA_HOME", "")
   if (basePath.equals("") || basePath == null) {
     throw new IllegalStateException("EPIDATA_HOME environment variable not set")
   }
-  // println("basePath value: " + basePath)
 
   private val conf = ConfigFactory.parseFile(new java.io.File(Paths.get(basePath, "conf", "sqlite-defaults.conf").toString())).resolve()
   println("conf value: " + conf)
-  //  private val basePath = new java.io.File(".").getAbsoluteFile().getParent()
 
-  //  private val logFilePath = basePath + "/log/" + conf.getString("spark.epidata.logFileName")
   private val logFilePath = Paths.get(basePath, "log", conf.getString("spark.epidata.logFileName")).toString()
-
-  //  private var logFilePath = conf.getString("spark.epidata.logFilePath")
-  //  if ((logFilePath == "") || (logFilePath == None)) {
-  //    logFilePath = basePath + "/log/" + conf.getString("spark.epidata.logFileName")
-  //  } else {
-  //    logFilePath = logFilePath + conf.getString("spark.epidata.logFileName")
-  //  }
 
   println("log file path: " + logFilePath)
 
   val fileHandler = new FileHandler(logFilePath)
   logger.addHandler(fileHandler)
-  //logger.log(Level.INFO, "File handler added")
 
   private lazy val sqliteDBName = conf.getString("spark.epidata.SQLite.dbFileName")
 
@@ -64,7 +52,7 @@ class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
     case m if m.trim.isEmpty => scala.util.Properties.envOrElse("EPIDATA_MEASUREMENT_MODEL", conf.getString("spark.epidata.measurementClass"))
     case m: String => m
   }
-  // logger.log(Level.INFO, "measurement class: " + measurementClass)
+  logger.log(Level.INFO, "measurement class: " + measurementClass)
 
   private lazy val streamingBatchDuration = conf.getInt("spark.epidata.streamingBatchDuration")
 
@@ -73,11 +61,9 @@ class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
       conf.getString("spark.epidata.SQLite.url") match {
         case s if s.trim.isEmpty => {
           Paths.get("jdbc:sqlite:", basePath, "data", sqliteDBName).toString()
-          // "jdbc:sqlite:" + basePath + "/data/" + sqliteDBName
         }
         case s => {
           Paths.get(conf.getString("spark.epidata.SQLite.url"), sqliteDBName).toString()
-          // conf.getString("spark.epidata.SQLite.url") + sqliteDBName
         }
       }
     }
@@ -91,6 +77,10 @@ class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
   private val con: Connection = DriverManager.getConnection(sqliteDBUrl)
 
   logger.log(Level.INFO, "Database connection established. Connection object: " + con)
+
+  def init() = {
+    logger.log(Level.INFO, "EpiDataLiteContext initialized.")
+  }
 
   def query(
     fieldQuery: Map[String, List[String]],
@@ -192,14 +182,12 @@ class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
           case BaseAutomatedTest.NAME =>
             while (rs.next()) {
               maps.add(BaseMeasurement.resultSetToJLinkedHashMap(rs, tableName, measurementClass))
-              // println("ATE maps meas_value: " + maps(0).get("meas_value") + ", class: " + maps(0).get("meas_value").getClass)
-              logger.log(Level.INFO, "ATE map: " + maps.toString())
+              // logger.log(Level.INFO, "ATE map: " + maps.toString())
             }
           case BaseSensorMeasurement.NAME =>
             while (rs.next()) {
               maps.add(BaseMeasurement.resultSetToJLinkedHashMap(rs, tableName, measurementClass))
-              // println("PAC maps: " + maps)
-              logger.log(Level.INFO, "PAC map: " + maps.toString())
+              // logger.log(Level.INFO, "PAC map: " + maps.toString())
             }
         }
 
@@ -208,14 +196,12 @@ class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
           case BaseAutomatedTest.NAME =>
             while (rs.next()) {
               maps.add(BaseMeasurementCleansed.resultSetToJLinkedHashMap(rs, tableName, measurementClass))
-              // println("ATE maps meas_value: " + maps(0).get("meas_value") + ", class: " + maps(0).get("meas_value").getClass)
-              logger.log(Level.INFO, "ATE map: " + maps.toString())
+              // logger.log(Level.INFO, "ATE map: " + maps.toString())
             }
           case BaseSensorMeasurement.NAME =>
             while (rs.next()) {
               maps.add(BaseMeasurementCleansed.resultSetToJLinkedHashMap(rs, tableName, measurementClass))
-              // println("PAC maps: " + maps)
-              logger.log(Level.INFO, "PAC map: " + maps.toString())
+              // logger.log(Level.INFO, "PAC map: " + maps.toString())
             }
         }
 
@@ -224,14 +210,12 @@ class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
           case BaseAutomatedTest.NAME =>
             while (rs.next()) {
               maps.add(BaseMeasurementSummary.resultSetToJLinkedHashMap(rs, tableName, measurementClass))
-              // println("ATE maps meas_value: " + maps(0).get("meas_value") + ", class: " + maps(0).get("meas_value").getClass)
-              logger.log(Level.INFO, "ATE map: " + maps.toString())
+              // logger.log(Level.INFO, "ATE map: " + maps.toString())
             }
           case BaseSensorMeasurement.NAME =>
             while (rs.next()) {
               maps.add(BaseMeasurementSummary.resultSetToJLinkedHashMap(rs, tableName, measurementClass))
-              // println("PAC maps: " + maps)
-              logger.log(Level.INFO, "PAC map: " + maps.toString())
+              // logger.log(Level.INFO, "PAC map: " + maps.toString())
             }
         }
     }
@@ -289,8 +273,6 @@ class EpidataLiteContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
           case BaseSensorMeasurement.NAME => BaseSensorMeasurementSummary.getColumns
         }
     }
-
-    // logger.log(Level.INFO, "Model columns: " + modelColumns.toString())
 
     if (!fieldQuery.keySet.subsetOf(modelColumns)) {
       logger.log(Level.WARNING, "Unexpected field in fieldQuery.")

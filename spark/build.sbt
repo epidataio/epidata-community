@@ -66,4 +66,4 @@ libraryDependencies += "ru.dgis" %% "reactive-zmq" % "0.4.0"
 
 testOptions in Test += Tests.Argument("-oF")
 
-assembly / mainClass := Some("com.epidata.spark.OpenGateway")
+assembly / mainClass := Some("com.epidata.spark.EpiDataLiteEntryPoint")

@@ -63,8 +63,6 @@ object EpidataLiteStreamingContextTest extends App {
 //  esc.createStream("measurements_intermediate", "measurements_cleansed", op3)
 //  println("stream 2 created: " + op3)
 //
-//  esc.testUnit()
-//  print(esc.printSomething(""))
 //
 //  //  esc.createStream("measurements_intermediate", "measurements_cleansed", op2)
 //  //  println("stream 3 created: " + op3)

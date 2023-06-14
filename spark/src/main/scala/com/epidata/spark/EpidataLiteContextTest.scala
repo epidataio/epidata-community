@@ -17,11 +17,11 @@ import scala.io.StdIn
 import scala.util.Properties
 //import scala.collection.mutable.Map
 
-/*
 object elcTest extends App {
-*/
-/*
+
+  /*
   val ec = new EpidataLiteContext()
+  ec.init()
 
   //  ----- EpiDataLite Batch  Test -----
 
@@ -1844,7 +1844,7 @@ object elcTest extends App {
   println("\n EpiDataLite Batch Query Test completed")
   println("----------------------------------------------------")
   */
-/*
+
   //  ----- EpiDataLite Stream Test Started -----
   println("\n EpiDataLite Stream Test Started")
 
@@ -1988,9 +1988,6 @@ object elcTest extends App {
   //  esc.createStream("measurements_original", "measurements_cleansed", op2)
   //  println("STREAM 7 created: " + "\n")
 
-  //  esc.testUnit()
-  //  println(esc.printSomething(""))
-
   // Start Stream
   esc.startStream()
   println("--------Stream started successfully--------")
@@ -2015,7 +2012,5 @@ object elcTest extends App {
 
   println("\n EpiDataLite Stream Test completed")
   println("----------------------------------------------------")
-*/
-/*
+
 }
-*/

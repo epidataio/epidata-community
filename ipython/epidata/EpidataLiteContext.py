@@ -2,6 +2,7 @@
 # Copyright (c) 2015-2022 EpiData, Inc.
 #
 
+from epidata import ec, esc
 from datetime import datetime
 import _private.py4j_additions
 import json
@@ -13,35 +14,50 @@ import time
 import urllib
 from threading import Thread
 from _private.transformation import Transformation
-from py4j.java_gateway import JavaGateway
+from py4j.java_gateway import JavaGateway, GatewayParameters, CallbackServerParameters
 import pandas as pd
 import py4j
 
 
-class EpidataLiteContext:
+class EpiDataLiteContext:
 
     '''
     Initializes the Java Gateway and creates an entry into the pre-compiled JAR file with
-    EpidataLiteContext.scala
+    EpiDataLiteContext.scala
     '''
     def __init__(self,
             ec_classpath=os.environ["EPIDATA_LITE_JAR"],
             sqlite_conf=None,
             measurement_class=None
     ):
-        self._gateway = JavaGateway(start_callback_server=False)
-        print("gateway: ", self._gateway)
+        self._gateway_parameters = GatewayParameters(address='127.0.0.1', port=25550)
+        self._gateway = JavaGateway(python_proxy_port=25551, start_callback_server=False, gateway_parameters=self._gateway_parameters)
+
+        py4j_path = os.path.join(os.environ["EPIDATA_HOME"], "ipython/epidata/py4j-0.10.9.2/py4j-java")
 
         self._sqlite_conf = sqlite_conf
         self._measurement_class = measurement_class
 
         try:
-            self._gg = self._gateway.launch_gateway(classpath=ec_classpath)
-            print("gg: ", self._gg)
-            self._jelc = self._gg.jvm.com.epidata.spark.EpidataLiteContext()
-            print("jelc: ", self._jelc)
+            self._gg = self._gateway
+#            self._gg = JavaGateway.launch_gateway(classpath=ec_classpath, jarpath=os.path.join(py4j_path, 'py4j0.10.9.2.jar'), die_on_exit=True)
+            self._jelc = self._gg.entry_point.returnEpiDataLiteContext()
         except Exception as e:
             print(str(e))
+
+
+    '''
+    Initializes the EpiDataLiteContext by opening the required network connections
+    '''
+    def init(self):
+        self._jelc.init()
+
+
+    '''
+    Clears (resets) the EpiDataLiteContext by closing its network connections
+    '''
+    def clear(self):
+        self._gg.close(keep_callback_server=False, close_callback_server_connections=True)
 
 
     '''
@@ -80,7 +96,6 @@ class EpidataLiteContext:
 
         # retrieve java's result as list of dictionaries while handling empty data case
         if isinstance(java_df, py4j.java_collections.JavaList):
-            #print("java_df:", java_df)
             if java_df.size() == 0:
                 java_df = []
             else:
@@ -119,7 +134,6 @@ class EpidataLiteContext:
 
         # retrieve java's result as list of dictionaries while handling empty data case
         if isinstance(java_df, py4j.java_collections.JavaList):
-            #print("java_df:", java_df)
             if java_df.size() == 0:
                 java_df = []
             else:
@@ -158,7 +172,6 @@ class EpidataLiteContext:
 
         # retrieve java's result as list of dictionaries while handling empty data case
         if isinstance(java_df, py4j.java_collections.JavaList):
-            #print("java_df:", java_df)
             if java_df.size() == 0:
                 java_df = []
             else:
@@ -184,7 +197,6 @@ class EpidataLiteContext:
 
         # retrieve java's result as list of dictionaries while handling empty data case
         if isinstance(java_df, py4j.java_collections.JavaList):
-            #print("java_df:", java_df)
             if java_df.size() == 0:
                 java_df = []
             else:
@@ -228,6 +240,9 @@ class EpidataLiteContext:
         pass  #not needed with the lite version
 
 
-#if os.environ.get('EPIDATA_MODE') == r'LITE':
-    # The global EpidataLiteContext.
-#    ec = EpidataLiteContext()
+if os.environ.get('EPIDATA_MODE') == r'LITE':
+    # The global EpiDataLiteContext.
+    ec = EpiDataLiteContext()
+
+if __name__ == "__main__":
+    pass

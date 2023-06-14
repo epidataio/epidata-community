@@ -5,10 +5,16 @@ py4j_jar = os.path.join(os.path.dirname(__file__), 'py4j-0.10.9.2/py4j-java/py4j
 sys.path.insert(0, py4j_src)
 sys.path.insert(0, py4j_jar)
 
-import EpidataLiteContext
+#import EpiDataLiteContext
+#import EpiDataLiteStreamingContext
 
 # import context
 # from data_frame import DataFrame
+
+if os.environ.get('EPIDATA_MODE') == r'LITE':
+    # The global EpiDataLiteContext and EpiDataLiteStreamingContext objects
+    ec = None
+    esc = None
 
 __doc__ = """
 epidata - Tools for querying and analyzing measurements stored on a remote cluster.

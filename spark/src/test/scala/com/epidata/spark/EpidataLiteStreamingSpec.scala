@@ -142,9 +142,6 @@ class EpidataLiteStreamingSpec extends FlatSpec with BeforeAndAfter with BeforeA
   esc.createStream("measurements_intermediate", "measurements_cleansed", op2)
   println("stream 2 created: " + op2)
 
-  esc.testUnit()
-  print(esc.printSomething(""))
-
   // Start Stream
   esc.startStream()
   println("Stream started successfully")

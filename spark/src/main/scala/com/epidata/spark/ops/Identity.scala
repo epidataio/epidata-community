@@ -10,6 +10,7 @@ import com.epidata.spark.{ Measurement, MeasurementCleansed }
 //import com.epidata.lib.models.{ Measurement => BaseMeasurement, SensorMeasurement => BaseSensorMeasurement, AutomatedTest => BaseAutomatedTest }
 import scala.collection.mutable.{ Map => MutableMap, ListBuffer }
 import java.util.{ Date, LinkedHashMap => JLinkedHashMap, LinkedList => JLinkedList, List => JList }
+import java.util.logging._
 
 class Identity(
     val meas_names: Option[List[String]]) extends Transformation {
@@ -17,24 +18,32 @@ class Identity(
   def this() = this(None)
 
   override def apply(measurements: ListBuffer[java.util.Map[String, Object]]): ListBuffer[java.util.Map[String, Object]] = {
+    logger.log(Level.FINE, "Identity transformation apply method invoked.")
+    // logger.log(Level.INFO, "meas_names: " + meas_names)
+
     if (meas_names.isDefined) {
       val filteredMeasurementsCollection = new ListBuffer[java.util.Map[String, Object]]()
+      // logger.log(Level.INFO, "filteredMeasurementsCollection: " + filteredMeasurementsCollection)
 
       for (meas_name <- meas_names.get) {
         val filteredMeasurements = measurements
           .filter(m => meas_name.equals(m.get("meas_name").asInstanceOf[String]))
 
+        // logger.log(Level.INFO, "filteredMeasurements: " + filteredMeasurements)
+
         for (index <- filteredMeasurements.indices) {
-          if (filteredMeasurements(index).get("meas_flag") == null) {
-            filteredMeasurements(index).put("meas_flag", null)
+          if ((filteredMeasurements(index).get("meas_flag") == null) || (filteredMeasurements(index).get("meas_flag") == "")) {
+            filteredMeasurements(index).put("meas_flag", "")
           }
-          if (filteredMeasurements(index).get("meas_method") == null) {
-            filteredMeasurements(index).put("meas_method", null)
+          if ((filteredMeasurements(index).get("meas_method") == null) || (filteredMeasurements(index).get("meas_method") == "")) {
+            filteredMeasurements(index).put("meas_method", "")
           }
         }
 
         filteredMeasurementsCollection ++= filteredMeasurements
       }
+
+      // logger.log(Level.INFO, "filteredMeasurementsCollection: " + filteredMeasurementsCollection)
 
       filteredMeasurementsCollection
     } else {
