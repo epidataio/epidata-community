@@ -1,3 +1,6 @@
+bin
+conf/logger.xml
+lib
 log
 logs
 project/project
