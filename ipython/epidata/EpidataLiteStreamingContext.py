@@ -64,6 +64,7 @@ class EpiDataLiteStreamingContext:
     Clears (resets) the EpiDataLiteStreamingContext by closing its network connections
     '''
     def clear(self):
+        self._jesc.clear()
         self._gg.close(keep_callback_server=False, close_callback_server_connections=True)
 
 

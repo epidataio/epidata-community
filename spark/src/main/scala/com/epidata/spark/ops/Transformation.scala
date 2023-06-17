@@ -17,9 +17,9 @@ import java.util.logging._
 
 trait Transformation {
 
-  val logger = Logger.getLogger("EpiDataLiteStreamingContext Logger")
-  logger.setLevel(Level.FINE)
-  logger.addHandler(new ConsoleHandler)
+  // val logger = Logger.getLogger("EpiDataLiteStreamingContext Logger")
+  // logger.setLevel(Level.FINE)
+  // logger.addHandler(new ConsoleHandler)
 
   def apply(dataFrame: DataFrame, sqlContext: SQLContext): DataFrame =
     dataFrame

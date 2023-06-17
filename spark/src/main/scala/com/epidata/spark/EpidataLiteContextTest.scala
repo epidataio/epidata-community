@@ -1849,165 +1849,172 @@ object elcTest extends App {
   println("\n EpiDataLite Stream Test Started")
 
   val esc = new EpidataLiteStreamingContext()
-  esc.init()
 
-  def addShutdownHook(esc: EpidataLiteStreamingContext): Unit = {
-    Runtime.getRuntime().addShutdownHook(new Thread { override def run() { esc.stopStream() } })
-  }
+  for (i <- Seq(1, 2, 3)) {
 
-  addShutdownHook(esc)
+    esc.init()
 
-  //  println("Enter 'Q' to stop streaming DEBUGGING 0")
-  //  while ((StdIn.readChar()).toLower.compare('q') != 0) {
-  //    println("Continuing streaming. Enter 'Q' to stop streaming.")
-  //  }
+    // def addShutdownHook(esc: EpidataLiteStreamingContext): Unit = {
+    //  Runtime.getRuntime().addShutdownHook(new Thread { override def run() { esc.stopStream() } })
+    // }
 
-  // Create Transformation
-  val op1 = esc.createTransformation("Identity", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
-  println("transformation created: " + op1)
+    // addShutdownHook(esc)
 
-  val op2 = esc.createTransformation("FillMissingValue", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map("method" -> "rolling", "s" -> 3))
-  println("transformation created: " + op2)
+    //  println("Enter 'Q' to stop streaming DEBUGGING 0")
+    //  while ((StdIn.readChar()).toLower.compare('q') != 0) {
+    //    println("Continuing streaming. Enter 'Q' to stop streaming.")
+    //  }
 
-  var list = new JArrayList[String]()
-  list.add("Temperature")
-  list.add("Wind_Speed")
-  list.add("Relative_Humidity")
-  val mutableMap = new JHashMap[String, String]
-  //  val op3 = esc.createTransformation("Identity", list, mutableMap)
-  //  println("transformation created: " + op3)
+    // Create Transformation
+    val op1 = esc.createTransformation("Identity", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
+    println("transformation created: " + op1)
 
-  //  val op4 = esc.createTransformation("Identity", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
-  //  println("transformation created: " + op4)
+    val op2 = esc.createTransformation("FillMissingValue", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map("method" -> "rolling", "s" -> 3))
+    println("transformation created: " + op2)
 
-  //  val op5 = esc.createTransformation("Identity", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
-  //  println("transformation created: " + op5)
+    var list = new JArrayList[String]()
+    list.add("Temperature")
+    list.add("Wind_Speed")
+    list.add("Relative_Humidity")
+    val mutableMap = new JHashMap[String, String]
+    //  val op3 = esc.createTransformation("Identity", list, mutableMap)
+    //  println("transformation created: " + op3)
 
-  val op6 = esc.createTransformation("MeasStatistics", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map("method" -> "standard"))
-  println("transformation created: " + op6)
+    //  val op4 = esc.createTransformation("Identity", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
+    //  println("transformation created: " + op4)
 
-  // val op7 = esc.createTransformation("Resample", List("Temperature"), Map("time_interval" -> 1, "timeunit" -> "min"))
-  // println("transformation created: " + op7)
+    //  val op5 = esc.createTransformation("Identity", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
+    //  println("transformation created: " + op5)
 
-  // val op8 = esc.createTransformation("NAs", List("Temperature"), Map[String, String]())
-  // println("transformation created: " + op8)
+    val op6 = esc.createTransformation("MeasStatistics", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map("method" -> "standard"))
+    println("transformation created: " + op6)
 
-  // val op9 = esc.createTransformation("Transpose", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
-  // println("transformation created: " + op9)
+    // val op7 = esc.createTransformation("Resample", List("Temperature"), Map("time_interval" -> 1, "timeunit" -> "min"))
+    // println("transformation created: " + op7)
 
-  // val op10 = esc.createTransformation("InverseTranspose", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
-  // println("transformation created: " + op10)
+    // val op8 = esc.createTransformation("NAs", List("Temperature"), Map[String, String]())
+    // println("transformation created: " + op8)
 
-  // val op11 = esc.createTransformation("OutlierDetector", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map("method" -> "quartile"))
-  // println("transformation created: " + op11)
+    // val op9 = esc.createTransformation("Transpose", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
+    // println("transformation created: " + op9)
 
-  // val op12 = esc.createTransformation("Outliers", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map("mpercentage" -> 25, "method" -> "quartile"))
-  // println("transformation created: " + op12)
+    // val op10 = esc.createTransformation("InverseTranspose", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
+    // println("transformation created: " + op10)
 
-  // Create Streams
+    // val op11 = esc.createTransformation("OutlierDetector", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map("method" -> "quartile"))
+    // println("transformation created: " + op11)
 
-  //     play producer
-  //           |
-  //           ↓
-  //          op1 --------
-  //         /     \      |
-  //        ↓       ↓     |
-  //   --- op2     op3    |
-  //  |     | \     /     |
-  //  |     |  ↓   ↓      |
-  //  |     |   op4       |
-  //  |     |   |         |
-  //  |     \   |         |
-  //  |      \  |         |
-  //  |       \ |         |
-  //  |        ↓          ↓
-  //  |        op5       op6
-  //   \        |        /
-  //     \      |      /
-  //       \    ↓    /
-  //    play datasink
+    // val op12 = esc.createTransformation("Outliers", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map("mpercentage" -> 25, "method" -> "quartile"))
+    // println("transformation created: " + op12)
 
-  //op1
-  esc.createStream("measurements_original", "measurements_substituted", op2)
-  println("STREAM 1 created: " + op2)
+    // Create Streams
 
-  //op2
-  esc.createStream("measurements_substituted", "measurements_cleansed", op1)
-  println("STREAM 2 created: " + op1)
+    //     play producer
+    //           |
+    //           ↓
+    //          op1 --------
+    //         /     \      |
+    //        ↓       ↓     |
+    //   --- op2     op3    |
+    //  |     | \     /     |
+    //  |     |  ↓   ↓      |
+    //  |     |   op4       |
+    //  |     |   |         |
+    //  |     \   |         |
+    //  |      \  |         |
+    //  |       \ |         |
+    //  |        ↓          ↓
+    //  |        op5       op6
+    //   \        |        /
+    //     \      |      /
+    //       \    ↓    /
+    //    play datasink
 
-  //op3
-  //  esc.createStream("measurements_intermediate_1", "measurements_intermediate_3", op3)
-  //  println("STREAM 3 created: " + op3)
+    //op1
+    esc.createStream("measurements_original", "measurements_substituted", op2)
+    // println("STREAM 1 created: " + op2)
 
-  // esc.createStream("measurements_original", "measurements_intermediate", op9)
-  // println("STREAM 9 created: " + op9)
+    //op2
+    esc.createStream("measurements_substituted", "measurements_cleansed", op1)
+    // println("STREAM 2 created: " + op1)
 
-  // esc.createStream("measurements_intermediate", "measurements_cleansed", op10)
-  // println("STREAM 10 created: " + op10)
+    //op3
+    //  esc.createStream("measurements_intermediate_1", "measurements_intermediate_3", op3)
+    //  println("STREAM 3 created: " + op3)
 
-  //op4
-  val op4topics = ListBuffer[String]()
-  op4topics += "measurements_intermediate_2"
-  op4topics += "measurements_intermediate_3"
-  val op4buffers = ListBuffer[Integer]()
-  op4buffers += 5
-  op4buffers += 12
-  //  println(op4buffers)
-  //  esc.createStream(op4topics, op4buffers, "measurements_intermediate_4", op4)
-  //  println("STREAM 4 created: " + op4 + "\n")
+    // esc.createStream("measurements_original", "measurements_intermediate", op9)
+    // println("STREAM 9 created: " + op9)
 
-  //op5 - measurements_cleansed
-  val op5topics = ListBuffer[String]()
-  op5topics += "measurements_intermediate_2"
-  op5topics += "measurements_intermediate_4"
-  //  esc.createStream(op5topics, "measurements_cleansed", op5)
-  //  println("STREAM 5 created: " + "\n")
+    // esc.createStream("measurements_intermediate", "measurements_cleansed", op10)
+    // println("STREAM 10 created: " + op10)
 
-  //op6 - measurements_summary
-  //esc.createStream("measurements_original", "measurements_intermediate_6", op6)
-  esc.createStream("measurements_substituted", "measurements_summary", op6)
-  println("STREAM 6 created: " + "\n")
+    //op4
+    val op4topics = ListBuffer[String]()
+    op4topics += "measurements_intermediate_2"
+    op4topics += "measurements_intermediate_3"
+    val op4buffers = ListBuffer[Integer]()
+    op4buffers += 5
+    op4buffers += 12
+    //  println(op4buffers)
+    //  esc.createStream(op4topics, op4buffers, "measurements_intermediate_4", op4)
+    //  println("STREAM 4 created: " + op4 + "\n")
 
-  //op7
-  // esc.createStream("measurements_original", "measurements_cleansed", op7)
-  // println("STREAM 7 created: " + op7)
+    //op5 - measurements_cleansed
+    val op5topics = ListBuffer[String]()
+    op5topics += "measurements_intermediate_2"
+    op5topics += "measurements_intermediate_4"
+    //  esc.createStream(op5topics, "measurements_cleansed", op5)
+    //  println("STREAM 5 created: " + "\n")
 
-  //op8
-  // esc.createStream("measurements_original", "measurements_cleansed", op8)
-  // println("STREAM 8 created: " + op8)
+    //op6 - measurements_summary
+    //esc.createStream("measurements_original", "measurements_intermediate_6", op6)
+    esc.createStream("measurements_substituted", "measurements_summary", op6)
+    // println("STREAM 6 created: " + "\n")
 
-  //op11
-  // esc.createStream("measurements_original", "measurements_cleansed", op11)
-  // println("STREAM 11 created: " + op11)
+    //op7
+    // esc.createStream("measurements_original", "measurements_cleansed", op7)
+    // println("STREAM 7 created: " + op7)
 
-  //op12
-  // esc.createStream("measurements_original", "measurements_cleansed", op12)
-  // println("STREAM 12 created: " + op12)
+    //op8
+    // esc.createStream("measurements_original", "measurements_cleansed", op8)
+    // println("STREAM 8 created: " + op8)
 
-  //op2 - measurements_cleansed
-  //  esc.createStream("measurements_original", "measurements_cleansed", op2)
-  //  println("STREAM 7 created: " + "\n")
+    //op11
+    // esc.createStream("measurements_original", "measurements_cleansed", op11)
+    // println("STREAM 11 created: " + op11)
 
-  // Start Stream
-  esc.startStream()
-  println("--------Stream started successfully--------")
+    //op12
+    // esc.createStream("measurements_original", "measurements_cleansed", op12)
+    // println("STREAM 12 created: " + op12)
 
-  // check stream data in SQLite database
+    //op2 - measurements_cleansed
+    //  esc.createStream("measurements_original", "measurements_cleansed", op2)
+    //  println("STREAM 7 created: " + "\n")
 
-  println("Enter 'Q' to stop streaming")
-  while ((StdIn.readChar()).toLower.compare('q') != 0) {
-    println("Continuing streaming. Enter 'Q' to stop streaming.")
-  }
+    // Start Stream
+    esc.startStream()
+    println("--------Stream started successfully--------")
 
-  //Thread.sleep(10000)
+    // check stream data in SQLite database
 
-  // Stop stream
-  try {
-    println("Stream being stopped in Test code")
-    esc.stopStream()
-    println("Stream processing stopped successfully.")
-  } catch {
-    case e: Throwable => println("Exception while stopping stream")
+    println("Enter 'Q' to stop streaming")
+    while ((StdIn.readChar()).toLower.compare('q') != 0) {
+      println("Continuing streaming. Enter 'Q' to stop streaming.")
+    }
+
+    //Thread.sleep(10000)
+
+    // Stop stream
+    try {
+      println("Stream being stopped in Test code")
+      esc.stopStream()
+      println("Stream processing stopped successfully.")
+    } catch {
+      case e: Throwable => println("Exception while stopping stream")
+    }
+
+    // Clear (reset) EpiDataLiteStreamingContext
+    esc.clear()
   }
 
   println("\n EpiDataLite Stream Test completed")

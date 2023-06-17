@@ -18,7 +18,7 @@ class Identity(
   def this() = this(None)
 
   override def apply(measurements: ListBuffer[java.util.Map[String, Object]]): ListBuffer[java.util.Map[String, Object]] = {
-    logger.log(Level.FINE, "Identity transformation apply method invoked.")
+    // logger.log(Level.FINE, "Identity transformation apply method invoked.")
     // logger.log(Level.INFO, "meas_names: " + meas_names)
 
     if (meas_names.isDefined) {

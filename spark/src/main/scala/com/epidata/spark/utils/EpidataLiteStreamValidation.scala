@@ -63,18 +63,19 @@ class EpidataLiteStreamValidation {
     */
     looseStreamValidation()
 
-    for (processor <- processorConfigs) {
-      logger.log(Level.INFO, "Operation: " + processor.get("transformation").getClass + "\n")
-    }
+    //for (processor <- processorConfigs) {
+    //  logger.log(Level.INFO, "Operation: " + processor.get("transformation").getClass + "\n")
+    //}
 
     processorConfigs
   }
 
   def looseStreamValidation() = {
     /*
-    "measurements_original" is a loose topic until a streaming node is seen subscribing to it.
+    "measurements_original" and "SHUTDOWN" are loose topics until a streaming node is seen subscribing to it.
     */
     looseSource.put("measurements_original", true)
+    looseSource.put("SHUTDOWN", true)
 
     for (processor <- processorConfigs) {
       val subTopics = processor.get("receiveTopics") match {
