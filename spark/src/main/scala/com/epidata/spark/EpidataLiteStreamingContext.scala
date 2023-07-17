@@ -23,14 +23,14 @@ import com.typesafe.config.{ ConfigFactory, ConfigValueFactory }
 import scala.collection.mutable.ListBuffer
 
 class EpidataLiteStreamingContext(epidataConf: EpiDataConf = EpiDataConf("", "")) {
-  var startPort: Integer = 5551
-  var cleansedPort: Integer = 5552
-  var summaryPort: Integer = 5553
-  var dynamicPort: Integer = 5554
+  val startPort: Integer = 5551
+  val cleansedPort: Integer = 5552
+  val summaryPort: Integer = 5553
+  val dynamicPort: Integer = 5554
   var intermediatePort: Integer = 5555
-  var shutdownPort: Integer = 4999
-  var shutdownTopic: String = "SHUTDOWN"
-  var shutdownMessage: String = "SHUTDOWN"
+  val shutdownPort: Integer = 4999
+  val shutdownTopic: String = "SHUTDOWN"
+  val shutdownMessage: String = "SHUTDOWN"
   var shutdownSocket: ZMQ.Socket = _
   var processors: ListBuffer[StreamingNode] = _
   var streamAuditor: EpidataLiteStreamValidation = _
@@ -79,10 +79,11 @@ class EpidataLiteStreamingContext(epidataConf: EpiDataConf = EpiDataConf("", "")
   }
 
   def init(): Unit = {
-    // logger.log(Level.FINE, "EpiDataLiteStreamingContext is being initialized.")
+    logger.log(Level.FINE, "EpiDataLiteStreamingContext is being initialized.")
     context = ZMQ.context(1)
     processors = ListBuffer()
     topicMap = MutableMap[String, Integer]()
+    intermediatePort = 5555
     topicMap.put("measurements_original", startPort)
     topicMap.put("measurements_cleansed", cleansedPort)
     topicMap.put("measurements_summary", summaryPort)
@@ -91,8 +92,6 @@ class EpidataLiteStreamingContext(epidataConf: EpiDataConf = EpiDataConf("", "")
 
     streamAuditor = new EpidataLiteStreamValidation()
     streamAuditor.init(logger)
-
-    configureShutdownMessenger(context)
 
     // bufferSize initialized based on configuration settings
     bufferSize = conf.getInt("spark.epidata.streamDefaultBufferSize")
@@ -113,7 +112,7 @@ class EpidataLiteStreamingContext(epidataConf: EpiDataConf = EpiDataConf("", "")
     opName: String,
     meas_names: java.util.List[String],
     params: java.util.Map[String, String]): Transformation = {
-    logger.log(Level.FINE, "createTransformation API method invoked.")
+    logger.log(Level.INFO, "createTransformation API method invoked.")
 
     import scala.collection.convert.ImplicitConversions.`list asScalaBuffer`
     //import scala.collection.JavaConverters
@@ -123,7 +122,7 @@ class EpidataLiteStreamingContext(epidataConf: EpiDataConf = EpiDataConf("", "")
 
     val sBuffer = asScalaBuffer(meas_names)
 
-    // logger.log(Level.INFO, "opName: " + opName + ", sBuffer: " + sBuffer.toList + ", params: " + params.toMap)
+    logger.log(Level.INFO, "opName: " + opName + ", sBuffer: " + sBuffer.toList + ", params: " + params.toMap)
 
     createTransformation(opName, sBuffer.toList, params.toMap)
   }
@@ -145,64 +144,79 @@ class EpidataLiteStreamingContext(epidataConf: EpiDataConf = EpiDataConf("", "")
       case _ => new Identity(Some(meas_names))
     }
 
-    logger.log(Level.FINE, "Transformation created. Name: " + op.name + ", measurments' list: " + meas_names + ", parameters: " + params)
+    logger.log(Level.INFO, "Transformation created. Name: " + op.name + ", measurments' list: " + meas_names + ", parameters: " + params)
 
     op
   }
 
   def createStream(sourceTopic: String, destinationTopic: String, operation: Transformation): Unit = {
+    logger.log(Level.INFO, "createStream method invoked. ")
     createStream(ListBuffer(sourceTopic), ListBuffer(bufferSize), ListBuffer(bufferOverlapSize), destinationTopic, operation)
   }
 
   def createStream(sourceTopics: ListBuffer[String], destinationTopic: String, operation: Transformation): Unit = {
+    logger.log(Level.INFO, "createStream method invoked. ")
     createStream(sourceTopics, ListBuffer(bufferSize), ListBuffer(bufferOverlapSize), destinationTopic, operation)
   }
 
   def createStream(sourceTopic: String, bufferSize: Integer, bufferOverlapSize: Integer, destinationTopic: String, operation: Transformation): Unit = {
+    logger.log(Level.INFO, "createStream method invoked. ")
     createStream(ListBuffer(sourceTopic), ListBuffer(bufferSize), ListBuffer(bufferOverlapSize), destinationTopic, operation)
   }
 
   def createStream(sourceTopics: ListBuffer[String], bufferSize: Integer, bufferOverlapSize: Integer, destinationTopic: String, operation: Transformation): Unit = {
+    logger.log(Level.INFO, "createStream method invoked. ")
     createStream(sourceTopics, ListBuffer(bufferSize), ListBuffer(bufferOverlapSize), destinationTopic, operation)
   }
 
   def createStream(sourceTopic: String, bufferSizes: ListBuffer[Integer], bufferOverlapSizes: ListBuffer[Integer], destinationTopic: String, operation: Transformation): Unit = {
+    logger.log(Level.INFO, "createStream method invoked. ")
     createStream(ListBuffer(sourceTopic), bufferSizes, bufferOverlapSizes, destinationTopic, operation)
   }
 
   def createStream(sourceTopics: ListBuffer[String], bufferSizes: ListBuffer[Integer], bufferOverlapSizes: ListBuffer[Integer], destinationTopic: String, operation: Transformation): Unit = {
-    logger.log(Level.FINE, "createStream method invoked. Source topic: " + sourceTopics.toString() + ", buffer sizes: " + bufferSizes.toString() + ", buffer overlap sizes:" + bufferOverlapSizes.toString() + ", destination topic: " + destinationTopic.toString() + ", transformation: " + operation.name)
+    logger.log(Level.INFO, "createStream method invoked. ")
     var streamSourcePort: ListBuffer[String] = ListBuffer()
+
+    logger.log(Level.INFO, "streamSourcePort defined.")
 
     sourceTopics += shutdownTopic
     for (topic <- sourceTopics) {
       if (topicMap.get(topic) != None) {
+        logger.log(Level.INFO, "source topic is not None")
         streamSourcePort += topicMap.get(topic).toString.replace("Some(", "").dropRight(1)
       } else {
+        logger.log(Level.INFO, "source topic is None")
         throw new IllegalArgumentException("Source Topic is not recognized. Please correct the Source Topic or define it by making it a Destination Topic first.")
       }
     }
 
-    // logger.log(Level.INFO, "Stream source ports added: " + streamSourcePort.toString())
+    logger.log(Level.INFO, "Stream source ports added: " + streamSourcePort.toString())
 
     topicMap.get(destinationTopic) match {
       case None => {
+        logger.log(Level.INFO, "destination topic is None")
         topicMap.put(destinationTopic, intermediatePort)
         intermediatePort += 1
-        // logger.log(Level.INFO, "New Stream Destination Topic created.")
+        logger.log(Level.INFO, "New Stream Destination Topic created.")
       }
       case _ => {
-        // logger.log(Level.INFO, "Stream Destination Topic already exists.")
+        logger.log(Level.INFO, "Stream Destination Topic already exists.")
       }
     }
 
     val streamDestinationPort = topicMap.get(destinationTopic) match {
-      case Some(port) => port.toString
+      case Some(port) => {
+        logger.log(Level.INFO, "destination port is not None")
+        port.toString
+      }
       case None => {
-        // logger.log(Level.WARNING, "Destination Topic is not recognized.")
+        logger.log(Level.WARNING, "Destination Topic is not recognized.")
         throw new IllegalArgumentException("Destination Topic is not recognized.")
       }
     }
+
+    logger.log(Level.INFO, "Stream auditor being called ")
 
     streamAuditor.addProcessor(
       streamSourcePort,
@@ -213,11 +227,13 @@ class EpidataLiteStreamingContext(epidataConf: EpiDataConf = EpiDataConf("", "")
       destinationTopic,
       operation)
 
-    logger.log(Level.INFO, "Stream Processing Node configured successfully. Source topics: " + sourceTopics + ", transformation: " + operation.name + ", destination topic: " + destinationTopic)
+    logger.log(Level.INFO, "Stream Processing Node configured successfully. Source topics: " + sourceTopics + ", destination topic: " + destinationTopic)
   }
 
   def startStream(): Unit = {
     stopStreamFlag = false
+
+    configureShutdownMessenger(context)
 
     val processorConfigs: ListBuffer[MutableMap[String, Any]] = streamAuditor.validate(topicMap, intermediatePort)
     // logger.log(Level.FINE, "Stream processing nodes are being created.")
@@ -335,6 +351,8 @@ class EpidataLiteStreamingContext(epidataConf: EpiDataConf = EpiDataConf("", "")
       sendShutdownMessage()
       Thread.sleep(2000)
 
+      clearShutdownMessenger()
+
       // logger.log(Level.INFO, "Messaging stream is being terminated")
       // context.term()
       // logger.log(Level.INFO, "Messaging stream terminated successfully.")
@@ -349,7 +367,7 @@ class EpidataLiteStreamingContext(epidataConf: EpiDataConf = EpiDataConf("", "")
         logger.log(Level.WARNING, "Exception during stream termination: " + e.getMessage)
     }
 
-    clearShutdownMessenger()
+    // clearShutdownMessenger()
 
     logger.log(Level.INFO, "Streams stopped successfully.")
   }
@@ -357,7 +375,13 @@ class EpidataLiteStreamingContext(epidataConf: EpiDataConf = EpiDataConf("", "")
   def clear(): Unit = {
     try {
       //logger.log(Level.INFO, "EpiDataLiteStreamingContext is being cleared (reset)")
+      stopStreamFlag = true
+
       context.term()
+      streamAuditor.clear()
+      processors = ListBuffer()
+      topicMap = MutableMap[String, Integer]()
+      intermediatePort = 5555
       logger.log(Level.INFO, "EpiDataLiteStreamingContext cleared (reset) successfully.")
     } catch {
       case e: Throwable =>

@@ -171,7 +171,7 @@ object AutomatedTestSummary {
   }
 
   def jsonToAutomatedTestSummary(str: String): Option[AutomatedTestSummary] = {
-    println("json record: " + str)
+    // println("json record: " + str)
     fromJson(str) match {
       case Some(jSONObject) => Some(jsonToAutomatedTestSummary(jSONObject))
       case _ => None
@@ -179,7 +179,7 @@ object AutomatedTestSummary {
   }
 
   def jsonToAutomatedTestsSummary(str: String): List[Option[AutomatedTestSummary]] = {
-    println("multiple json records: " + str)
+    // println("multiple json records: " + str)
     fromJsonArray(str) match {
       case Some(jSONArray) => jSONArray.toArray.toList.map(
         x =>
@@ -193,7 +193,7 @@ object AutomatedTestSummary {
   }
 
   def jsonToAutomatedTestSummary(jSONObject: JSONObject): AutomatedTestSummary = {
-    println("json object: " + jSONObject)
+    // println("json object: " + jSONObject)
     val company: String = jSONObject.get("company").asInstanceOf[String]
     val site: String = jSONObject.get("site").asInstanceOf[String]
     val device_group: String = jSONObject.get("device_group").asInstanceOf[String]

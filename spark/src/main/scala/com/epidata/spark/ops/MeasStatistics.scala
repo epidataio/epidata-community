@@ -23,12 +23,14 @@ class MeasStatistics(
     var measStatistics = ListBuffer[java.util.Map[String, Object]]()
 
     val groupByFields = model match {
-      case BaseAutomatedTest.NAME => Seq("company", "site", "device_group", "tester", "start_time", "stop_time", "device_name", "test_name", "meas_name")
+      case BaseAutomatedTest.NAME => Seq("company", "site", "device_group", "tester", "start_time", "stop_time", "test_name", "meas_name")
       case BaseSensorMeasurement.NAME => Seq("company", "site", "station", "sensor", "start_time", "stop_time", "event", "meas_name")
       case _ => {
         throw new IllegalStateException("Unsupported measurement model")
       }
     }
+
+    // println("groupbyFields: " + groupByFields)
 
     method match {
       case "standard" =>
@@ -39,7 +41,7 @@ class MeasStatistics(
         //  .filter(m => meas_names.contains(m.get("meas_name").asInstanceOf[String]))
         /*.groupBy(record =>
             if (model.equals(BaseSensorMeasurement.NAME)
-              (record.get(groupByFields(0)), record.get(groupByFields(1)), record.get(groupByFields(2)), record.get(groupByFields(3)), record.get(groupByFields(6)), record.get(groupByFields(7)), record.get(groupByFields(8)))
+              (record.get(groupByFields(0)), record.get(groupByFields(1)), record.get(groupByFields(2)), record.get(groupByFields(3)), record.get(groupByFields(6)), record.get(groupByFields(7)))
             else
               (record.get(groupByFields(0)), record.get(groupByFields(1)), record.get(groupByFields(2)), record.get(groupByFields(3)), record.get(groupByFields(6)), record.get(groupByFields(7)))
           )
@@ -50,7 +52,7 @@ class MeasStatistics(
         if (model.equals(BaseAutomatedTest.NAME)) {
           val filteredMeas = measurements
             .filter(m => meas_names.contains(m.get("meas_name").asInstanceOf[String]))
-            .groupBy(record => (record.get(groupByFields(0)), record.get(groupByFields(1)), record.get(groupByFields(2)), record.get(groupByFields(3)), record.get(groupByFields(6)), record.get(groupByFields(7)), record.get(groupByFields(8))))
+            .groupBy(record => (record.get(groupByFields(0)), record.get(groupByFields(1)), record.get(groupByFields(2)), record.get(groupByFields(3)), record.get(groupByFields(6)), record.get(groupByFields(7))))
 
           for (k <- filteredMeas.keySet.toSeq) {
             var values = filteredMeas.get(k).get
@@ -62,7 +64,6 @@ class MeasStatistics(
             map.put(groupByFields(3), k._4)
             map.put(groupByFields(6), k._5)
             map.put(groupByFields(7), k._6)
-            map.put(groupByFields(8), k._7)
 
             map.put("start_time", values(0).get("ts"))
             map.put("stop_time", values(0).get("ts"))
@@ -192,7 +193,7 @@ class MeasStatistics(
           "min" -> min, "max" -> max, "mean" -> mean, "count" -> count, "std" -> stddev)
 
         val groupByFields = model match {
-          case BaseAutomatedTest.NAME => Seq("company", "site", "device_group", "tester", "start_time", "stop_time", "device_name", "test_name", "meas_name")
+          case BaseAutomatedTest.NAME => Seq("company", "site", "device_group", "tester", "start_time", "stop_time", "test_name", "meas_name")
           case BaseSensorMeasurement.NAME => Seq("company", "site", "station", "sensor", "start_time", "stop_time", "event", "meas_name")
           case _ => {
             throw new IllegalStateException("Unsupported measurement model")

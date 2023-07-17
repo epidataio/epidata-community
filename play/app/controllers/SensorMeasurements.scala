@@ -6,7 +6,6 @@ package controllers
 
 import javax.inject._
 import java.util.Date
-
 import com.epidata.lib.models.util.JsonHelpers
 import com.epidata.lib.models.{ Measurement, MeasurementCleansed, MeasurementSummary }
 import models.{ MeasurementService, SQLiteMeasurementService, SensorMeasurement, Device }
@@ -15,21 +14,16 @@ import play.api.libs.json._
 import play.api.mvc._
 import play.api.i18n.{ I18nSupport, Messages }
 import play.api.{ Configuration, Environment, Logger }
-import service.{ AppEnvironment, Configs }
-//import securesocial.core.{ IdentityProvider, RuntimeEnvironment, SecureSocial }
-import service.Configs
+import play.api.i18n.{ I18nSupport, Messages }
+import play.api.{ Configuration, Environment, Logger }
+
+// import service.{ AppEnvironment, Configs }
 import service._
 import actions.ValidAction
 
 /** Controller for sensor measurement data. */
 @Singleton
-class SensorMeasurements @Inject() (val cc: ControllerComponents, validAction: ValidAction)( //  override implicit val env: Environment
-//  override implicit val env: RuntimeEnvironment
-) extends AbstractController(cc) //  with SecureSocial
-{
-
-  //  override def messagesApi = env.messagesApi
-
+class SensorMeasurements @Inject() (val cc: ControllerComponents, validAction: ValidAction)() extends AbstractController(cc) {
   val logger: Logger = Logger(this.getClass())
 
   def create = validAction(parse.json) { implicit request: Request[JsValue] =>
@@ -44,19 +38,6 @@ class SensorMeasurements @Inject() (val cc: ControllerComponents, validAction: V
       BadRequest(Json.obj("status" -> "ERROR", "message" -> message))
     }
   }
-
-  //  def insertKafka = SecuredAction(parse.json) { implicit request =>
-  //    val sensorMeasurements = com.epidata.lib.models.SensorMeasurement.jsonToSensorMeasurements(request.body.toString)
-  //    models.SensorMeasurement.insertToKafka(sensorMeasurements.flatMap(x => x))
-  //
-  //    val failedIndexes = sensorMeasurements.zipWithIndex.filter(_._1 == None).map(_._2)
-  //    if (failedIndexes.isEmpty)
-  //      Created
-  //    else {
-  //      val message = "Failed objects: " + failedIndexes.mkString(",")
-  //      BadRequest(Json.obj("status" -> "ERROR", "message" -> message))
-  //    }
-  //  }
 
   def insertQueue = validAction(parse.json) { implicit request =>
     val sensorMeasurements = com.epidata.lib.models.SensorMeasurement.jsonToSensorMeasurements(request.body.toString)
@@ -77,25 +58,6 @@ class SensorMeasurements @Inject() (val cc: ControllerComponents, validAction: V
       BadRequest(Json.obj("status" -> "ERROR", "message" -> message))
     }
   }
-
-  //  @Deprecated
-  //  def query(
-  //    company: String,
-  //    site: String,
-  //    station: String,
-  //    sensor: String,
-  //    beginTime: Date,
-  //    endTime: Date,
-  //    ordering: Ordering.Value = Ordering.Unspecified) = SecuredAction {
-  //    Ok(SensorMeasurement.toJson(SensorMeasurement.find(
-  //      company,
-  //      site,
-  //      station,
-  //      sensor,
-  //      beginTime,
-  //      endTime,
-  //      ordering)))
-  //  }
 
   def find(
     company: String,

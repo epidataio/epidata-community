@@ -9,8 +9,8 @@ class Transformation(object):
     def __init__(self, func, meas_names=[], args=[], name="Default", destination="", datastore="sqlite", gateway = None):
         self._func = func
         self._args = args
-        self._name = name
-        self._destination = destination
+        self.name = name
+        self.destination = destination
         self._datastore = datastore
         self._meas_names = meas_names
         self._gateway = gateway
@@ -29,7 +29,7 @@ class Transformation(object):
 
 
     def destination(self):
-        return self._destination
+        return self.destination
 
     def datastore(self):
         return self._datastore
@@ -39,6 +39,6 @@ class Transformation(object):
 
     def toString(self):
         return self._func.__name__
-    
+
     class Java:
         implements = ['com.epidata.spark.ops.Transformation']

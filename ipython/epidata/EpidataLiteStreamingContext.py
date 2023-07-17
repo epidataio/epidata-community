@@ -25,7 +25,7 @@ class EpiDataLiteStreamingContext:
     EpiDataLiteContext.scala
     '''
     def __init__(self,
-                esc_classpath=os.environ["EPIDATA_LITE_JAR"],
+                esc_classpath=os.environ["EPIDATA_STREAM_PROCESSOR"],
                 topics=None,
                 sqlite_conf=None,
                 zmq_conf=None,
@@ -33,7 +33,22 @@ class EpiDataLiteStreamingContext:
     ):
         self._gateway_parameters = GatewayParameters(address='127.0.0.1', port=25550)
         self._callback_server_parameters = CallbackServerParameters(address='127.0.0.1', port=25551)
-        self._gateway = JavaGateway(python_proxy_port=25551, start_callback_server=True, gateway_parameters=self._gateway_parameters, callback_server_parameters=self._callback_server_parameters)
+
+        # working code
+#        self._gateway = JavaGateway(python_proxy_port=25551, start_callback_server=True, gateway_parameters=self._gateway_parameters, callback_server_parameters=self._callback_server_parameters)
+
+        # alternate code
+        self._gateway = JavaGateway(python_proxy_port=25551, start_callback_server=False, gateway_parameters=self._gateway_parameters, callback_server_parameters=self._callback_server_parameters)
+#        self._gateway = JavaGateway(gateway_parameters=self._gateway_parameters, callback_server_parameters=self._callback_server_parameters)
+        self._gateway.java_gateway_server.resetCallbackClient(
+            self._gateway.java_gateway_server.getCallbackClient().getAddress(),
+            25551)
+
+        python_port = self._gateway.get_callback_server().get_listening_port()
+        #print("python_port:", python_port)
+        python_address = self._gateway.java_gateway_server.getCallbackClient().getAddress()
+        #print("python_address", python_address)
+
 
         py4j_path = os.path.join(os.environ["EPIDATA_HOME"], "ipython/epidata/py4j-0.10.9.2/py4j-java")
 
@@ -65,7 +80,12 @@ class EpiDataLiteStreamingContext:
     '''
     def clear(self):
         self._jesc.clear()
-        self._gg.close(keep_callback_server=False, close_callback_server_connections=True)
+
+        # working code
+#        self._gg.close(keep_callback_server=False, close_callback_server_connections=True)
+
+        # alternate code
+        self._gg.close(keep_callback_server=True, close_callback_server_connections=False)
 
 
     '''
@@ -95,8 +115,13 @@ class EpiDataLiteStreamingContext:
             # java_params = {k: self.to_java_list(v) for k, v in params.items()}
             java_params = MapConverter().convert(params, self._gg._gateway_client)
             trans = self._jesc.createTransformation(opName, java_meas_names, java_params)
+            print("Transformation created:", trans)
             return trans
-        return Transformation(opName, meas_names, params, gateway=self._gateway)
+        else:
+            #print("opName is an Object. opName's name:", opName.__name__)
+            trans = Transformation(opName, meas_names, params, name=str(opName.__name__), gateway=self._gateway)
+            print("Transformation created:", trans)
+            return trans
 
     def create_stream(self, sourceTopic, destinationTopic, transformation):
         self._jesc.createStream(sourceTopic, destinationTopic, transformation)

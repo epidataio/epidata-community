@@ -45,7 +45,6 @@ object SensorMeasurement {
   def insert(sensorMeasurement: BaseSensorMeasurement, sqliteEnable: Boolean) = {
     if (sqliteEnable) {
       SQLiteMeasurementService.insert(sensorMeasurement)
-      // logger.info("insert called. sensorMeasurement: " + sensorMeasurement)
     } else {
       MeasurementService.insert(sensorMeasurement)
     }
@@ -58,7 +57,6 @@ object SensorMeasurement {
   def insert(sensorMeasurementList: List[BaseSensorMeasurement], sqliteEnable: Boolean): Unit = {
     if (sqliteEnable) {
       SQLiteMeasurementService.bulkInsert(sensorMeasurementList.map(sensorMeasurementToMeasurement))
-      // logger.info("Bulk insert called. sensorMeasurementList map: " + sensorMeasurementList.map(sensorMeasurementToMeasurement))
     } else {
       MeasurementService.bulkInsert(sensorMeasurementList.map(sensorMeasurementToMeasurement))
     }
@@ -69,6 +67,7 @@ object SensorMeasurement {
    * @param sensorMeasurementCleansed The SensorMeasurementCleansed data to insert.
    */
   def insertCleansed(sensorMeasurementCleansed: BaseSensorMeasurementCleansed, sqliteEnable: Boolean) = {
+    // println("sensor measurement cleansed: " + automatedTestCleansed)
     if (sqliteEnable) {
       SQLiteMeasurementService.insertCleansed(sensorMeasurementCleansed)
     } else {
@@ -124,7 +123,6 @@ object SensorMeasurement {
   }
 
   def insertRecordFromZMQ(str: String): Unit = {
-    // println("insertRecordFromZMQ called. str: " + str + "\n")
     BaseSensorMeasurement.jsonToSensorMeasurement(str) match {
       case Some(sensorMeasurement) => insert(sensorMeasurement, Configs.measDBLite)
       case _ => logger.error("Bad json format!")
@@ -132,8 +130,7 @@ object SensorMeasurement {
   }
 
   def insertCleansedRecordFromZMQ(str: String): Unit = {
-    // println("insertCleansedRecordFromZMQ called." + "\n")
-    // println("str: " + str + "\n")
+    // println("cleansed record from zmq: " + str + "\n")
     BaseSensorMeasurementCleansed.jsonToSensorMeasurementCleansed(str) match {
       case Some(smc) => insertCleansed(smc, Configs.measDBLite)
       case _ => logger.error("Bad json format!")
@@ -141,17 +138,15 @@ object SensorMeasurement {
   }
 
   def insertSummaryRecordFromZMQ(str: String): Unit = {
-    // println("insertSummaryRecordFromZMQ called." + "\n")
-    // println("str: " + str + "\n")
+    // println("summary record from zmq: " + str)
     BaseSensorMeasurementSummary.jsonToSensorMeasurementSummary(str) match {
-      case Some(sms) => {
-        insertSummary(sms, Configs.measDBLite)
-      }
+      case Some(sms) => insertSummary(sms, Configs.measDBLite)
       case _ => logger.error("Bad json format!")
     }
   }
 
   def insertDynamicRecordFromZMQ(str: String): Unit = {
+    // println("dynamic record from zmq: " + str)
     try {
       BaseSensorMeasurementCleansed.jsonToSensorMeasurementCleansed(str) match {
         case Some(smc: BaseSensorMeasurementCleansed) => {
@@ -205,7 +200,6 @@ object SensorMeasurement {
    * @param sensorMeasurement The Measurement to insert.
    */
   def insertToZMQ(sensorMeasurement: BaseSensorMeasurement): Unit = {
-    // logger.info("insertToZMQ called. sensorMeasurement: " + sensorMeasurement)
     val key = keyForMeasurementTopic(sensorMeasurement)
     val value = BaseSensorMeasurement.toJson(sensorMeasurement)
     // logger.info("key: " + key + ", value: " + value)
@@ -215,7 +209,6 @@ object SensorMeasurement {
   }
 
   def insertToZMQ(sensorMeasurementList: List[BaseSensorMeasurement]): Unit = {
-    // logger.info("Bulk insertToZMQ called. sensorMeasurementList: " + sensorMeasurementList)
     sensorMeasurementList.foreach(m => insertToZMQ(m))
 
     // Two way ingestion NOT supported with SQLite

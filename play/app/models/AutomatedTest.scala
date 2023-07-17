@@ -7,10 +7,14 @@ package models
 import java.util.Date
 
 import com.epidata.lib.models.{ Measurement, MeasurementCleansed, MeasurementSummary, AutomatedTest => BaseAutomatedTest, AutomatedTestCleansed => BaseAutomatedTestCleansed, AutomatedTestSummary => BaseAutomatedTestSummary }
-import _root_.util.Ordering
 import play.api.Logger
+import play.api.libs.json._
+import _root_.util.Ordering
 import models.AutomatedTest.keyForMeasurementTopic
 import service.{ Configs, DataService, KafkaService, ZMQProducer, ZMQInit }
+
+import scala.collection.convert.WrapAsScala
+import scala.language.implicitConversions
 
 object AutomatedTest {
 
@@ -39,7 +43,6 @@ object AutomatedTest {
    * @param automatedTest The AutomatedTest measurement to insert.
    */
   def insert(automatedTest: BaseAutomatedTest, sqliteEnable: Boolean): Unit = {
-    // println("automated test: " + automatedTest)
     if (sqliteEnable) {
       SQLiteMeasurementService.insert(automatedTest)
     } else {
@@ -52,7 +55,6 @@ object AutomatedTest {
    * @param automatedTests Multiple AutomatedTest measurements to insert.
    */
   def insert(automatedTests: List[BaseAutomatedTest], sqliteEnable: Boolean): Unit = {
-    // println("multiple automated tests: " + automatedTests)
     if (sqliteEnable) {
       SQLiteMeasurementService.bulkInsert(automatedTests.map(automatedTestToMeasurement))
     } else {
@@ -79,7 +81,6 @@ object AutomatedTest {
    * @param automatedTestsCleansed Multiple AutomatedTestCleansed measurements to insert.
    */
   def insertCleansed(automatedTestsCleansed: List[BaseAutomatedTestCleansed], sqliteEnable: Boolean): Unit = {
-    // println("multiple automated tests cleansed: " + automatedTestsCleansed)
     if (sqliteEnable) {
       SQLiteMeasurementService.bulkInsertCleansed(automatedTestsCleansed.map(automatedTestCleansedToMeasurementCleansed))
     } else {
@@ -93,7 +94,6 @@ object AutomatedTest {
    * @param automatedTestSummary The AutomatedTestSummary data to insert.
    */
   def insertSummary(automatedTestSummary: BaseAutomatedTestSummary, sqliteEnable: Boolean): Unit = {
-    // println("automated test summary: " + automatedTestSummary)
     if (sqliteEnable) {
       SQLiteMeasurementService.insertSummary(automatedTestSummary)
     } else {
@@ -107,7 +107,6 @@ object AutomatedTest {
    * @param automatedTestsSummary Multiple AutomatedTestSummary data to insert.
    */
   def insertSummary(automatedTestsSummary: List[BaseAutomatedTestSummary], sqliteEnable: Boolean): Unit = {
-    // println("multiple automated tests summary: " + automatedTestsSummary)
     if (sqliteEnable) {
       SQLiteMeasurementService.bulkInsertSummary(automatedTestsSummary.map(automatedTestSummaryToMeasurementSummary))
     } else {
@@ -131,7 +130,7 @@ object AutomatedTest {
   }
 
   def insertCleansedRecordFromZMQ(str: String): Unit = {
-    // println("cleansed record from zmq: " + str)
+    // println("cleansed record from zmq: " + str + "\n")
     BaseAutomatedTestCleansed.jsonToAutomatedTestCleansed(str) match {
       case Some(mc) => insertCleansed(mc, Configs.measDBLite)
       case _ => logger.error("Bad json format!")
@@ -177,30 +176,44 @@ object AutomatedTest {
     }
   }
 
-  def insertToKafka(m: BaseAutomatedTest): Unit = {
-    val key = keyForMeasurementTopic(m)
-    val value = BaseAutomatedTest.toJson(m)
+  /**
+   * Insert a measurement into the kafka.
+   * @param automatedTest The Measurement to insert.
+   */
+  def insertToKafka(automatedTest: BaseAutomatedTest): Unit = {
+    val key = keyForMeasurementTopic(automatedTest)
+    val value = BaseAutomatedTest.toJson(automatedTest)
     KafkaService.sendMessage(Measurement.KafkaTopic, key, value)
   }
 
-  def insertToKafka(list: List[BaseAutomatedTest]): Unit = {
-    list.foreach(m => insertToKafka(m))
-    if (Configs.twoWaysIngestion) {
-      models.AutomatedTest.insert(list, Configs.measDBLite)
+  def insertToKafka(automatedTestList: List[BaseAutomatedTest]): Unit = {
+    automatedTestList.foreach(m => insertToKafka(m))
+
+    // Two way ingestion NOT supported with SQLite
+    if (Configs.twoWaysIngestion && !Configs.measDBLite) {
+      models.AutomatedTest.insert(automatedTestList, Configs.measDBLite)
     }
   }
 
-  def insertToZMQ(m: BaseAutomatedTest): Unit = {
-    val key = keyForMeasurementTopic(m)
-    val value = BaseAutomatedTest.toJson(m)
+  /**
+   * Insert a measurement into the ZMQ.
+   * @param automatedTest The Measurement to insert.
+   */
+  def insertToZMQ(automatedTest: BaseAutomatedTest): Unit = {
+    val key = keyForMeasurementTopic(automatedTest)
+    val value = BaseAutomatedTest.toJson(automatedTest)
+    // logger.info("key: " + key + ", value: " + value)
+
     ZMQInit._ZMQProducer.push(key, value)
     ZMQInit._ZMQProducer.pub(Measurement.zmqTopic, key, value)
   }
 
-  def insertToZMQ(list: List[BaseAutomatedTest]): Unit = {
-    list.foreach(m => insertToZMQ(m))
-    if (Configs.twoWaysIngestion) {
-      models.AutomatedTest.insert(list, Configs.measDBLite)
+  def insertToZMQ(automatedTestList: List[BaseAutomatedTest]): Unit = {
+    automatedTestList.foreach(m => insertToZMQ(m))
+
+    // Two way ingestion NOT supported with SQLite
+    if (Configs.twoWaysIngestion && !Configs.measDBLite) {
+      models.AutomatedTest.insert(automatedTestList, Configs.measDBLite)
     }
   }
 

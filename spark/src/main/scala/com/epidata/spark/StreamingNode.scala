@@ -162,11 +162,11 @@ class StreamingNode(logger: Logger) {
             // logger.log(Level.FINE, "Stream processor recvStr called. No topic received.")
             Thread.sleep(1000)
           } else if (topic.equals("SHUTDOWN")) {
-            logger.log(Level.FINE, "Stream processor - topic received: " + topic)
+            // logger.log(Level.FINE, "Stream processor - topic received: " + topic)
             // Thread.currentThread.interrupt()
             break
           } else {
-            logger.log(Level.FINE, "Stream processor - topic received: " + topic)
+            // logger.log(Level.FINE, "Stream processor - topic received: " + topic)
             break
           }
         }
@@ -176,11 +176,11 @@ class StreamingNode(logger: Logger) {
         try {
           // logger.log(Level.FINE, "Stream processor recvStr being called for message")
           receivedString = subSocket.recvStr(ZMQ.NOBLOCK)
-          logger.log(Level.FINE, "Stream processor - message received: " + receivedString)
+          // logger.log(Level.INFO, "Stream processor - message received: " + receivedString)
         } catch {
           case e: ZMQException if ZMQ.Error.ETERM == e.getErrorCode() =>
             {
-              logger.log(Level.FINE, "Stream processor - no message received.")
+              logger.log(Level.WARNING, "Stream processor - no message received.")
             }
             e: Throwable => {
               logger.log(Level.WARNING, "Exception - Stream process exception while receiving message. " + e)
@@ -249,11 +249,11 @@ class StreamingNode(logger: Logger) {
       measList.add(jsonToMap(json))
     }
 
-    // logger.log(Level.INFO, "measList - " + measList)
+    logger.log(Level.INFO, "measList - " + measList)
 
     val resultsListJava = transformation.apply(measList)
 
-    // logger.log(Level.INFO, "resultsListJava - " + resultsListJava)
+    logger.log(Level.INFO, "resultsListJava - " + resultsListJava)
 
     import scala.collection.JavaConverters._
     val resultsList = resultsListJava.asScala.to[ListBuffer]

@@ -58,27 +58,41 @@ autopep8 := {
 (test in Test) := ((test in Test)
   .dependsOn(autopep8)).value
 
-assemblyMergeStrategy in assembly := {
-  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
-  case manifest if manifest.contains("MANIFEST.MF") =>
-    // We don't need manifest files since sbt-assembly will create
-    // one with the given settings
-    MergeStrategy.discard
-  case referenceOverrides if referenceOverrides.contains("reference-overrides.conf") =>
-    // Keep the content for all reference-overrides.conf files
-    MergeStrategy.concat
-  case x => MergeStrategy.first
-
-//  case x =>
-    // For all the other files, use the default sbt-assembly merge strategy
-//    val oldStrategy = (assemblyMergeStrategy in assembly).value
-//    oldStrategy(x)
-}
-
 mainClass in assembly := Some("play.core.server.ProdServerStart")
 fullClasspath in assembly += Attributed.blank(PlayKeys.playPackageAssets.value)
 
-doc in Compile := (target.value / "none")
+assemblyMergeStrategy in assembly := {
+  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+  case referenceOverrides if referenceOverrides.contains("reference-overrides.conf") =>
+      // Keep the content for all reference-overrides.conf files
+    MergeStrategy.concat
+  case PathList("reference.conf") =>
+    MergeStrategy.concat
+  case x => MergeStrategy.first
+}
+
+//assemblyMergeStrategy in assembly := {
+//  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+//  case manifest if manifest.contains("MANIFEST.MF") =>
+    // We don't need manifest files since sbt-assembly will create
+    // one with the given settings
+//    MergeStrategy.discard
+//  case referenceOverrides if referenceOverrides.contains("reference-overrides.conf") =>
+    // Keep the content for all reference-overrides.conf files
+//    MergeStrategy.concat
+  //case x => MergeStrategy.first
+//  case PathList("reference.conf") =>
+//    MergeStrategy.first
+//  case x =>
+    // For all the other files, use the default sbt-assembly merge strategy
+//     val oldStrategy = (assemblyMergeStrategy in assembly).value
+//     oldStrategy(x)
+//}
+
+// doc in Compile := (target.value / "none")
+
+sources in (Compile, doc) := Seq.empty
+publishArtifact in (Compile, packageDoc) := false
 
 test in assembly := {}
 

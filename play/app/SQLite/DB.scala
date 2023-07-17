@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2022 EpiData, Inc.
+ * Copyright (c) 2015-2023 EpiData, Inc.
 */
 
 package SQLite
@@ -28,8 +28,8 @@ object DB {
    * Connect to SQlite.
    */
   @Inject()
-  def connect(url: String, schemaPath: java.io.File) = {
-    connection = Some(new ConnectionLite(url, schemaPath))
+  def connect(url: String, env: Environment) = {
+    connection = Some(new ConnectionLite(url, env))
   }
 
   /** Generate a prepared statement. */
@@ -58,23 +58,42 @@ object DB {
 
 }
 
-private class ConnectionLite(url: String, schemaPath: java.io.File) {
+private class ConnectionLite(url: String, env: Environment) {
+  //private class ConnectionLite(url: String, schemaPath: java.io.File) {
   Class.forName("org.sqlite.JDBC");
   val session = DriverManager.getConnection(url)
 
-  val original = schemaPath + "/measurements_original"
-  val cleansed = schemaPath + "/measurements_cleansed"
-  val summary = schemaPath + "/measurements_summary"
-  val keys = schemaPath + "/measurements_keys"
-  val users = schemaPath + "/users"
-  val devices = schemaPath + "/iot_devices"
+  val original = env.resourceAsStream("schema/measurements_original") match {
+    case Some(s) => s
+    case null => null
+  }
+  val cleansed = env.resourceAsStream("schema/measurements_cleansed") match {
+    case Some(s) => s
+    case null => null
+  }
+  val summary = env.resourceAsStream("schema/measurements_summary") match {
+    case Some(s) => s
+    case null => null
+  }
+  val keys = env.resourceAsStream("schema/measurements_keys") match {
+    case Some(s) => s
+    case null => null
+  }
+  val users = env.resourceAsStream("schema/users") match {
+    case Some(s) => s
+    case null => null
+  }
+  val devices = env.resourceAsStream("schema/iot_devices") match {
+    case Some(s) => s
+    case null => null
+  }
 
-  val sql1 = Source.fromFile(original).getLines.mkString
-  val sql2 = Source.fromFile(cleansed).getLines.mkString
-  val sql3 = Source.fromFile(summary).getLines.mkString
-  val sql4 = Source.fromFile(keys).getLines.mkString
-  val sql5 = Source.fromFile(users).getLines.mkString
-  val sql6 = Source.fromFile(devices).getLines.mkString
+  val sql1 = Source.fromInputStream(original).getLines.mkString
+  val sql2 = Source.fromInputStream(cleansed).getLines.mkString
+  val sql3 = Source.fromInputStream(summary).getLines.mkString
+  val sql4 = Source.fromInputStream(keys).getLines.mkString
+  val sql5 = Source.fromInputStream(users).getLines.mkString
+  val sql6 = Source.fromInputStream(devices).getLines.mkString
 
   session.createStatement().executeUpdate(sql1)
   session.createStatement().executeUpdate(sql2)

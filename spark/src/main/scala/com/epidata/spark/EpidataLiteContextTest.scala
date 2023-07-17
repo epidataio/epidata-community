@@ -16,6 +16,7 @@ import scala.io.Source
 import scala.io.StdIn
 import scala.util.Properties
 //import scala.collection.mutable.Map
+import com.epidata.spark.ops._
 
 object elcTest extends App {
 
@@ -1866,11 +1867,68 @@ object elcTest extends App {
     //  }
 
     // Create Transformation
-    val op1 = esc.createTransformation("Identity", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
+    //    val op1 = esc.createTransformation("Identity", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
+    val op1 = esc.createTransformation("Identity", List("Temperature_1", "Voltage_1", "Current_1", "Temperature_2", "Voltage_2", "Current_2"), Map[String, String]())
     println("transformation created: " + op1)
 
-    val op2 = esc.createTransformation("FillMissingValue", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map("method" -> "rolling", "s" -> 3))
+    //    val op2 = esc.createTransformation("FillMissingValue", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map("method" -> "rolling", "s" -> 3))
+    val op2 = esc.createTransformation("FillMissingValue", List("Temperature_1", "Voltage_1", "Current_1", "Temperature_2", "Voltage_2", "Current_2"), Map("method" -> "rolling", "s" -> 3))
     println("transformation created: " + op2)
+
+    class CustomFillMissingValue(
+        meas_names: List[String],
+        method: String,
+        s: Int) extends FillMissingValue(
+      meas_names: List[String],
+      method: String,
+      s: Int) {
+      override def apply(measurements: ListBuffer[java.util.Map[String, Object]]): ListBuffer[java.util.Map[String, Object]] = {
+
+        val field = "meas_value"
+
+        //convert to an odd number so there are even number of measuremnts on either side
+        val size = if (s % 2 == 0) s + 1 else s
+
+        method match {
+          case "rolling" =>
+            var filteredMeasCollection = new ListBuffer[java.util.Map[String, Object]]()
+
+            for (meas_name <- meas_names) {
+              val filteredMeas = measurements
+                .filter(m => meas_name.equals(m.get("meas_name").asInstanceOf[String]))
+
+              for (index <- filteredMeas.indices) {
+                // If value is null, then substitute it!
+                if (filteredMeas(index).get("meas_value") == null) {
+                  var sum: Double = 0
+                  var count = 0
+
+                  for (i <- index - (size - 1) / 2 to index + (size + 1) / 2) {
+                    if (i >= 0 && i < filteredMeas.size && filteredMeas(i).get("meas_value") != null) {
+                      sum = sum + filteredMeas(i).get("meas_value").asInstanceOf[Double]
+                      count = count + 1
+                    }
+                  }
+
+                  if (count > 0) {
+                    val measValue = (sum / count).asInstanceOf[Object]
+                    filteredMeas(index).put("meas_value", measValue)
+                    filteredMeas(index).put("meas_flag", "custom_substituted")
+                    filteredMeas(index).put("meas_method", method)
+                  }
+                }
+              }
+
+              filteredMeasCollection ++= filteredMeas
+
+            }
+            filteredMeasCollection
+        }
+      }
+    }
+
+    val CustomOp2 = new CustomFillMissingValue(List("Temperature", "Wind_Speed", "Relative_Humidity"), "rolling", 3)
+    println("transformation created: " + CustomOp2)
 
     var list = new JArrayList[String]()
     list.add("Temperature")
@@ -1886,7 +1944,8 @@ object elcTest extends App {
     //  val op5 = esc.createTransformation("Identity", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map[String, String]())
     //  println("transformation created: " + op5)
 
-    val op6 = esc.createTransformation("MeasStatistics", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map("method" -> "standard"))
+    //    val op6 = esc.createTransformation("MeasStatistics", List("Temperature", "Wind_Speed", "Relative_Humidity"), Map("method" -> "standard"))
+    val op6 = esc.createTransformation("MeasStatistics", List("Temperature_1", "Voltage_1", "Current_1", "Temperature_2", "Voltage_2", "Current_2"), Map("method" -> "standard"))
     println("transformation created: " + op6)
 
     // val op7 = esc.createTransformation("Resample", List("Temperature"), Map("time_interval" -> 1, "timeunit" -> "min"))
@@ -1930,11 +1989,15 @@ object elcTest extends App {
     //       \    ↓    /
     //    play datasink
 
-    //op1
+    //op2
     esc.createStream("measurements_original", "measurements_substituted", op2)
     // println("STREAM 1 created: " + op2)
 
-    //op2
+    //CustomOp2
+    // esc.createStream("measurements_original", "measurements_substituted", CustomOp2)
+    // println("STREAM 1 created: " + CustomOp2)
+
+    //op1
     esc.createStream("measurements_substituted", "measurements_cleansed", op1)
     // println("STREAM 2 created: " + op1)
 
@@ -1967,7 +2030,6 @@ object elcTest extends App {
     //  println("STREAM 5 created: " + "\n")
 
     //op6 - measurements_summary
-    //esc.createStream("measurements_original", "measurements_intermediate_6", op6)
     esc.createStream("measurements_substituted", "measurements_summary", op6)
     // println("STREAM 6 created: " + "\n")
 

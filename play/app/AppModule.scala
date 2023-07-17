@@ -49,13 +49,9 @@ class ApplicationDBStart @Inject() (env: Environment, conf: Configuration) {
       val dbURL: String = "jdbc:sqlite:" + Paths.get(basePath, "data", conf.getOptional[Configuration]("lite.db.epidata").get
         .getOptional[Configuration](env.mode.toString.toLowerCase).get
         .getOptional[String]("sqlite.url").get)
-
-      //      val dbURL: String = "jdbc:sqlite:" + basePath + conf.getOptional[Configuration]("lite.db.epidata").get
-      //        .getOptional[Configuration](env.mode.toString.toLowerCase).get
-      //        .getOptional[String]("sqlite.url").get
       println("DB url: " + dbURL)
-      println("Schema file path: " + env.getFile("conf/schema"))
-      DBLite.connect(dbURL, env.getFile("conf/schema"))
+
+      DBLite.connect(dbURL, env)
       println("DB connection successful")
     } catch {
       case e: SQLException =>
@@ -94,7 +90,7 @@ class ApplicationDBStart @Inject() (env: Environment, conf: Configuration) {
           .getOptional[Int]("replicationFactor").getOrElse(1),
         conf.getOptional[String]("cassandra.username").get,
         conf.getOptional[String]("cassandra.password").get,
-        env.getFile("conf/pillar/migrations/epidata"))
+        env.getFile("pillar/migrations/epidata"))
       println("DB connection successful")
     } catch {
       case e: NoHostAvailableException =>

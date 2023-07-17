@@ -33,6 +33,14 @@ class EpidataLiteStreamValidation {
     this.logger = logger
   }
 
+  def clear(): Unit = {
+    processorConfigs = ListBuffer[MutableMap[String, Any]]()
+    //streamStatus = HashMap[String, Boolean]()
+    looseSource = HashMap[String, Boolean]()
+    looseDestination = HashMap[String, Boolean]()
+    numOfProcessors = 0
+  }
+
   def addProcessor(
     receivePorts: ListBuffer[String],
     receiveTopics: ListBuffer[String],

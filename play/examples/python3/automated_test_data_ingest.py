@@ -16,7 +16,6 @@ from time import sleep
 import urllib.request, urllib.error, urllib.parse
 import requests
 
-
 ##################################
 # Define Variables and Functions #
 ##################################
@@ -29,26 +28,14 @@ arg_parser.add_argument('--device_token')
 args = arg_parser.parse_args()
 
 HOST = args.host or '127.0.0.1:9443'
-
-# ACCESS_TOKEN = args.access_token or 'epidata123'
-DEVICE_ID = args.device_id or 'iot_device_1'
-DEVICE_TOKEN = args.device_token or 'epidata_123'
-
-# AUTHENTICATION_URL = 'https://' + HOST + '/authenticate/app'
-# AUTHENTICATION_ROUTE = '/authenticate/app'
-# AUTHENTICATION_URL = 'https://' + HOST + '/login/device'
-# AUTHENTICATION_ROUTE = '/login/device'
 AUTHENTICATION_URL = 'https://' + HOST + '/authenticate/deviceApp'
-AUTHENTICATION_ROUTE = '/authenticate/deviceApp'
+
 EPI_STREAM = True
-LOG_ITERATION = 1
 
 if EPI_STREAM:
     CREATE_MEASUREMENT_URL = 'https://' + HOST + '/stream/measurements'
-    CREATE_MEASUREMENT_ROUTE = '/stream/measurements'
 else:
     CREATE_MEASUREMENT_URL = 'https://' + HOST + '/measurements'
-    CREATE_MEASUREMENT_ROUTE = '/measurements'
 
 def get_time(time_string):
     date_object = datetime.strptime(time_string, '%m/%d/%Y %H:%M:%S.%f')
@@ -69,36 +56,30 @@ current_time = get_time(current_time_string)
 #####################
 
 # Replace quoted string with API Token or GitHub Personal Access Token (REQUIRED)
-ACCESS_TOKEN = args.access_token or 'epidata123'
+DEVICE_ID = args.device_id or 'iot_device_1'
+DEVICE_TOKEN = args.device_token or 'epidata_123'
 
+# Modify default values (OPTIONAL)
+COMPANY = 'EpiData'
 
-#########################
-# SKIP SSL VERIFICATION #
-#########################
-import ssl
+#####################################
+# Disable SSL verification warnings #
+#####################################
 
-try:
-    _create_unverified_https_context = ssl._create_unverified_context
-except AttributeError:
-    # Legacy Python that doesn't verify HTTPS certificates by default
-    pass
-else:
-    # Handle target environment that doesn't support HTTPS verification
-    ssl._create_default_https_context = _create_unverified_https_context
-
+requests.packages.urllib3.disable_warnings()
 
 ##############################
 # AUTHENTICATE with epidata. #
 ##############################
 
-# Create session object for HTTP requests
+# Create session object for HTTPS requests
 session = requests.Session()
 
 # Authentication is achieved by posting to the AUTHENTICATION_URL.
 url = AUTHENTICATION_URL
-print(url)
 
-# An HTTP POST with JSON content requires the HTTP Content-type header.
+# An HTTPS POST with JSON content requires the HTTPS Content-type header.
+# The access token is povided via JSON header.
 json_header = {'Content-type': 'application/json', 'Set-Cookie': "epidata", 'device_id': DEVICE_ID,
                 'device_token': DEVICE_TOKEN}
 
@@ -106,25 +87,25 @@ json_header = {'Content-type': 'application/json', 'Set-Cookie': "epidata", 'dev
 json_body = json.dumps({'device_id': DEVICE_ID,
                         'device_token': DEVICE_TOKEN})
 
-# Send the POST request and receive the HTTP response.
+# Send the POST request and receive the HTTPS response.
 req = requests.Request('POST', AUTHENTICATION_URL, headers=json_header)
 prepped = session.prepare_request(req)
 resp = session.send(prepped, stream=None, verify=None, proxies=None, cert=None, timeout=None)
 json_web_token = resp.headers.get('device_jwt')
-# Check that the response's HTTP response code is 200 (OK).
-print(resp.text)
+
+# Check that the response's HTTPS response code is 200 (OK).
 assert resp.status_code == 200
 
 # Parse the JSON response.
 post_response = json.loads(resp.content)
-print("response - ", post_response)
-
 
 #####################################################
 # CREATE an automated test temperature measurement. #
 #####################################################
 
-# Measurements are created by sending an HTTP POST request to the create url.
+print("Generating Sample Sensor Data...")
+
+# Measurements are created by sending an HTTPS POST request to the create url.
 url = CREATE_MEASUREMENT_URL
 
 # Request headers add parameters to the request.
@@ -133,10 +114,9 @@ headers = {
     'device_jwt': json_web_token
 }
 
-# The measurement data is assembled in a python dictionary and converted
-# to JSON.
+# The measurement data is assembled in a python dictionary and converted to JSON.
 json_body = json.dumps([{
-    'company': 'Company-1',
+    'company': COMPANY,
     'site': 'Site-1',
     'device_group': '1000',
     'tester': 'Station-1',
@@ -164,17 +144,11 @@ json_body = json.dumps([{
 }])
 
 # Construct and send the POST request.
-#post_request = urllib2.Request(url, headers=headers, data=json_body)
 req = requests.Request('POST', CREATE_MEASUREMENT_URL, data=json_body, headers=headers)
 prepped = session.prepare_request(req)
 resp = session.send(prepped, stream=None, verify=None, proxies=None, cert=None, timeout=None)
 
-# Send the POST request and receive the HTTP response.
-#post_response2 = urllib2.urlopen(post_request)
-
-# Check that the response's HTTP response code is 201 (CREATED).
-#assert post_response2.getcode() == 201
-print(resp.content)
+# Check that the response's HTTPS response code is 201 (CREATED).
 assert resp.status_code == 201
 
 # Print measurement details
@@ -190,8 +164,9 @@ headers = {
     'Content-type': 'application/json',
     'device_jwt': json_web_token
     }
+
 json_body = json.dumps([{
-    'company': 'Company-2',
+    'company': COMPANY,
     'site': 'Site-2',
     'device_group': '2000',
     'tester': 'Station-2',
@@ -211,18 +186,17 @@ json_body = json.dumps([{
     'test_status': 'PASS'
 }])
 
-#post_request = urllib2.Request(url, headers=headers, data=json_body)
-#post_response = urllib2.urlopen(post_request)
-#assert post_response.getcode() == 201
-
 # Construct and send the POST request.
 req = requests.Request('POST', CREATE_MEASUREMENT_URL, data=json_body, headers=headers)
 prepped = session.prepare_request(req)
 resp = session.send(prepped, stream=None, verify=None, proxies=None, cert=None, timeout=None)
 
-# Check that the response's HTTP response code is 201 (CREATED).
-print(resp.content)
+# Check that the response's HTTPS response code is 201 (CREATED).
 assert resp.status_code == 201
 
 # Print measurement details
 print(json_body + "\n")
+
+################################
+# End of Data Ingestion Script #
+################################
